@@ -1,0 +1,37 @@
+---
+import { FileText, ArrowRight } from 'lucide-astro';
+
+export interface Props {
+  variant?: 'primary' | 'secondary';
+  className?: string;
+}
+
+const { variant = 'primary', className = '' } = Astro.props;
+
+const bgColor = variant === 'primary' ? 'bg-moss-green' : 'bg-stone-beige';
+const textColor = variant === 'primary' ? 'text-white' : 'text-earth-brown';
+const iconBg = variant === 'primary' ? 'bg-white/20' : 'bg-moss-green/10';
+const hoverBg = variant === 'primary' ? 'hover:bg-forest-canopy' : 'hover:bg-light-stone';
+---
+
+<div class={`${bgColor} ${hoverBg} rounded-lg p-6 transition-colors ${className}`}>
+  <a href="/blog" class="block">
+    <div class="flex items-start space-x-4">
+      <div class={`${iconBg} rounded-lg p-3`}>
+        <FileText className={`w-6 h-6 ${variant === 'primary' ? 'text-white' : 'text-moss-green'}`} />
+      </div>
+      <div class="flex-1">
+        <h3 class={`text-lg font-semibold ${textColor} mb-2`}>
+          Visit Our Blog
+        </h3>
+        <p class={`${variant === 'primary' ? 'text-gray-200' : 'text-gray-600'} text-sm mb-3`}>
+          Read the latest updates, insights, and stories from our Montessori community.
+        </p>
+        <span class={`inline-flex items-center ${variant === 'primary' ? 'text-sunlight-gold' : 'text-moss-green'} font-medium text-sm group`}>
+          Read Blog Posts
+          <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+        </span>
+      </div>
+    </div>
+  </a>
+</div>

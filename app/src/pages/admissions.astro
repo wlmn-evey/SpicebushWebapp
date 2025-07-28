@@ -1,0 +1,408 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import OptimizedImage from '../components/OptimizedImage.astro';
+import { FileText, ExternalLink, Phone, Mail, CheckCircle, ArrowRight } from 'lucide-astro';
+---
+
+<Layout 
+  title="Admissions - Spicebush Montessori School"
+  description="Learn about our admissions process, tuition options, and how to enroll your child in our inclusive Montessori program."
+  keywords="Montessori admissions, enrollment process, tuition rates, financial aid, school application"
+>
+  <Header />
+  
+  <main id="main-content">
+    <!-- Hero Section -->
+    <section class="relative bg-gradient-to-br from-stone-beige to-light-stone py-16 lg:py-24">
+      <div class="absolute inset-0 z-0 overflow-hidden">
+        <div class="opacity-20 w-full h-full">
+          <OptimizedImage
+            photoSlug="outdoor-montessori-outdoor-education-img-9428-1310x1746"
+            className="w-full h-full"
+            objectFit="cover"
+            loading="eager"
+          />
+        </div>
+      </div>
+      <div class="container mx-auto px-4 relative z-10">
+        <div class="text-center">
+          <h1 class="text-4xl lg:text-5xl font-bold text-earth-brown mb-6">
+            Admissions
+          </h1>
+          <p class="text-lg text-earth-brown max-w-3xl mx-auto leading-relaxed">
+            We welcome families from all backgrounds to apply to our inclusive Montessori community.
+            Start your child's journey with us by completing our online application.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Enrollment Process Flow -->
+    <section class="py-16 bg-gradient-to-b from-white to-stone-beige">
+      <div class="container mx-auto px-4">
+        <div class="max-w-6xl mx-auto">
+          <div class="text-center mb-12">
+            <h2 class="text-3xl lg:text-4xl font-bold text-earth-brown mb-4">
+              Your Enrollment Journey
+            </h2>
+            <p class="text-lg text-earth-brown max-w-3xl mx-auto">
+              We've designed a simple, supportive process to help your family join our community.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Step 1: Apply -->
+            <div class="relative">
+              <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 h-full">
+                <div class="flex items-center justify-center w-16 h-16 bg-forest-canopy text-white rounded-2xl mb-6 mx-auto">
+                  <span class="text-2xl font-bold">1</span>
+                </div>
+                <h3 class="text-xl font-bold text-earth-brown mb-4 text-center">Submit Application</h3>
+                <p class="text-earth-brown text-center mb-6">
+                  Complete our online application (15-20 minutes) with your child's information and program preferences.
+                </p>
+                <div class="text-center">
+                  <a 
+                    href="https://www.transparentclassroom.com/s/4693/online_applications/new"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center text-forest-canopy hover:text-moss-green font-semibold"
+                  >
+                    Start Application
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </a>
+                </div>
+              </div>
+              <!-- Arrow connector for desktop -->
+              <div class="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
+                <ArrowRight className="w-8 h-8 text-moss-green" />
+              </div>
+            </div>
+
+            <!-- Step 2: Tour -->
+            <div class="relative">
+              <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 h-full">
+                <div class="flex items-center justify-center w-16 h-16 bg-moss-green text-white rounded-2xl mb-6 mx-auto">
+                  <span class="text-2xl font-bold">2</span>
+                </div>
+                <h3 class="text-xl font-bold text-earth-brown mb-4 text-center">Schedule a Tour</h3>
+                <p class="text-earth-brown text-center mb-6">
+                  Visit our classroom, meet our teachers, and see our Montessori environment in action.
+                </p>
+                <div class="text-center">
+                  <a 
+                    href="/contact"
+                    class="inline-flex items-center text-moss-green hover:text-forest-canopy font-semibold"
+                  >
+                    Schedule Tour
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </a>
+                </div>
+              </div>
+              <!-- Arrow connector for desktop -->
+              <div class="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
+                <ArrowRight className="w-8 h-8 text-moss-green" />
+              </div>
+            </div>
+
+            <!-- Step 3: Enroll -->
+            <div class="relative">
+              <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 h-full">
+                <div class="flex items-center justify-center w-16 h-16 bg-sunlight-gold text-white rounded-2xl mb-6 mx-auto">
+                  <span class="text-2xl font-bold">3</span>
+                </div>
+                <h3 class="text-xl font-bold text-earth-brown mb-4 text-center">Join Our Community</h3>
+                <p class="text-earth-brown text-center mb-6">
+                  Complete enrollment paperwork, discuss tuition options, and prepare for your child's first day.
+                </p>
+                <div class="text-center">
+                  <a 
+                    href="/contact"
+                    class="inline-flex items-center text-sunlight-gold hover:text-orange-600 font-semibold"
+                  >
+                    Contact Us
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Additional Support -->
+          <div class="mt-12 text-center">
+            <div class="bg-forest-canopy/10 rounded-2xl p-8">
+              <h3 class="text-xl font-bold text-earth-brown mb-4">Need Help with the Process?</h3>
+              <p class="text-earth-brown mb-6 max-w-2xl mx-auto">
+                Our admissions team is here to support you every step of the way. We're happy to answer questions, 
+                discuss tuition options, or schedule a phone call to learn more about your family's needs.
+              </p>
+              <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a 
+                  href="tel:(484) 202-0712"
+                  class="inline-flex items-center bg-forest-canopy hover:bg-moss-green text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                >
+                  <Phone className="w-5 h-5 mr-2" />
+                  Call (484) 202-0712
+                </a>
+                <a 
+                  href="mailto:information@spicebushmontessori.org"
+                  class="inline-flex items-center border-2 border-forest-canopy text-forest-canopy hover:bg-forest-canopy hover:text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                >
+                  <Mail className="w-5 h-5 mr-2" />
+                  Email Us
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Application Process Section -->
+    <section class="py-16 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+          
+          <!-- Application CTA -->
+          <div class="bg-gradient-to-br from-forest-canopy to-moss-green rounded-2xl p-8 lg:p-12 text-white text-center mb-12 shadow-xl">
+            <div class="flex justify-center mb-6">
+              <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <FileText className="w-10 h-10 text-white" />
+              </div>
+            </div>
+            <h2 class="text-3xl lg:text-4xl font-bold mb-4 tracking-tight">Ready to Apply?</h2>
+            <p class="text-xl text-green-100 mb-8 max-w-2xl mx-auto leading-relaxed">
+              Our secure online application takes about 15-20 minutes to complete. 
+              Start your child's Montessori journey today.
+            </p>
+            <a 
+              href="https://www.transparentclassroom.com/s/4693/online_applications/new" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="inline-flex items-center bg-sunlight-gold hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+              onclick="return openApplicationInNewTab(this)"
+            >
+              <FileText className="w-6 h-6 mr-3" />
+              Start Application
+              <ExternalLink className="w-5 h-5 ml-2" />
+            </a>
+            <p class="text-green-200 text-sm mt-4">
+              ↗️ Opens in a new tab • Hosted securely by Transparent Classroom
+            </p>
+          </div>
+
+          <!-- Application Information -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            
+            <!-- What You'll Need -->
+            <div class="bg-stone-beige rounded-xl p-8 border border-gray-200">
+              <h3 class="text-2xl font-bold text-earth-brown mb-6 flex items-center">
+                <CheckCircle className="w-6 h-6 text-forest-canopy mr-3" />
+                What You'll Need
+              </h3>
+              <ul class="space-y-3 text-earth-brown">
+                <li class="flex items-start">
+                  <div class="w-2 h-2 bg-forest-canopy rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <span>Child's basic information (name, birth date, etc.)</span>
+                </li>
+                <li class="flex items-start">
+                  <div class="w-2 h-2 bg-forest-canopy rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <span>Parent/guardian contact details</span>
+                </li>
+                <li class="flex items-start">
+                  <div class="w-2 h-2 bg-forest-canopy rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <span>Emergency contact information</span>
+                </li>
+                <li class="flex items-start">
+                  <div class="w-2 h-2 bg-forest-canopy rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <span>Program preferences and scheduling needs</span>
+                </li>
+                <li class="flex items-start">
+                  <div class="w-2 h-2 bg-forest-canopy rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <span>Medical information and allergies</span>
+                </li>
+                <li class="flex items-start">
+                  <div class="w-2 h-2 bg-forest-canopy rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <span>Previous childcare/school experience</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Application Process -->
+            <div class="bg-white rounded-xl p-8 border border-gray-200 shadow-sm">
+              <h3 class="text-2xl font-bold text-earth-brown mb-6 flex items-center">
+                <ArrowRight className="w-6 h-6 text-forest-canopy mr-3" />
+                Next Steps
+              </h3>
+              <ol class="space-y-4 text-earth-brown">
+                <li class="flex items-start">
+                  <span class="w-8 h-8 bg-forest-canopy text-white rounded-full text-sm font-bold flex items-center justify-center mr-3 flex-shrink-0">1</span>
+                  <div>
+                    <strong>Submit Application:</strong> Complete the online form with all required information
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <span class="w-8 h-8 bg-forest-canopy text-white rounded-full text-sm font-bold flex items-center justify-center mr-3 flex-shrink-0">2</span>
+                  <div>
+                    <strong>Schedule Tour:</strong> We'll contact you to arrange a visit to our school
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <span class="w-8 h-8 bg-forest-canopy text-white rounded-full text-sm font-bold flex items-center justify-center mr-3 flex-shrink-0">3</span>
+                  <div>
+                    <strong>Family Meeting:</strong> Meet with our teachers to discuss your child's needs
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <span class="w-8 h-8 bg-forest-canopy text-white rounded-full text-sm font-bold flex items-center justify-center mr-3 flex-shrink-0">4</span>
+                  <div>
+                    <strong>Enrollment:</strong> Finalize enrollment and prepare for your child's first day
+                  </div>
+                </li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- Important Information -->
+          <div class="bg-white rounded-xl p-8 border border-gray-200 shadow-sm mb-12">
+            <h3 class="text-2xl font-bold text-earth-brown mb-6">Important Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <h4 class="font-semibold text-earth-brown mb-3">Application Timeline</h4>
+                <p class="text-earth-brown text-sm leading-relaxed mb-4">
+                  Applications are reviewed on a rolling basis. We recommend applying early as spaces are limited. 
+                  Priority consideration is given to applications received by March 1st for the following school year.
+                </p>
+                
+                <h4 class="font-semibold text-earth-brown mb-3">Tuition Information</h4>
+                <p class="text-earth-brown text-sm leading-relaxed">
+                  We offer income-based tuition to make Montessori education accessible to all families. 
+                  Use our <a href="/admissions/tuition-calculator" class="text-forest-canopy hover:text-moss-green font-medium underline">tuition calculator</a> 
+                  to estimate your family's rate.
+                </p>
+              </div>
+              
+              <div>
+                <h4 class="font-semibold text-earth-brown mb-3">Required Documents</h4>
+                <p class="text-earth-brown text-sm leading-relaxed mb-4">
+                  After submitting your application, you'll need to provide:
+                </p>
+                <ul class="text-earth-brown text-sm space-y-1">
+                  <li>• Child's immunization records</li>
+                  <li>• Birth certificate (copy)</li>
+                  <li>• Health assessment form</li>
+                  <li>• Previous school records (if applicable)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Section -->
+          <div class="bg-gradient-to-br from-moss-green to-forest-canopy rounded-xl p-8 lg:p-12 text-white text-center">
+            <h3 class="text-2xl font-bold mb-4">Questions About Admissions?</h3>
+            <p class="text-green-100 mb-8 max-w-2xl mx-auto leading-relaxed">
+              Our admissions team is here to help guide you through the process and answer any questions about 
+              our programs, tuition, or what makes our Montessori community special.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+              <a 
+                href="mailto:information@spicebushmontessori.org" 
+                class="inline-flex items-center justify-center bg-white text-forest-canopy hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold transition-colors"
+              >
+                <Mail className="w-5 h-5 mr-2" />
+                Email Admissions
+              </a>
+              <a 
+                href="tel:484-202-0712" 
+                class="inline-flex items-center justify-center border-2 border-white text-white hover:bg-white hover:text-forest-canopy px-6 py-3 rounded-lg font-semibold transition-colors"
+              >
+                <Phone className="w-5 h-5 mr-2" />
+                Call (484) 202-0712
+              </a>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-white/20">
+              <p class="text-green-200 text-sm">
+                Want to visit us first? 
+                <a href="/admissions/schedule-tour" class="text-white hover:text-sunlight-gold font-medium underline">
+                  Schedule a tour
+                </a> 
+                to see our community in action.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Community Welcome Section -->
+    <section class="py-16 bg-moss-green/10">
+      <div class="container mx-auto px-4">
+        <div class="max-w-6xl mx-auto">
+          <h2 class="text-3xl lg:text-4xl font-bold text-earth-brown text-center mb-12">
+            Join Our Warm Community
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="relative overflow-hidden rounded-lg shadow-md group">
+              <div class="aspect-[4/3] relative">
+                <OptimizedImage
+                  photoSlug="admissions-montessori-collaborative-art-creative-expression"
+                  className="w-full h-full transition-transform duration-300 group-hover:scale-105"
+                  objectFit="cover"
+                  loading="lazy"
+                />
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                  <p class="text-white font-semibold">Collaborative Learning</p>
+                </div>
+              </div>
+            </div>
+            <div class="relative overflow-hidden rounded-lg shadow-md group">
+              <div class="aspect-[4/3] relative">
+                <OptimizedImage
+                  photoSlug="admissions-montessori-reading-together-literacy-community"
+                  className="w-full h-full transition-transform duration-300 group-hover:scale-105"
+                  objectFit="cover"
+                  loading="lazy"
+                />
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                  <p class="text-white font-semibold">Nurturing Environment</p>
+                </div>
+              </div>
+            </div>
+            <div class="relative overflow-hidden rounded-lg shadow-md group">
+              <div class="aspect-[4/3] relative">
+                <OptimizedImage
+                  photoSlug="admissions-montessori-group-block-construction-teamwork"
+                  className="w-full h-full transition-transform duration-300 group-hover:scale-105"
+                  objectFit="cover"
+                  loading="lazy"
+                />
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                  <p class="text-white font-semibold">Social Learning</p>
+                </div>
+              </div>
+            </div>
+            <div class="relative overflow-hidden rounded-lg shadow-md group">
+              <div class="aspect-[4/3] relative">
+                <OptimizedImage
+                  photoSlug="gallery-montessori-playground-action-gross-motor"
+                  className="w-full h-full transition-transform duration-300 group-hover:scale-105"
+                  objectFit="cover"
+                  loading="lazy"
+                />
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                  <p class="text-white font-semibold">Active Play</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <Footer />
+</Layout>

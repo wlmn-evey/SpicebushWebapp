@@ -1,0 +1,145 @@
+---
+import { Mail } from 'lucide-astro';
+import { getCollection } from 'astro:content';
+
+// Get staff from content collections
+const staff = await getCollection('staff');
+const sortedStaff = staff.sort((a, b) => (a.data.order || 999) - (b.data.order || 999));
+---
+
+<!-- Teachers Section for About Page -->
+<section class="py-16 bg-white">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl lg:text-4xl font-heading font-bold text-earth-brown mb-4 tracking-tight">
+        Meet Our Teaching Team
+      </h2>
+      <p class="text-lg text-earth-brown max-w-3xl mx-auto leading-relaxed-plus font-light">
+        Our dedicated teachers bring passion, expertise, and deep care to every interaction with children and families.
+      </p>
+    </div>
+    
+    <div id="teachers-container" class="space-y-12">
+      {sortedStaff.length === 0 ? (
+        <p class="text-center text-gray-500">No teachers available at this time.</p>
+      ) : (
+        sortedStaff.map((teacher, index) => {
+          const isEven = index % 2 === 0;
+          const layoutClass = isEven ? 'lg:flex-row' : 'lg:flex-row-reverse';
+          const initials = teacher.data.name.split(' ').map(n => n[0]).join('');
+
+          return (
+            <div 
+              class="teacher-card bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-500"
+              style={`animation-delay: ${index * 200}ms;`}
+            >
+              <div class={`flex flex-col ${layoutClass} lg:min-h-[400px]`}>
+                
+                <!-- Photo Section -->
+                <div class="w-full lg:w-2/5 relative">
+                  {teacher.data.photo ? (
+                    <div class="aspect-square lg:aspect-auto lg:h-full overflow-hidden">
+                      <img 
+                        src={teacher.data.photo}
+                        alt={teacher.data.name}
+                        class="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                        loading="lazy"
+                      />
+                    </div>
+                  ) : (
+                    <div class="aspect-square lg:aspect-auto lg:h-full bg-gradient-to-br from-forest-canopy to-moss-green flex items-center justify-center">
+                      <span class="text-white text-6xl font-bold">{initials}</span>
+                    </div>
+                  )}
+                  
+                  <!-- Decorative corner accent -->
+                  <div class={`absolute top-4 ${isEven ? 'right-4' : 'left-4'} w-12 h-12 bg-sunlight-gold rounded-full opacity-20`}></div>
+                </div>
+                
+                <!-- Content Section -->
+                <div class="w-full lg:w-3/5 p-8 lg:p-12 flex flex-col justify-center">
+                  <div class="mb-6">
+                    <h3 class="text-2xl lg:text-3xl font-heading font-bold text-earth-brown mb-3 tracking-tight">
+                      {teacher.data.name}
+                    </h3>
+                    {teacher.data.role && (
+                      <div class="text-forest-canopy font-semibold text-lg mb-3">
+                        {teacher.data.role}
+                      </div>
+                    )}
+                    {teacher.data.credentials && teacher.data.credentials.length > 0 && (
+                      <div class="flex flex-wrap gap-2 mb-4">
+                        {teacher.data.credentials.map(credential => (
+                          <span class="inline-block px-3 py-1 bg-forest-canopy/10 text-forest-canopy rounded-full text-sm font-medium">
+                            {credential}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div class="text-earth-brown leading-relaxed text-base lg:text-lg mb-8 max-w-none">
+                    {teacher.body}
+                  </div>
+                  
+                  {teacher.data.email && (
+                    <div class="flex items-center text-moss-green">
+                      <Mail className="w-5 h-5 mr-2" />
+                      <a href={`mailto:${teacher.data.email}`} class="hover:text-forest-canopy transition-colors">
+                        {teacher.data.email}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
+  </div>
+</section>
+
+<script>
+  // Trigger animation on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.teacher-card');
+    cards.forEach((card, index) => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(30px)';
+      setTimeout(() => {
+        card.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, index * 200);
+    });
+  });
+</script>
+
+<style>
+  .teacher-card {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  
+  .teacher-card img {
+    transition: transform 0.3s ease;
+  }
+  
+  .teacher-card:hover img {
+    transform: scale(1.05);
+  }
+  
+  /* Ensure text doesn't get too constrained */
+  .teacher-card .text-earth-brown {
+    max-width: none;
+    line-height: 1.8;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 1024px) {
+    .teacher-card .flex {
+      flex-direction: column !important;
+    }
+  }
+</style>

@@ -1,0 +1,251 @@
+{
+  "$ref": "#/definitions/photos",
+  "definitions": {
+    "photos": {
+      "type": "object",
+      "properties": {
+        "originalFilename": {
+          "type": "string"
+        },
+        "optimizedFilename": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "homepage",
+            "about",
+            "programs",
+            "admissions",
+            "gallery",
+            "teachers",
+            "blog",
+            "art",
+            "classroom",
+            "events",
+            "group",
+            "individual",
+            "materials",
+            "outdoor",
+            "practical"
+          ]
+        },
+        "originalWidth": {
+          "type": "number"
+        },
+        "originalHeight": {
+          "type": "number"
+        },
+        "aspectRatio": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "webp",
+            "jpg",
+            "png"
+          ],
+          "default": "webp"
+        },
+        "primaryFocalX": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "primaryFocalY": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "primaryFocalWeight": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 10
+        },
+        "primaryFocalDescription": {
+          "type": "string"
+        },
+        "secondaryFocalX": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "secondaryFocalY": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "secondaryFocalWeight": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 5
+        },
+        "secondaryFocalDescription": {
+          "type": "string"
+        },
+        "mobileCropX": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 0
+        },
+        "mobileCropY": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 0
+        },
+        "mobileCropWidth": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 100,
+          "default": 100
+        },
+        "mobileCropHeight": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 100,
+          "default": 100
+        },
+        "tabletCropX": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 0
+        },
+        "tabletCropY": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 0
+        },
+        "tabletCropWidth": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 100,
+          "default": 100
+        },
+        "tabletCropHeight": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 100,
+          "default": 100
+        },
+        "altText": {
+          "type": "string"
+        },
+        "seoKeywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "contextualDescription": {
+          "type": "string"
+        },
+        "usedOn": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "primaryUse": {
+          "type": "string"
+        },
+        "hasHumanFaces": {
+          "type": "boolean",
+          "default": false
+        },
+        "hasChildren": {
+          "type": "boolean",
+          "default": false
+        },
+        "hasMonressoriMaterials": {
+          "type": "boolean",
+          "default": false
+        },
+        "dominantColors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "lighting": {
+          "type": "string",
+          "enum": [
+            "natural",
+            "indoor",
+            "mixed"
+          ],
+          "default": "natural"
+        },
+        "activity": {
+          "type": "string"
+        },
+        "setting": {
+          "type": "string",
+          "enum": [
+            "classroom",
+            "outdoor",
+            "mixed",
+            "portrait",
+            "art area",
+            "outdoor classroom",
+            "montessori classroom",
+            "school event",
+            "outdoor playground",
+            "outdoor space",
+            "school gathering"
+          ],
+          "default": "classroom"
+        },
+        "compressed": {
+          "type": "boolean",
+          "default": true
+        },
+        "hasWebP": {
+          "type": "boolean",
+          "default": true
+        },
+        "hasSrcSet": {
+          "type": "boolean",
+          "default": true
+        },
+        "lazyLoad": {
+          "type": "boolean",
+          "default": true
+        },
+        "priority": {
+          "type": "boolean",
+          "default": false
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "originalFilename",
+        "optimizedFilename",
+        "category",
+        "originalWidth",
+        "originalHeight",
+        "aspectRatio",
+        "primaryFocalX",
+        "primaryFocalY",
+        "primaryFocalDescription",
+        "altText",
+        "seoKeywords",
+        "contextualDescription",
+        "primaryUse",
+        "activity"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

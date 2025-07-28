@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Localhost Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        a {
+            display: inline-block;
+            margin: 10px 10px 10px 0;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        a:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Spicebush Photo System Test Links</h1>
+    
+    <div class="status info">
+        <h2>Development Server Status</h2>
+        <p>The Astro development server should be running on port 4321.</p>
+        <p>If you see "This site can't be reached", the server needs to be started with: <code>npm run dev</code></p>
+    </div>
+    
+    <h2>Test Pages:</h2>
+    
+    <div>
+        <h3>1. Main Website Pages</h3>
+        <a href="http://localhost:4321/" target="_blank">Homepage</a>
+        <a href="http://localhost:4321/about" target="_blank">About Page</a>
+        <a href="http://localhost:4321/admissions" target="_blank">Admissions</a>
+    </div>
+    
+    <div>
+        <h3>2. Photo System Test Pages</h3>
+        <a href="http://localhost:4321/photo-test-simple" target="_blank">Simple Image Test</a>
+        <a href="http://localhost:4321/test-focal-points" target="_blank">Focal Points Test</a>
+        <a href="http://localhost:4321/photo-focal-demo" target="_blank">Interactive Demo</a>
+    </div>
+    
+    <div class="status success">
+        <h2>What to Test:</h2>
+        <ul>
+            <li><strong>Images Loading:</strong> All images should display properly (WebP with JPG fallbacks)</li>
+            <li><strong>Responsive Behavior:</strong> Resize browser window to see focal points adjust</li>
+            <li><strong>Logo Display:</strong> Check header and footer for logo</li>
+            <li><strong>Performance:</strong> Images should load quickly with appropriate sizes</li>
+        </ul>
+    </div>
+    
+    <div class="status info">
+        <h2>Troubleshooting:</h2>
+        <ul>
+            <li>If pages don't load, ensure server is running: <code>npm run dev</code></li>
+            <li>Check browser console for any JavaScript errors</li>
+            <li>Use Developer Tools Network tab to verify image loading</li>
+            <li>Test in different browsers for compatibility</li>
+        </ul>
+    </div>
+</body>
+</html>

@@ -1,0 +1,520 @@
+---
+/**
+ * Blog Post Editor
+ * 
+ * Handles both creating new blog posts and editing existing ones.
+ * Provides a rich editing experience with auto-save, preview, and validation.
+ */
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import FormField from '../../../components/forms/FormField.astro';
+import TextInput from '../../../components/forms/TextInput.astro';
+import TextArea from '../../../components/forms/TextArea.astro';
+import SelectField from '../../../components/forms/SelectField.astro';
+import ToggleSwitch from '../../../components/forms/ToggleSwitch.astro';
+import ImageUpload from '../../../components/forms/ImageUpload.astro';
+import { checkAdminAuth } from '../../../lib/admin-auth-check';
+import { getEntry } from '../../../lib/content-db';
+
+// Check authentication
+const { isAuthenticated } = await checkAdminAuth(Astro);
+if (!isAuthenticated) {
+  return Astro.redirect('/auth/login?redirect=' + Astro.url.pathname);
+}
+
+// Get slug from URL
+const slug = Astro.url.searchParams.get('slug');
+const isEdit = !!slug;
+
+// Load existing post if editing
+let post = null;
+let errors = {};
+
+if (isEdit) {
+  post = await getEntry('blog', slug);
+  if (!post) {
+    return Astro.redirect('/admin/blog?error=Post not found');
+  }
+}
+
+// Handle form submission
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    
+    // Extract form data
+    const data = {
+      title: formData.get('title')?.toString().trim() || '',
+      slug: formData.get('slug')?.toString().trim() || '',
+      excerpt: formData.get('excerpt')?.toString().trim() || '',
+      content: formData.get('content')?.toString() || '',
+      featuredImage: formData.get('featuredImage')?.toString() || '',
+      author: formData.get('author')?.toString().trim() || '',
+      category: formData.get('category')?.toString() || '',
+      tags: formData.get('tags')?.toString().split(',').map(tag => tag.trim()).filter(Boolean) || [],
+      status: formData.get('status')?.toString() || 'draft',
+      publishDate: formData.get('publishDate')?.toString() || new Date().toISOString().split('T')[0],
+      metaTitle: formData.get('metaTitle')?.toString().trim() || '',
+      metaDescription: formData.get('metaDescription')?.toString().trim() || '',
+    };
+    
+    // Validation
+    if (!data.title) errors.title = 'Title is required';
+    if (!data.slug) errors.slug = 'Slug is required';
+    if (!data.content) errors.content = 'Content is required';
+    if (!data.author) errors.author = 'Author is required';
+    
+    // Generate slug from title if not provided
+    if (data.title && !data.slug) {
+      data.slug = data.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+    }
+    
+    if (Object.keys(errors).length === 0) {
+      // Prepare data for database
+      const contentData = {
+        type: 'blog',
+        slug: data.slug,
+        title: data.title,
+        data: {
+          excerpt: data.excerpt,
+          body: data.content,
+          featured_image: data.featuredImage,
+          author: data.author,
+          category: data.category,
+          tags: data.tags,
+          publish_date: data.publishDate,
+          seo: {
+            meta_title: data.metaTitle || data.title,
+            meta_description: data.metaDescription || data.excerpt
+          }
+        },
+        status: data.status,
+        author_email: 'admin@spicebushmontessori.org' // TODO: Get from session
+      };
+      
+      // Save to database via API
+      const apiEndpoint = '/api/cms/entry';
+      const response = await fetch(apiEndpoint, {
+        method: isEdit ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contentData)
+      });
+      
+      if (response.ok) {
+        const action = data.status === 'published' ? 'published' : 'saved';
+        return Astro.redirect(`/admin/blog?success=Post ${action} successfully`);
+      } else {
+        errors.general = 'Failed to save post. Please try again.';
+      }
+    }
+  } catch (error) {
+    console.error('Form submission error:', error);
+    errors.general = 'An unexpected error occurred. Please try again.';
+  }
+}
+
+// Default values
+const defaultData = post ? {
+  title: post.data.title || '',
+  slug: post.slug || '',
+  excerpt: post.data.excerpt || '',
+  content: post.data.body || '',
+  featuredImage: post.data.featured_image || '',
+  author: post.data.author || '',
+  category: post.data.category || '',
+  tags: post.data.tags?.join(', ') || '',
+  status: post.data.status || 'draft',
+  publishDate: post.data.publish_date || new Date().toISOString().split('T')[0],
+  metaTitle: post.data.seo?.meta_title || '',
+  metaDescription: post.data.seo?.meta_description || '',
+} : {
+  title: '',
+  slug: '',
+  excerpt: '',
+  content: '',
+  featuredImage: '',
+  author: 'Spicebush Montessori',
+  category: '',
+  tags: '',
+  status: 'draft',
+  publishDate: new Date().toISOString().split('T')[0],
+  metaTitle: '',
+  metaDescription: '',
+};
+
+// Category options
+const categoryOptions = [
+  { value: '', label: 'Select category...' },
+  { value: 'announcements', label: 'Announcements' },
+  { value: 'education', label: 'Education' },
+  { value: 'community', label: 'Community' },
+  { value: 'events', label: 'Events' },
+  { value: 'resources', label: 'Resources' },
+];
+
+const pageTitle = isEdit ? `Edit: ${post?.data.title}` : 'New Blog Post';
+---
+
+<AdminLayout title={pageTitle} description={isEdit ? 'Edit an existing blog post' : 'Create a new blog post'}>
+  <div class="blog-editor">
+    {errors.general && (
+      <div class="error-banner" role="alert">
+        {errors.general}
+      </div>
+    )}
+    
+    <form class="blog-form" method="POST" data-auto-save>
+      <div class="form-grid">
+        <!-- Left Column: Main Content -->
+        <div class="form-main">
+          <FormField
+            label="Title"
+            name="title"
+            required
+            help="The main title of your blog post"
+            error={errors.title}
+          >
+            <TextInput
+              name="title"
+              value={defaultData.title}
+              placeholder="Enter post title..."
+              required
+              maxLength={100}
+              data-slug-source
+            />
+          </FormField>
+          
+          <FormField
+            label="Slug"
+            name="slug"
+            required
+            help="URL-friendly version of the title"
+            error={errors.slug}
+          >
+            <TextInput
+              name="slug"
+              value={defaultData.slug}
+              pattern="^[a-z0-9-]+$"
+              placeholder="url-friendly-slug"
+              required
+              data-slug-target
+            />
+          </FormField>
+          
+          <FormField
+            label="Excerpt"
+            name="excerpt"
+            help="A brief summary of the post (used in previews)"
+            error={errors.excerpt}
+          >
+            <TextArea
+              name="excerpt"
+              value={defaultData.excerpt}
+              rows={3}
+              maxLength={300}
+              showCount
+              placeholder="Brief summary of the post..."
+            />
+          </FormField>
+          
+          <FormField
+            label="Content"
+            name="content"
+            required
+            help="The main content of your post (Markdown supported)"
+            error={errors.content}
+          >
+            <TextArea
+              name="content"
+              value={defaultData.content}
+              rows={20}
+              autoResize
+              placeholder="Write your post content here... You can use Markdown formatting."
+              required
+            />
+          </FormField>
+        </div>
+        
+        <!-- Right Column: Metadata & Actions -->
+        <div class="form-sidebar">
+          <!-- Publication Settings -->
+          <div class="form-section">
+            <h3 class="section-title">Publication</h3>
+            
+            <FormField
+              label="Status"
+              name="status"
+            >
+              <SelectField
+                name="status"
+                value={defaultData.status}
+                options={[
+                  { value: 'draft', label: 'Draft' },
+                  { value: 'published', label: 'Published' }
+                ]}
+              />
+            </FormField>
+            
+            <FormField
+              label="Publish Date"
+              name="publishDate"
+            >
+              <TextInput
+                name="publishDate"
+                type="date"
+                value={defaultData.publishDate}
+              />
+            </FormField>
+            
+            <FormField
+              label="Author"
+              name="author"
+              required
+            >
+              <TextInput
+                name="author"
+                value={defaultData.author}
+                required
+              />
+            </FormField>
+          </div>
+          
+          <!-- Categorization -->
+          <div class="form-section">
+            <h3 class="section-title">Categorization</h3>
+            
+            <FormField
+              label="Category"
+              name="category"
+            >
+              <SelectField
+                name="category"
+                value={defaultData.category}
+                options={categoryOptions}
+              />
+            </FormField>
+            
+            <FormField
+              label="Tags"
+              name="tags"
+              help="Comma-separated tags"
+            >
+              <TextInput
+                name="tags"
+                value={defaultData.tags}
+                placeholder="education, montessori, children"
+              />
+            </FormField>
+          </div>
+          
+          <!-- Featured Image -->
+          <div class="form-section">
+            <h3 class="section-title">Featured Image</h3>
+            
+            <FormField
+              label="Featured Image"
+              name="featuredImage"
+              help="Main image for the post"
+            >
+              <ImageUpload
+                name="featuredImage"
+                value={defaultData.featuredImage}
+              />
+            </FormField>
+          </div>
+          
+          <!-- SEO -->
+          <div class="form-section">
+            <h3 class="section-title">SEO</h3>
+            
+            <FormField
+              label="Meta Title"
+              name="metaTitle"
+              help="SEO title (leave blank to use post title)"
+            >
+              <TextInput
+                name="metaTitle"
+                value={defaultData.metaTitle}
+                maxLength={60}
+                placeholder="Leave blank to use post title"
+              />
+            </FormField>
+            
+            <FormField
+              label="Meta Description"
+              name="metaDescription"
+              help="SEO description (leave blank to use excerpt)"
+            >
+              <TextArea
+                name="metaDescription"
+                value={defaultData.metaDescription}
+                rows={3}
+                maxLength={160}
+                showCount
+                placeholder="Leave blank to use excerpt"
+              />
+            </FormField>
+          </div>
+          
+          <!-- Actions -->
+          <div class="form-actions">
+            <button type="submit" name="status" value="published" class="btn btn--primary">
+              {isEdit ? 'Update' : 'Publish'}
+            </button>
+            <button type="submit" name="status" value="draft" class="btn btn--secondary">
+              Save Draft
+            </button>
+            <a href="/admin/blog" class="btn btn--ghost">Cancel</a>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</AdminLayout>
+
+<script>
+  // Auto-generate slug from title
+  const titleInput = document.querySelector('[data-slug-source]');
+  const slugInput = document.querySelector('[data-slug-target]');
+  
+  if (titleInput && slugInput) {
+    titleInput.addEventListener('input', () => {
+      if (!slugInput.value || slugInput.dataset.autoGenerated === 'true') {
+        const slug = titleInput.value
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+        slugInput.value = slug;
+        slugInput.dataset.autoGenerated = 'true';
+      }
+    });
+    
+    slugInput.addEventListener('input', () => {
+      delete slugInput.dataset.autoGenerated;
+    });
+  }
+  
+  // Auto-save functionality
+  const form = document.querySelector('[data-auto-save]');
+  let autoSaveTimer;
+  let isDirty = false;
+  
+  if (form) {
+    // Track changes
+    form.addEventListener('input', () => {
+      isDirty = true;
+      clearTimeout(autoSaveTimer);
+      autoSaveTimer = setTimeout(autoSave, 30000); // 30 seconds
+    });
+    
+    // Warn before leaving if unsaved changes
+    window.addEventListener('beforeunload', (e) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+      }
+    });
+    
+    // Auto-save function
+    async function autoSave() {
+      if (!isDirty) return;
+      
+      const formData = new FormData(form);
+      formData.set('status', 'draft'); // Always save as draft for auto-save
+      
+      try {
+        const response = await fetch(window.location.href, {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (response.ok) {
+          isDirty = false;
+          showAutoSaveStatus('Draft saved automatically');
+        }
+      } catch (error) {
+        console.error('Auto-save failed:', error);
+      }
+    }
+    
+    function showAutoSaveStatus(message) {
+      // Remove existing status
+      const existing = document.querySelector('.auto-save-status');
+      if (existing) existing.remove();
+      
+      // Create new status
+      const status = document.createElement('div');
+      status.className = 'auto-save-status';
+      status.textContent = message;
+      document.body.appendChild(status);
+      
+      // Auto-remove after 3 seconds
+      setTimeout(() => status.remove(), 3000);
+    }
+  }
+</script>
+
+<style>
+  .blog-editor {
+    @apply max-w-7xl mx-auto;
+  }
+  
+  .error-banner {
+    @apply bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6;
+  }
+  
+  .blog-form {
+    @apply bg-white rounded-lg shadow;
+  }
+  
+  .form-grid {
+    @apply grid grid-cols-1 lg:grid-cols-3 gap-8 p-8;
+  }
+  
+  .form-main {
+    @apply lg:col-span-2 space-y-6;
+  }
+  
+  .form-sidebar {
+    @apply space-y-6;
+  }
+  
+  .form-section {
+    @apply bg-gray-50 rounded-lg p-6;
+  }
+  
+  .section-title {
+    @apply text-lg font-semibold text-gray-900 mb-4;
+  }
+  
+  .form-actions {
+    @apply sticky top-8 bg-white border border-gray-200 rounded-lg p-6 space-y-3;
+  }
+  
+  .btn {
+    @apply w-full px-4 py-2 rounded-md font-medium text-center transition-colors duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn--primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+  }
+  
+  .btn--secondary {
+    @apply bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500;
+  }
+  
+  .btn--ghost {
+    @apply text-gray-700 hover:text-gray-900 hover:bg-gray-100;
+  }
+  
+  .auto-save-status {
+    @apply fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg;
+    @apply text-sm font-medium;
+    z-index: 1000;
+  }
+</style>

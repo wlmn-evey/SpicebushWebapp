@@ -1,0 +1,35 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import NonDiscriminationPolicy from '../components/NonDiscriminationPolicy.astro';
+---
+
+<Layout 
+  title="Non-Discrimination Policy - Spicebush Montessori School"
+  description="Our commitment to providing equal educational opportunities for all children regardless of background, ability, or family circumstances."
+  keywords="non-discrimination policy, equal opportunity, inclusive education, diversity commitment"
+>
+  <Header />
+  
+  <main id="main-content">
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-stone-beige to-light-stone py-16 lg:py-24">
+      <div class="container mx-auto px-4">
+        <div class="text-center">
+          <h1 class="text-4xl lg:text-5xl font-bold text-earth-brown mb-6">
+            Non-Discrimination Policy
+          </h1>
+          <p class="text-lg text-earth-brown max-w-3xl mx-auto">
+            Our commitment to providing equal educational opportunities for all children, regardless of background, ability, or family circumstances.
+          </p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Non-Discrimination Policy Component -->
+    <NonDiscriminationPolicy />
+  </main>
+  
+  <Footer />
+</Layout>

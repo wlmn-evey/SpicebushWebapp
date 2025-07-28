@@ -1,0 +1,471 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import OptimizedImage from '../components/OptimizedImage.astro';
+import { Heart, Users, Leaf, DollarSign, Award, HandHeart, BookOpen, Lightbulb, Star, Shield } from 'lucide-astro';
+---
+
+<Layout 
+  title="Our Principles - Spicebush Montessori School"
+  description="Discover the core principles that guide our inclusive Montessori education: respect for the child, authentic methods, environmental stewardship, and community building."
+  keywords="Montessori principles, educational philosophy, inclusive education values, environmental stewardship, authentic Montessori"
+>
+  <Header />
+  
+  <main id="main-content">
+    <!-- Hero Section -->
+    <section class="relative">
+      <div class="relative h-[60vh] overflow-hidden">
+        <OptimizedImage
+          photoSlug="outdoor-montessori-outdoor-education-img-9493-1729x1297"
+          className="w-full h-full"
+          objectFit="cover"
+          loading="eager"
+        />
+        <div class="absolute inset-0 bg-forest-canopy/40"></div>
+      </div>
+      <div class="container mx-auto px-4 pb-16">
+        <div class="text-center relative -mt-24 bg-white rounded-lg shadow-xl p-10 max-w-4xl mx-auto mb-8">
+          <h1 class="text-4xl lg:text-5xl font-heading font-bold text-earth-brown mb-6 tracking-tight">
+            Our Guiding Principles
+          </h1>
+          <p class="text-lg text-earth-brown leading-relaxed-plus font-medium">
+            At Spicebush Montessori, our principles shape every decision we make and every interaction we have. 
+            They are the foundation upon which we build a community where every child can flourish authentically.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Introduction Section -->
+    <section class="pt-8 pb-16 bg-white">
+      <div class="container mx-auto px-4 max-w-4xl">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold text-earth-brown mb-6">The Heart of Our Community</h2>
+          <p class="text-lg text-earth-brown leading-relaxed">
+            These principles aren't just words on a page—they're living values that guide our daily practice. 
+            From how we prepare our environment to how we support each family, these beliefs shape our approach 
+            to nurturing young minds and building an inclusive learning community.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPICES Values Section -->
+    <section class="py-16 bg-stone-beige">
+      <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl lg:text-4xl font-bold text-earth-brown mb-4">Our SPICES Values</h2>
+          <p class="text-lg text-earth-brown max-w-3xl mx-auto leading-relaxed">
+            Inspired by Quaker principles, these values form the foundation of everything we do at Spicebush
+          </p>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <!-- Social Justice -->
+          <div class="bg-white rounded-xl p-5 text-center shadow-md transform transition-transform hover:-translate-y-2 duration-300 h-[220px] flex flex-col">
+            <div class="w-16 h-16 bg-forest-canopy rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="text-white font-bold text-2xl">S</span>
+            </div>
+            <h3 class="text-xl font-bold text-earth-brown mb-2">Social Justice</h3>
+            <p class="text-sm text-earth-brown leading-snug">Creating a fair community where everyone's voice matters</p>
+          </div>
+          
+          <!-- Peace -->
+          <div class="bg-white rounded-xl p-5 text-center shadow-md transform transition-transform hover:-translate-y-2 duration-300 h-[220px] flex flex-col">
+            <div class="w-16 h-16 bg-moss-green rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="text-white font-bold text-2xl">P</span>
+            </div>
+            <h3 class="text-xl font-bold text-earth-brown mb-2">Peace</h3>
+            <p class="text-sm text-earth-brown leading-snug">Resolving conflicts with respect and finding harmony together</p>
+          </div>
+          
+          <!-- Inclusion -->
+          <div class="bg-white rounded-xl p-5 text-center shadow-md transform transition-transform hover:-translate-y-2 duration-300 h-[220px] flex flex-col">
+            <div class="w-16 h-16 bg-sunlight-gold rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="text-white font-bold text-2xl">I</span>
+            </div>
+            <h3 class="text-xl font-bold text-earth-brown mb-2">Inclusion</h3>
+            <p class="text-sm text-earth-brown leading-snug">Welcoming and celebrating each person's unique gifts and needs</p>
+          </div>
+          
+          <!-- Community -->
+          <div class="bg-white rounded-xl p-5 text-center shadow-md transform transition-transform hover:-translate-y-2 duration-300 h-[220px] flex flex-col">
+            <div class="w-16 h-16 bg-sky-blue rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="text-white font-bold text-2xl">C</span>
+            </div>
+            <h3 class="text-xl font-bold text-earth-brown mb-2">Community</h3>
+            <p class="text-sm text-earth-brown leading-snug">Growing, learning, and supporting one another as a family</p>
+          </div>
+          
+          <!-- Environment -->
+          <div class="bg-white rounded-xl p-5 text-center shadow-md transform transition-transform hover:-translate-y-2 duration-300 h-[220px] flex flex-col">
+            <div class="w-16 h-16 bg-forest-canopy rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="text-white font-bold text-2xl">E</span>
+            </div>
+            <h3 class="text-xl font-bold text-earth-brown mb-2">Environment</h3>
+            <p class="text-sm text-earth-brown leading-snug">Caring for our world and learning to be responsible stewards</p>
+          </div>
+          
+          <!-- Simplicity -->
+          <div class="bg-white rounded-xl p-5 text-center shadow-md transform transition-transform hover:-translate-y-2 duration-300 h-[220px] flex flex-col">
+            <div class="w-16 h-16 bg-moss-green rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="text-white font-bold text-2xl">S</span>
+            </div>
+            <h3 class="text-xl font-bold text-earth-brown mb-2">Simplicity</h3>
+            <p class="text-sm text-earth-brown leading-snug">Finding joy in the essential and focusing on what truly matters</p>
+          </div>
+        </div>
+        
+        <div class="mt-12 max-w-2xl mx-auto text-center">
+          <p class="text-earth-brown leading-relaxed font-medium">
+            Our school name "Spicebush" honors these SPICES values. Just like the native Spicebush plant provides nourishment 
+            and shelter for many creatures in our local ecosystem, we create an environment where all children grow and flourish.
+            These principles guide our interactions with students, families, and our broader community every day.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Core Principles -->
+    <section class="py-16 bg-white" id="core-principles">
+      <div class="container mx-auto px-4">
+        
+        <!-- Principle 1: Respect for the Child -->
+        <div class="mb-20">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div class="flex items-center mb-6">
+                <div class="w-16 h-16 bg-forest-canopy rounded-full flex items-center justify-center mr-6">
+                  <Heart className="w-8 h-8 text-white" />
+                </div>
+                <h3 class="text-3xl font-bold text-earth-brown">Respect for the Child</h3>
+              </div>
+              <p class="text-lg text-earth-brown mb-6 leading-relaxed">
+                We believe every child is a capable, curious individual deserving of deep respect. This means honoring their natural development, 
+                listening to their needs, and trusting their innate desire to learn and grow.
+              </p>
+              <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-forest-canopy rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Individual Pace:</strong> Children progress at their own speed without pressure or comparison to others</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-forest-canopy rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Voice & Choice:</strong> Children have meaningful input in their learning journey and classroom community</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-forest-canopy rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Authentic Expression:</strong> We celebrate each child's unique personality, interests, and way of being</p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="rounded-lg shadow-lg overflow-hidden h-80">
+                <OptimizedImage
+                  photoSlug="individual-montessori-concentration-img-7291-1770x1931"
+                  className="w-full h-full"
+                  objectFit="cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Principle 2: Inclusive Community -->
+        <div class="mb-20">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div class="order-2 lg:order-1">
+              <div class="rounded-lg shadow-lg overflow-hidden h-80">
+                <OptimizedImage
+                  photoSlug="group-montessori-collaboration-img-6537-1485x1980"
+                  className="w-full h-full"
+                  objectFit="cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div class="order-1 lg:order-2">
+              <div class="flex items-center mb-6">
+                <div class="w-16 h-16 bg-moss-green rounded-full flex items-center justify-center mr-6">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <h3 class="text-3xl font-bold text-earth-brown">Inclusive Community</h3>
+              </div>
+              <p class="text-lg text-earth-brown mb-6 leading-relaxed">
+                Neurodiversity is not just welcomed—it's celebrated as an essential part of our learning community. 
+                We intentionally create space for all types of minds and bodies to thrive.
+              </p>
+              <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-moss-green rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Universal Design:</strong> Our environment and practices are designed to be accessible to all learners</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-moss-green rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Strength-Based Approach:</strong> We focus on what each child can do and build from their natural abilities</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-moss-green rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Family Collaboration:</strong> We partner closely with families to understand and support each child's needs</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Principle 3: Authentic Montessori -->
+        <div class="mb-20">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div class="flex items-center mb-6">
+                <div class="w-16 h-16 bg-sunlight-gold rounded-full flex items-center justify-center mr-6">
+                  <Award className="w-8 h-8 text-white" />
+                </div>
+                <h3 class="text-3xl font-bold text-earth-brown">Authentic Montessori</h3>
+              </div>
+              <p class="text-lg text-earth-brown mb-6 leading-relaxed">
+                We are committed to Dr. Maria Montessori's original vision while thoughtfully applying her methods 
+                to meet the needs of today's children and families.
+              </p>
+              <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-sunlight-gold rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Prepared Environment:</strong> Our classrooms are carefully designed with natural materials and purposeful order</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-sunlight-gold rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Mixed-Age Community:</strong> Children ages 3-6 learn together, fostering mentorship and cooperation</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-sunlight-gold rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Uninterrupted Work:</strong> Long work periods allow for deep concentration and meaningful learning</p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="rounded-lg shadow-lg overflow-hidden h-80">
+                <OptimizedImage
+                  photoSlug="materials-montessori-montessori-materials-img-7149-1666x1250"
+                  className="w-full h-full"
+                  objectFit="cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Principle 4: Environmental Stewardship -->
+        <div class="mb-20">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div class="order-2 lg:order-1">
+              <div class="rounded-lg shadow-lg overflow-hidden h-80">
+                <OptimizedImage
+                  photoSlug="outdoor-montessori-outdoor-education-img-6278-1395x1860"
+                  className="w-full h-full"
+                  objectFit="cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div class="order-1 lg:order-2">
+              <div class="flex items-center mb-6">
+                <div class="w-16 h-16 bg-forest-canopy rounded-full flex items-center justify-center mr-6">
+                  <Leaf className="w-8 h-8 text-white" />
+                </div>
+                <h3 class="text-3xl font-bold text-earth-brown">Environmental Stewardship</h3>
+              </div>
+              <p class="text-lg text-earth-brown mb-6 leading-relaxed">
+                We foster a deep connection to the natural world, teaching children to be caretakers of their environment 
+                and understanding their place within the larger ecosystem.
+              </p>
+              <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-forest-canopy rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Nature Integration:</strong> Outdoor exploration and nature study are central to our curriculum</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-forest-canopy rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Sustainable Practices:</strong> We model eco-friendly choices in our daily routines and material selection</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-forest-canopy rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Cosmic Education:</strong> Children explore their interconnection with all living things</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Principle 5: Economic Accessibility -->
+        <div class="mb-20">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div class="flex items-center mb-6">
+                <div class="w-16 h-16 bg-sky-blue rounded-full flex items-center justify-center mr-6">
+                  <DollarSign className="w-8 h-8 text-white" />
+                </div>
+                <h3 class="text-3xl font-bold text-earth-brown">Economic Accessibility</h3>
+              </div>
+              <p class="text-lg text-earth-brown mb-6 leading-relaxed">
+                Quality education should not be limited by family income. We are committed to making excellent 
+                Montessori education accessible to families across economic backgrounds.
+              </p>
+              <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-sky-blue rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Tiered Tuition:</strong> Sliding scale tuition based on family income and circumstances</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-sky-blue rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Financial Transparency:</strong> Clear, upfront information about all costs and assistance available</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-sky-blue rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Community Support:</strong> Fundraising and partnerships help keep education affordable for all</p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="rounded-lg shadow-lg overflow-hidden h-80">
+                <OptimizedImage
+                  photoSlug="events-montessori-celebration-img-3719-1776x1332"
+                  className="w-full h-full"
+                  objectFit="cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Principle 6: Lifelong Learning -->
+        <div class="mb-20">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div class="order-2 lg:order-1">
+              <div class="rounded-lg shadow-lg overflow-hidden h-80">
+                <OptimizedImage
+                  photoSlug="classroom-montessori-classroom-img-8743-1731x1055"
+                  className="w-full h-full"
+                  objectFit="cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div class="order-1 lg:order-2">
+              <div class="flex items-center mb-6">
+                <div class="w-16 h-16 bg-moss-green rounded-full flex items-center justify-center mr-6">
+                  <BookOpen className="w-8 h-8 text-white" />
+                </div>
+                <h3 class="text-3xl font-bold text-earth-brown">Lifelong Learning</h3>
+              </div>
+              <p class="text-lg text-earth-brown mb-6 leading-relaxed">
+                We model curiosity and growth for our students. Our educators are committed to continuous learning, 
+                reflection, and improvement in their practice.
+              </p>
+              <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-moss-green rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Professional Development:</strong> Regular training in Montessori methods, child development, and inclusive practices</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-moss-green rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Reflective Practice:</strong> Teachers regularly observe, document, and reflect on children's learning</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-moss-green rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Innovation & Adaptation:</strong> We thoughtfully integrate new research and best practices</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Principle 7: Community Partnership -->
+        <div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div class="flex items-center mb-6">
+                <div class="w-16 h-16 bg-sunlight-gold rounded-full flex items-center justify-center mr-6">
+                  <HandHeart className="w-8 h-8 text-white" />
+                </div>
+                <h3 class="text-3xl font-bold text-earth-brown">Community Partnership</h3>
+              </div>
+              <p class="text-lg text-earth-brown mb-6 leading-relaxed">
+                Education happens in partnership—between school and family, between children and adults, 
+                and between our school and the broader community.
+              </p>
+              <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-sunlight-gold rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Family Collaboration:</strong> Families are valued partners in their child's educational journey</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-sunlight-gold rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Professional Networks:</strong> We collaborate with specialists and therapists to support all children</p>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 bg-sunlight-gold rounded-full mt-3 flex-shrink-0"></div>
+                  <p class="text-earth-brown"><strong>Community Connections:</strong> Real-world learning experiences connect children to their broader community</p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="rounded-lg shadow-lg overflow-hidden h-80">
+                <OptimizedImage
+                  photoSlug="events-montessori-celebration-img-3100-1754x1341"
+                  className="w-full h-full"
+                  objectFit="cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Living Our Principles Section -->
+    <section class="py-16 bg-stone-beige">
+      <div class="container mx-auto px-4 max-w-4xl">
+        <div class="text-center">
+          <h2 class="text-3xl font-bold text-earth-brown mb-8">Principles in Action</h2>
+          <p class="text-lg text-earth-brown mb-8 leading-relaxed">
+            These principles come alive in our daily practice. From the way we greet children each morning 
+            to how we design our learning environment, every decision reflects our commitment to these values.
+          </p>
+          
+          <div class="bg-white rounded-lg shadow-sm p-8">
+            <div class="flex items-center justify-center mb-6">
+              <Lightbulb className="w-12 h-12 text-sunlight-gold mr-4" />
+              <h3 class="text-2xl font-bold text-earth-brown">Experience Our Community</h3>
+            </div>
+            <p class="text-earth-brown mb-6">
+              The best way to understand how our principles and SPICES values come to life is to see them in action. We invite you to visit our school, 
+              observe our classrooms, and experience the warmth and intention behind everything we do.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <a 
+                href="/admissions/schedule-tour" 
+                class="bg-sunlight-gold hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
+              >
+                Schedule a Tour
+              </a>
+              <a 
+                href="/contact" 
+                class="border-2 border-forest-canopy text-forest-canopy hover:bg-forest-canopy hover:text-white px-8 py-3 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2"
+              >
+                Ask Questions
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main> 
+  
+  <Footer />
+</Layout>

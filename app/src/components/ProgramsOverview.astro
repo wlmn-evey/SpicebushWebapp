@@ -1,0 +1,89 @@
+---
+import { ArrowRight } from 'lucide-astro';
+import OptimizedImage from './OptimizedImage.astro';
+---
+
+<!-- Programs Overview Section -->
+<section class="py-16 bg-white">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl lg:text-4xl font-heading font-bold text-earth-brown mb-4 tracking-tight">
+        Our Programs for Ages 3-6
+      </h2>
+      <p class="text-lg text-earth-brown max-w-3xl mx-auto leading-relaxed-plus font-light">
+        Full-day Montessori education from 8:00 AM - 4:00 PM with extended care available. Our mixed-age classrooms create a vibrant community where every child finds their place.
+      </p>
+      <div class="mt-6 flex flex-wrap justify-center gap-4 text-sm font-semibold">
+        <span class="bg-stone-beige px-4 py-2 rounded-full text-earth-brown">Sliding Scale Tuition</span>
+        <span class="bg-stone-beige px-4 py-2 rounded-full text-earth-brown">Year-Round Enrollment</span>
+        <span class="bg-stone-beige px-4 py-2 rounded-full text-earth-brown">Inclusive Environment</span>
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div class="rounded-lg overflow-hidden h-80">
+        <OptimizedImage
+          photoSlug="classroom-montessori-classroom-img-7150-1617x1213"
+          className="w-full h-full"
+          objectFit="cover"
+          loading="lazy"
+        />
+      </div>
+      
+      <div>
+        <h3 class="text-2xl font-heading font-bold text-earth-brown mb-6">
+          Following the Child's Natural Rhythm
+        </h3>
+        
+        <div class="space-y-6">
+          <div class="flex items-start space-x-4">
+            <div class="w-8 h-8 bg-forest-canopy rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <span class="text-white font-semibold text-sm">1</span>
+            </div>
+            <div>
+              <h4 class="font-semibold text-earth-brown mb-2">Morning Gathering & Choice Time</h4>
+              <p class="text-earth-brown leading-relaxed-plus">Children settle into their day, choose work that calls to them, and begin their individual learning journey with gentle support from teachers.</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start space-x-4">
+            <div class="w-8 h-8 bg-moss-green rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <span class="text-white font-semibold text-sm">2</span>
+            </div>
+            <div>
+              <h4 class="font-semibold text-earth-brown mb-2">Learning from Each Other</h4>
+              <p class="text-earth-brown leading-relaxed-plus">Older children naturally become teachers and mentors, while younger ones learn by watching and doing. Everyone finds their special place.</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start space-x-4">
+            <div class="w-8 h-8 bg-sunlight-gold rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <span class="text-white font-semibold text-sm">3</span>
+            </div>
+            <div>
+              <h4 class="font-semibold text-earth-brown mb-2">Nature as Our Extended Classroom</h4>
+              <p class="text-earth-brown leading-relaxed-plus">We step outside often, exploring, discovering, and connecting with the natural world that surrounds and inspires us.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-8 flex flex-col sm:flex-row gap-4">
+          <a 
+            href="/programs" 
+            class="inline-flex items-center justify-center text-forest-canopy hover:text-moss-green transition-colors font-semibold"
+          >
+            View Full Program Details
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </a>
+          <a 
+            href="/admissions/tuition-calculator" 
+            class="inline-flex items-center justify-center text-forest-canopy hover:text-moss-green transition-colors font-semibold"
+          >
+            Calculate Your Tuition
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

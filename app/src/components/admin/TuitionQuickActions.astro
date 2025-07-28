@@ -1,0 +1,48 @@
+---
+import { DollarSign, Users, Save } from 'lucide-astro';
+---
+
+<!-- Quick Actions Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+  <div class="bg-forest-canopy text-white rounded-lg p-6 text-center">
+    <DollarSign className="w-12 h-12 mx-auto mb-4" />
+    <h3 class="text-xl font-bold mb-2">Tuition Rates</h3>
+    <p class="text-green-100 text-sm mb-4">Manage income-based pricing tiers</p>
+    <button id="focus-rates-btn" class="bg-white text-forest-canopy px-4 py-2 rounded font-medium hover:bg-gray-100 transition-colors">
+      Manage Rates
+    </button>
+  </div>
+  
+  <div class="bg-moss-green text-white rounded-lg p-6 text-center">
+    <Users className="w-12 h-12 mx-auto mb-4" />
+    <h3 class="text-xl font-bold mb-2">Programs</h3>
+    <p class="text-green-100 text-sm mb-4">Add or edit program offerings</p>
+    <button id="focus-programs-btn" class="bg-white text-moss-green px-4 py-2 rounded font-medium hover:bg-gray-100 transition-colors">
+      Manage Programs
+    </button>
+  </div>
+  
+  <div class="bg-sunlight-gold text-white rounded-lg p-6 text-center">
+    <Save className="w-12 h-12 mx-auto mb-4" />
+    <h3 class="text-xl font-bold mb-2">Settings</h3>
+    <p class="text-orange-100 text-sm mb-4">Update global calculator settings</p>
+    <button id="focus-settings-btn" class="bg-white text-sunlight-gold px-4 py-2 rounded font-medium hover:bg-gray-100 transition-colors">
+      Manage Settings
+    </button>
+  </div>
+</div>
+
+<script>
+  // Focus button handlers
+  document.getElementById('focus-rates-btn')?.addEventListener('click', () => {
+    document.getElementById('rates-section')?.scrollIntoView({ behavior: 'smooth' });
+  });
+  
+  document.getElementById('focus-programs-btn')?.addEventListener('click', () => {
+    document.getElementById('programs-section')?.scrollIntoView({ behavior: 'smooth' });
+  });
+  
+  document.getElementById('focus-settings-btn')?.addEventListener('click', () => {
+    document.getElementById('settings-section')?.scrollIntoView({ behavior: 'smooth' });
+  });
+</script>

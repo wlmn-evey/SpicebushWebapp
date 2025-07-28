@@ -1,0 +1,70 @@
+---
+import { Star } from 'lucide-astro';
+import { getCollection } from '../lib/content-db';
+
+// Get featured testimonials from Supabase
+const allTestimonials = await getCollection('testimonials');
+const featuredTestimonials = allTestimonials
+  .filter(testimonial => testimonial.data.featured === true)
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+  .slice(0, 3);
+
+// Fallback if no featured testimonials are available
+const displayTestimonials = featuredTestimonials.length > 0 ? featuredTestimonials : allTestimonials.slice(0, 3);
+---
+
+<!-- Social Proof Section -->
+<section class="py-16 bg-stone-beige">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl lg:text-4xl font-bold text-earth-brown mb-4">
+        What Families Are Saying
+      </h2>
+      <div class="flex justify-center items-center space-x-2 mb-6">
+        <div class="flex space-x-1">
+          <Star className="w-5 h-5 text-yellow-400 fill-current" />
+          <Star className="w-5 h-5 text-yellow-400 fill-current" />
+          <Star className="w-5 h-5 text-yellow-400 fill-current" />
+          <Star className="w-5 h-5 text-yellow-400 fill-current" />
+          <Star className="w-5 h-5 text-yellow-400 fill-current" />
+        </div>
+        <span class="text-earth-brown">Based on caregiver feedback</span>
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {displayTestimonials.map((testimonial, index) => (
+        <div class="bg-white p-8 rounded-lg shadow-sm hover:shadow-md transition-shadow" role="article" aria-labelledby={`testimonial-${index + 1}-name`}>
+          <div class="flex space-x-1 mb-4">
+            {Array.from({ length: testimonial.data.rating }, (_, i) => (
+              <Star className="w-4 h-4 text-yellow-400 fill-current" />
+            ))}
+          </div>
+          <div class="text-earth-brown mb-4 italic" set:html={testimonial.body} />
+          <div class="flex items-center space-x-3">
+            {testimonial.data.authorPhoto ? (
+              <img 
+                src={testimonial.data.authorPhoto}
+                alt={`Portrait of ${testimonial.data.author}`}
+                class="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div class="w-10 h-10 rounded-full bg-forest-canopy text-white flex items-center justify-center text-sm font-semibold">
+                {testimonial.data.author.split(' ').map(n => n[0]).join('')}
+              </div>
+            )}
+            <div>
+              <div class="font-semibold text-earth-brown" id={`testimonial-${index + 1}-name`}>
+                {testimonial.data.author}
+              </div>
+              <div class="text-sm text-earth-brown">
+                {testimonial.data.authorTitle || 'Parent'}
+                {testimonial.data.childAge && ` of ${testimonial.data.childAge}`}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

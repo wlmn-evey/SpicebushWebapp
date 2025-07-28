@@ -1,0 +1,92 @@
+---
+import { Heart, Users } from 'lucide-astro';
+---
+
+<section class="py-12 bg-stone-beige">
+  <div class="container mx-auto px-4 max-w-4xl">
+    <div class="bg-warm-white rounded-2xl p-8 lg:p-12 shadow-sm">
+      <!-- Header with Icon -->
+      <div class="flex items-center mb-8">
+        <div class="w-16 h-16 bg-forest-canopy rounded-full flex items-center justify-center mr-6 flex-shrink-0">
+          <Users className="w-8 h-8 text-white" />
+        </div>
+        <h2 class="text-3xl lg:text-4xl font-bold text-earth-brown">
+          Our Promise: Everyone Belongs
+        </h2>
+      </div>
+      
+      <!-- Main Policy Text -->
+      <div class="mb-8">
+        <p class="text-lg text-earth-brown leading-relaxed-plus mb-6 font-medium">
+          At Spicebush Montessori, we welcome children and families of every race, color, gender, national and ethnic origin, and sexual orientation into our learning community. We believe that our differences make us stronger, and we do not discriminate in any of our programs, policies, or practices.
+        </p>
+        
+        <p class="text-lg text-earth-brown leading-relaxed-plus mb-8 font-medium">
+          If you ever experience discrimination or bias in our community, we want to know. Below are ways to reach external organizations or contact our school directly—we're committed to making this right.
+        </p>
+      </div>
+      
+      <!-- Contact Links -->
+      <div class="space-y-4 mb-8">
+        <div class="text-center">
+          <a 
+            href="https://www.hhs.gov/ocr/index.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-block text-lg font-semibold text-sunlight-gold hover:text-yellow-600 transition-colors focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 rounded px-2 py-1 tracking-wide"
+          >
+            U.S. Office for Civil Rights
+          </a>
+        </div>
+        
+        <div class="text-center">
+          <a 
+            href="https://www.dhs.pa.gov/contact/DHS-Offices/Pages/OA-Bureau%20of%20Equal%20Opportunity.aspx"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-block text-lg font-semibold text-sunlight-gold hover:text-yellow-600 transition-colors focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 rounded px-2 py-1 tracking-wide"
+          >
+            PA Bureau of Equal Opportunity
+          </a>
+        </div>
+        
+        <div class="text-center">
+          <a 
+            href="https://www.phrc.pa.gov/File-a-Complaint/Pages/default.aspx"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-block text-lg font-semibold text-sunlight-gold hover:text-yellow-600 transition-colors focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 rounded px-2 py-1 tracking-wide"
+          >
+            Pennsylvania Human Rights Commission
+          </a>
+        </div>
+      </div>
+      
+      <!-- Additional Actions -->
+      <div class="space-y-4">
+        <p class="text-earth-brown text-center font-medium">
+          You can also share feedback anonymously with our teacher leaders using this 
+          <a 
+            href="https://docs.google.com/forms/d/e/1FAIpQLSd9x0mdbCKXBjbWuVme2SeRX9enMfUAf7Y_80VqFUDFs4qfRg/viewform?usp=sf_link"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-sunlight-gold hover:text-yellow-600 font-semibold transition-colors focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 rounded px-1 tracking-wide"
+          >
+            form
+          </a>.
+        </p>
+        
+        <div class="bg-sunlight-gold text-center py-4 px-6 rounded-lg">
+          <p class="text-white font-medium tracking-wide">
+            <a 
+              href="/contact"
+              class="text-white hover:text-gray-100 transition-colors focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-sunlight-gold rounded px-1"
+            >
+              You can always reach out to us directly if you've experienced bias or discrimination in our community.
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

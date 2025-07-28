@@ -1,0 +1,16 @@
+---
+// Redirect to magic link login by default
+return Astro.redirect('/auth/magic-login');
+---
+
+<Layout 
+  title="Sign In - Spicebush Montessori School"
+  description="Sign in to your Spicebush Montessori School administrative account."
+  keywords="login, sign in, admin, administration"
+>
+  <AuthForm 
+    type="login" 
+    title="Welcome Back" 
+    subtitle="Sign in to your account to continue"
+  />
+</Layout>

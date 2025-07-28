@@ -1,0 +1,91 @@
+# Netlify Configuration for Spicebush Montessori
+
+[build]
+  # Build command
+  command = "npm run build"
+  
+  # Directory to deploy (Astro outputs to dist/)
+  publish = "dist"
+  
+  # Node version
+  environment = { NODE_VERSION = "20" }
+
+[build.environment]
+  # Ensure npm doesn't look for a workspace root
+  NPM_FLAGS = "--prefix=/dev/null"
+
+# Production context
+[context.production]
+  environment = { NODE_ENV = "production" }
+
+# Branch deploy context
+[context.branch-deploy]
+  environment = { NODE_ENV = "development" }
+
+# Deploy preview context
+[context.deploy-preview]
+  environment = { NODE_ENV = "development" }
+
+# Headers for security and performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    
+    # HSTS (only enable after confirming HTTPS works)
+    # Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+# Cache control for static assets
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Redirects (example - adjust as needed)
+[[redirects]]
+  from = "/admin"
+  to = "/admin/login"
+  status = 302
+  conditions = {Role = ["admin"]}
+
+# 404 page
+[[redirects]]
+  from = "/*"
+  to = "/404"
+  status = 404
+
+# Functions directory (if using Netlify Functions)
+[functions]
+  directory = "netlify/functions"
+
+# Plugins
+[[plugins]]
+  # Lighthouse CI
+  package = "@netlify/plugin-lighthouse"
+  
+  [plugins.inputs]
+    # Performance budget
+    performance = 0.9
+    accessibility = 0.9
+    best-practices = 0.9
+    seo = 0.9
+
+# Forms (Netlify Forms - optional)
+[forms]
+  # If you want to use Netlify Forms for contact forms
+  # Otherwise, forms will use your configured email service

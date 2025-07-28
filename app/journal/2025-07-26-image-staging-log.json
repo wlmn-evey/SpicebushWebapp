@@ -1,0 +1,299 @@
+{
+  "timestamp": "2025-07-26T20:42:14.084Z",
+  "totalSelected": 58,
+  "successfullyCopied": 58,
+  "missing": 0,
+  "stagingPath": "/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/public/images/gallery-staging",
+  "files": [
+    {
+      "source": "IMG_8781.png",
+      "target": "gallery-staging/materials/materials-montessori-montessori-materials-img-8781-2113x1518.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_7509.jpg",
+      "target": "gallery-staging/group/group-montessori-collaboration-img-7509-2448x3264.jpg",
+      "status": "success"
+    },
+    {
+      "source": "IMG_6543.png",
+      "target": "gallery-staging/group/group-montessori-collaboration-img-6543-1933x1450.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_5131.jpg",
+      "target": "gallery-staging/practical/practical-montessori-practical-life-img-5131-3024x4032.jpg",
+      "status": "success"
+    },
+    {
+      "source": "IMG_9428.png",
+      "target": "gallery-staging/outdoor/outdoor-montessori-outdoor-education-img-9428-1310x1746.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_9472.png",
+      "target": "gallery-staging/outdoor/outdoor-montessori-outdoor-education-img-9472-1353x1862.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_9493.png",
+      "target": "gallery-staging/outdoor/outdoor-montessori-outdoor-education-img-9493-1729x1297.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_8329.png",
+      "target": "gallery-staging/outdoor/outdoor-montessori-outdoor-education-img-8329-1563x1662.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_9831.png",
+      "target": "gallery-staging/classroom/classroom-montessori-classroom-img-9831-1442x1922.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_9413.png",
+      "target": "gallery-staging/classroom/classroom-montessori-classroom-img-9413-1554x2072.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_8832.png",
+      "target": "gallery-staging/classroom/classroom-montessori-classroom-img-8832-1497x1296.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_8743.png",
+      "target": "gallery-staging/classroom/classroom-montessori-classroom-img-8743-1731x1055.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_8530.png",
+      "target": "gallery-staging/classroom/classroom-montessori-classroom-img-8530-1322x1762.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_9103.png",
+      "target": "gallery-staging/materials/materials-montessori-montessori-materials-img-9103-1350x1800.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_9835.png",
+      "target": "gallery-staging/group/group-montessori-collaboration-img-9835-1582x1187.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_8774.png",
+      "target": "gallery-staging/group/group-montessori-collaboration-img-8774-1322x1579.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_9687.png",
+      "target": "gallery-staging/individual/individual-montessori-concentration-img-9687-1585x1704.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_8832.png",
+      "target": "gallery-staging/individual/individual-montessori-concentration-img-8832-1497x1296.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_7380.png",
+      "target": "gallery-staging/outdoor/outdoor-montessori-outdoor-education-img-7380-1470x1870.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_6278.png",
+      "target": "gallery-staging/outdoor/outdoor-montessori-outdoor-education-img-6278-1395x1860.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_7150.png",
+      "target": "gallery-staging/classroom/classroom-montessori-classroom-img-7150-1617x1213.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_7417.png",
+      "target": "gallery-staging/materials/materials-montessori-montessori-materials-img-7417-1364x1818.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_7149.png",
+      "target": "gallery-staging/materials/materials-montessori-montessori-materials-img-7149-1666x1250.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_6998.png",
+      "target": "gallery-staging/materials/materials-montessori-montessori-materials-img-6998-1510x2013.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_6935.png",
+      "target": "gallery-staging/materials/materials-montessori-montessori-materials-img-6935-1343x1790.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_6703.png",
+      "target": "gallery-staging/materials/materials-montessori-montessori-materials-img-6703-1400x1763.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_6678.png",
+      "target": "gallery-staging/materials/materials-montessori-montessori-materials-img-6678-1499x1814.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_6599.png",
+      "target": "gallery-staging/group/group-montessori-collaboration-img-6599-1362x2213.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_6537.png",
+      "target": "gallery-staging/group/group-montessori-collaboration-img-6537-1485x1980.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_7919.png",
+      "target": "gallery-staging/individual/individual-montessori-concentration-img-7919-1508x2010.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_7895.png",
+      "target": "gallery-staging/individual/individual-montessori-concentration-img-7895-1503x2004.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_7893.png",
+      "target": "gallery-staging/individual/individual-montessori-concentration-img-7893-1304x1738.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_7803.png",
+      "target": "gallery-staging/individual/individual-montessori-concentration-img-7803-1483x1977.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_7293.png",
+      "target": "gallery-staging/individual/individual-montessori-concentration-img-7293-1732x2057.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_7291.png",
+      "target": "gallery-staging/individual/individual-montessori-concentration-img-7291-1770x1931.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_6989.png",
+      "target": "gallery-staging/individual/individual-montessori-concentration-img-6989-1423x1897.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_6858.png",
+      "target": "gallery-staging/art/art-montessori-art-img-6858-1482x1976.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_6382.png",
+      "target": "gallery-staging/art/art-montessori-art-img-6382-1429x1909.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_5980.png",
+      "target": "gallery-staging/art/art-montessori-art-img-5980-1578x2104.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_5922.png",
+      "target": "gallery-staging/art/art-montessori-art-img-5922-1508x1741.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_5739.png",
+      "target": "gallery-staging/art/art-montessori-art-img-5739-1363x1783.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_5526.png",
+      "target": "gallery-staging/art/art-montessori-art-img-5526-1563x1827.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_5469.png",
+      "target": "gallery-staging/art/art-montessori-art-img-5469-1872x1404.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_5458.png",
+      "target": "gallery-staging/art/art-montessori-art-img-5458-1306x1741.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_5397.png",
+      "target": "gallery-staging/practical/practical-montessori-practical-life-img-5397-1750x1313.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_4959.png",
+      "target": "gallery-staging/practical/practical-montessori-practical-life-img-4959-1340x1786.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_4709.png",
+      "target": "gallery-staging/practical/practical-montessori-practical-life-img-4709-1591x2121.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_4678.png",
+      "target": "gallery-staging/practical/practical-montessori-practical-life-img-4678-1842x1382.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_4621.png",
+      "target": "gallery-staging/practical/practical-montessori-practical-life-img-4621-1403x1809.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_4529.png",
+      "target": "gallery-staging/practical/practical-montessori-practical-life-img-4529-1573x2097.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_4415.png",
+      "target": "gallery-staging/practical/practical-montessori-practical-life-img-4415-1453x1937.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_4394.png",
+      "target": "gallery-staging/events/events-montessori-celebration-img-4394-1404x1872.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_4028.png",
+      "target": "gallery-staging/events/events-montessori-celebration-img-4028-1516x2021.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_3719.png",
+      "target": "gallery-staging/events/events-montessori-celebration-img-3719-1776x1332.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_3692.png",
+      "target": "gallery-staging/events/events-montessori-celebration-img-3692-1580x2106.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_3416.png",
+      "target": "gallery-staging/events/events-montessori-celebration-img-3416-1626x2168.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_3100.png",
+      "target": "gallery-staging/events/events-montessori-celebration-img-3100-1754x1341.png",
+      "status": "success"
+    },
+    {
+      "source": "IMG_3040.png",
+      "target": "gallery-staging/events/events-montessori-celebration-img-3040-1640x2187.png",
+      "status": "success"
+    }
+  ]
+}

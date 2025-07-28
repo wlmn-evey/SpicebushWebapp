@@ -1,0 +1,496 @@
+---
+// DEPRECATED: Use CMS instead at /admin/cms#/collections/staff
+return Astro.redirect('/admin/cms#/collections/staff');
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { ArrowLeft, Users, Plus, Edit, Trash2, Save, X, Eye, User } from 'lucide-astro';
+---
+
+<Layout 
+  title="Manage Teachers - Admin Panel"
+  description="Administrative interface for managing teacher leaders and their profiles."
+  keywords="admin, teacher management, staff profiles"
+>
+  <Header />
+  
+  <main id="main-content">
+    <!-- Admin Auth Check -->
+    <script>
+      import { auth } from '../../lib/supabase.ts';
+      
+      document.addEventListener('DOMContentLoaded', async function() {
+        try {
+          const user = await auth.getCurrentUser();
+          if (!user) {
+            window.location.href = '/auth/login';
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking authentication:', error);
+          window.location.href = '/auth/login';
+        }
+      });
+    </script>
+
+    <!-- Header -->
+    <section class="bg-gradient-to-br from-purple-500 to-purple-600 py-12">
+      <div class="container mx-auto px-4">
+        <div class="max-w-6xl mx-auto">
+          <!-- Back to Dashboard Navigation -->
+          <div class="mb-6">
+            <a href="/admin" class="inline-flex items-center text-purple-200 hover:text-white transition-colors group">
+              <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+              <span class="text-sm font-medium">Back to Admin Dashboard</span>
+            </a>
+          </div>
+          
+          <div>
+            <h1 class="text-3xl lg:text-4xl font-heading font-bold text-white mb-4 tracking-tight">
+              Manage Teacher Leaders
+            </h1>
+            <p class="text-purple-100 text-lg max-w-3xl">
+              Manage teacher profiles, bios, and information displayed on the website.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Management Interface -->
+    <section class="py-12 bg-white">
+      <div class="container mx-auto px-4 max-w-6xl">
+        
+        <!-- Quick Actions -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-earth-brown mb-1">Teacher Management</h2>
+              <p class="text-gray-600 text-sm">Manage teacher profiles and information</p>
+            </div>
+            <button 
+              id="add-teacher-btn"
+              class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Teacher
+            </button>
+          </div>
+        </div>
+
+        <!-- Teachers List -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+          <div class="flex items-center mb-6">
+            <Users className="w-6 h-6 text-purple-500 mr-3" />
+            <h2 class="text-2xl font-bold text-earth-brown">Teacher Leaders</h2>
+          </div>
+          
+          <div id="teachers-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Teachers will be loaded here -->
+          </div>
+          
+          <div id="loading-state" class="text-center py-8">
+            <p class="text-gray-500">Loading teachers...</p>
+          </div>
+          
+          <div id="empty-state" class="hidden text-center py-8">
+            <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p class="text-gray-500 text-lg mb-2">No teachers found</p>
+            <p class="text-gray-400 text-sm">Add your first teacher to get started</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Teacher Edit Modal -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 max-w-2xl shadow-lg rounded-md bg-white">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-200">
+          <h3 id="modal-title" class="text-lg font-bold text-earth-brown">Edit Teacher</h3>
+          <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <div id="modal-content" class="mt-4">
+          <form id="teacher-form" class="space-y-6">
+            <input type="hidden" id="teacher-id" />
+            
+            <div>
+              <label for="teacher-name" class="block text-sm font-medium text-earth-brown mb-2">
+                Full Name
+              </label>
+              <input 
+                type="text" 
+                id="teacher-name" 
+                required 
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Teacher's full name"
+              />
+            </div>
+            
+            <div>
+              <label for="teacher-slug" class="block text-sm font-medium text-earth-brown mb-2">
+                URL Slug (auto-generated)
+              </label>
+              <input 
+                type="text" 
+                id="teacher-slug" 
+                required 
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-50"
+                placeholder="url-friendly-name"
+                readonly
+              />
+            </div>
+            
+            <div>
+              <label for="teacher-title" class="block text-sm font-medium text-earth-brown mb-2">
+                Job Title
+              </label>
+              <input 
+                type="text" 
+                id="teacher-title" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Lead Teacher, Assistant Teacher, etc."
+              />
+            </div>
+            
+            <div>
+              <label for="teacher-email" class="block text-sm font-medium text-earth-brown mb-2">
+                Email Address
+              </label>
+              <input 
+                type="email" 
+                id="teacher-email" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="teacher@spicebushmontessori.org"
+              />
+            </div>
+            
+            <div>
+              <label for="teacher-pronouns" class="block text-sm font-medium text-earth-brown mb-2">
+                Pronouns
+              </label>
+              <input 
+                type="text" 
+                id="teacher-pronouns" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="They/Them, She/Her, He/Him, etc."
+              />
+            </div>
+            
+            <div>
+              <label for="teacher-photo-url" class="block text-sm font-medium text-earth-brown mb-2">
+                Profile Photo URL
+              </label>
+              <input 
+                type="url" 
+                id="teacher-photo-url" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="https://example.com/photo.jpg"
+              />
+              <p class="text-xs text-gray-500 mt-1">URL to the teacher's profile photo</p>
+            </div>
+            
+            <div>
+              <label for="teacher-description" class="block text-sm font-medium text-earth-brown mb-2">
+                Bio & Description
+              </label>
+              <textarea 
+                id="teacher-description" 
+                rows="8"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Teacher's bio and background (HTML supported)"
+              ></textarea>
+              <p class="text-xs text-gray-500 mt-1">You can use basic HTML tags like &lt;p&gt;, &lt;strong&gt;, &lt;em&gt;</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="teacher-display-order" class="block text-sm font-medium text-earth-brown mb-2">
+                  Display Order
+                </label>
+                <input 
+                  type="number" 
+                  id="teacher-display-order" 
+                  min="0"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="0"
+                />
+              </div>
+              <div class="flex items-end">
+                <label class="flex items-center">
+                  <input type="checkbox" id="teacher-active" checked class="mr-2 text-purple-500 focus:ring-purple-500" />
+                  <span class="text-sm text-earth-brown">Active (visible on website)</span>
+                </label>
+              </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4">
+              <button 
+                type="button" 
+                id="cancel-teacher-btn"
+                class="px-4 py-2 border border-gray-300 text-earth-brown rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                class="px-4 py-2 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors flex items-center"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Save Teacher
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <Footer />
+</Layout>
+
+<script>
+  import { supabase } from '../../lib/supabase.ts';
+
+  document.addEventListener('DOMContentLoaded', async function() {
+    const teachersGrid = document.getElementById('teachers-grid');
+    const loadingState = document.getElementById('loading-state');
+    const emptyState = document.getElementById('empty-state');
+    const editModal = document.getElementById('edit-modal');
+    const teacherForm = document.getElementById('teacher-form');
+    const addTeacherBtn = document.getElementById('add-teacher-btn');
+    const closeModalBtn = document.getElementById('close-modal');
+    const cancelTeacherBtn = document.getElementById('cancel-teacher-btn');
+    const teacherNameInput = document.getElementById('teacher-name');
+    const teacherSlugInput = document.getElementById('teacher-slug');
+
+    let teachers = [];
+
+    // Load teachers from database
+    async function loadTeachers() {
+      try {
+        const { data, error } = await supabase
+          .from('teacher_leaders')
+          .select('*')
+          .order('display_order, name');
+
+        if (error) throw error;
+
+        teachers = data || [];
+        renderTeachers();
+      } catch (error) {
+        console.error('Error loading teachers:', error);
+        showError('Failed to load teachers');
+      }
+    }
+
+    // Render teachers grid
+    function renderTeachers() {
+      loadingState.classList.add('hidden');
+      
+      if (teachers.length === 0) {
+        teachersGrid.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      teachersGrid.classList.remove('hidden');
+      
+      teachersGrid.innerHTML = teachers.map(teacher => `
+        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex items-center mb-4">
+            <div class="w-16 h-16 bg-purple-100 rounded-full overflow-hidden flex-shrink-0">
+              ${teacher.profile_photo_url ? 
+                `<img src="${teacher.profile_photo_url}" alt="${teacher.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.classList.add('bg-purple-500'); this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center\\'>\\n  <span class=\\'text-white text-lg font-bold\\'>${teacher.name.split(' ').map(n => n[0]).join('')}</span>\\n</div>';" />` :
+                `<div class="w-full h-full flex items-center justify-center">
+                  <User class="w-8 h-8 text-purple-500" />
+                </div>`
+              }
+            </div>
+            <div class="ml-4 flex-1">
+              <h3 class="font-semibold text-earth-brown text-lg">${teacher.name}</h3>
+              ${teacher.title ? `<p class="text-forest-canopy text-sm font-medium">${teacher.title}</p>` : ''}
+              ${teacher.pronouns ? `<p class="text-gray-600 text-sm">${teacher.pronouns}</p>` : ''}
+              ${teacher.email ? `<p class="text-gray-500 text-xs">${teacher.email}</p>` : ''}
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <div class="text-sm text-gray-600 line-clamp-3">
+              ${stripHtml(teacher.description || '').substring(0, 120)}${(teacher.description || '').length > 120 ? '...' : ''}
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="px-2 py-1 text-xs rounded-full ${teacher.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                ${teacher.active ? 'Active' : 'Inactive'}
+              </span>
+              <span class="text-xs text-gray-500">Order: ${teacher.display_order}</span>
+            </div>
+            <div class="flex space-x-2">
+              <button 
+                onclick="editTeacher('${teacher.id}')" 
+                class="text-purple-500 hover:text-purple-700 transition-colors"
+                title="Edit teacher"
+              >
+                <Edit class="w-4 h-4" />
+              </button>
+              <button 
+                onclick="deleteTeacher('${teacher.id}')" 
+                class="text-red-500 hover:text-red-700 transition-colors"
+                title="Delete teacher"
+              >
+                <Trash2 class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Helper function to strip HTML tags
+    function stripHtml(html) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || '';
+    }
+
+    // Generate slug from name
+    function generateSlug(name) {
+      return name
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    // Show/hide modal
+    function showModal(title) {
+      document.getElementById('modal-title').textContent = title;
+      editModal.classList.remove('hidden');
+    }
+
+    function hideModal() {
+      editModal.classList.add('hidden');
+      teacherForm.reset();
+      document.getElementById('teacher-id').value = '';
+    }
+
+    // Show error message
+    function showError(message) {
+      alert(message); // Simple error handling, could be improved with toast notifications
+    }
+
+    // Show success message
+    function showSuccess(message) {
+      alert(message); // Simple success handling, could be improved with toast notifications
+    }
+
+    // Auto-generate slug when name changes
+    teacherNameInput.addEventListener('input', function() {
+      teacherSlugInput.value = generateSlug(this.value);
+    });
+
+    // Add teacher button
+    addTeacherBtn.addEventListener('click', function() {
+      showModal('Add New Teacher');
+    });
+
+    // Close modal buttons
+    closeModalBtn.addEventListener('click', hideModal);
+    cancelTeacherBtn.addEventListener('click', hideModal);
+
+    // Form submission
+    teacherForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const teacherId = document.getElementById('teacher-id').value;
+      const teacherData = {
+        name: document.getElementById('teacher-name').value,
+        slug: document.getElementById('teacher-slug').value,
+        title: document.getElementById('teacher-title').value || null,
+        email: document.getElementById('teacher-email').value || null,
+        pronouns: document.getElementById('teacher-pronouns').value || null,
+        profile_photo_url: document.getElementById('teacher-photo-url').value || null,
+        description: document.getElementById('teacher-description').value || null,
+        display_order: parseInt(document.getElementById('teacher-display-order').value) || 0,
+        active: document.getElementById('teacher-active').checked
+      };
+
+      try {
+        if (teacherId) {
+          // Update existing teacher
+          const { error } = await supabase
+            .from('teacher_leaders')
+            .update(teacherData)
+            .eq('id', teacherId);
+          
+          if (error) throw error;
+          showSuccess('Teacher updated successfully!');
+        } else {
+          // Create new teacher
+          const { error } = await supabase
+            .from('teacher_leaders')
+            .insert([teacherData]);
+          
+          if (error) throw error;
+          showSuccess('Teacher added successfully!');
+        }
+        
+        hideModal();
+        loadTeachers();
+      } catch (error) {
+        console.error('Error saving teacher:', error);
+        showError('Error saving teacher: ' + error.message);
+      }
+    });
+
+    // Global functions for teacher actions
+    window.editTeacher = async function(id) {
+      const teacher = teachers.find(t => t.id === id);
+      if (!teacher) return;
+      
+      document.getElementById('teacher-id').value = teacher.id;
+      document.getElementById('teacher-name').value = teacher.name;
+      document.getElementById('teacher-slug').value = teacher.slug;
+      document.getElementById('teacher-title').value = teacher.title || '';
+      document.getElementById('teacher-email').value = teacher.email || '';
+      document.getElementById('teacher-pronouns').value = teacher.pronouns || '';
+      document.getElementById('teacher-photo-url').value = teacher.profile_photo_url || '';
+      document.getElementById('teacher-description').value = teacher.description || '';
+      document.getElementById('teacher-display-order').value = teacher.display_order;
+      document.getElementById('teacher-active').checked = teacher.active;
+      
+      showModal('Edit Teacher');
+    };
+
+    window.deleteTeacher = async function(id) {
+      const teacher = teachers.find(t => t.id === id);
+      if (!teacher) return;
+      
+      if (!confirm(`Are you sure you want to delete ${teacher.name}? This action cannot be undone.`)) return;
+      
+      try {
+        const { error } = await supabase
+          .from('teacher_leaders')
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+        
+        showSuccess('Teacher deleted successfully!');
+        loadTeachers();
+      } catch (error) {
+        console.error('Error deleting teacher:', error);
+        showError('Error deleting teacher: ' + error.message);
+      }
+    };
+
+    // Initialize
+    loadTeachers();
+  });
+</script>

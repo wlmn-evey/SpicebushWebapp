@@ -1,0 +1,183 @@
+---
+/**
+ * SelectField Component
+ * 
+ * A dropdown selection component with support for single and multiple selection,
+ * option groups, and custom styling. Provides consistent appearance across browsers.
+ * 
+ * @prop {string} name - The select name attribute
+ * @prop {string|string[]} value - The current value(s)
+ * @prop {Array} options - Array of options or option groups
+ * @prop {boolean} required - Whether the field is required
+ * @prop {boolean} disabled - Whether the field is disabled
+ * @prop {boolean} multiple - Whether multiple selection is allowed
+ * @prop {number} size - Number of visible options (for multiple select)
+ * @prop {string} placeholder - Placeholder text for empty selection
+ * @prop {string} className - Additional CSS classes
+ * @prop {string} fieldId - ID for the select (usually provided by FormField)
+ * @prop {string} ariaDescribedBy - IDs of elements that describe this select
+ */
+
+export interface SelectOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+}
+
+export interface SelectOptionGroup {
+  label: string;
+  options: SelectOption[];
+}
+
+export interface Props {
+  name: string;
+  value?: string | string[];
+  options: (SelectOption | SelectOptionGroup)[];
+  required?: boolean;
+  disabled?: boolean;
+  multiple?: boolean;
+  size?: number;
+  placeholder?: string;
+  className?: string;
+  fieldId?: string;
+  ariaDescribedBy?: string;
+}
+
+const {
+  name,
+  value = '',
+  options,
+  required = false,
+  disabled = false,
+  multiple = false,
+  size,
+  placeholder,
+  className = '',
+  fieldId,
+  ariaDescribedBy
+} = Astro.props;
+
+const selectId = fieldId || `field-${name}`;
+
+// Helper to check if an option is a group
+function isOptionGroup(option: SelectOption | SelectOptionGroup): option is SelectOptionGroup {
+  return 'options' in option;
+}
+
+// Helper to check if a value is selected
+function isSelected(optionValue: string, currentValue: string | string[]): boolean {
+  if (Array.isArray(currentValue)) {
+    return currentValue.includes(optionValue);
+  }
+  return optionValue === currentValue;
+}
+---
+
+<div class="select-wrapper">
+  <select
+    id={selectId}
+    name={name}
+    required={required}
+    disabled={disabled}
+    multiple={multiple}
+    size={size}
+    aria-describedby={ariaDescribedBy}
+    class={`select-input ${multiple ? 'select-input--multiple' : ''} ${className}`}
+  >
+    {placeholder && !multiple && (
+      <option value="" disabled selected={!value}>
+        {placeholder}
+      </option>
+    )}
+    
+    {options.map((option) => {
+      if (isOptionGroup(option)) {
+        return (
+          <optgroup label={option.label}>
+            {option.options.map((groupOption) => (
+              <option
+                value={groupOption.value}
+                disabled={groupOption.disabled}
+                selected={isSelected(groupOption.value, value)}
+              >
+                {groupOption.label}
+              </option>
+            ))}
+          </optgroup>
+        );
+      } else {
+        return (
+          <option
+            value={option.value}
+            disabled={option.disabled}
+            selected={isSelected(option.value, value)}
+          >
+            {option.label}
+          </option>
+        );
+      }
+    })}
+  </select>
+  
+  {!multiple && (
+    <div class="select-arrow" aria-hidden="true">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+      </svg>
+    </div>
+  )}
+</div>
+
+<style>
+  .select-wrapper {
+    @apply relative;
+  }
+  
+  .select-input {
+    @apply block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm;
+    @apply text-gray-900 bg-white;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+    @apply disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed;
+    @apply transition-colors duration-200;
+    @apply appearance-none cursor-pointer;
+  }
+  
+  /* Multiple select specific styles */
+  .select-input--multiple {
+    @apply pr-3 cursor-default;
+    @apply min-h-[100px];
+  }
+  
+  .select-input--multiple option {
+    @apply py-1 px-2;
+  }
+  
+  .select-input--multiple option:checked {
+    @apply bg-blue-500 text-white;
+  }
+  
+  /* Option group styles */
+  .select-input optgroup {
+    @apply font-semibold text-gray-900;
+  }
+  
+  .select-input optgroup option {
+    @apply font-normal pl-4;
+  }
+  
+  /* Custom arrow for single select */
+  .select-arrow {
+    @apply absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none;
+    @apply text-gray-400;
+  }
+  
+  /* Invalid state (HTML5 validation) */
+  .select-input:invalid:not(:placeholder-shown) {
+    @apply border-red-300 focus:border-red-500 focus:ring-red-500;
+  }
+  
+  /* Disabled state for arrow */
+  .select-wrapper:has(.select-input:disabled) .select-arrow {
+    @apply text-gray-300;
+  }
+</style>

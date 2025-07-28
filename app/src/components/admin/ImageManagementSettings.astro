@@ -1,0 +1,194 @@
+---
+import { Database, Key, Shield, Eye, EyeOff } from 'lucide-astro';
+---
+
+<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+  <div class="flex items-center mb-6">
+    <Database className="w-6 h-6 text-blue-600 mr-3" />
+    <h3 class="text-xl font-semibold text-earth-brown">Image Management (Cloudinary)</h3>
+  </div>
+  
+  <form id="image-settings-form" class="space-y-6">
+    <div>
+      <label class="block text-sm font-medium text-earth-brown mb-2">Cloud Name</label>
+      <input
+        type="text"
+        id="cloudinary-cloud-name"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        placeholder="your-cloud-name"
+      />
+      <p class="text-xs text-gray-500 mt-1">Your Cloudinary cloud name (required for image management)</p>
+    </div>
+    
+    <div>
+      <label class="block text-sm font-medium text-earth-brown mb-2">Upload Preset</label>
+      <input
+        type="text"
+        id="cloudinary-upload-preset"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        placeholder="preset-name"
+      />
+      <p class="text-xs text-gray-500 mt-1">Unsigned upload preset created in your Cloudinary dashboard</p>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-earth-brown mb-2">Image Quality</label>
+      <select
+        id="cloudinary-image-quality"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      >
+        <option value="auto">Auto (recommended)</option>
+        <option value="90">High (90%)</option>
+        <option value="80">Medium (80%)</option>
+        <option value="60">Low (60%)</option>
+      </select>
+      <p class="text-xs text-gray-500 mt-1">Quality setting for uploaded images</p>
+    </div>
+
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+      <div class="flex items-start">
+        <Shield className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+        <div>
+          <h4 class="text-sm font-medium text-yellow-800">Required for Admin Image Management</h4>
+          <p class="text-sm text-yellow-700 mt-1">
+            These settings are needed to enable image management functionality for administrators.
+            You'll need to <a href="https://cloudinary.com/console" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">create a Cloudinary account</a> if you don't have one.
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <button 
+      type="submit" 
+      class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+    >
+      Save Image Settings
+    </button>
+  </form>
+</div>
+
+<script>
+  import { supabase } from '../../lib/supabase.ts';
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('image-settings-form');
+    const cloudNameInput = document.getElementById('cloudinary-cloud-name');
+    const uploadPresetInput = document.getElementById('cloudinary-upload-preset');
+    const imageQualitySelect = document.getElementById('cloudinary-image-quality');
+
+    // Load settings
+    loadImageSettings();
+    
+    // Form submission
+    if (form) {
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await saveImageSettings();
+      });
+    }
+    
+    async function loadImageSettings() {
+      try {
+        const { data, error } = await supabase
+          .from('admin_settings')
+          .select('setting_key, setting_value')
+          .in('setting_key', [
+            'cloudinary_cloud_name', 
+            'cloudinary_upload_preset',
+            'default_image_quality',
+            'max_file_size'
+          ]);
+        
+        if (error) throw error;
+        
+        if (data) {
+          data.forEach(setting => {
+            let value;
+            try {
+              value = JSON.parse(setting.setting_value);
+            } catch {
+              value = setting.setting_value;
+            }
+            
+            if (setting.setting_key === 'cloudinary_cloud_name' && cloudNameInput) {
+              cloudNameInput.value = value || '';
+            }
+            
+            if (setting.setting_key === 'cloudinary_upload_preset' && uploadPresetInput) {
+              uploadPresetInput.value = value || '';
+            }
+            
+            if (setting.setting_key === 'default_image_quality' && imageQualitySelect) {
+              // Default to 'auto' if not set
+              imageQualitySelect.value = value || 'auto';
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error loading image settings:', error);
+      }
+    }
+    
+    async function saveImageSettings() {
+      try {
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalText = submitButton.textContent;
+        submitButton.textContent = 'Saving...';
+        submitButton.disabled = true;
+
+        const settings = [
+          {
+            setting_key: 'cloudinary_cloud_name',
+            setting_value: JSON.stringify(cloudNameInput.value),
+            setting_category: 'image_management',
+            description: 'Cloudinary cloud name for image uploads'
+          },
+          {
+            setting_key: 'cloudinary_upload_preset',
+            setting_value: JSON.stringify(uploadPresetInput.value),
+            setting_category: 'image_management',
+            description: 'Cloudinary unsigned upload preset name'
+          },
+          {
+            setting_key: 'default_image_quality',
+            setting_value: JSON.stringify(imageQualitySelect.value),
+            setting_category: 'image_management',
+            description: 'Default quality setting for uploaded images'
+          }
+        ];
+        
+        // Batch upsert all settings at once
+        const { data, error } = await supabase
+          .from('admin_settings')
+          .upsert(settings, { 
+            onConflict: 'setting_key',
+            returning: 'minimal'
+          });
+          
+        if (error) throw error;
+        
+        // Log success for debugging
+        // Show success state
+        submitButton.textContent = 'Saved!';
+        submitButton.classList.add('bg-green-600');
+        submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        
+        setTimeout(() => {
+          submitButton.textContent = originalText;
+          submitButton.disabled = false;
+          submitButton.classList.remove('bg-green-600');
+          submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Error saving image settings:', error);
+        alert(`Error saving settings: ${error.message || 'Unknown error'}. Please try again.`);
+        
+        // Reset button state
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.textContent = 'Save Image Settings';
+        submitButton.disabled = false;
+      }
+    }
+  });
+</script>

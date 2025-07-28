@@ -1,0 +1,748 @@
+---
+export const prerender = true;
+
+import { getEntry, getCollection } from 'astro:content';
+
+// Get all the data we need
+const schoolInfo = await getEntry('school-info', 'general');
+const hoursCollection = await getCollection('hours');
+const tuitionPrograms = await getCollection('tuition', (entry) => entry.data.type === 'program');
+const tuitionRates = await getCollection('tuition', (entry) => entry.data.type === 'rate');
+
+// Sort hours by order
+const sortedHours = hoursCollection.sort((a, b) => a.data.order - b.data.order);
+
+// Get today's hours
+const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+const todayHours = sortedHours.find(h => h.data.day === today);
+
+// Constants
+const applicationLink = "https://www.transparentclassroom.com/s/4693/online_applications/new";
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spicebush Montessori School - Coming Soon</title>
+  <meta name="description" content="Spicebush Montessori School in Glen Mills, PA. Inclusive Montessori education for ages 3-6 with income-based tuition. Apply now!">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --moss-green: #68a063;
+      --dark-green: #1a4d35;
+      --light-green: #e8f5e9;
+      --cream: #fdfbf7;
+      --gray: #666;
+      --border-color: #e0e0e0;
+    }
+
+    body {
+      font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: var(--cream);
+    }
+
+    /* Header Section */
+    .header {
+      background: linear-gradient(135deg, var(--light-green) 0%, #c8e6c9 100%);
+      padding: 3rem 1rem 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(104, 160, 99, 0.1) 0%, transparent 70%);
+      animation: rotate 30s linear infinite;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .logo {
+      width: 150px;
+      height: 150px;
+      margin: 0 auto 1.5rem;
+      display: block;
+      position: relative;
+      z-index: 1;
+      animation: logoFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: var(--dark-green);
+      margin-bottom: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .tagline {
+      font-size: 1.25rem;
+      color: var(--gray);
+      margin-bottom: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .launch-notice {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 0.75rem 1.5rem;
+      border-radius: 30px;
+      font-weight: 600;
+      color: var(--moss-green);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Quick Info Cards */
+    .quick-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: -3rem auto 4rem;
+      padding: 0 1rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .info-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .info-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .info-card-icon {
+      width: 50px;
+      height: 50px;
+      margin: 0 auto 1rem;
+      background: var(--light-green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .info-card h3 {
+      color: var(--dark-green);
+      margin-bottom: 0.5rem;
+      font-size: 1.25rem;
+    }
+
+    .info-card p {
+      color: var(--gray);
+      font-size: 1rem;
+    }
+
+    .info-card a {
+      color: var(--moss-green);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .info-card a:hover {
+      text-decoration: underline;
+    }
+
+    /* Apply Button */
+    .apply-button {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--moss-green) 0%, #5a8c55 100%);
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-top: 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .apply-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(104, 160, 99, 0.3);
+    }
+
+    /* Content Sections */
+    .section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 4rem 1rem;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .section-header h2 {
+      font-size: 2rem;
+      color: var(--dark-green);
+      margin-bottom: 0.5rem;
+    }
+
+    .section-header p {
+      color: var(--gray);
+      font-size: 1.1rem;
+    }
+
+    /* About Section */
+    .about-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .about-text h3 {
+      color: var(--dark-green);
+      margin-bottom: 1rem;
+    }
+
+    .about-text p {
+      color: var(--gray);
+      margin-bottom: 1rem;
+    }
+
+    .values-list {
+      list-style: none;
+      margin-top: 1.5rem;
+    }
+
+    .values-list li {
+      padding: 0.5rem 0;
+      padding-left: 2rem;
+      position: relative;
+      color: var(--gray);
+    }
+
+    .values-list li::before {
+      content: '🌱';
+      position: absolute;
+      left: 0;
+    }
+
+    /* Programs Section */
+    .programs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .program-card {
+      background: white;
+      border-radius: 15px;
+      padding: 2rem;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s ease;
+    }
+
+    .program-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .program-card h3 {
+      color: var(--dark-green);
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+
+    .program-details {
+      color: var(--gray);
+      margin-bottom: 1rem;
+    }
+
+    .program-details strong {
+      color: var(--dark-green);
+    }
+
+    .tuition-range {
+      background: var(--light-green);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1rem;
+    }
+
+    .tuition-range h4 {
+      color: var(--dark-green);
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .tuition-range p {
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+
+    /* Contact Section */
+    .contact-section {
+      background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+      border-radius: 20px;
+      padding: 3rem;
+      margin-top: 4rem;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    .contact-info h3 {
+      color: var(--dark-green);
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+    }
+
+    .contact-item {
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: start;
+      gap: 1rem;
+    }
+
+    .contact-item-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--light-green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .contact-item-content h4 {
+      color: var(--dark-green);
+      margin-bottom: 0.25rem;
+    }
+
+    .contact-item-content p {
+      color: var(--gray);
+    }
+
+    .contact-item-content a {
+      color: var(--moss-green);
+      text-decoration: none;
+    }
+
+    .contact-item-content a:hover {
+      text-decoration: underline;
+    }
+
+    /* Contact Form */
+    .contact-form {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .contact-form h3 {
+      color: var(--dark-green);
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      color: var(--dark-green);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--moss-green);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .submit-button {
+      background: linear-gradient(135deg, var(--moss-green) 0%, #5a8c55 100%);
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .submit-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(104, 160, 99, 0.3);
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--dark-green);
+      color: white;
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+
+    .footer p {
+      margin-bottom: 0.5rem;
+      opacity: 0.9;
+    }
+
+    .footer a {
+      color: #a7d49f;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      .about-content,
+      .contact-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .quick-info {
+        margin-top: -2rem;
+      }
+
+      .section {
+        padding: 3rem 1rem;
+      }
+
+      .contact-section {
+        padding: 2rem 1rem;
+      }
+    }
+
+    /* Animations */
+    .fade-in {
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+    .stagger-4 { animation-delay: 0.4s; }
+  </style>
+</head>
+<body>
+  <!-- Header Section -->
+  <header class="header">
+    <img src="/images/optimized/homepage/homepage-spicebush-logo-brand-identity-800x800.webp" alt="Spicebush Montessori School" class="logo">
+    <h1>Spicebush Montessori School</h1>
+    <p class="tagline">Nurturing Young Minds in Glen Mills, PA</p>
+    <div class="launch-notice">🚀 New Website Coming Soon!</div>
+  </header>
+
+  <!-- Quick Info Cards -->
+  <section class="quick-info">
+    <div class="info-card fade-in stagger-1">
+      <div class="info-card-icon">👶</div>
+      <h3>Ages Served</h3>
+      <p>{schoolInfo?.data.agesServed || "3-6 years old"}</p>
+      <p>Preschool & Primary</p>
+    </div>
+
+    <div class="info-card fade-in stagger-2">
+      <div class="info-card-icon">🕐</div>
+      <h3>School Hours</h3>
+      <p>
+        {todayHours && !todayHours.data.is_closed 
+          ? `Today: ${todayHours.data.open_time} - ${todayHours.data.close_time}`
+          : "Mon-Thu: 8:00 AM - 5:30 PM"}
+      </p>
+      {(!todayHours || todayHours.data.is_closed) && <p>Fri: 8:00 AM - 3:00 PM</p>}
+      <p>Extended care available</p>
+    </div>
+
+    <div class="info-card fade-in stagger-3">
+      <div class="info-card-icon">📞</div>
+      <h3>Contact Us</h3>
+      <p><a href={`tel:${schoolInfo?.data.phone}`}>{schoolInfo?.data.phone}</a></p>
+      <p><a href={`mailto:${schoolInfo?.data.email}`}>{schoolInfo?.data.email}</a></p>
+    </div>
+
+    <div class="info-card fade-in stagger-4">
+      <div class="info-card-icon">📝</div>
+      <h3>Apply Now</h3>
+      <p>Enrollment is open!</p>
+      <a href={applicationLink} target="_blank" rel="noopener noreferrer" class="apply-button">
+        Start Application
+      </a>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="section">
+    <div class="section-header">
+      <h2>About Spicebush Montessori</h2>
+      <p>Inclusive, individualized education rooted in Montessori philosophy</p>
+    </div>
+    
+    <div class="about-content">
+      <div class="about-text">
+        <h3>Our Mission</h3>
+        <p>
+          Spicebush Montessori School provides authentic Montessori education in a nurturing, 
+          inclusive environment. We believe every child deserves access to quality early education, 
+          regardless of family income.
+        </p>
+        <p>
+          Our unique FIT (Family Income Tuition) model ensures that Montessori education is 
+          accessible to all families in our community. We celebrate diversity and support each 
+          child's individual journey of discovery and growth.
+        </p>
+        
+        <h3>Our Values (SPICES)</h3>
+        <ul class="values-list">
+          <li><strong>Social Justice</strong> - Fairness and equity for all</li>
+          <li><strong>Peace</strong> - Fostering harmony and understanding</li>
+          <li><strong>Inclusion</strong> - Welcoming all learners</li>
+          <li><strong>Community</strong> - Building connections</li>
+          <li><strong>Environment</strong> - Caring for our world</li>
+          <li><strong>Simplicity</strong> - Finding joy in the essential</li>
+        </ul>
+      </div>
+      
+      <div class="about-image">
+        <img src="/images/homepage/montessori-numbers.png" alt="Children learning with Montessori materials" style="width: 100%; border-radius: 15px;">
+      </div>
+    </div>
+  </section>
+
+  <!-- Programs Section -->
+  <section class="section" style="background: var(--light-green); margin: 0; padding: 4rem 1rem;">
+    <div class="section-header">
+      <h2>Our Programs</h2>
+      <p>Flexible options to meet your family's needs</p>
+    </div>
+    
+    <div class="programs-grid">
+      {tuitionPrograms.map((program) => {
+        // Try multiple ways to match program with rates
+        const rates = tuitionRates.filter(r => 
+          r.data.program_id === program.id || 
+          r.data.program_id === program.id.replace('-program', '') ||
+          r.data.program_id === program.data.name
+        );
+        
+        // Use reasonable defaults if no rates found
+        let minRate = 200;
+        let maxRate = 1800;
+        
+        if (rates.length > 0) {
+          const prices = rates.map(r => r.data.tuition_price || 0).filter(p => p > 0);
+          if (prices.length > 0) {
+            minRate = Math.min(...prices);
+            maxRate = Math.max(...prices);
+          }
+        }
+        
+        return (
+          <div class="program-card">
+            <h3>{program.data.name}</h3>
+            <div class="program-details">
+              <p><strong>Schedule:</strong> {program.data.days_per_week} days/week</p>
+              <p><strong>Hours:</strong> {program.data.daily_hours} hours/day</p>
+              <p>{program.data.description}</p>
+            </div>
+            <div class="tuition-range">
+              <h4>Tuition Range (FIT Model)</h4>
+              <p>${minRate}/month - ${maxRate}/month</p>
+              <p>Based on family income & size</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+    
+    <div style="text-align: center; margin-top: 2rem;">
+      <p style="color: var(--gray); margin-bottom: 1rem;">
+        Our Family Income Tuition (FIT) model ensures every family pays what they can afford.
+      </p>
+      <a href={applicationLink} target="_blank" rel="noopener noreferrer" class="apply-button">
+        Apply Now to Learn Your Tuition
+      </a>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="section">
+    <div class="contact-section">
+      <div class="section-header">
+        <h2>Get in Touch</h2>
+        <p>We'd love to hear from you!</p>
+      </div>
+      
+      <div class="contact-grid">
+        <div class="contact-info">
+          <h3>Contact Information</h3>
+          
+          <div class="contact-item">
+            <div class="contact-item-icon">📍</div>
+            <div class="contact-item-content">
+              <h4>Visit Us</h4>
+              <p>
+                {schoolInfo?.data.address.street}<br>
+                {schoolInfo?.data.address.city}, {schoolInfo?.data.address.state} {schoolInfo?.data.address.zip}
+              </p>
+            </div>
+          </div>
+          
+          <div class="contact-item">
+            <div class="contact-item-icon">📞</div>
+            <div class="contact-item-content">
+              <h4>Call Us</h4>
+              <p><a href={`tel:${schoolInfo?.data.phone}`}>{schoolInfo?.data.phone}</a></p>
+              <p>Mon-Fri: 8:00 AM - 5:00 PM</p>
+            </div>
+          </div>
+          
+          <div class="contact-item">
+            <div class="contact-item-icon">✉️</div>
+            <div class="contact-item-content">
+              <h4>Email Us</h4>
+              <p><a href={`mailto:${schoolInfo?.data.email}`}>{schoolInfo?.data.email}</a></p>
+            </div>
+          </div>
+          
+          <div class="contact-item">
+            <div class="contact-item-icon">🕐</div>
+            <div class="contact-item-content">
+              <h4>School Hours</h4>
+              {sortedHours.map((hour) => (
+                <p>
+                  {hour.data.day}: {hour.data.is_closed ? 'Closed' : `${hour.data.open_time} - ${hour.data.close_time}`}
+                  {hour.data.note && ` (${hour.data.note})`}
+                </p>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        <div class="contact-form">
+          <h3>Send Us a Message</h3>
+          <form name="coming-soon-contact" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+            <input type="hidden" name="form-name" value="coming-soon-contact">
+            <p style="display: none;">
+              <label>Don't fill this out: <input name="bot-field"></label>
+            </p>
+            
+            <div class="form-group">
+              <label for="name">Your Name</label>
+              <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="phone">Phone Number (Optional)</label>
+              <input type="tel" id="phone" name="phone">
+            </div>
+            
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea id="message" name="message" required placeholder="Tell us about your child and what you're looking for..."></textarea>
+            </div>
+            
+            <button type="submit" class="submit-button">Send Message</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>© 2025 Spicebush Montessori School</p>
+    <p>A 501(c)(3) Non-Profit Organization | EIN: {schoolInfo?.data.ein || "88-0565930"}</p>
+    <p>
+      <a href="/non-discrimination-policy">Non-Discrimination Policy</a> | 
+      <a href="/privacy-policy">Privacy Policy</a>
+    </p>
+    <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
+      We admit students of any race, color, national and ethnic origin to all the rights, 
+      privileges, programs, and activities generally accorded or made available to students at the school.
+    </p>
+  </footer>
+</body>
+</html>

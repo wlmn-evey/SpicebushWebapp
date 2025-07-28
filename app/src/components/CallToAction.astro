@@ -1,0 +1,64 @@
+---
+import { Calendar, Phone, Mail } from 'lucide-astro';
+---
+
+<!-- CTA Section -->
+<section class="py-16 bg-forest-canopy text-white" id="contact">
+  <div class="container mx-auto px-4 text-center">
+    <h2 class="text-3xl lg:text-4xl font-heading font-bold mb-6 tracking-tight">
+      Come See Our Community in Action
+    </h2>
+    <p class="text-lg text-green-100 mb-8 max-w-3xl mx-auto leading-relaxed-plus font-light">
+      The best way to understand what we're about is to visit. Watch the children at work, meet our teachers, and feel the warmth of our community for yourself.
+    </p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-12">
+      <!-- Schedule Tour -->
+      <div class="text-center" role="region" aria-labelledby="schedule-tour-heading">
+        <div class="w-16 h-16 bg-sunlight-gold rounded-full flex items-center justify-center mx-auto mb-4">
+          <Calendar className="w-8 h-8 text-white" />
+        </div>
+        <h3 class="text-xl font-semibold mb-2" id="schedule-tour-heading">Come for a Visit</h3>
+        <p class="text-green-100 mb-4 font-light">See our children at work and feel the magic of our environment</p>
+        <a 
+          href="/admissions/schedule-tour" 
+          class="text-sunlight-gold hover:text-yellow-300 font-semibold focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 focus:ring-offset-forest-canopy rounded px-2 py-1"
+        >
+          Schedule Your Visit →
+        </a>
+      </div>
+      
+      <!-- Call Us -->
+      <div class="text-center" role="region" aria-labelledby="call-us-heading">
+        <div class="w-16 h-16 bg-sunlight-gold rounded-full flex items-center justify-center mx-auto mb-4">
+          <Phone className="w-8 h-8 text-white" />
+        </div>
+        <h3 class="text-xl font-semibold mb-2" id="call-us-heading">Let's Talk</h3>
+        <p class="text-green-100 mb-4 font-light">We'd love to hear about your child and answer your questions</p>
+        <a 
+          href="tel:484-202-0712" 
+          class="text-sunlight-gold hover:text-yellow-300 font-semibold focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 focus:ring-offset-forest-canopy rounded px-2 py-1"
+        >
+          <span class="sr-only">Call us at </span>
+          (484) 202-0712
+        </a>
+      </div>
+      
+      <!-- Email Us -->
+      <div class="text-center" role="region" aria-labelledby="email-us-heading">
+        <div class="w-16 h-16 bg-sunlight-gold rounded-full flex items-center justify-center mx-auto mb-4">
+          <Mail className="w-8 h-8 text-white" />
+        </div>
+        <h3 class="text-xl font-semibold mb-2" id="email-us-heading">Send a Message</h3>
+        <p class="text-green-100 mb-4 font-light">Ask anything—we're here to help you learn about our community</p>
+        <a 
+          href="mailto:information@spicebushmontessori.org" 
+          class="text-sunlight-gold hover:text-yellow-300 font-semibold focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 focus:ring-offset-forest-canopy rounded px-2 py-1"
+        >
+          Say Hello →
+        </a>
+      </div>
+    </div>
+    
+  </div>
+</section>

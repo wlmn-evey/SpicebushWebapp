@@ -1,0 +1,423 @@
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  line-height: 1.6;
+  font-feature-settings: "kern" 1, "liga" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography enhancements for natural feel */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', 'Nunito', system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+h1 {
+  font-weight: 700;
+  letter-spacing: -0.05em;
+}
+
+h2 {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+p {
+  line-height: 1.75;
+  font-weight: 400;
+}
+
+/* Make text feel more natural and readable */
+.text-natural {
+  line-height: 1.75;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.text-warm {
+  color: #2E2E2E;
+  font-weight: 500;
+}
+
+.heading-playful {
+  font-family: 'Poppins', 'Nunito', system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Focus styles for accessibility */
+
+/* Image hover effects */
+.hover-zoom {
+  overflow: hidden;
+}
+
+.hover-zoom img {
+  transition: transform 0.5s ease;
+}
+
+.hover-zoom:hover img {
+  transform: scale(1.05);
+}
+
+/* Parallax effect for browsers that support it */
+@media (prefers-reduced-motion: no-preference) {
+  .parallax-container {
+    transform: translateY(0);
+    will-change: transform;
+  }
+}
+
+/* Image grid gallery styles */
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.image-grid-item {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 4/3;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.image-grid-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Animation utilities */
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.8s ease-in-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* =========================================
+   ADMIN IMAGE MANAGEMENT STYLES
+   ========================================= */
+
+/* Admin overlay styles are now included in the component */
+.admin-success-toast {
+  @apply fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300;
+}
+
+.admin-success-toast.show {
+  @apply translate-x-0;
+}
+
+/* Device preview specific styles */
+.device-preview img {
+  transition: all 0.3s ease;
+}
+
+.device-tab.active {
+  @apply bg-forest-canopy text-white;
+}
+
+/* Position preview overlays */
+.position-overlay {
+  @apply absolute inset-0 pointer-events-none;
+}
+
+.position-overlay.mobile {
+  @apply bg-blue-500 bg-opacity-10 border-2 border-blue-500;
+}
+
+.position-overlay.tablet {
+  @apply bg-green-500 bg-opacity-10 border-2 border-green-500;
+}
+
+.position-overlay.desktop {
+  @apply bg-purple-500 bg-opacity-10 border-2 border-purple-500;
+}
+
+/* =========================================
+   TUITION CALCULATOR STYLES
+   ========================================= */
+
+/* Modern Program Option Cards */
+.program-card {
+  @apply bg-white border border-gray-200 rounded-lg p-6 transition-all duration-200 shadow-sm relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.program-card:hover {
+  @apply border-forest-canopy shadow-md;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.program-card.tuition-d {
+  @apply border-green-500 bg-green-50;
+}
+
+.program-card.tuition-d:hover {
+  @apply border-green-600;
+}
+
+/* Card Header */
+.program-header {
+  @apply flex flex-col gap-4 mb-6;
+}
+
+.program-title {
+  @apply text-xl font-bold text-earth-brown leading-tight;
+}
+
+.program-description {
+  @apply text-sm text-gray-600 leading-relaxed mb-3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.program-rate-badge {
+  @apply inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-forest-canopy text-white self-start;
+}
+
+.program-rate-badge.tuition-d {
+  @apply bg-green-600;
+}
+
+/* Price Display */
+.price-section {
+  @apply text-center py-4 border-t border-gray-100;
+}
+
+.program-price {
+  @apply text-3xl font-bold text-forest-canopy leading-none mb-1;
+}
+
+.program-price.tuition-d {
+  @apply text-green-600;
+}
+
+.program-monthly {
+  @apply text-sm text-gray-600 font-normal;
+}
+
+.savings-badge {
+  @apply inline-block px-2 py-1 rounded text-xs font-medium mt-2 bg-orange-100 text-orange-800;
+}
+
+/* Option Buttons */
+.option-buttons {
+  @apply grid gap-2 my-6 p-4 bg-gray-50 rounded-lg;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.option-btn {
+  @apply px-4 py-3 border border-gray-200 rounded-lg bg-white text-sm font-medium cursor-pointer transition-all duration-200 text-center min-h-[50px] text-earth-brown;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.3;
+}
+
+.option-btn:hover {
+  @apply border-forest-canopy;
+}
+
+.option-btn.active {
+  @apply bg-forest-canopy text-white border-forest-canopy font-semibold;
+}
+
+.option-btn.active:hover {
+  @apply bg-moss-green -translate-y-1 scale-[1.02];
+}
+
+/* Enroll Button */
+.enroll-button {
+  @apply w-full bg-sunlight-gold text-white px-6 py-3 rounded-lg font-semibold text-base text-center block transition-all duration-200 border-0 cursor-pointer;
+}
+
+.enroll-button:hover {
+  @apply bg-orange-600;
+}
+
+.enroll-button:active {
+  @apply bg-orange-700;
+}
+
+/* Table Styling */
+/* Table Row Styling */
+.table-row {
+  @apply border-b border-gray-200 transition-colors duration-200;
+}
+
+.table-row:nth-child(odd) {
+  @apply bg-white;
+}
+
+.table-row:nth-child(even) {
+  @apply bg-stone-beige;
+}
+
+.table-row:hover {
+  @apply bg-blue-50;
+}
+
+/* Rate Information Styling */
+.rate-info {
+  @apply flex flex-col items-start gap-2 text-left;
+}
+
+.rate-name {
+  @apply font-semibold text-base text-earth-brown leading-tight;
+}
+
+.rate-program {
+  @apply text-sm text-gray-600 font-normal;
+}
+
+.rate-price {
+  @apply text-lg font-bold text-forest-canopy mt-1;
+}
+
+/* Income Threshold Styling */
+.income-cell {
+  @apply font-semibold text-earth-brown;
+}
+
+.income-amount {
+  @apply text-base leading-tight;
+}
+
+.threshold-symbol {
+  @apply text-sm opacity-80 mr-1;
+}
+
+/* Highlight States */
+.family-column.highlighted {
+  @apply bg-sunlight-gold text-forest-canopy;
+}
+
+.table-row .highlighted {
+  @apply bg-yellow-50 border-l-4 border-r-4 border-sunlight-gold font-semibold text-forest-canopy;
+}
+
+/* Button States */
+.family-size-btn.active {
+  @apply bg-sunlight-gold text-white font-semibold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  #program-results {
+    @apply grid-cols-1 gap-8;
+  }
+}
+
+@media (max-width: 768px) {
+  .program-card {
+    @apply p-4 mb-4;
+  }
+
+  .program-title {
+    @apply text-lg;
+  }
+
+  .program-price {
+    @apply text-2xl;
+  }
+
+  .option-buttons {
+    @apply grid-cols-1 p-3 gap-2;
+  }
+
+  .program-header {
+    @apply gap-3;
+  }
+
+  .option-btn {
+    @apply px-3 py-2 min-h-[40px] text-sm;
+  }
+
+  .enroll-button {
+    @apply px-4 py-3 text-sm;
+  }
+}
+
+@media (max-width: 480px) {
+  .program-card {
+    @apply p-3 rounded-lg;
+  }
+
+  .option-btn {
+    @apply px-2 py-2 text-xs;
+  }
+}
+
+/* Loading states */
+.loading-row {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Hero Section Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.hero-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.hero-float-delay {
+  animation: float 3s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+/* Smooth scroll behavior for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus states for accessibility */
+.option-btn:focus,
+.enroll-button:focus {
+  @apply outline-2 outline-forest-canopy outline-offset-2;
+}
+
+.program-card:focus-within {
+  @apply ring-2 ring-forest-canopy ring-opacity-50;
+}

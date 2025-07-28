@@ -1,0 +1,263 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { checkAdminAuth } from '../../lib/admin-auth-check';
+
+// Check if user is authenticated and has admin access
+const { isAuthenticated, user } = await checkAdminAuth(Astro);
+
+if (!isAuthenticated) {
+  return Astro.redirect('/auth/login?redirect=/admin/cms');
+}
+---
+
+<Layout title="Content Management System - Spicebush Montessori">
+  <main class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+          <div class="flex items-center">
+            <h1 class="text-2xl font-bold text-gray-900">Content Management</h1>
+            <span class="ml-3 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+              Admin Access
+            </span>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="text-sm text-gray-600">
+              Welcome, {user?.user_metadata?.full_name || user?.email || 'Administrator'}
+            </span>
+            <a 
+              href="/admin" 
+              class="text-sm text-forest-canopy hover:text-green-700 font-medium"
+            >
+              ← Back to Admin Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- CMS Interface -->
+    <div id="nc-root"></div>
+
+    <!-- Loading State -->
+    <div id="cms-loading" class="flex items-center justify-center min-h-96">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-forest-canopy mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading Content Management System...</p>
+        <p class="text-sm text-gray-500 mt-2">
+          If this takes longer than expected, please refresh the page.
+        </p>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="fixed bottom-6 right-6 z-50">
+      <div class="bg-white rounded-lg shadow-lg p-4 max-w-sm">
+        <h3 class="font-semibold text-gray-900 mb-2">Quick Actions</h3>
+        <div class="space-y-2 text-sm">
+          <a href="#/collections/blog" class="block text-forest-canopy hover:underline">
+            📝 Manage Blog Posts
+          </a>
+          <a href="#/collections/announcements" class="block text-forest-canopy hover:underline">
+            📢 Create Announcement
+          </a>
+          <a href="#/collections/tuition" class="block text-forest-canopy hover:underline">
+            💰 Update Tuition Rates
+          </a>
+          <a href="#/collections/hours" class="block text-forest-canopy hover:underline">
+            🕐 Modify School Hours
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Decap CMS Scripts -->
+  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <script src="/js/simple-cms-backend.js"></script>
+  
+  <script>
+    
+    // Wait for CMS to be available
+    async function initializeCMS() {
+      // Check authentication first to prevent config.yml fetch
+      try {
+        const authResponse = await fetch('/api/auth/check', { credentials: 'include' });
+        if (!authResponse.ok) {
+          console.log('Not authenticated, redirecting...');
+          window.location.href = '/auth/login?redirect=/admin/cms';
+          return;
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = '/auth/login?redirect=/admin/cms';
+        return;
+      }
+      
+      if (!window.CMS) {
+        console.log('Waiting for CMS...');
+        setTimeout(initializeCMS, 100);
+        return;
+      }
+      
+      console.log('CMS available, registering backend...');
+      
+      // Register our simple Supabase backend
+      window.CMS.registerBackend('supabase', window.SimpleCMSBackend);
+      
+      // Initialize CMS with Supabase backend
+      console.log('Initializing CMS with config...');
+      window.CMS.init({
+            load_config_file: false, // Explicitly disable YAML loading
+            backend: {
+              name: 'supabase',
+              branch: 'main'
+            },
+            media_folder: "public/uploads",
+            public_folder: "/uploads",
+            site_url: window.location.origin,
+            display_url: window.location.origin,
+            collections: [
+              {
+                name: 'blog',
+                label: 'Blog Posts',
+                folder: 'blog',
+                create: true,
+                slug: '{{year}}-{{month}}-{{day}}-{{slug}}',
+                fields: [
+                  {label: 'Title', name: 'title', widget: 'string'},
+                  {label: 'Publish Date', name: 'date', widget: 'datetime'},
+                  {label: 'Author', name: 'author', widget: 'string', default: 'Spicebush Team'},
+                  {label: 'Body', name: 'body', widget: 'markdown'}
+                ]
+              },
+              {
+                name: 'staff',
+                label: 'Staff & Teachers',
+                folder: 'staff',
+                create: true,
+                slug: '{{slug}}',
+                fields: [
+                  {label: 'Name', name: 'name', widget: 'string'},
+                  {label: 'Role', name: 'role', widget: 'string'},
+                  {label: 'Bio', name: 'bio', widget: 'markdown'}
+                ]
+              },
+              {
+                name: 'hours',
+                label: 'School Hours',
+                folder: 'hours',
+                create: false,
+                slug: '{{day}}',
+                fields: [
+                  {label: 'Day', name: 'day', widget: 'string'},
+                  {label: 'Open Time', name: 'open_time', widget: 'string'},
+                  {label: 'Close Time', name: 'close_time', widget: 'string'},
+                  {label: 'Is Closed', name: 'is_closed', widget: 'boolean', default: false}
+                ]
+              },
+              {
+                name: 'tuition',
+                label: 'Tuition Programs & Rates',
+                folder: 'tuition',
+                create: true,
+                slug: '{{slug}}',
+                fields: [
+                  {label: 'Type', name: 'type', widget: 'select', options: ['program', 'rate']},
+                  {label: 'Name', name: 'name', widget: 'string'},
+                  {label: 'Description', name: 'description', widget: 'text'}
+                ]
+              },
+              {
+                name: 'announcements',
+                label: 'Announcements & Notices',
+                folder: 'announcements',
+                create: true,
+                slug: '{{year}}-{{month}}-{{day}}-{{slug}}',
+                fields: [
+                  {label: 'Title', name: 'title', widget: 'string'},
+                  {label: 'Type', name: 'type', widget: 'select', options: ['notice', 'closure', 'event', 'update']},
+                  {label: 'Priority', name: 'priority', widget: 'select', options: ['low', 'normal', 'high', 'urgent']},
+                  {label: 'Content', name: 'body', widget: 'markdown'}
+                ]
+              },
+              {
+                name: 'photos',
+                label: 'Photo Gallery',
+                folder: 'photos',
+                create: true,
+                slug: '{{slug}}',
+                fields: [
+                  {label: 'Original Filename', name: 'originalFilename', widget: 'string'},
+                  {label: 'Category', name: 'category', widget: 'select', options: ['homepage', 'about', 'programs', 'admissions', 'gallery']},
+                  {label: 'Alt Text', name: 'altText', widget: 'text'}
+                ]
+              },
+              {
+                name: 'coming_soon',
+                label: 'Coming Soon Mode',
+                folder: 'coming-soon',
+                files: [
+                  {
+                    name: 'config',
+                    label: 'Coming Soon Configuration',
+                    file: 'coming-soon-config',
+                    fields: [
+                      {label: 'Enable Coming Soon Mode', name: 'enabled', widget: 'boolean', default: false}
+                    ]
+                  }
+                ]
+              }
+            ]
+        });
+        
+        // Hide loading state after init
+        setTimeout(() => {
+          const loading = document.getElementById('cms-loading');
+          if (loading) {
+            loading.style.display = 'none';
+          }
+        }, 1000);
+      }
+      
+      // Add custom styling
+      const style = document.createElement('style');
+      style.textContent = `
+        /* Custom CMS styling */
+        .nc-app-header {
+          background-color: #0f4c3a !important;
+        }
+        
+        .nc-app-header .nc-app-header-content {
+          color: white !important;
+        }
+        
+        /* Hide loading when CMS is ready */
+        .nc-app-container {
+          min-height: calc(100vh - 80px);
+        }
+        
+        /* Hide any auth screens */
+        .nc-gitGatewayAuthenticationPage,
+        .nc-githubAuthenticationPage,
+        .nc-testRepoAuthenticationPage {
+          display: none !important;
+        }
+        
+        /* Success messages */
+        .nc-toast-success {
+          background-color: #10b981 !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Start initialization when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeCMS);
+    } else {
+      initializeCMS();
+    }
+  </script>
+</Layout>

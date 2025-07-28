@@ -1,0 +1,178 @@
+---
+import { Menu, Phone, Mail } from 'lucide-astro';
+import AuthNav from './AuthNav.astro';
+import OptimizedImage from './OptimizedImage.astro';
+import { getEntry, getCollection } from '../lib/content-db';
+
+// Get school info from Supabase
+const schoolInfo = await getEntry('school-info', 'general');
+const { phone, agesServed, extendedCareUntil } = schoolInfo?.data || {
+  phone: '(484) 356-6728',
+  agesServed: '3-6',
+  extendedCareUntil: '5:30 PM'
+};
+
+// Get hours to display standard schedule from Supabase
+const hours = await getCollection('hours');
+const weekdayHours = hours.find(h => h.data.day === 'Monday');
+---
+
+<header class="bg-white shadow-sm sticky top-0 z-50">
+  <!-- Top Utility Bar -->
+  <div class="bg-stone-beige border-b border-gray-200">
+    <div class="container mx-auto px-4 py-2">
+      <div class="flex justify-between items-center">
+        <!-- Left side: Quick Info -->
+        <div class="flex items-center space-x-4 text-sm">
+          <span class="text-earth-brown hidden md:inline">Ages {agesServed} • Mon-Fri {weekdayHours?.data.open_time} - {weekdayHours?.data.close_time}</span>
+          <a href="tel:{phone.replace(/[^0-9]/g, '')}" class="flex items-center space-x-2 text-forest-canopy hover:text-moss-green transition-colors font-semibold">
+            <Phone className="w-4 h-4" />
+            <span>{phone}</span>
+          </a>
+        </div>
+        
+        <!-- Right side: Links -->
+        <div class="flex items-center space-x-4 text-sm">
+          <a href="/resources/faq" class="text-earth-brown hover:text-forest-canopy transition-colors hidden sm:inline">FAQ</a>
+          <a href="/donate" class="text-earth-brown hover:text-forest-canopy transition-colors hidden sm:inline">Donate</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Main Navigation -->
+  <nav class="container mx-auto px-4 py-3 sm:py-4" role="navigation" aria-label="Main navigation">
+    <div class="flex justify-between items-center">
+      <!-- Logo -->
+      <a href="/" class="hover:opacity-90 transition-opacity">
+        <OptimizedImage
+          photoSlug="homepage-spicebush-logo-brand-identity"
+          className="h-16 sm:h-18 lg:h-20 w-auto"
+          loading="eager"
+          priority={true}
+        />
+      </a>
+      
+      <!-- Desktop Navigation -->
+      <div class="hidden lg:flex items-center">
+        <!-- Navigation Links with reduced spacing -->
+        <div class="flex items-center space-x-3 xl:space-x-5">
+          <a href="/about" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">About</a>
+          <a href="/programs" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Programs</a>
+          <a href="/admissions" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Admissions</a>
+          <a href="/blog" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Blog</a>
+          <a href="/contact" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Contact</a>
+        </div>
+        
+        <!-- CTA Buttons with responsive sizing -->
+        <div class="ml-4 xl:ml-6 flex items-center space-x-3">
+          <a 
+            href="/admissions/tuition-calculator" 
+            class="bg-white hover:bg-stone-beige text-forest-canopy border-2 border-forest-canopy px-4 xl:px-5 py-2 xl:py-2.5 rounded-lg font-semibold text-sm xl:text-base transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 whitespace-nowrap"
+            aria-label="Calculate tuition"
+          >
+            Calculate Tuition
+          </a>
+          <a 
+            href="/admissions/schedule-tour" 
+            class="bg-sunlight-gold hover:bg-orange-600 text-white px-4 xl:px-5 py-2 xl:py-2.5 rounded-lg font-semibold text-sm xl:text-base transition-colors focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 whitespace-nowrap"
+            aria-label="Schedule a tour"
+          >
+            Schedule Tour
+          </a>
+        </div>
+      </div>
+      
+      <!-- Mobile Menu Button -->
+      <button 
+        class="lg:hidden p-2 text-earth-brown hover:text-forest-canopy transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded"
+        aria-label="Open mobile menu"
+        aria-expanded="false"
+        id="mobile-menu-toggle"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+    </div>
+    
+    <!-- Mobile Navigation -->
+    <div class="lg:hidden hidden mt-4 pb-4 border-t border-gray-200" id="mobile-menu" role="menu" aria-labelledby="mobile-menu-toggle">
+      <div class="flex flex-col space-y-3 pt-6">
+        <a href="/about" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">About</a>
+        <a href="/programs" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Programs</a>
+        <a href="/admissions" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Admissions</a>
+        <a href="/blog" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Blog</a>
+        <a href="/contact" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Contact</a>
+        <a href="/resources/faq" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">FAQ</a>
+        <a href="/donate" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Donate</a>
+        
+        <!-- Mobile CTA Buttons -->
+        <div class="pt-4 space-y-3">
+          <a 
+            href="/admissions/tuition-calculator" 
+            class="w-full bg-white hover:bg-stone-beige text-forest-canopy border-2 border-forest-canopy px-6 py-3 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 text-center block text-base"
+          >
+            Calculate Tuition
+          </a>
+          <a 
+            href="/admissions/schedule-tour" 
+            class="w-full bg-sunlight-gold hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 text-center block text-base tracking-wide"
+          >
+            Schedule Tour
+          </a>
+        </div>
+        
+        <!-- Mobile Quick Info -->
+        <div class="pt-4 border-t border-gray-200">
+          <div class="px-3 py-2 text-sm text-earth-brown space-y-2">
+            <p class="font-semibold">School Hours</p>
+            <p>Monday - Friday: {weekdayHours?.data.open_time} - {weekdayHours?.data.close_time}</p>
+            <p>Extended care until {extendedCareUntil}</p>
+          </div>
+        </div>
+        
+        <!-- Mobile Contact -->
+        <div class="pt-4 border-t border-gray-200">
+          <a href="tel:{phone.replace(/[^0-9]/g, '')}" class="flex items-center justify-center space-x-2 bg-forest-canopy hover:bg-moss-green text-white px-6 py-3 rounded-lg font-semibold transition-colors mx-3">
+            <Phone className="w-5 h-5" />
+            <span>Call {phone}</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<script>
+  // Mobile menu toggle functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const toggleButton = document.getElementById('mobile-menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    if (toggleButton && mobileMenu) {
+      toggleButton.addEventListener('click', function() {
+        mobileMenu.classList.toggle('hidden');
+        
+        // Update aria-expanded attribute for accessibility
+        const isExpanded = !mobileMenu.classList.contains('hidden');
+        toggleButton.setAttribute('aria-expanded', isExpanded.toString());
+        
+        // Focus management for keyboard users
+        if (isExpanded) {
+          const firstMenuItem = mobileMenu.querySelector('a[role="menuitem"]');
+          if (firstMenuItem) {
+            firstMenuItem.focus();
+          }
+        }
+      });
+      
+      // Close mobile menu when pressing Escape
+      document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
+          mobileMenu.classList.add('hidden');
+          toggleButton.setAttribute('aria-expanded', 'false');
+          toggleButton.focus();
+        }
+      });
+    }
+  });
+</script>

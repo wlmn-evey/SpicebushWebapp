@@ -1,0 +1,545 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { 
+  Clock, 
+  DollarSign, 
+  ArrowLeft,
+  Users, 
+  MessageSquare, 
+  BarChart3, 
+  Settings,
+  Calendar,
+  Mail,
+  AlertCircle,
+  TrendingUp,
+  FileText,
+  Shield,
+  Activity,
+  Eye,
+  ArrowUpRight,
+  Bell
+} from 'lucide-astro';
+---
+
+<Layout 
+  title="Admin Dashboard - Spicebush Montessori School"
+  description="Administrative dashboard for managing school operations, hours, tuition, and communications."
+  keywords="admin dashboard, school management, operations"
+>
+  <Header />
+  
+  <main id="main-content">
+    <!-- Admin Auth Check -->
+    <script>
+      import { auth } from '../../lib/supabase.ts';
+      
+      document.addEventListener('DOMContentLoaded', async function() {
+        try {
+          const user = await auth.getCurrentUser();
+          if (!user) {
+            window.location.href = '/auth/login';
+            return;
+          }
+          
+          // Check if user has admin privileges
+          const isAdmin = await auth.isAdmin();
+          if (!isAdmin) {
+            alert('Access denied. You do not have administrator privileges.');
+            window.location.href = '/dashboard';
+            return;
+          }
+          
+          // Update admin info
+          const adminEmailElement = document.getElementById('admin-email');
+          if (adminEmailElement && user.email) {
+            adminEmailElement.textContent = user.email;
+          }
+        } catch (error) {
+          console.error('Error checking authentication:', error);
+          window.location.href = '/auth/login';
+        }
+      });
+    </script>
+
+    <!-- Admin Header -->
+    <section class="bg-gradient-to-br from-forest-canopy via-moss-green to-forest-canopy py-12">
+      <div class="container mx-auto px-4">
+        <div class="max-w-7xl mx-auto">
+          <!-- Back to Site Navigation -->
+          <div class="mb-6">
+            <a href="/dashboard" class="inline-flex items-center text-green-200 hover:text-white transition-colors group">
+              <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+              <span class="text-sm font-medium">Back to Family Dashboard</span>
+            </a>
+          </div>
+          
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+            <div>
+              <h1 class="text-4xl lg:text-5xl font-heading font-bold text-white mb-4 tracking-tight">
+                Admin Dashboard
+              </h1>
+              <p class="text-green-100 text-lg mb-2">
+                Welcome back! Managing Spicebush Montessori
+              </p>
+              <p class="text-green-200 text-sm">
+                Signed in as <span id="admin-email" class="font-medium text-sunlight-gold"></span>
+              </p>
+            </div>
+            
+            <!-- Live Stats Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full lg:w-auto">
+              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center border border-white/20 hover:bg-white/20 transition-colors">
+                <div class="text-3xl font-bold text-white mb-1" id="total-programs">-</div>
+                <div class="text-green-100 text-sm font-medium">Active Programs</div>
+              </div>
+              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center border border-white/20 hover:bg-white/20 transition-colors">
+                <div class="text-3xl font-bold text-white mb-1" id="tuition-rates">-</div>
+                <div class="text-green-100 text-sm font-medium">Tuition Rates</div>
+              </div>
+              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center border border-white/20 hover:bg-white/20 transition-colors">
+                <div class="text-3xl font-bold text-white mb-1" id="active-messages">-</div>
+                <div class="text-green-100 text-sm font-medium">Teacher Leaders</div>
+              </div>
+              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center border border-white/20">
+                <div class="text-3xl font-bold text-sunlight-gold mb-1">●</div>
+                <div class="text-green-100 text-sm font-medium">System Online</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Admin Content -->
+    <section class="py-12 bg-gray-50 min-h-screen">
+      <div class="container mx-auto px-4">
+        <div class="max-w-7xl mx-auto">
+          
+          <!-- Quick Actions Bar -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-8">
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+              <div>
+                <h2 class="text-lg font-semibold text-earth-brown mb-1">Quick Actions</h2>
+                <p class="text-gray-600 text-sm">Common tasks and shortcuts</p>
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <button id="quick-holiday-btn" class="flex items-center px-4 py-2 bg-forest-canopy text-white rounded-lg hover:bg-moss-green transition-colors text-sm font-medium">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Add Holiday
+                </button>
+                <button id="quick-message-btn" class="flex items-center px-4 py-2 bg-sky-blue text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium">
+                  <Mail className="w-4 h-4 mr-2" />
+                  Send Message
+                </button>
+                <button class="flex items-center px-4 py-2 bg-sunlight-gold text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Generate Report
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Primary Management Tools -->
+          <div class="mb-12">
+            <h2 class="text-2xl font-heading font-bold text-earth-brown mb-8 tracking-tight">Management Center</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              
+              <!-- School Hours -->
+              <a href="/admin/hours" class="group transform hover:scale-105 transition-all duration-300">
+                <div class="bg-white rounded-xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 group-hover:border-forest-canopy h-full relative overflow-hidden">
+                  <div class="absolute top-0 right-0 w-20 h-20 bg-forest-canopy/5 rounded-full -translate-y-8 translate-x-8"></div>
+                  <div class="relative">
+                    <div class="flex items-center mb-6">
+                      <div class="w-14 h-14 bg-gradient-to-br from-forest-canopy to-moss-green rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                        <Clock className="w-7 h-7 text-white" />
+                      </div>
+                      <div class="ml-4">
+                        <h3 class="text-xl font-semibold text-earth-brown">School Hours</h3>
+                        <p class="text-gray-500 text-sm">Daily schedules</p>
+                      </div>
+                    </div>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                      Manage daily schedules, before/after care times, and holiday closures. Keep families informed about any changes.
+                    </p>
+                    <div class="flex items-center text-forest-canopy font-semibold group-hover:text-moss-green">
+                      <span>Manage Hours</span>
+                      <ArrowUpRight className="w-4 h-4 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </a>
+
+              <!-- Tuition Management -->
+              <a href="/admin/tuition" class="group transform hover:scale-105 transition-all duration-300">
+                <div class="bg-white rounded-xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 group-hover:border-sunlight-gold h-full relative overflow-hidden">
+                  <div class="absolute top-0 right-0 w-20 h-20 bg-sunlight-gold/5 rounded-full -translate-y-8 translate-x-8"></div>
+                  <div class="relative">
+                    <div class="flex items-center mb-6">
+                      <div class="w-14 h-14 bg-gradient-to-br from-sunlight-gold to-orange-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                        <DollarSign className="w-7 h-7 text-white" />
+                      </div>
+                      <div class="ml-4">
+                        <h3 class="text-xl font-semibold text-earth-brown">Tuition & Programs</h3>
+                        <p class="text-gray-500 text-sm">Rates & offerings</p>
+                      </div>
+                    </div>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                      Update tuition rates, program offerings, and calculator settings. Manage the sliding scale system.
+                    </p>
+                    <div class="flex items-center text-sunlight-gold font-semibold group-hover:text-orange-600">
+                      <span>Manage Tuition</span>
+                      <ArrowUpRight className="w-4 h-4 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </a>
+
+              <!-- Teacher Leaders -->
+              <a href="/admin/teachers" class="group transform hover:scale-105 transition-all duration-300">
+                <div class="bg-white rounded-xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 group-hover:border-sky-blue h-full relative overflow-hidden">
+                  <div class="absolute top-0 right-0 w-20 h-20 bg-sky-blue/5 rounded-full -translate-y-8 translate-x-8"></div>
+                  <div class="relative">
+                    <div class="flex items-center mb-6">
+                      <div class="w-14 h-14 bg-gradient-to-br from-sky-blue to-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                        <Users className="w-7 h-7 text-white" />
+                      </div>
+                      <div class="ml-4">
+                        <h3 class="text-xl font-semibold text-earth-brown">Teacher Leaders</h3>
+                        <p class="text-gray-500 text-sm">Staff profiles</p>
+                      </div>
+                    </div>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                      Manage teacher profiles, bios, and staff information displayed on the website.
+                    </p>
+                    <div class="flex items-center text-sky-blue font-semibold group-hover:text-blue-600">
+                      <span>Manage Teachers</span>
+                      <ArrowUpRight className="w-4 h-4 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </a>
+
+              <!-- Content Management -->
+              <a href="/admin/cms" class="group transform hover:scale-105 transition-all duration-300">
+                <div class="bg-white rounded-xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 group-hover:border-forest-canopy h-full relative overflow-hidden">
+                  <div class="absolute top-0 right-0 w-20 h-20 bg-forest-canopy/5 rounded-full -translate-y-8 translate-x-8"></div>
+                  <div class="relative">
+                    <div class="flex items-center mb-6">
+                      <div class="w-14 h-14 bg-gradient-to-br from-forest-canopy to-moss-green rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                        <FileText className="w-7 h-7 text-white" />
+                      </div>
+                      <div class="ml-4">
+                        <h3 class="text-xl font-semibold text-earth-brown">Content Management</h3>
+                        <p class="text-gray-500 text-sm">All school content</p>
+                      </div>
+                    </div>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                      Create and manage blog posts, announcements, tuition rates, staff profiles, and all school content.
+                    </p>
+                    <div class="flex items-center text-forest-canopy font-semibold group-hover:text-green-700">
+                      <span>Open Content Editor</span>
+                      <ArrowUpRight className="w-4 h-4 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </a>
+
+              <!-- Communications -->
+              <a href="/admin/users" class="group transform hover:scale-105 transition-all duration-300">
+                <div class="bg-white rounded-xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 group-hover:border-purple-500 h-full relative overflow-hidden">
+                  <div class="absolute top-0 right-0 w-20 h-20 bg-purple-500/5 rounded-full -translate-y-8 translate-x-8"></div>
+                  <div class="relative">
+                    <div class="flex items-center mb-6">
+                      <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                        <MessageSquare className="w-7 h-7 text-white" />
+                      </div>
+                      <div class="ml-4">
+                        <h3 class="text-xl font-semibold text-earth-brown">Communications</h3>
+                        <p class="text-gray-500 text-sm">Family messaging</p>
+                      </div>
+                    </div>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                      Send announcements, manage newsletter content, and maintain communication with families.
+                    </p>
+                    <div class="flex items-center text-purple-500 font-semibold group-hover:text-purple-600">
+                      <span>Manage Messages</span>
+                      <ArrowUpRight className="w-4 h-4 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </a>
+
+              <!-- Analytics -->
+              <a href="/admin/analytics" class="group transform hover:scale-105 transition-all duration-300">
+                <div class="bg-white rounded-xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 group-hover:border-emerald-500 h-full relative overflow-hidden">
+                  <div class="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 rounded-full -translate-y-8 translate-x-8"></div>
+                  <div class="relative">
+                    <div class="flex items-center mb-6">
+                      <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                        <BarChart3 className="w-7 h-7 text-white" />
+                      </div>
+                      <div class="ml-4">
+                        <h3 class="text-xl font-semibold text-earth-brown">Analytics</h3>
+                        <p class="text-gray-500 text-sm">Insights & reports</p>
+                      </div>
+                    </div>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                      View website analytics, enrollment trends, and generate reports for school operations.
+                    </p>
+                    <div class="flex items-center text-emerald-500 font-semibold group-hover:text-emerald-600">
+                      <span>View Analytics</span>
+                      <ArrowUpRight className="w-4 h-4 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </a>
+
+              <!-- Settings -->
+              <a href="/admin/settings" class="group transform hover:scale-105 transition-all duration-300">
+                <div class="bg-white rounded-xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 group-hover:border-gray-500 h-full relative overflow-hidden">
+                  <div class="absolute top-0 right-0 w-20 h-20 bg-gray-500/5 rounded-full -translate-y-8 translate-x-8"></div>
+                  <div class="relative">
+                    <div class="flex items-center mb-6">
+                      <div class="w-14 h-14 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                        <Settings className="w-7 h-7 text-white" />
+                      </div>
+                      <div class="ml-4">
+                        <h3 class="text-xl font-semibold text-earth-brown">System Settings</h3>
+                        <p class="text-gray-500 text-sm">Configuration</p>
+                      </div>
+                    </div>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                      Configure system settings, security preferences, and administrative options.
+                    </p>
+                    <div class="flex items-center text-gray-500 font-semibold group-hover:text-gray-600">
+                      <span>System Settings</span>
+                      <ArrowUpRight className="w-4 h-4 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Dashboard Analytics and Activity -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Analytics Overview -->
+            <div class="lg:col-span-2 bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+              <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center">
+                  <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 class="text-xl font-semibold text-earth-brown ml-3">Analytics Overview</h3>
+                </div>
+                <button class="text-emerald-500 hover:text-emerald-600 font-medium text-sm">View Details</button>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                  <div class="flex items-center justify-between mb-4">
+                    <div>
+                      <div class="text-2xl font-bold text-blue-900">1,247</div>
+                      <div class="text-blue-700 text-sm font-medium">Website Visitors</div>
+                    </div>
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <Eye className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                  <div class="text-blue-600 text-xs">+12% from last month</div>
+                </div>
+                
+                <div class="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                  <div class="flex items-center justify-between mb-4">
+                    <div>
+                      <div class="text-2xl font-bold text-green-900">89</div>
+                      <div class="text-green-700 text-sm font-medium">Tuition Calculator Uses</div>
+                    </div>
+                    <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                      <DollarSign className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                  <div class="text-green-600 text-xs">+8% from last month</div>
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
+                  <div class="flex items-center justify-between mb-4">
+                    <div>
+                      <div class="text-2xl font-bold text-orange-900">23</div>
+                      <div class="text-orange-700 text-sm font-medium">Contact Inquiries</div>
+                    </div>
+                    <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                      <Mail className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                  <div class="text-orange-600 text-xs">+5% from last month</div>
+                </div>
+                
+                <div class="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                  <div class="flex items-center justify-between mb-4">
+                    <div>
+                      <div class="text-2xl font-bold text-purple-900">12</div>
+                      <div class="text-purple-700 text-sm font-medium">Tour Requests</div>
+                    </div>
+                    <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                  <div class="text-purple-600 text-xs">+15% from last month</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+              <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center">
+                  <div class="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center">
+                    <Activity className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 class="text-xl font-semibold text-earth-brown ml-3">Recent Activity</h3>
+                </div>
+                <button class="text-gray-500 hover:text-gray-600 font-medium text-sm">View All</button>
+              </div>
+              
+              <div class="space-y-6">
+                <div class="flex items-start space-x-4">
+                  <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-gray-900 font-medium text-sm">School hours updated</p>
+                    <p class="text-gray-600 text-xs">Friday after-care settings modified</p>
+                    <p class="text-gray-400 text-xs mt-1">2 hours ago</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                  <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <DollarSign className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-gray-900 font-medium text-sm">Tuition rates adjusted</p>
+                    <p class="text-gray-600 text-xs">2025-2026 rates updated</p>
+                    <p class="text-gray-400 text-xs mt-1">1 day ago</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                  <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-gray-900 font-medium text-sm">Holiday message sent</p>
+                    <p class="text-gray-600 text-xs">Winter break notice to families</p>
+                    <p class="text-gray-400 text-xs mt-1">3 days ago</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                  <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Users className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-gray-900 font-medium text-sm">New family enrolled</p>
+                    <p class="text-gray-600 text-xs">Rodriguez family account created</p>
+                    <p class="text-gray-400 text-xs mt-1">5 days ago</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <Footer />
+</Layout>
+
+<script>
+  import { supabase } from '../../lib/supabase.ts';
+
+  document.addEventListener('DOMContentLoaded', async function() {
+    // Load dashboard stats
+    async function loadDashboardStats() {
+      try {
+        const [programsResponse, ratesResponse, messagesResponse] = await Promise.all([
+          await supabase.from('tuition_programs').select('id').eq('active', true),
+          await supabase.from('tuition_rates').select('id').eq('active', true),
+          await supabase.from('teacher_leaders').select('id').eq('active', true)
+        ]);
+
+        // Update stats display with smooth counting animation
+        if (programsResponse.data) {
+          animateNumber('total-programs', programsResponse.data.length);
+        }
+        if (ratesResponse.data) {
+          animateNumber('tuition-rates', ratesResponse.data.length);
+        }
+        if (messagesResponse.data) {
+          animateNumber('active-messages', messagesResponse.data.length);
+        }
+      } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+        // Set fallback values
+        document.getElementById('total-programs').textContent = '4';
+        document.getElementById('tuition-rates').textContent = '8';
+        document.getElementById('active-messages').textContent = '3';
+      }
+    }
+
+    // Animate number counting
+    function animateNumber(elementId, targetNumber) {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+      
+      let currentNumber = 0;
+      const increment = Math.ceil(targetNumber / 20);
+      const timer = setInterval(() => {
+        currentNumber += increment;
+        if (currentNumber >= targetNumber) {
+          currentNumber = targetNumber;
+          clearInterval(timer);
+        }
+        element.textContent = currentNumber;
+      }, 50);
+    }
+
+    // Quick action handlers
+    const quickHolidayBtn = document.getElementById('quick-holiday-btn');
+    const quickMessageBtn = document.getElementById('quick-message-btn');
+
+    if (quickHolidayBtn) {
+      quickHolidayBtn.addEventListener('click', function() {
+        window.location.href = '/admin/hours#add-holiday';
+      });
+    }
+
+    if (quickMessageBtn) {
+      quickMessageBtn.addEventListener('click', function() {
+        window.location.href = '/admin/communications#new-message';
+      });
+    }
+
+    // Load stats on page load
+    loadDashboardStats();
+
+    // Add some nice loading states
+    const cards = document.querySelectorAll('.group');
+    cards.forEach((card, index) => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      setTimeout(() => {
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, index * 100);
+    });
+  });
+</script>

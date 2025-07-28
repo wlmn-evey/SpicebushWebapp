@@ -1,0 +1,2394 @@
+{
+  "generatedAt": "2025-07-26T20:23:44.397Z",
+  "totalSelected": 58,
+  "byCategory": {
+    "outdoor": 6,
+    "classroom": 6,
+    "materials": 8,
+    "group": 6,
+    "individual": 9,
+    "art": 8,
+    "practical": 8,
+    "events": 7
+  },
+  "images": [
+    {
+      "originalFile": "IMG_8781.png",
+      "category": "materials",
+      "seoFilename": "materials-montessori-montessori-materials-img-8781-2113x1518.webp",
+      "altText": "Child working with Montessori sensorial materials at Spicebush Montessori School",
+      "description": "Child working with Montessori sensorial materials",
+      "keywords": [
+        "montessori materials",
+        "hands-on learning",
+        "concentration",
+        "sensorial",
+        "manipulatives"
+      ],
+      "dimensions": {
+        "width": 2113,
+        "height": 1518
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "high",
+      "season": "spring",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_7509.jpg",
+      "category": "group",
+      "seoFilename": "group-montessori-collaboration-img-7509-2448x3264.webp",
+      "altText": "Group lesson in the Montessori classroom at Spicebush Montessori School",
+      "description": "Group lesson in the Montessori classroom",
+      "keywords": [
+        "collaboration",
+        "group work",
+        "mixed age",
+        "peer learning",
+        "community"
+      ],
+      "dimensions": {
+        "width": 2448,
+        "height": 3264
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "high",
+      "season": "spring",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_6543.png",
+      "category": "group",
+      "seoFilename": "group-montessori-collaboration-img-6543-1933x1450.webp",
+      "altText": "Mixed-age students working together at Spicebush Montessori School",
+      "description": "Mixed-age students working together",
+      "keywords": [
+        "collaboration",
+        "group work",
+        "mixed age",
+        "peer learning",
+        "community"
+      ],
+      "dimensions": {
+        "width": 1933,
+        "height": 1450
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "high",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_5131.jpg",
+      "category": "practical",
+      "seoFilename": "practical-montessori-practical-life-img-5131-3024x4032.webp",
+      "altText": "Food preparation in the classroom at Spicebush Montessori School",
+      "description": "Food preparation in the classroom",
+      "keywords": [
+        "practical life",
+        "life skills",
+        "pouring",
+        "food preparation",
+        "real world"
+      ],
+      "dimensions": {
+        "width": 3024,
+        "height": 4032
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "high",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_9428.png",
+      "category": "outdoor",
+      "seoFilename": "outdoor-montessori-outdoor-education-img-9428-1310x1746.webp",
+      "altText": "Children exploring nature in the outdoor classroom at Spicebush Montessori School",
+      "description": "Children exploring nature in the outdoor classroom",
+      "keywords": [
+        "outdoor education",
+        "nature",
+        "playground",
+        "gross motor",
+        "fresh air"
+      ],
+      "dimensions": {
+        "width": 1310,
+        "height": 1746
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 60
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "fall",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_9472.png",
+      "category": "outdoor",
+      "seoFilename": "outdoor-montessori-outdoor-education-img-9472-1353x1862.webp",
+      "altText": "Students engaged in playground activities at Spicebush Montessori School",
+      "description": "Students engaged in playground activities",
+      "keywords": [
+        "outdoor education",
+        "nature",
+        "playground",
+        "gross motor",
+        "fresh air"
+      ],
+      "dimensions": {
+        "width": 1353,
+        "height": 1862
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 25,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "fall",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_9493.png",
+      "category": "outdoor",
+      "seoFilename": "outdoor-montessori-outdoor-education-img-9493-1729x1297.webp",
+      "altText": "Nature-based learning experience at Spicebush Montessori School",
+      "description": "Nature-based learning experience",
+      "keywords": [
+        "outdoor education",
+        "nature",
+        "playground",
+        "gross motor",
+        "fresh air"
+      ],
+      "dimensions": {
+        "width": 1729,
+        "height": 1297
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 60
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "fall",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_8329.png",
+      "category": "outdoor",
+      "seoFilename": "outdoor-montessori-outdoor-education-img-8329-1563x1662.webp",
+      "altText": "Outdoor gross motor development activities at Spicebush Montessori School",
+      "description": "Outdoor gross motor development activities",
+      "keywords": [
+        "outdoor education",
+        "nature",
+        "playground",
+        "gross motor",
+        "fresh air"
+      ],
+      "dimensions": {
+        "width": 1563,
+        "height": 1662
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 25,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_9831.png",
+      "category": "classroom",
+      "seoFilename": "classroom-montessori-classroom-img-9831-1442x1922.webp",
+      "altText": "Mixed-age classroom collaboration at Spicebush Montessori School",
+      "description": "Mixed-age classroom collaboration",
+      "keywords": [
+        "classroom",
+        "montessori environment",
+        "learning",
+        "concentration",
+        "materials"
+      ],
+      "dimensions": {
+        "width": 1442,
+        "height": 1922
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 30
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "fall",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_9413.png",
+      "category": "classroom",
+      "seoFilename": "classroom-montessori-classroom-img-9413-1554x2072.webp",
+      "altText": "Peaceful classroom atmosphere during work time at Spicebush Montessori School",
+      "description": "Peaceful classroom atmosphere during work time",
+      "keywords": [
+        "classroom",
+        "montessori environment",
+        "learning",
+        "concentration",
+        "materials"
+      ],
+      "dimensions": {
+        "width": 1554,
+        "height": 2072
+      },
+      "focalPoints": {
+        "primaryFocalX": 40,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "fall",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_8832.png",
+      "category": "classroom",
+      "seoFilename": "classroom-montessori-classroom-img-8832-1497x1296.webp",
+      "altText": "Mixed-age classroom collaboration at Spicebush Montessori School",
+      "description": "Mixed-age classroom collaboration",
+      "keywords": [
+        "classroom",
+        "montessori environment",
+        "learning",
+        "concentration",
+        "materials"
+      ],
+      "dimensions": {
+        "width": 1497,
+        "height": 1296
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 65,
+        "secondaryFocalY": 35
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_8743.png",
+      "category": "classroom",
+      "seoFilename": "classroom-montessori-classroom-img-8743-1731x1055.webp",
+      "altText": "Mixed-age classroom collaboration at Spicebush Montessori School",
+      "description": "Mixed-age classroom collaboration",
+      "keywords": [
+        "classroom",
+        "montessori environment",
+        "learning",
+        "concentration",
+        "materials"
+      ],
+      "dimensions": {
+        "width": 1731,
+        "height": 1055
+      },
+      "focalPoints": {
+        "primaryFocalX": 40,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_8530.png",
+      "category": "classroom",
+      "seoFilename": "classroom-montessori-classroom-img-8530-1322x1762.webp",
+      "altText": "Montessori classroom environment with prepared materials at Spicebush Montessori School",
+      "description": "Montessori classroom environment with prepared materials",
+      "keywords": [
+        "classroom",
+        "montessori environment",
+        "learning",
+        "concentration",
+        "materials"
+      ],
+      "dimensions": {
+        "width": 1322,
+        "height": 1762
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 30
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_9103.png",
+      "category": "materials",
+      "seoFilename": "materials-montessori-montessori-materials-img-9103-1350x1800.webp",
+      "altText": "Child working with Montessori sensorial materials at Spicebush Montessori School",
+      "description": "Child working with Montessori sensorial materials",
+      "keywords": [
+        "montessori materials",
+        "hands-on learning",
+        "concentration",
+        "sensorial",
+        "manipulatives"
+      ],
+      "dimensions": {
+        "width": 1350,
+        "height": 1800
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 50,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 35
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "fall",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_9835.png",
+      "category": "group",
+      "seoFilename": "group-montessori-collaboration-img-9835-1582x1187.webp",
+      "altText": "Collaborative learning experience at Spicebush Montessori School",
+      "description": "Collaborative learning experience",
+      "keywords": [
+        "collaboration",
+        "group work",
+        "mixed age",
+        "peer learning",
+        "community"
+      ],
+      "dimensions": {
+        "width": 1582,
+        "height": 1187
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "fall",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_8774.png",
+      "category": "group",
+      "seoFilename": "group-montessori-collaboration-img-8774-1322x1579.webp",
+      "altText": "Children collaborating on group project at Spicebush Montessori School",
+      "description": "Children collaborating on group project",
+      "keywords": [
+        "collaboration",
+        "group work",
+        "mixed age",
+        "peer learning",
+        "community"
+      ],
+      "dimensions": {
+        "width": 1322,
+        "height": 1579
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_9687.png",
+      "category": "individual",
+      "seoFilename": "individual-montessori-concentration-img-9687-1585x1704.webp",
+      "altText": "Focused concentration during work time at Spicebush Montessori School",
+      "description": "Focused concentration during work time",
+      "keywords": [
+        "concentration",
+        "individual work",
+        "independence",
+        "focus",
+        "self-directed"
+      ],
+      "dimensions": {
+        "width": 1585,
+        "height": 1704
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "fall",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_8832.png",
+      "category": "individual",
+      "seoFilename": "individual-montessori-concentration-img-8832-1497x1296.webp",
+      "altText": "Child engaged in self-directed learning at Spicebush Montessori School",
+      "description": "Child engaged in self-directed learning",
+      "keywords": [
+        "concentration",
+        "individual work",
+        "independence",
+        "focus",
+        "self-directed"
+      ],
+      "dimensions": {
+        "width": 1497,
+        "height": 1296
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": true
+    },
+    {
+      "originalFile": "IMG_7380.png",
+      "category": "outdoor",
+      "seoFilename": "outdoor-montessori-outdoor-education-img-7380-1470x1870.webp",
+      "altText": "Children exploring nature in the outdoor classroom at Spicebush Montessori School",
+      "description": "Children exploring nature in the outdoor classroom",
+      "keywords": [
+        "outdoor education",
+        "nature",
+        "playground",
+        "gross motor",
+        "fresh air"
+      ],
+      "dimensions": {
+        "width": 1470,
+        "height": 1870
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 70,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_6278.png",
+      "category": "outdoor",
+      "seoFilename": "outdoor-montessori-outdoor-education-img-6278-1395x1860.webp",
+      "altText": "Children exploring nature in the outdoor classroom at Spicebush Montessori School",
+      "description": "Children exploring nature in the outdoor classroom",
+      "keywords": [
+        "outdoor education",
+        "nature",
+        "playground",
+        "gross motor",
+        "fresh air"
+      ],
+      "dimensions": {
+        "width": 1395,
+        "height": 1860
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 60
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_7150.png",
+      "category": "classroom",
+      "seoFilename": "classroom-montessori-classroom-img-7150-1617x1213.webp",
+      "altText": "Peaceful classroom atmosphere during work time at Spicebush Montessori School",
+      "description": "Peaceful classroom atmosphere during work time",
+      "keywords": [
+        "classroom",
+        "montessori environment",
+        "learning",
+        "concentration",
+        "materials"
+      ],
+      "dimensions": {
+        "width": 1617,
+        "height": 1213
+      },
+      "focalPoints": {
+        "primaryFocalX": 40,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_7417.png",
+      "category": "materials",
+      "seoFilename": "materials-montessori-montessori-materials-img-7417-1364x1818.webp",
+      "altText": "Child working with Montessori sensorial materials at Spicebush Montessori School",
+      "description": "Child working with Montessori sensorial materials",
+      "keywords": [
+        "montessori materials",
+        "hands-on learning",
+        "concentration",
+        "sensorial",
+        "manipulatives"
+      ],
+      "dimensions": {
+        "width": 1364,
+        "height": 1818
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 40,
+        "secondaryFocalY": 30
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_7149.png",
+      "category": "materials",
+      "seoFilename": "materials-montessori-montessori-materials-img-7149-1666x1250.webp",
+      "altText": "Hands-on learning with mathematical manipulatives at Spicebush Montessori School",
+      "description": "Hands-on learning with mathematical manipulatives",
+      "keywords": [
+        "montessori materials",
+        "hands-on learning",
+        "concentration",
+        "sensorial",
+        "manipulatives"
+      ],
+      "dimensions": {
+        "width": 1666,
+        "height": 1250
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 50,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 35
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_6998.png",
+      "category": "materials",
+      "seoFilename": "materials-montessori-montessori-materials-img-6998-1510x2013.webp",
+      "altText": "Child working with Montessori sensorial materials at Spicebush Montessori School",
+      "description": "Child working with Montessori sensorial materials",
+      "keywords": [
+        "montessori materials",
+        "hands-on learning",
+        "concentration",
+        "sensorial",
+        "manipulatives"
+      ],
+      "dimensions": {
+        "width": 1510,
+        "height": 2013
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_6935.png",
+      "category": "materials",
+      "seoFilename": "materials-montessori-montessori-materials-img-6935-1343x1790.webp",
+      "altText": "Child concentrating on material work at Spicebush Montessori School",
+      "description": "Child concentrating on material work",
+      "keywords": [
+        "montessori materials",
+        "hands-on learning",
+        "concentration",
+        "sensorial",
+        "manipulatives"
+      ],
+      "dimensions": {
+        "width": 1343,
+        "height": 1790
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 40,
+        "secondaryFocalY": 30
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_6703.png",
+      "category": "materials",
+      "seoFilename": "materials-montessori-montessori-materials-img-6703-1400x1763.webp",
+      "altText": "Practical life materials in use at Spicebush Montessori School",
+      "description": "Practical life materials in use",
+      "keywords": [
+        "montessori materials",
+        "hands-on learning",
+        "concentration",
+        "sensorial",
+        "manipulatives"
+      ],
+      "dimensions": {
+        "width": 1400,
+        "height": 1763
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 50,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 35
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_6678.png",
+      "category": "materials",
+      "seoFilename": "materials-montessori-montessori-materials-img-6678-1499x1814.webp",
+      "altText": "Hands-on learning with mathematical manipulatives at Spicebush Montessori School",
+      "description": "Hands-on learning with mathematical manipulatives",
+      "keywords": [
+        "montessori materials",
+        "hands-on learning",
+        "concentration",
+        "sensorial",
+        "manipulatives"
+      ],
+      "dimensions": {
+        "width": 1499,
+        "height": 1814
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 40,
+        "secondaryFocalY": 30
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_6599.png",
+      "category": "group",
+      "seoFilename": "group-montessori-collaboration-img-6599-1362x2213.webp",
+      "altText": "Students helping each other learn at Spicebush Montessori School",
+      "description": "Students helping each other learn",
+      "keywords": [
+        "collaboration",
+        "group work",
+        "mixed age",
+        "peer learning",
+        "community"
+      ],
+      "dimensions": {
+        "width": 1362,
+        "height": 2213
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_6537.png",
+      "category": "group",
+      "seoFilename": "group-montessori-collaboration-img-6537-1485x1980.webp",
+      "altText": "Students helping each other learn at Spicebush Montessori School",
+      "description": "Students helping each other learn",
+      "keywords": [
+        "collaboration",
+        "group work",
+        "mixed age",
+        "peer learning",
+        "community"
+      ],
+      "dimensions": {
+        "width": 1485,
+        "height": 1980
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_7919.png",
+      "category": "individual",
+      "seoFilename": "individual-montessori-concentration-img-7919-1508x2010.webp",
+      "altText": "Child engaged in self-directed learning at Spicebush Montessori School",
+      "description": "Child engaged in self-directed learning",
+      "keywords": [
+        "concentration",
+        "individual work",
+        "independence",
+        "focus",
+        "self-directed"
+      ],
+      "dimensions": {
+        "width": 1508,
+        "height": 2010
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_7895.png",
+      "category": "individual",
+      "seoFilename": "individual-montessori-concentration-img-7895-1503x2004.webp",
+      "altText": "Child engaged in self-directed learning at Spicebush Montessori School",
+      "description": "Child engaged in self-directed learning",
+      "keywords": [
+        "concentration",
+        "individual work",
+        "independence",
+        "focus",
+        "self-directed"
+      ],
+      "dimensions": {
+        "width": 1503,
+        "height": 2004
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_7893.png",
+      "category": "individual",
+      "seoFilename": "individual-montessori-concentration-img-7893-1304x1738.webp",
+      "altText": "Child deeply concentrated on individual work at Spicebush Montessori School",
+      "description": "Child deeply concentrated on individual work",
+      "keywords": [
+        "concentration",
+        "individual work",
+        "independence",
+        "focus",
+        "self-directed"
+      ],
+      "dimensions": {
+        "width": 1304,
+        "height": 1738
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_7803.png",
+      "category": "individual",
+      "seoFilename": "individual-montessori-concentration-img-7803-1483x1977.webp",
+      "altText": "Child engaged in self-directed learning at Spicebush Montessori School",
+      "description": "Child engaged in self-directed learning",
+      "keywords": [
+        "concentration",
+        "individual work",
+        "independence",
+        "focus",
+        "self-directed"
+      ],
+      "dimensions": {
+        "width": 1483,
+        "height": 1977
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_7293.png",
+      "category": "individual",
+      "seoFilename": "individual-montessori-concentration-img-7293-1732x2057.webp",
+      "altText": "Child engaged in self-directed learning at Spicebush Montessori School",
+      "description": "Child engaged in self-directed learning",
+      "keywords": [
+        "concentration",
+        "individual work",
+        "independence",
+        "focus",
+        "self-directed"
+      ],
+      "dimensions": {
+        "width": 1732,
+        "height": 2057
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_7291.png",
+      "category": "individual",
+      "seoFilename": "individual-montessori-concentration-img-7291-1770x1931.webp",
+      "altText": "Student working independently with materials at Spicebush Montessori School",
+      "description": "Student working independently with materials",
+      "keywords": [
+        "concentration",
+        "individual work",
+        "independence",
+        "focus",
+        "self-directed"
+      ],
+      "dimensions": {
+        "width": 1770,
+        "height": 1931
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "spring",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_6989.png",
+      "category": "individual",
+      "seoFilename": "individual-montessori-concentration-img-6989-1423x1897.webp",
+      "altText": "Child deeply concentrated on individual work at Spicebush Montessori School",
+      "description": "Child deeply concentrated on individual work",
+      "keywords": [
+        "concentration",
+        "individual work",
+        "independence",
+        "focus",
+        "self-directed"
+      ],
+      "dimensions": {
+        "width": 1423,
+        "height": 1897
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_6858.png",
+      "category": "art",
+      "seoFilename": "art-montessori-art-img-6858-1482x1976.webp",
+      "altText": "Creative work in the art area at Spicebush Montessori School",
+      "description": "Creative work in the art area",
+      "keywords": [
+        "art",
+        "creativity",
+        "painting",
+        "artistic expression",
+        "creative"
+      ],
+      "dimensions": {
+        "width": 1482,
+        "height": 1976
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_6382.png",
+      "category": "art",
+      "seoFilename": "art-montessori-art-img-6382-1429x1909.webp",
+      "altText": "Students exploring artistic materials at Spicebush Montessori School",
+      "description": "Students exploring artistic materials",
+      "keywords": [
+        "art",
+        "creativity",
+        "painting",
+        "artistic expression",
+        "creative"
+      ],
+      "dimensions": {
+        "width": 1429,
+        "height": 1909
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_5980.png",
+      "category": "art",
+      "seoFilename": "art-montessori-art-img-5980-1578x2104.webp",
+      "altText": "Creative work in the art area at Spicebush Montessori School",
+      "description": "Creative work in the art area",
+      "keywords": [
+        "art",
+        "creativity",
+        "painting",
+        "artistic expression",
+        "creative"
+      ],
+      "dimensions": {
+        "width": 1578,
+        "height": 2104
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_5922.png",
+      "category": "art",
+      "seoFilename": "art-montessori-art-img-5922-1508x1741.webp",
+      "altText": "Creative work in the art area at Spicebush Montessori School",
+      "description": "Creative work in the art area",
+      "keywords": [
+        "art",
+        "creativity",
+        "painting",
+        "artistic expression",
+        "creative"
+      ],
+      "dimensions": {
+        "width": 1508,
+        "height": 1741
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_5739.png",
+      "category": "art",
+      "seoFilename": "art-montessori-art-img-5739-1363x1783.webp",
+      "altText": "Creative work in the art area at Spicebush Montessori School",
+      "description": "Creative work in the art area",
+      "keywords": [
+        "art",
+        "creativity",
+        "painting",
+        "artistic expression",
+        "creative"
+      ],
+      "dimensions": {
+        "width": 1363,
+        "height": 1783
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_5526.png",
+      "category": "art",
+      "seoFilename": "art-montessori-art-img-5526-1563x1827.webp",
+      "altText": "Creative expression through art activities at Spicebush Montessori School",
+      "description": "Creative expression through art activities",
+      "keywords": [
+        "art",
+        "creativity",
+        "painting",
+        "artistic expression",
+        "creative"
+      ],
+      "dimensions": {
+        "width": 1563,
+        "height": 1827
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_5469.png",
+      "category": "art",
+      "seoFilename": "art-montessori-art-img-5469-1872x1404.webp",
+      "altText": "Creative expression through art activities at Spicebush Montessori School",
+      "description": "Creative expression through art activities",
+      "keywords": [
+        "art",
+        "creativity",
+        "painting",
+        "artistic expression",
+        "creative"
+      ],
+      "dimensions": {
+        "width": 1872,
+        "height": 1404
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_5458.png",
+      "category": "art",
+      "seoFilename": "art-montessori-art-img-5458-1306x1741.webp",
+      "altText": "Creative work in the art area at Spicebush Montessori School",
+      "description": "Creative work in the art area",
+      "keywords": [
+        "art",
+        "creativity",
+        "painting",
+        "artistic expression",
+        "creative"
+      ],
+      "dimensions": {
+        "width": 1306,
+        "height": 1741
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_5397.png",
+      "category": "practical",
+      "seoFilename": "practical-montessori-practical-life-img-5397-1750x1313.webp",
+      "altText": "Practical life activities developing real-world skills at Spicebush Montessori School",
+      "description": "Practical life activities developing real-world skills",
+      "keywords": [
+        "practical life",
+        "life skills",
+        "pouring",
+        "food preparation",
+        "real world"
+      ],
+      "dimensions": {
+        "width": 1750,
+        "height": 1313
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "winter",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_4959.png",
+      "category": "practical",
+      "seoFilename": "practical-montessori-practical-life-img-4959-1340x1786.webp",
+      "altText": "Care of environment activities at Spicebush Montessori School",
+      "description": "Care of environment activities",
+      "keywords": [
+        "practical life",
+        "life skills",
+        "pouring",
+        "food preparation",
+        "real world"
+      ],
+      "dimensions": {
+        "width": 1340,
+        "height": 1786
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "various",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_4709.png",
+      "category": "practical",
+      "seoFilename": "practical-montessori-practical-life-img-4709-1591x2121.webp",
+      "altText": "Care of environment activities at Spicebush Montessori School",
+      "description": "Care of environment activities",
+      "keywords": [
+        "practical life",
+        "life skills",
+        "pouring",
+        "food preparation",
+        "real world"
+      ],
+      "dimensions": {
+        "width": 1591,
+        "height": 2121
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "various",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_4678.png",
+      "category": "practical",
+      "seoFilename": "practical-montessori-practical-life-img-4678-1842x1382.webp",
+      "altText": "Practical life activities developing real-world skills at Spicebush Montessori School",
+      "description": "Practical life activities developing real-world skills",
+      "keywords": [
+        "practical life",
+        "life skills",
+        "pouring",
+        "food preparation",
+        "real world"
+      ],
+      "dimensions": {
+        "width": 1842,
+        "height": 1382
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "various",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_4621.png",
+      "category": "practical",
+      "seoFilename": "practical-montessori-practical-life-img-4621-1403x1809.webp",
+      "altText": "Food preparation in the classroom at Spicebush Montessori School",
+      "description": "Food preparation in the classroom",
+      "keywords": [
+        "practical life",
+        "life skills",
+        "pouring",
+        "food preparation",
+        "real world"
+      ],
+      "dimensions": {
+        "width": 1403,
+        "height": 1809
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "various",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_4529.png",
+      "category": "practical",
+      "seoFilename": "practical-montessori-practical-life-img-4529-1573x2097.webp",
+      "altText": "Practical life activities developing real-world skills at Spicebush Montessori School",
+      "description": "Practical life activities developing real-world skills",
+      "keywords": [
+        "practical life",
+        "life skills",
+        "pouring",
+        "food preparation",
+        "real world"
+      ],
+      "dimensions": {
+        "width": 1573,
+        "height": 2097
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "various",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_4415.png",
+      "category": "practical",
+      "seoFilename": "practical-montessori-practical-life-img-4415-1453x1937.webp",
+      "altText": "Care of environment activities at Spicebush Montessori School",
+      "description": "Care of environment activities",
+      "keywords": [
+        "practical life",
+        "life skills",
+        "pouring",
+        "food preparation",
+        "real world"
+      ],
+      "dimensions": {
+        "width": 1453,
+        "height": 1937
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "various",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_4394.png",
+      "category": "events",
+      "seoFilename": "events-montessori-celebration-img-4394-1404x1872.webp",
+      "altText": "Cultural celebration in the classroom at Spicebush Montessori School",
+      "description": "Cultural celebration in the classroom",
+      "keywords": [
+        "celebration",
+        "community",
+        "events",
+        "gathering",
+        "special occasion"
+      ],
+      "dimensions": {
+        "width": 1404,
+        "height": 1872
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "various",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_4028.png",
+      "category": "events",
+      "seoFilename": "events-montessori-celebration-img-4028-1516x2021.webp",
+      "altText": "Seasonal celebration with students at Spicebush Montessori School",
+      "description": "Seasonal celebration with students",
+      "keywords": [
+        "celebration",
+        "community",
+        "events",
+        "gathering",
+        "special occasion"
+      ],
+      "dimensions": {
+        "width": 1516,
+        "height": 2021
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "various",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_3719.png",
+      "category": "events",
+      "seoFilename": "events-montessori-celebration-img-3719-1776x1332.webp",
+      "altText": "School community gathering at Spicebush Montessori School",
+      "description": "School community gathering",
+      "keywords": [
+        "celebration",
+        "community",
+        "events",
+        "gathering",
+        "special occasion"
+      ],
+      "dimensions": {
+        "width": 1776,
+        "height": 1332
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "various",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_3692.png",
+      "category": "events",
+      "seoFilename": "events-montessori-celebration-img-3692-1580x2106.webp",
+      "altText": "Seasonal celebration with students at Spicebush Montessori School",
+      "description": "Seasonal celebration with students",
+      "keywords": [
+        "celebration",
+        "community",
+        "events",
+        "gathering",
+        "special occasion"
+      ],
+      "dimensions": {
+        "width": 1580,
+        "height": 2106
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "various",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_3416.png",
+      "category": "events",
+      "seoFilename": "events-montessori-celebration-img-3416-1626x2168.webp",
+      "altText": "Special event bringing families together at Spicebush Montessori School",
+      "description": "Special event bringing families together",
+      "keywords": [
+        "celebration",
+        "community",
+        "events",
+        "gathering",
+        "special occasion"
+      ],
+      "dimensions": {
+        "width": 1626,
+        "height": 2168
+      },
+      "focalPoints": {
+        "primaryFocalX": 50,
+        "primaryFocalY": 40,
+        "secondaryFocalX": 35,
+        "secondaryFocalY": 55
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "various",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_3100.png",
+      "category": "events",
+      "seoFilename": "events-montessori-celebration-img-3100-1754x1341.webp",
+      "altText": "Seasonal celebration with students at Spicebush Montessori School",
+      "description": "Seasonal celebration with students",
+      "keywords": [
+        "celebration",
+        "community",
+        "events",
+        "gathering",
+        "special occasion"
+      ],
+      "dimensions": {
+        "width": 1754,
+        "height": 1341
+      },
+      "focalPoints": {
+        "primaryFocalX": 45,
+        "primaryFocalY": 35,
+        "secondaryFocalX": 60,
+        "secondaryFocalY": 50
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "various",
+      "isRecent": false
+    },
+    {
+      "originalFile": "IMG_3040.png",
+      "category": "events",
+      "seoFilename": "events-montessori-celebration-img-3040-1640x2187.webp",
+      "altText": "School community gathering at Spicebush Montessori School",
+      "description": "School community gathering",
+      "keywords": [
+        "celebration",
+        "community",
+        "events",
+        "gathering",
+        "special occasion"
+      ],
+      "dimensions": {
+        "width": 1640,
+        "height": 2187
+      },
+      "focalPoints": {
+        "primaryFocalX": 55,
+        "primaryFocalY": 45,
+        "secondaryFocalX": 30,
+        "secondaryFocalY": 40
+      },
+      "cropZones": {
+        "mobile": {
+          "x": 30,
+          "y": 20,
+          "width": 40,
+          "height": 60
+        },
+        "tablet": {
+          "x": 20,
+          "y": 10,
+          "width": 60,
+          "height": 80
+        }
+      },
+      "quality": "medium",
+      "season": "various",
+      "isRecent": false
+    }
+  ]
+}

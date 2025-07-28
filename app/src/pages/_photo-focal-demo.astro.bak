@@ -1,0 +1,214 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import OptimizedImage from '../components/OptimizedImage.astro';
+---
+
+<Layout 
+  title="Focal Point Demo - Spicebush Montessori School"
+  description="Interactive demonstration of responsive focal point positioning"
+>
+  <Header />
+  
+  <main id="main-content" class="py-16">
+    <div class="container mx-auto px-4">
+      <h1 class="text-4xl font-heading font-bold mb-8 text-center">Responsive Focal Point Demo</h1>
+      
+      <div class="bg-blue-50 p-6 rounded-lg mb-8">
+        <h2 class="text-xl font-bold mb-2">How This Works:</h2>
+        <ul class="list-disc list-inside space-y-1">
+          <li>Each image has focal point coordinates (red dot) that stay visible when cropped</li>
+          <li>Mobile devices use mobile crop zones (green boxes)</li>
+          <li>Tablets use tablet crop zones (orange boxes)</li>
+          <li>Desktop uses the primary focal point</li>
+          <li>Resize your browser to see the responsive behavior</li>
+        </ul>
+      </div>
+      
+      <!-- Example 1: Portrait-oriented focal point -->
+      <div class="mb-16 bg-white p-8 rounded-lg shadow-lg">
+        <h2 class="text-2xl font-bold mb-4">Example 1: Child with Globe (Portrait Focus)</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h3 class="font-semibold mb-2">Metadata:</h3>
+            <ul class="text-sm space-y-1 mb-4">
+              <li>{'Primary Focal - 65% x, 35% y (child\'s face)'}</li>
+              <li>{'Mobile Crop - 50, 10, 40, 60 (portrait crop)'}</li>
+              <li>{'Tablet Crop - 30, 0, 60, 80 (wider view)'}</li>
+            </ul>
+            <div class="aspect-[4/3] bg-gray-100 rounded overflow-hidden">
+              <OptimizedImage
+                photoSlug="homepage-montessori-child-exploring-globe-joyful-learning"
+                className="w-full h-full"
+                objectFit="cover"
+                showFocalPoints={true}
+              />
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold mb-2">Different Aspect Ratios:</h3>
+            <div class="space-y-4">
+              <div>
+                <p class="text-sm mb-1">Square (1:1)</p>
+                <div class="aspect-square bg-gray-100 rounded overflow-hidden max-w-xs">
+                  <OptimizedImage
+                    photoSlug="homepage-montessori-child-exploring-globe-joyful-learning"
+                    className="w-full h-full"
+                    objectFit="cover"
+                  />
+                </div>
+              </div>
+              <div>
+                <p class="text-sm mb-1">Wide Banner (3:1)</p>
+                <div class="aspect-[3/1] bg-gray-100 rounded overflow-hidden">
+                  <OptimizedImage
+                    photoSlug="homepage-montessori-child-exploring-globe-joyful-learning"
+                    className="w-full h-full"
+                    objectFit="cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Example 2: Action scene with multiple subjects -->
+      <div class="mb-16 bg-white p-8 rounded-lg shadow-lg">
+        <h2 class="text-2xl font-bold mb-4">Example 2: Outdoor Scene (Multiple Subjects)</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h3 class="font-semibold mb-2">Metadata:</h3>
+            <ul class="text-sm space-y-1 mb-4">
+              <li>Primary Focal - 50% x, 40% y (children)</li>
+              <li>Secondary Focal - 30% x, 60% y (leaves)</li>
+              <li>Mobile - Focus on main subjects</li>
+              <li>Tablet: Show more environment</li>
+            </ul>
+            <div class="aspect-video bg-gray-100 rounded overflow-hidden">
+              <OptimizedImage
+                photoSlug="homepage-montessori-children-autumn-leaves-outdoor-exploration"
+                className="w-full h-full"
+                objectFit="cover"
+                showFocalPoints={true}
+              />
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold mb-2">Responsive Behavior:</h3>
+            <div class="space-y-4">
+              <div class="max-w-[200px]">
+                <p class="text-sm mb-1">Mobile View (narrow)</p>
+                <div class="aspect-[9/16] bg-gray-100 rounded overflow-hidden">
+                  <OptimizedImage
+                    photoSlug="homepage-montessori-children-autumn-leaves-outdoor-exploration"
+                    className="w-full h-full"
+                    objectFit="cover"
+                  />
+                </div>
+              </div>
+              <div>
+                <p class="text-sm mb-1">Desktop View (wide)</p>
+                <div class="aspect-[21/9] bg-gray-100 rounded overflow-hidden">
+                  <OptimizedImage
+                    photoSlug="homepage-montessori-children-autumn-leaves-outdoor-exploration"
+                    className="w-full h-full"
+                    objectFit="cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Example 3: Detail work -->
+      <div class="mb-16 bg-white p-8 rounded-lg shadow-lg">
+        <h2 class="text-2xl font-bold mb-4">Example 3: Detail Work (Math Materials)</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h3 class="font-semibold mb-2">Metadata:</h3>
+            <ul class="text-sm space-y-1 mb-4">
+              <li>Primary Focal - 45% x, 35% y (hands/materials)</li>
+              <li>Mobile - Tight crop on work</li>
+              <li>Desktop - Show full context</li>
+              <li>Priority: High (homepage feature)</li>
+            </ul>
+            <div class="aspect-[4/3] bg-gray-100 rounded overflow-hidden">
+              <OptimizedImage
+                photoSlug="homepage-montessori-math-numbers-concentration-deep-learning"
+                className="w-full h-full"
+                objectFit="cover"
+                showFocalPoints={true}
+              />
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold mb-2">Loading Performance:</h3>
+            <div class="space-y-4">
+              <div>
+                <p class="text-sm mb-1">Sizes Available:</p>
+                <ul class="text-xs space-y-1 bg-gray-50 p-4 rounded">
+                  <li>• 320w: Mobile phones</li>
+                  <li>• 640w: Tablets & high-DPI phones</li>
+                  <li>• 960w: Small laptops</li>
+                  <li>• 1280w: Desktop screens</li>
+                  <li>• Original: Large displays</li>
+                </ul>
+              </div>
+              <div>
+                <p class="text-sm mb-1">Format Support:</p>
+                <ul class="text-xs space-y-1 bg-gray-50 p-4 rounded">
+                  <li>✓ WebP: Modern browsers (85% smaller)</li>
+                  <li>✓ JPG: Fallback for older browsers</li>
+                  <li>✓ Lazy loading: Off-screen images</li>
+                  <li>✓ Priority loading: Critical images</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Technical Details -->
+      <div class="bg-gray-100 p-8 rounded-lg">
+        <h2 class="text-2xl font-bold mb-4">Technical Implementation</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h3 class="font-semibold mb-2">Focal Point System:</h3>
+            <pre class="text-xs bg-gray-800 text-gray-100 p-4 rounded overflow-x-auto">
+<code>// Photo metadata in CMS
+primaryFocalX: 65    // 0-100 percentage
+primaryFocalY: 35    // 0-100 percentage
+mobileCropX: 50      // Mobile crop zone
+mobileCropY: 10
+mobileCropWidth: 40
+mobileCropHeight: 60</code>
+            </pre>
+          </div>
+          <div>
+            <h3 class="font-semibold mb-2">Responsive CSS:</h3>
+            <pre class="text-xs bg-gray-800 text-gray-100 p-4 rounded overflow-x-auto">
+<code>// Applied dynamically
+.optimized-image-element {
+  object-fit: cover;
+  object-position: 65% 35%; // Desktop
+}
+
+@media (max-width: 767px) {
+  // JS updates to mobile position
+  object-position: 70% 40%;
+}</code>
+            </pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <Footer />
+</Layout>

@@ -1,0 +1,407 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { ChevronDown, ChevronUp } from 'lucide-astro';
+---
+
+<Layout 
+  title="Frequently Asked Questions - Spicebush Montessori School"
+  description="Find answers to common questions about our Montessori programs, inclusive education practices, and admissions process."
+  keywords="Montessori FAQ, preschool questions, inclusive education information, admissions help, caregiver questions"
+>
+  <Header />
+  
+  <main id="main-content">
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-stone-beige to-light-stone py-16 lg:py-24">
+      <div class="container mx-auto px-4">
+        <div class="text-center">
+          <h1 class="text-4xl lg:text-5xl font-bold text-earth-brown mb-6">
+            Frequently Asked Questions
+          </h1>
+          <p class="text-lg lg:text-xl text-earth-brown max-w-3xl mx-auto">
+            Find answers to common questions about our school, programs, and enrollment process. Can't find what you're looking for? We're happy to help!
+          </p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- FAQ Sections -->
+    <section class="py-16 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+          
+          <!-- Enrollment & Admissions -->
+          <div class="mb-12">
+            <h2 class="text-2xl lg:text-3xl font-bold text-earth-brown mb-8">Enrollment & Admissions</h2>
+            <div class="space-y-4">
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">What ages do you serve?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">We serve children ages 3-6 years old in our primary program. Children must be 3 years old by September 1st to enroll. We maintain a mixed-age classroom following the Montessori approach, which allows younger children to learn from older peers and older children to develop leadership skills.</p>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">Do children need to be potty trained?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">We welcome children at various stages of toilet learning. While we encourage independence, we understand that each child develops at their own pace. Our teachers work with families to support toilet learning in a respectful, pressure-free way. Please discuss your child's specific needs during your tour.</p>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">When can we apply for enrollment?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">We accept applications year-round for our waitlist. Open enrollment for the following school year typically begins in January, with tours starting in November. We encourage families to schedule a tour first to ensure our program is a good fit. Priority is given to siblings of current students and families who demonstrate alignment with our values.</p>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">What is your enrollment process?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">Our enrollment process has three simple steps:</p>
+                  <ol class="list-decimal list-inside mt-2 space-y-2 text-earth-brown/80">
+                    <li><strong>Schedule a Tour:</strong> Visit our school to see our environment and meet our teachers</li>
+                    <li><strong>Submit Application:</strong> Complete our online application with a $50 non-refundable fee</li>
+                    <li><strong>Enrollment Decision:</strong> We'll contact you within 2 weeks regarding acceptance</li>
+                  </ol>
+                  <p class="text-earth-brown/80 mt-2">Once accepted, a deposit equal to one month's tuition secures your child's spot.</p>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+          
+          <!-- Tuition & Financial Aid -->
+          <div class="mb-12">
+            <h2 class="text-2xl lg:text-3xl font-bold text-earth-brown mb-8">Tuition & Financial Aid</h2>
+            <div class="space-y-4">
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">How much is tuition?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">We use a sliding scale tuition model based on family income, ranging from $185 to $1,850 per month for our full-day program. Use our <a href="/admissions/tuition-calculator" class="text-forest-canopy hover:underline font-semibold">Tuition Calculator</a> to estimate your family's tuition based on your income and family size. We believe every family should have access to quality Montessori education.</p>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">Do you offer financial aid beyond the sliding scale?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">Our sliding scale tuition is our primary form of financial aid, making our program accessible to families across income levels. In cases of exceptional financial hardship, we may have limited additional aid available. We also accept state childcare subsidies and can provide documentation for dependent care FSA accounts.</p>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">What is included in tuition?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">Tuition includes:</p>
+                  <ul class="list-disc list-inside mt-2 space-y-1 text-earth-brown/80">
+                    <li>All educational materials and supplies</li>
+                    <li>Morning and afternoon snacks (organic when possible)</li>
+                    <li>Enrichment activities (art, music, gardening)</li>
+                    <li>Field trips within walking distance</li>
+                    <li>Parent education workshops</li>
+                  </ul>
+                  <p class="text-earth-brown/80 mt-2">Families provide lunch and any special dietary items. Extended care (4:00-5:30 PM) is available for an additional fee.</p>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+          
+          <!-- Daily Life & Schedule -->
+          <div class="mb-12">
+            <h2 class="text-2xl lg:text-3xl font-bold text-earth-brown mb-8">Daily Life & Schedule</h2>
+            <div class="space-y-4">
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">What are your school hours?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">Our regular school day runs from 8:00 AM to 4:00 PM, Monday through Friday. We offer extended care until 5:30 PM for families who need it. Drop-off begins at 7:45 AM, and we ask that all children arrive by 8:30 AM to fully participate in the morning work cycle.</p>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">What does a typical day look like?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">A typical day includes:</p>
+                  <ul class="list-none mt-2 space-y-2 text-earth-brown/80">
+                    <li><strong>8:00-8:30 AM:</strong> Arrival and morning greeting</li>
+                    <li><strong>8:30-11:30 AM:</strong> Morning work cycle (uninterrupted Montessori work time)</li>
+                    <li><strong>11:30 AM-12:00 PM:</strong> Lunch</li>
+                    <li><strong>12:00-1:00 PM:</strong> Outdoor play</li>
+                    <li><strong>1:00-3:00 PM:</strong> Afternoon work cycle or rest for younger children</li>
+                    <li><strong>3:00-3:30 PM:</strong> Snack and story time</li>
+                    <li><strong>3:30-4:00 PM:</strong> Outdoor play and dismissal</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">Do children nap at school?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">We provide a rest time for children who need it, typically our younger students. Children who don't nap engage in quiet activities like looking at books, drawing, or working with quiet materials. We work with each family to honor their child's individual rest needs while maintaining a peaceful environment for all.</p>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">What do children eat at school?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">We provide healthy morning and afternoon snacks, often including fresh fruits, vegetables, and whole grains. Many snacks are prepared by the children as part of our practical life curriculum. Families pack lunch for their children. We're a nut-free school and accommodate various dietary restrictions. Water is available throughout the day.</p>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+          
+          <!-- Educational Approach -->
+          <div class="mb-12">
+            <h2 class="text-2xl lg:text-3xl font-bold text-earth-brown mb-8">Educational Approach</h2>
+            <div class="space-y-4">
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">What makes Montessori different?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">Montessori education is child-centered and based on scientific observations of how children learn. Key differences include:</p>
+                  <ul class="list-disc list-inside mt-2 space-y-1 text-earth-brown/80">
+                    <li>Multi-age classrooms (3-6 years together)</li>
+                    <li>Self-directed learning with teacher guidance</li>
+                    <li>Hands-on materials that make abstract concepts concrete</li>
+                    <li>Uninterrupted work cycles (3 hours)</li>
+                    <li>Focus on intrinsic motivation rather than external rewards</li>
+                    <li>Emphasis on independence and practical life skills</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">How do you support different learning styles?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">Montessori education naturally accommodates different learning styles through its multi-sensory approach. Children can see, touch, and manipulate materials, supporting visual, kinesthetic, and auditory learners. Our teachers observe each child to understand their unique needs and interests, adapting presentations and offering materials that match their learning style. We celebrate neurodiversity and work with families to support children with various learning differences.</p>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">Do children learn academics like reading and math?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">Yes! Montessori children often learn to read and work with mathematical concepts earlier than in traditional settings because the materials make these concepts tangible and engaging. However, we follow each child's readiness and interest. Some children may be reading at 4, while others begin at 6 - both timelines are perfectly normal. Our materials cover language, mathematics, sensorial exploration, practical life, and cultural studies (science, geography, art, music).</p>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">How do you assess progress without grades?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">We use careful observation and detailed record-keeping to track each child's progress. Teachers maintain portfolios showing growth across all areas of development. We share progress through regular parent conferences, narrative reports, and examples of your child's work. This approach provides a much richer picture of your child's development than traditional grades, focusing on growth and mastery rather than comparison to others.</p>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+          
+          <!-- Special Needs & Support -->
+          <div class="mb-12">
+            <h2 class="text-2xl lg:text-3xl font-bold text-earth-brown mb-8">Inclusion & Support</h2>
+            <div class="space-y-4">
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">Do you accept children with special needs?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">We welcome all children and believe deeply in inclusive education. Montessori's individualized approach naturally supports children with various learning differences, including ADHD, autism, sensory processing differences, and other needs. We work closely with families and support specialists to ensure each child thrives. Please discuss your child's specific needs during your tour so we can plan together.</p>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">Can therapists come to school?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">Yes, we welcome support specialists including speech therapists, occupational therapists, and behavioral specialists to work with children at school. We can provide space for services and collaborate with your child's support team. This allows children to receive needed services without missing school time and helps us implement strategies consistently throughout the day.</p>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">How do you handle behavioral challenges?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">We view challenging behaviors as communication about unmet needs. Our approach focuses on understanding the child, adjusting the environment, teaching skills, and building connection. We use positive discipline techniques, never punishment or shame. Our prepared environment and individualized approach often prevent behavioral challenges. When they arise, we work collaboratively with families to support the child's growth.</p>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+          
+          <!-- Parent Involvement -->
+          <div class="mb-12">
+            <h2 class="text-2xl lg:text-3xl font-bold text-earth-brown mb-8">Parent & Family Involvement</h2>
+            <div class="space-y-4">
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">How can parents be involved?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">We encourage family involvement in many ways:</p>
+                  <ul class="list-disc list-inside mt-2 space-y-1 text-earth-brown/80">
+                    <li>Classroom observations (after your child is settled)</li>
+                    <li>Parent education evenings on Montessori principles</li>
+                    <li>Volunteering for special events and field trips</li>
+                    <li>Sharing your culture, skills, or profession with the class</li>
+                    <li>Participating in workdays to maintain our environment</li>
+                    <li>Joining committees (fundraising, events, diversity & inclusion)</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                  <span class="font-semibold text-earth-brown">How do you communicate with families?</span>
+                  <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                </button>
+                <div class="faq-content hidden px-6 pb-4">
+                  <p class="text-earth-brown/80">We maintain open communication through:</p>
+                  <ul class="list-disc list-inside mt-2 space-y-1 text-earth-brown/80">
+                    <li>Daily brief check-ins at drop-off and pick-up</li>
+                    <li>Weekly classroom newsletters with photos and updates</li>
+                    <li>Parent-teacher conferences twice yearly</li>
+                    <li>Digital portfolio updates showing your child's work</li>
+                    <li>Parent education evenings and community events</li>
+                    <li>Open-door policy for questions or concerns</li>
+                  </ul>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+          
+          <!-- Call to Action -->
+          <div class="bg-moss-green/10 rounded-lg p-8 mt-12 text-center">
+            <h3 class="text-2xl font-bold text-earth-brown mb-4">Still Have Questions?</h3>
+            <p class="text-earth-brown/80 mb-6">We're here to help! Contact us directly or schedule a tour to learn more about our school.</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="/admissions/schedule-tour" class="bg-sunlight-gold hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                Schedule a Tour
+              </a>
+              <a href="/contact" class="bg-white hover:bg-gray-50 text-earth-brown border border-earth-brown px-6 py-3 rounded-lg font-semibold transition-colors">
+                Contact Us
+              </a>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <Footer />
+</Layout>
+
+<script>
+  // FAQ accordion functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const faqItems = document.querySelectorAll('.faq-item');
+    
+    faqItems.forEach(item => {
+      const toggle = item.querySelector('.faq-toggle');
+      const content = item.querySelector('.faq-content');
+      const icon = toggle?.querySelector('svg');
+      
+      toggle?.addEventListener('click', () => {
+        const isOpen = !content?.classList.contains('hidden');
+        
+        // Close all other FAQs
+        faqItems.forEach(otherItem => {
+          const otherContent = otherItem.querySelector('.faq-content');
+          const otherIcon = otherItem.querySelector('.faq-toggle svg');
+          if (otherItem !== item) {
+            otherContent?.classList.add('hidden');
+            otherIcon?.classList.remove('rotate-180');
+          }
+        });
+        
+        // Toggle current FAQ
+        if (isOpen) {
+          content?.classList.add('hidden');
+          icon?.classList.remove('rotate-180');
+        } else {
+          content?.classList.remove('hidden');
+          icon?.classList.add('rotate-180');
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .faq-toggle svg {
+    transition: transform 0.3s ease;
+  }
+  
+  .faq-content {
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>

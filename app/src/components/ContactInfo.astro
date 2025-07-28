@@ -1,0 +1,52 @@
+---
+import { getEntry } from '../lib/content-db';
+import { Phone, Mail, MapPin } from 'lucide-astro';
+
+interface Props {
+  showIcons?: boolean;
+  showLabels?: boolean;
+  inline?: boolean;
+  className?: string;
+}
+
+const { showIcons = true, showLabels = false, inline = false, className = '' } = Astro.props;
+
+// Get school info from Supabase
+const schoolInfo = await getEntry('school-info', 'general');
+const { phone, email, address } = schoolInfo.data;
+
+const containerClass = inline ? 'flex flex-wrap gap-4' : 'space-y-2';
+---
+
+<div class={`${containerClass} ${className}`}>
+  <div class="flex items-center gap-2">
+    {showIcons && <Phone className="w-4 h-4 text-forest-canopy" />}
+    {showLabels && <span class="text-earth-brown/80">Phone:</span>}
+    <a 
+      href={`tel:${phone.replace(/[^0-9]/g, '')}`}
+      class="text-earth-brown hover:text-forest-canopy transition-colors"
+    >
+      {phone}
+    </a>
+  </div>
+  
+  <div class="flex items-center gap-2">
+    {showIcons && <Mail className="w-4 h-4 text-forest-canopy" />}
+    {showLabels && <span class="text-earth-brown/80">Email:</span>}
+    <a 
+      href={`mailto:${email}`}
+      class="text-earth-brown hover:text-forest-canopy transition-colors"
+    >
+      {email}
+    </a>
+  </div>
+  
+  <div class="flex items-start gap-2">
+    {showIcons && <MapPin className="w-4 h-4 text-forest-canopy mt-0.5" />}
+    {showLabels && <span class="text-earth-brown/80">Address:</span>}
+    <address class="not-italic text-earth-brown">
+      {address.street}<br />
+      {address.city}, {address.state} {address.zip}
+    </address>
+  </div>
+</div>

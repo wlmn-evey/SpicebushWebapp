@@ -1,0 +1,71 @@
+{
+  "$ref": "#/definitions/testimonials",
+  "definitions": {
+    "testimonials": {
+      "type": "object",
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "authorTitle": {
+          "type": "string"
+        },
+        "authorPhoto": {
+          "type": "string"
+        },
+        "rating": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 5,
+          "default": 5
+        },
+        "featured": {
+          "type": "boolean",
+          "default": false
+        },
+        "date": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "integer",
+              "format": "unix-time"
+            }
+          ]
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "general",
+            "teachers",
+            "programs",
+            "admissions",
+            "values"
+          ],
+          "default": "general"
+        },
+        "childAge": {
+          "type": "string"
+        },
+        "yearsAtSpicebush": {
+          "type": "number"
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "author",
+        "date"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

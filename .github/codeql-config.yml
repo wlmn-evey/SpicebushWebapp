@@ -1,0 +1,19 @@
+name: "Spicebush CodeQL Config"
+
+disable-default-queries: false
+
+queries:
+  - uses: security-and-quality
+
+paths-ignore:
+  - node_modules
+  - dist
+  - .astro
+  - coverage
+  - backups
+
+paths:
+  - app/src
+
+packs:
+  - codeql/javascript-queries

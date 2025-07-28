@@ -1,0 +1,82 @@
+services:
+  # Astro development server
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev.optimized
+    ports:
+      - "4321:4321"
+    volumes:
+      # Mount source code for hot reload
+      - .:/app:delegated
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PUBLIC_SUPABASE_URL=http://postgrest:3000
+      - PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwiZXhwIjoxOTgzODEyOTk2LCJyb2xlIjoiYW5vbiIsImF1ZCI6ImF1dGhlbnRpY2F0ZWQiLCJpYXQiOjE3NTI3ODg4MzR9.dATSc1K6ClMcdQUiK4_XWKZcYszT2037YlqqbD5muB4
+    networks:
+      - spicebush-network
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgrest:
+        condition: service_started
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: spicebush_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spicebush-network
+
+  # PostgREST - REST API for PostgreSQL
+  postgrest:
+    image: postgrest/postgrest:v12.2.3
+    restart: unless-stopped
+    ports:
+      - "54321:3000"
+    environment:
+      PGRST_DB_URI: postgres://postgres:postgres@postgres:5432/spicebush_dev
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: postgres
+      PGRST_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      PGRST_JWT_AUD: ""
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - spicebush-network
+
+  # Email testing service
+  mailhog:
+    image: mailhog/mailhog:latest
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MH_STORAGE: memory
+    networks:
+      - spicebush-network
+
+networks:
+  spicebush-network:
+    driver: bridge
+
+volumes:
+  postgres-data:

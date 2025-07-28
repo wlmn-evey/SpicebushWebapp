@@ -1,0 +1,56 @@
+---
+import { CheckCircle, ArrowRight } from 'lucide-astro';
+import OptimizedImage from './OptimizedImage.astro';
+---
+
+<!-- Inclusion Commitment Section -->
+<section class="py-16 bg-moss-green text-white">
+  <div class="container mx-auto px-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div>
+        <h2 class="text-3xl lg:text-4xl font-heading font-bold mb-6 tracking-tight">
+          Every Child Brings Something Beautiful
+        </h2>
+        <p class="text-lg text-gray-100 mb-6 leading-relaxed-plus font-light">
+          We've learned that neurodivergent children don't just belong in our community—they make it richer, more joyful, and more alive. Their unique ways of seeing and being in the world teach all of us something new every day.
+        </p>
+        
+        <div class="space-y-4 mb-8">
+          <div class="flex items-center space-x-3">
+            <CheckCircle className="w-5 h-5 text-sunlight-gold flex-shrink-0" />
+            <span>Classrooms designed for all kinds of sensitivities and needs</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <CheckCircle className="w-5 h-5 text-sunlight-gold flex-shrink-0" />
+            <span>Learning approaches tailored to each child's strengths</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <CheckCircle className="w-5 h-5 text-sunlight-gold flex-shrink-0" />
+            <span>Close partnership with families and specialists</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <CheckCircle className="w-5 h-5 text-sunlight-gold flex-shrink-0" />
+            <span>Celebrating what each child does beautifully</span>
+          </div>
+        </div>
+        
+        <a 
+          href="/our-principles" 
+          class="bg-white text-moss-green hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold inline-flex items-center transition-colors focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-moss-green"
+        >
+          Learn About Our Approach
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </a>
+      </div>
+      
+      <div class="rounded-lg overflow-hidden h-80">
+        <OptimizedImage
+          photoSlug="group-montessori-collaboration-img-6599-1362x2213"
+          className="w-full h-full"
+          objectFit="cover"
+          loading="lazy"
+        />
+      </div>
+    </div>
+  </div>
+</section>

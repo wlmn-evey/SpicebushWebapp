@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spicebush Photo Library Preview</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #2E4A3B;
+        }
+        .stats {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .controls {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .filter-btn {
+            margin: 5px;
+            padding: 8px 16px;
+            border: 2px solid #2E4A3B;
+            background: white;
+            color: #2E4A3B;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .filter-btn.active {
+            background: #2E4A3B;
+            color: white;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .image-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .image-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .image-container {
+            position: relative;
+            padding-bottom: 75%;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+        .image-container img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+        }
+        .image-info {
+            padding: 15px;
+        }
+        .filename {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        .quality-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        .quality-high {
+            background: #4CAF50;
+            color: white;
+        }
+        .quality-medium {
+            background: #FF9800;
+            color: white;
+        }
+        .quality-low {
+            background: #f44336;
+            color: white;
+        }
+        .category-select {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 300px;
+        }
+        .selected {
+            border: 3px solid #4CAF50;
+        }
+        .selection-counter {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2E4A3B;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Spicebush Montessori Photo Library</h1>
+    
+    <div class="stats">
+        <h2>Library Statistics</h2>
+        <p>Total web-viewable images: 147</p>
+        <p>Formats: JPG, PNG (HEIC files not shown - need conversion)</p>
+        <p>Click images to select for website use</p>
+    </div>
+    
+    <div class="controls">
+        <h3>Quick Filters</h3>
+        <button class="filter-btn" onclick="filterByPattern('IMG_9')">Recent (9000s)</button>
+        <button class="filter-btn" onclick="filterByPattern('IMG_8')">8000s</button>
+        <button class="filter-btn" onclick="filterByPattern('IMG_7')">7000s</button>
+        <button class="filter-btn" onclick="filterByPattern('IMG_6')">6000s</button>
+        <button class="filter-btn" onclick="filterByPattern('IMG_5')">5000s</button>
+        <button class="filter-btn" onclick="showAll()">Show All</button>
+        
+        <h3>Categorize Selected</h3>
+        <select class="category-select" id="categorySelect">
+            <option value="">Select category...</option>
+            <option value="classroom-learning">Classroom Learning</option>
+            <option value="outdoor-activities">Outdoor Activities</option>
+            <option value="montessori-materials">Montessori Materials</option>
+            <option value="group-activities">Group Activities</option>
+            <option value="individual-work">Individual Work</option>
+            <option value="teachers-staff">Teachers & Staff</option>
+            <option value="events-celebrations">Events & Celebrations</option>
+            <option value="practical-life">Practical Life</option>
+            <option value="art-creative">Art & Creative</option>
+            <option value="seasonal">Seasonal</option>
+        </select>
+        <button onclick="categorizeSelected()">Categorize Selected</button>
+        <button onclick="exportSelections()">Export Selections</button>
+    </div>
+    
+    <div class="gallery" id="gallery">
+        
+            <div class="image-card" data-filename="48910319-C4A2-4F4B-A178-63DDF7E4361C.jpg" data-index="0" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/48910319-C4A2-4F4B-A178-63DDF7E4361C.jpg" alt="48910319-C4A2-4F4B-A178-63DDF7E4361C.jpg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">48910319-C4A2-4F4B-A178-63DDF7E4361C.jpg</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="48910319-C4A2-4F4B-A178-63DDF7E4361C.png" data-index="1" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/48910319-C4A2-4F4B-A178-63DDF7E4361C.png" alt="48910319-C4A2-4F4B-A178-63DDF7E4361C.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">48910319-C4A2-4F4B-A178-63DDF7E4361C.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="423786D1-5ED9-4253-9172-E65C2FCFA2FC.jpg" data-index="2" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/423786D1-5ED9-4253-9172-E65C2FCFA2FC.jpg" alt="423786D1-5ED9-4253-9172-E65C2FCFA2FC.jpg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">423786D1-5ED9-4253-9172-E65C2FCFA2FC.jpg</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="423786D1-5ED9-4253-9172-E65C2FCFA2FC.png" data-index="3" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/423786D1-5ED9-4253-9172-E65C2FCFA2FC.png" alt="423786D1-5ED9-4253-9172-E65C2FCFA2FC.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">423786D1-5ED9-4253-9172-E65C2FCFA2FC.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_9835.png" data-index="4" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_9835.png" alt="IMG_9835.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_9835.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_9831.png" data-index="5" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_9831.png" alt="IMG_9831.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_9831.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_9687.png" data-index="6" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_9687.png" alt="IMG_9687.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_9687.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_9646(1).png" data-index="7" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_9646(1).png" alt="IMG_9646(1).png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_9646(1).png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_9636.png" data-index="8" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_9636.png" alt="IMG_9636.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_9636.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_9616.png" data-index="9" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_9616.png" alt="IMG_9616.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_9616.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_9493.png" data-index="10" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_9493.png" alt="IMG_9493.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_9493.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_9472.png" data-index="11" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_9472.png" alt="IMG_9472.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_9472.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_9466.png" data-index="12" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_9466.png" alt="IMG_9466.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_9466.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_9428.png" data-index="13" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_9428.png" alt="IMG_9428.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_9428.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_9421.png" data-index="14" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_9421.png" alt="IMG_9421.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_9421.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_9413.png" data-index="15" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_9413.png" alt="IMG_9413.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_9413.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_9103.png" data-index="16" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_9103.png" alt="IMG_9103.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_9103.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_8836.png" data-index="17" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_8836.png" alt="IMG_8836.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_8836.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_8832 - 01.png" data-index="18" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_8832 - 01.png" alt="IMG_8832 - 01.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_8832 - 01.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_8832.png" data-index="19" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_8832.png" alt="IMG_8832.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_8832.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_8781.png" data-index="20" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_8781.png" alt="IMG_8781.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_8781.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_8774.png" data-index="21" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_8774.png" alt="IMG_8774.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_8774.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_8753(1).png" data-index="22" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_8753(1).png" alt="IMG_8753(1).png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_8753(1).png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_8743.png" data-index="23" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_8743.png" alt="IMG_8743.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_8743.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_8530.png" data-index="24" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_8530.png" alt="IMG_8530.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_8530.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_8390(1).png" data-index="25" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_8390(1).png" alt="IMG_8390(1).png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_8390(1).png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="ED8376D7-F480-4B7E-B51B-F79A94F2A6C7.jpg" data-index="26" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/ED8376D7-F480-4B7E-B51B-F79A94F2A6C7.jpg" alt="ED8376D7-F480-4B7E-B51B-F79A94F2A6C7.jpg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">ED8376D7-F480-4B7E-B51B-F79A94F2A6C7.jpg</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="ED8376D7-F480-4B7E-B51B-F79A94F2A6C7.png" data-index="27" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/ED8376D7-F480-4B7E-B51B-F79A94F2A6C7.png" alt="ED8376D7-F480-4B7E-B51B-F79A94F2A6C7.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">ED8376D7-F480-4B7E-B51B-F79A94F2A6C7.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_8329.png" data-index="28" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_8329.png" alt="IMG_8329.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_8329.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_8315.png" data-index="29" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_8315.png" alt="IMG_8315.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_8315.png</div>
+                    <span class="quality-badge quality-high">
+                        Recent
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7919.JPG" data-index="30" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7919.JPG" alt="IMG_7919.JPG" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7919.JPG</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7919.png" data-index="31" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7919.png" alt="IMG_7919.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7919.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7895.png" data-index="32" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7895.png" alt="IMG_7895.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7895.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7893.png" data-index="33" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7893.png" alt="IMG_7893.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7893.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7803.png" data-index="34" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7803.png" alt="IMG_7803.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7803.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7509(1).JPG" data-index="35" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7509(1).JPG" alt="IMG_7509(1).JPG" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7509(1).JPG</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7509(1).png" data-index="36" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7509(1).png" alt="IMG_7509(1).png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7509(1).png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7509.JPG" data-index="37" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7509.JPG" alt="IMG_7509.JPG" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7509.JPG</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7490(1).png" data-index="38" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7490(1).png" alt="IMG_7490(1).png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7490(1).png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7432.png" data-index="39" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7432.png" alt="IMG_7432.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7432.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7417.png" data-index="40" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7417.png" alt="IMG_7417.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7417.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7380.png" data-index="41" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7380.png" alt="IMG_7380.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7380.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7379.png" data-index="42" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7379.png" alt="IMG_7379.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7379.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7293.png" data-index="43" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7293.png" alt="IMG_7293.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7293.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7291.png" data-index="44" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7291.png" alt="IMG_7291.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7291.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7150.png" data-index="45" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7150.png" alt="IMG_7150.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7150.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7149.png" data-index="46" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7149.png" alt="IMG_7149.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7149.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_7118.png" data-index="47" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_7118.png" alt="IMG_7118.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_7118.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6998.png" data-index="48" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6998.png" alt="IMG_6998.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6998.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6989.JPG" data-index="49" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6989.JPG" alt="IMG_6989.JPG" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6989.JPG</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6989.png" data-index="50" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6989.png" alt="IMG_6989.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6989.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6935.png" data-index="51" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6935.png" alt="IMG_6935.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6935.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6858.png" data-index="52" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6858.png" alt="IMG_6858.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6858.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6760.png" data-index="53" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6760.png" alt="IMG_6760.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6760.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6703.png" data-index="54" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6703.png" alt="IMG_6703.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6703.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6699(1).png" data-index="55" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6699(1).png" alt="IMG_6699(1).png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6699(1).png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6692.png" data-index="56" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6692.png" alt="IMG_6692.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6692.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6678.png" data-index="57" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6678.png" alt="IMG_6678.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6678.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6672.png" data-index="58" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6672.png" alt="IMG_6672.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6672.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6660(1).png" data-index="59" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6660(1).png" alt="IMG_6660(1).png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6660(1).png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6599.png" data-index="60" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6599.png" alt="IMG_6599.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6599.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6543.png" data-index="61" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6543.png" alt="IMG_6543.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6543.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6537.png" data-index="62" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6537.png" alt="IMG_6537.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6537.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6382.png" data-index="63" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6382.png" alt="IMG_6382.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6382.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6379(1).png" data-index="64" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6379(1).png" alt="IMG_6379(1).png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6379(1).png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6292.JPG" data-index="65" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6292.JPG" alt="IMG_6292.JPG" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6292.JPG</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6292.png" data-index="66" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6292.png" alt="IMG_6292.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6292.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6278.png" data-index="67" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6278.png" alt="IMG_6278.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6278.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6218 - 01.png" data-index="68" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6218 - 01.png" alt="IMG_6218 - 01.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6218 - 01.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_6218.png" data-index="69" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_6218.png" alt="IMG_6218.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_6218.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_5980.png" data-index="70" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_5980.png" alt="IMG_5980.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_5980.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_5922.png" data-index="71" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_5922.png" alt="IMG_5922.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_5922.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_5739.png" data-index="72" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_5739.png" alt="IMG_5739.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_5739.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_5526.png" data-index="73" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_5526.png" alt="IMG_5526.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_5526.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_5516(1).png" data-index="74" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_5516(1).png" alt="IMG_5516(1).png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_5516(1).png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_5469.png" data-index="75" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_5469.png" alt="IMG_5469.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_5469.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_5458.png" data-index="76" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_5458.png" alt="IMG_5458.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_5458.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_5397.png" data-index="77" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_5397.png" alt="IMG_5397.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_5397.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_5131.JPG" data-index="78" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_5131.JPG" alt="IMG_5131.JPG" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_5131.JPG</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_5131.png" data-index="79" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_5131.png" alt="IMG_5131.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_5131.png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_5026(1).png" data-index="80" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_5026(1).png" alt="IMG_5026(1).png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_5026(1).png</div>
+                    <span class="quality-badge quality-medium">
+                        Medium
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_4959.png" data-index="81" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_4959.png" alt="IMG_4959.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_4959.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_4936.png" data-index="82" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_4936.png" alt="IMG_4936.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_4936.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_4709.JPG" data-index="83" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_4709.JPG" alt="IMG_4709.JPG" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_4709.JPG</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_4709.png" data-index="84" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_4709.png" alt="IMG_4709.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_4709.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_4678.png" data-index="85" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_4678.png" alt="IMG_4678.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_4678.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_4621.png" data-index="86" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_4621.png" alt="IMG_4621.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_4621.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="F4563C13-10E2-4882-98A9-1D726DCF8C1D.jpg" data-index="87" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/F4563C13-10E2-4882-98A9-1D726DCF8C1D.jpg" alt="F4563C13-10E2-4882-98A9-1D726DCF8C1D.jpg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">F4563C13-10E2-4882-98A9-1D726DCF8C1D.jpg</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="F4563C13-10E2-4882-98A9-1D726DCF8C1D.png" data-index="88" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/F4563C13-10E2-4882-98A9-1D726DCF8C1D.png" alt="F4563C13-10E2-4882-98A9-1D726DCF8C1D.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">F4563C13-10E2-4882-98A9-1D726DCF8C1D.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_4529.png" data-index="89" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_4529.png" alt="IMG_4529.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_4529.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_4415.png" data-index="90" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_4415.png" alt="IMG_4415.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_4415.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_4394.png" data-index="91" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_4394.png" alt="IMG_4394.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_4394.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_4232.png" data-index="92" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_4232.png" alt="IMG_4232.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_4232.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_4028.png" data-index="93" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_4028.png" alt="IMG_4028.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_4028.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_3788.png" data-index="94" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_3788.png" alt="IMG_3788.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_3788.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_3719.png" data-index="95" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_3719.png" alt="IMG_3719.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_3719.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_3692.jpeg" data-index="96" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_3692.jpeg" alt="IMG_3692.jpeg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_3692.jpeg</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_3692.png" data-index="97" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_3692.png" alt="IMG_3692.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_3692.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_3416.png" data-index="98" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_3416.png" alt="IMG_3416.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_3416.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_3100.png" data-index="99" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_3100.png" alt="IMG_3100.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_3100.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_3040.png" data-index="100" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_3040.png" alt="IMG_3040.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_3040.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2992.png" data-index="101" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2992.png" alt="IMG_2992.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2992.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2892.png" data-index="102" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2892.png" alt="IMG_2892.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2892.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2767.png" data-index="103" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2767.png" alt="IMG_2767.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2767.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2753.png" data-index="104" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2753.png" alt="IMG_2753.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2753.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2570 - 01.png" data-index="105" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2570 - 01.png" alt="IMG_2570 - 01.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2570 - 01.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2570 - 02.png" data-index="106" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2570 - 02.png" alt="IMG_2570 - 02.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2570 - 02.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2570.PNG" data-index="107" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2570.PNG" alt="IMG_2570.PNG" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2570.PNG</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2568 - 01.png" data-index="108" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2568 - 01.png" alt="IMG_2568 - 01.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2568 - 01.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2568 - 02.png" data-index="109" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2568 - 02.png" alt="IMG_2568 - 02.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2568 - 02.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2568.PNG" data-index="110" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2568.PNG" alt="IMG_2568.PNG" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2568.PNG</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2336.JPG" data-index="111" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2336.JPG" alt="IMG_2336.JPG" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2336.JPG</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2336.png" data-index="112" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2336.png" alt="IMG_2336.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2336.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2221.png" data-index="113" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2221.png" alt="IMG_2221.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2221.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2087.png" data-index="114" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2087.png" alt="IMG_2087.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2087.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_2015.png" data-index="115" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_2015.png" alt="IMG_2015.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_2015.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_1959.png" data-index="116" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_1959.png" alt="IMG_1959.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_1959.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_1938.png" data-index="117" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_1938.png" alt="IMG_1938.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_1938.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_1873.png" data-index="118" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_1873.png" alt="IMG_1873.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_1873.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_1828.png" data-index="119" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_1828.png" alt="IMG_1828.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_1828.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_1821.png" data-index="120" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_1821.png" alt="IMG_1821.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_1821.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_1788.png" data-index="121" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_1788.png" alt="IMG_1788.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_1788.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_1590.png" data-index="122" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_1590.png" alt="IMG_1590.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_1590.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_1488.png" data-index="123" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_1488.png" alt="IMG_1488.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_1488.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_1482.png" data-index="124" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_1482.png" alt="IMG_1482.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_1482.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_1180.png" data-index="125" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_1180.png" alt="IMG_1180.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_1180.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="739A6E21-D1C4-4FAB-9A21-A5E788A945AB.jpg" data-index="126" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/739A6E21-D1C4-4FAB-9A21-A5E788A945AB.jpg" alt="739A6E21-D1C4-4FAB-9A21-A5E788A945AB.jpg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">739A6E21-D1C4-4FAB-9A21-A5E788A945AB.jpg</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="739A6E21-D1C4-4FAB-9A21-A5E788A945AB.png" data-index="127" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/739A6E21-D1C4-4FAB-9A21-A5E788A945AB.png" alt="739A6E21-D1C4-4FAB-9A21-A5E788A945AB.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">739A6E21-D1C4-4FAB-9A21-A5E788A945AB.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="IMG_0707.png" data-index="128" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/IMG_0707.png" alt="IMG_0707.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">IMG_0707.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="F431EE77-4163-4C90-B53B-9C7C26DAD558.jpg" data-index="129" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/F431EE77-4163-4C90-B53B-9C7C26DAD558.jpg" alt="F431EE77-4163-4C90-B53B-9C7C26DAD558.jpg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">F431EE77-4163-4C90-B53B-9C7C26DAD558.jpg</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="F431EE77-4163-4C90-B53B-9C7C26DAD558.png" data-index="130" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/F431EE77-4163-4C90-B53B-9C7C26DAD558.png" alt="F431EE77-4163-4C90-B53B-9C7C26DAD558.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">F431EE77-4163-4C90-B53B-9C7C26DAD558.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="116C4239-C1B4-4E75-8459-24D9F45629EA.jpg" data-index="131" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/116C4239-C1B4-4E75-8459-24D9F45629EA.jpg" alt="116C4239-C1B4-4E75-8459-24D9F45629EA.jpg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">116C4239-C1B4-4E75-8459-24D9F45629EA.jpg</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="116C4239-C1B4-4E75-8459-24D9F45629EA.png" data-index="132" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/116C4239-C1B4-4E75-8459-24D9F45629EA.png" alt="116C4239-C1B4-4E75-8459-24D9F45629EA.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">116C4239-C1B4-4E75-8459-24D9F45629EA.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="DD83E7FC-B304-435C-9867-9E8DEBB90086.jpg" data-index="133" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/DD83E7FC-B304-435C-9867-9E8DEBB90086.jpg" alt="DD83E7FC-B304-435C-9867-9E8DEBB90086.jpg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">DD83E7FC-B304-435C-9867-9E8DEBB90086.jpg</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="DD83E7FC-B304-435C-9867-9E8DEBB90086.png" data-index="134" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/DD83E7FC-B304-435C-9867-9E8DEBB90086.png" alt="DD83E7FC-B304-435C-9867-9E8DEBB90086.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">DD83E7FC-B304-435C-9867-9E8DEBB90086.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="BDC72C73-DB23-46EE-B746-B2BF824AFA18.jpg" data-index="135" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/BDC72C73-DB23-46EE-B746-B2BF824AFA18.jpg" alt="BDC72C73-DB23-46EE-B746-B2BF824AFA18.jpg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">BDC72C73-DB23-46EE-B746-B2BF824AFA18.jpg</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="BDC72C73-DB23-46EE-B746-B2BF824AFA18.png" data-index="136" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/BDC72C73-DB23-46EE-B746-B2BF824AFA18.png" alt="BDC72C73-DB23-46EE-B746-B2BF824AFA18.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">BDC72C73-DB23-46EE-B746-B2BF824AFA18.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="4E6C393D-04BF-4107-8C5C-A98F18262CF8.jpg" data-index="137" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/4E6C393D-04BF-4107-8C5C-A98F18262CF8.jpg" alt="4E6C393D-04BF-4107-8C5C-A98F18262CF8.jpg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">4E6C393D-04BF-4107-8C5C-A98F18262CF8.jpg</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="4E6C393D-04BF-4107-8C5C-A98F18262CF8.png" data-index="138" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/4E6C393D-04BF-4107-8C5C-A98F18262CF8.png" alt="4E6C393D-04BF-4107-8C5C-A98F18262CF8.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">4E6C393D-04BF-4107-8C5C-A98F18262CF8.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="2E0B1591-5A86-4BE8-B605-00F37D324D5A.jpg" data-index="139" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/2E0B1591-5A86-4BE8-B605-00F37D324D5A.jpg" alt="2E0B1591-5A86-4BE8-B605-00F37D324D5A.jpg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">2E0B1591-5A86-4BE8-B605-00F37D324D5A.jpg</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="2E0B1591-5A86-4BE8-B605-00F37D324D5A.png" data-index="140" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/2E0B1591-5A86-4BE8-B605-00F37D324D5A.png" alt="2E0B1591-5A86-4BE8-B605-00F37D324D5A.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">2E0B1591-5A86-4BE8-B605-00F37D324D5A.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="2FE8292B-7E3D-4A70-9649-E77BDFDC87B7.jpg" data-index="141" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/2FE8292B-7E3D-4A70-9649-E77BDFDC87B7.jpg" alt="2FE8292B-7E3D-4A70-9649-E77BDFDC87B7.jpg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">2FE8292B-7E3D-4A70-9649-E77BDFDC87B7.jpg</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="2FE8292B-7E3D-4A70-9649-E77BDFDC87B7.png" data-index="142" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/2FE8292B-7E3D-4A70-9649-E77BDFDC87B7.png" alt="2FE8292B-7E3D-4A70-9649-E77BDFDC87B7.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">2FE8292B-7E3D-4A70-9649-E77BDFDC87B7.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="1EE7088B-6293-448C-B22E-442E56E396F5.jpg" data-index="143" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/1EE7088B-6293-448C-B22E-442E56E396F5.jpg" alt="1EE7088B-6293-448C-B22E-442E56E396F5.jpg" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">1EE7088B-6293-448C-B22E-442E56E396F5.jpg</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="1EE7088B-6293-448C-B22E-442E56E396F5.png" data-index="144" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/1EE7088B-6293-448C-B22E-442E56E396F5.png" alt="1EE7088B-6293-448C-B22E-442E56E396F5.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">1EE7088B-6293-448C-B22E-442E56E396F5.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="FullSizeRender(1).png" data-index="145" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/FullSizeRender(1).png" alt="FullSizeRender(1).png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">FullSizeRender(1).png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+            <div class="image-card" data-filename="FullSizeRender.png" data-index="146" onclick="toggleSelection(this)">
+                <div class="image-container">
+                    <img src="file:///Users/eveywinters/CascadeProjects/SpicebushWebapp/Website Photos, Spicebush Montessori School 2/FullSizeRender.png" alt="FullSizeRender.png" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="filename">FullSizeRender.png</div>
+                    <span class="quality-badge quality-low">
+                        Older
+                    </span>
+                    <div class="category" data-category=""></div>
+                </div>
+            </div>
+          
+    </div>
+    
+    <div class="selection-counter" id="counter">0 selected</div>
+    
+    <script>
+        let selections = new Set();
+        let categorizations = {};
+        
+        function toggleSelection(card) {
+            const filename = card.dataset.filename;
+            if (selections.has(filename)) {
+                selections.delete(filename);
+                card.classList.remove('selected');
+            } else {
+                selections.add(filename);
+                card.classList.add('selected');
+            }
+            updateCounter();
+        }
+        
+        function updateCounter() {
+            document.getElementById('counter').textContent = selections.size + ' selected';
+        }
+        
+        function filterByPattern(pattern) {
+            const cards = document.querySelectorAll('.image-card');
+            cards.forEach(card => {
+                if (card.dataset.filename.includes(pattern)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        function showAll() {
+            const cards = document.querySelectorAll('.image-card');
+            cards.forEach(card => {
+                card.style.display = 'block';
+            });
+        }
+        
+        function categorizeSelected() {
+            const category = document.getElementById('categorySelect').value;
+            if (!category) {
+                alert('Please select a category');
+                return;
+            }
+            
+            selections.forEach(filename => {
+                categorizations[filename] = category;
+                const card = document.querySelector(`[data-filename="${filename}"]`);
+                const categoryDiv = card.querySelector('.category');
+                categoryDiv.textContent = 'Category: ' + category;
+                categoryDiv.style.color = '#4CAF50';
+            });
+            
+            alert(`Categorized ${selections.size} images as "${category}"`);
+        }
+        
+        function exportSelections() {
+            const output = {
+                totalSelected: selections.size,
+                selections: Array.from(selections),
+                categorizations: categorizations,
+                timestamp: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(output, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'spicebush-photo-selections.json';
+            a.click();
+        }
+    </script>
+</body>
+</html>

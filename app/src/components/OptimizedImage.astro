@@ -1,0 +1,217 @@
+---
+interface Props {
+  photoSlug: string;
+  className?: string;
+  priority?: boolean;
+  sizes?: string;
+  objectFit?: 'cover' | 'contain' | 'fill' | 'scale-down' | 'none';
+  objectPosition?: string;
+  loading?: 'lazy' | 'eager';
+  showFocalPoints?: boolean; // Debug mode
+}
+
+import { getCollection, getEntry } from 'astro:content';
+
+const { 
+  photoSlug, 
+  className = '', 
+  priority = false, 
+  sizes = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw',
+  objectFit = 'cover',
+  objectPosition,
+  loading,
+  showFocalPoints = false
+} = Astro.props;
+
+// Get photo metadata from CMS
+let photo;
+try {
+  photo = await getEntry('photos', photoSlug);
+} catch (error) {
+  console.error(`Photo not found: ${photoSlug}`);
+  photo = null;
+}
+
+if (!photo) {
+  // Fallback for missing photos
+  return null;
+}
+
+const {
+  optimizedFilename,
+  originalWidth,
+  originalHeight,
+  altText,
+  primaryFocalX,
+  primaryFocalY,
+  secondaryFocalX,
+  secondaryFocalY,
+  mobileCropX,
+  mobileCropY,
+  mobileCropWidth,
+  mobileCropHeight,
+  tabletCropX,
+  tabletCropY,
+  tabletCropWidth,
+  tabletCropHeight
+} = photo.data;
+
+// Calculate object-position based on focal points
+const objectPositionDesktop = `${primaryFocalX}% ${primaryFocalY}%`;
+const objectPositionTablet = `${tabletCropX + (tabletCropWidth / 2)}% ${tabletCropY + (tabletCropHeight / 2)}%`;
+const objectPositionMobile = `${mobileCropX + (mobileCropWidth / 2)}% ${mobileCropY + (mobileCropHeight / 2)}%`;
+
+// Generate srcset for different screen sizes
+// Gallery subcategories are stored in gallery/{category} subdirectories
+const gallerySubcategories = ['art', 'classroom', 'events', 'group', 'individual', 'materials', 'outdoor', 'practical'];
+const isGallerySubcategory = gallerySubcategories.includes(photo.data.category);
+const basePath = isGallerySubcategory 
+  ? `/images/optimized/gallery/${photo.data.category}`
+  : `/images/optimized/${photo.data.category}`;
+
+// Extract the base filename without dimensions from optimizedFilename
+// e.g., "gallery-montessori-watercolor-painting-artistic-expression-1200x800.webp" -> use slug instead
+const webpSrc = `${basePath}/${optimizedFilename}`;
+const jpgFallback = `${basePath}/${photo.slug}-640w.jpg`;
+
+// Create responsive srcset
+let srcSet = [
+  `${basePath}/${photo.slug}-320w.webp 320w`,
+  `${basePath}/${photo.slug}-640w.webp 640w`,
+  `${basePath}/${photo.slug}-960w.webp 960w`,
+  `${basePath}/${photo.slug}-1280w.webp 1280w`
+].filter(src => {
+  // Only include sizes that exist (smaller than original)
+  const width = parseInt(src.match(/(\d+)w/)?.[1] || '0');
+  return width <= originalWidth;
+}).join(', ');
+
+// Add primary image to srcset if it exists
+if (originalWidth > 1280) {
+  srcSet += `, ${webpSrc} ${originalWidth}w`;
+}
+
+// Determine loading strategy
+const loadingStrategy = loading || (priority ? 'eager' : 'lazy');
+
+// Generate a simple data attribute for CSS targeting
+const imageId = `img-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div class={`optimized-image ${className}`} data-photo-slug={photoSlug}>
+  <picture>
+    <!-- WebP source with responsive sizing -->
+    <source
+      type="image/webp"
+      srcset={srcSet}
+      sizes={sizes}
+    />
+    
+    <!-- Fallback JPG -->
+    <img
+      src={jpgFallback}
+      alt={altText}
+      width={originalWidth}
+      height={originalHeight}
+      loading={loadingStrategy}
+      decoding={priority ? 'sync' : 'async'}
+      class="optimized-image-element"
+      data-image-id={imageId}
+      data-position-mobile={objectPositionMobile}
+      data-position-tablet={objectPositionTablet}
+      data-position-desktop={objectPositionDesktop}
+      style={`object-fit: ${objectFit}; object-position: ${objectPosition || objectPositionDesktop};`}
+    />
+  </picture>
+  
+  {showFocalPoints && (
+    <div class="focal-points-debug">
+      <!-- Primary focal point -->
+      <div 
+        class="focal-point focal-point-primary"
+        style={`left: ${primaryFocalX}%; top: ${primaryFocalY}%;`}
+        title={`Primary: ${primaryFocalX}%, ${primaryFocalY}%`}
+      ></div>
+      
+      <!-- Secondary focal point -->
+      {secondaryFocalX && secondaryFocalY && (
+        <div 
+          class="focal-point focal-point-secondary"
+          style={`left: ${secondaryFocalX}%; top: ${secondaryFocalY}%;`}
+          title={`Secondary: ${secondaryFocalX}%, ${secondaryFocalY}%`}
+        ></div>
+      )}
+      
+      <!-- Mobile crop zone -->
+      <div 
+        class="crop-zone crop-zone-mobile"
+        style={`left: ${mobileCropX}%; top: ${mobileCropY}%; width: ${mobileCropWidth}%; height: ${mobileCropHeight}%;`}
+        title="Mobile crop zone"
+      ></div>
+      
+      <!-- Tablet crop zone -->
+      <div 
+        class="crop-zone crop-zone-tablet"
+        style={`left: ${tabletCropX}%; top: ${tabletCropY}%; width: ${tabletCropWidth}%; height: ${tabletCropHeight}%;`}
+        title="Tablet crop zone"
+      ></div>
+    </div>
+  )}
+</div>
+
+<style>
+  .optimized-image {
+    @apply block relative overflow-hidden;
+  }
+  
+  .optimized-image-element {
+    @apply w-full h-full;
+  }
+  
+  /* Debug styles */
+  .focal-points-debug {
+    @apply absolute inset-0 pointer-events-none;
+  }
+  
+  .focal-point {
+    @apply absolute w-4 h-4 rounded-full border-2 border-white transform -translate-x-2 -translate-y-2;
+  }
+  
+  .focal-point-primary {
+    @apply bg-red-500;
+  }
+  
+  .focal-point-secondary {
+    @apply bg-blue-500 w-3 h-3 -translate-x-1.5 -translate-y-1.5;
+  }
+  
+  .crop-zone {
+    @apply absolute border-2;
+  }
+  
+  .crop-zone-mobile {
+    @apply border-green-400 bg-green-400/20;
+  }
+  
+  @media (min-width: 768px) {
+    .crop-zone-mobile {
+      @apply hidden;
+    }
+  }
+  
+  .crop-zone-tablet {
+    @apply border-orange-400 bg-orange-400/20 hidden;
+  }
+  
+  @media (min-width: 768px) {
+    .crop-zone-tablet {
+      @apply block;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .crop-zone-tablet {
+      @apply hidden;
+    }
+  }
+</style>

@@ -1,0 +1,373 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { checkAdminAuth } from '../../lib/admin-auth-check';
+import { 
+  ArrowLeft,
+  BarChart3, 
+  TrendingUp, 
+  TrendingDown,
+  Users, 
+  Eye,
+  Download,
+  Calendar,
+  Filter,
+  RefreshCw,
+  DollarSign,
+  Mail,
+  Phone,
+  MapPin
+} from 'lucide-astro';
+
+// Check if user is authenticated and has admin access
+const { isAuthenticated } = await checkAdminAuth(Astro);
+
+if (!isAuthenticated) {
+  return Astro.redirect('/auth/login?redirect=/admin/analytics');
+}
+---
+
+<Layout 
+  title="Analytics Dashboard - Admin Panel"
+  description="View comprehensive analytics and insights about school operations and website performance."
+  keywords="admin analytics, school insights, performance metrics"
+>
+  <Header />
+  
+  <main id="main-content">
+    <!-- Admin Auth Check -->
+    <script>
+      import { auth } from '../../lib/supabase.ts';
+      
+      document.addEventListener('DOMContentLoaded', async function() {
+        try {
+          const user = await auth.getCurrentUser();
+          if (!user) {
+            window.location.href = '/auth/login';
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking authentication:', error);
+          window.location.href = '/auth/login';
+        }
+      });
+    </script>
+
+    <!-- Header -->
+    <section class="bg-gradient-to-br from-emerald-500 to-green-600 py-12">
+      <div class="container mx-auto px-4">
+        <div class="max-w-6xl mx-auto">
+          <!-- Back to Dashboard Navigation -->
+          <div class="mb-6">
+            <a href="/admin" class="inline-flex items-center text-green-200 hover:text-white transition-colors group">
+              <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+              <span class="text-sm font-medium">Back to Admin Dashboard</span>
+            </a>
+          </div>
+          
+          <div>
+            <h1 class="text-3xl lg:text-4xl font-heading font-bold text-white tracking-tight">
+              Analytics Dashboard
+            </h1>
+            <p class="text-green-100 text-lg max-w-3xl">
+              Comprehensive insights into website performance, enrollment trends, and family engagement.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Analytics Content -->
+    <section class="py-12 bg-gray-50 min-h-screen">
+      <div class="container mx-auto px-4 max-w-7xl">
+        
+        <!-- Controls Bar -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-8">
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div class="flex items-center space-x-4">
+              <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                <option>Last 30 days</option>
+                <option>Last 7 days</option>
+                <option>Last 90 days</option>
+                <option>This year</option>
+              </select>
+              <button class="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:border-emerald-500 transition-colors">
+                <Filter className="w-4 h-4 mr-2" />
+                Filter
+              </button>
+              <button class="flex items-center px-4 py-2 text-emerald-600 hover:text-emerald-700 transition-colors">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </button>
+            </div>
+            <button class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center">
+              <Download className="w-4 h-4 mr-2" />
+              Export Report
+            </button>
+          </div>
+        </div>
+
+        <!-- Key Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <div class="text-2xl font-bold text-gray-900">2,347</div>
+                <div class="text-gray-600 text-sm font-medium">Total Visitors</div>
+              </div>
+              <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Eye className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+            <div class="flex items-center text-green-600 text-sm">
+              <TrendingUp className="w-4 h-4 mr-1" />
+              +12.5% from last month
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <div class="text-2xl font-bold text-gray-900">156</div>
+                <div class="text-gray-600 text-sm font-medium">Tuition Calculations</div>
+              </div>
+              <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+            <div class="flex items-center text-green-600 text-sm">
+              <TrendingUp className="w-4 h-4 mr-1" />
+              +8.3% from last month
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <div class="text-2xl font-bold text-gray-900">34</div>
+                <div class="text-gray-600 text-sm font-medium">Contact Inquiries</div>
+              </div>
+              <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Mail className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+            <div class="flex items-center text-green-600 text-sm">
+              <TrendingUp className="w-4 h-4 mr-1" />
+              +15.7% from last month
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <div class="text-2xl font-bold text-gray-900">18</div>
+                <div class="text-gray-600 text-sm font-medium">Tour Requests</div>
+              </div>
+              <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+            <div class="flex items-center text-green-600 text-sm">
+              <TrendingUp className="w-4 h-4 mr-1" />
+              +22.1% from last month
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <!-- Website Traffic Chart -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-semibold text-gray-900">Website Traffic</h3>
+              <button class="text-gray-500 hover:text-gray-700 text-sm">View Details</button>
+            </div>
+            <div class="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+              <div class="text-center">
+                <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                <p class="text-gray-500">Traffic chart visualization</p>
+                <p class="text-gray-400 text-sm">(Chart integration needed)</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Engagement Metrics -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-semibold text-gray-900">User Engagement</h3>
+              <button class="text-gray-500 hover:text-gray-700 text-sm">View Details</button>
+            </div>
+            <div class="space-y-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-semibold text-gray-900">Avg. Session Duration</div>
+                  <div class="text-gray-600 text-sm">3m 42s</div>
+                </div>
+                <div class="text-green-600 text-sm flex items-center">
+                  <TrendingUp className="w-4 h-4 mr-1" />
+                  +5.2%
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-semibold text-gray-900">Pages per Session</div>
+                  <div class="text-gray-600 text-sm">4.7 pages</div>
+                </div>
+                <div class="text-green-600 text-sm flex items-center">
+                  <TrendingUp className="w-4 h-4 mr-1" />
+                  +8.1%
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-semibold text-gray-900">Bounce Rate</div>
+                  <div class="text-gray-600 text-sm">28.3%</div>
+                </div>
+                <div class="text-red-600 text-sm flex items-center">
+                  <TrendingDown className="w-4 h-4 mr-1" />
+                  -12.4%
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-semibold text-gray-900">Return Visitors</div>
+                  <div class="text-gray-600 text-sm">42.1%</div>
+                </div>
+                <div class="text-green-600 text-sm flex items-center">
+                  <TrendingUp className="w-4 h-4 mr-1" />
+                  +3.7%
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Tables -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Top Pages -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-semibold text-gray-900">Top Pages</h3>
+              <button class="text-emerald-600 hover:text-emerald-700 text-sm">View All</button>
+            </div>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                <div>
+                  <div class="font-medium text-gray-900">/</div>
+                  <div class="text-gray-600 text-sm">Home Page</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-semibold text-gray-900">847</div>
+                  <div class="text-gray-600 text-sm">views</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                <div>
+                  <div class="font-medium text-gray-900">/admissions/tuition-calculator</div>
+                  <div class="text-gray-600 text-sm">Tuition Calculator</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-semibold text-gray-900">423</div>
+                  <div class="text-gray-600 text-sm">views</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                <div>
+                  <div class="font-medium text-gray-900">/about</div>
+                  <div class="text-gray-600 text-sm">About Us</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-semibold text-gray-900">312</div>
+                  <div class="text-gray-600 text-sm">views</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                <div>
+                  <div class="font-medium text-gray-900">/our-principles</div>
+                  <div class="text-gray-600 text-sm">Our Principles</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-semibold text-gray-900">278</div>
+                  <div class="text-gray-600 text-sm">views</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between py-3">
+                <div>
+                  <div class="font-medium text-gray-900">/contact</div>
+                  <div class="text-gray-600 text-sm">Contact Us</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-semibold text-gray-900">189</div>
+                  <div class="text-gray-600 text-sm">views</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Referral Sources -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-semibold text-gray-900">Traffic Sources</h3>
+              <button class="text-emerald-600 hover:text-emerald-700 text-sm">View All</button>
+            </div>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                <div>
+                  <div class="font-medium text-gray-900">Direct</div>
+                  <div class="text-gray-600 text-sm">Direct visits</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-semibold text-gray-900">45.2%</div>
+                  <div class="text-gray-600 text-sm">1,061 visits</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                <div>
+                  <div class="font-medium text-gray-900">Google Search</div>
+                  <div class="text-gray-600 text-sm">Organic search</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-semibold text-gray-900">32.8%</div>
+                  <div class="text-gray-600 text-sm">770 visits</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                <div>
+                  <div class="font-medium text-gray-900">Facebook</div>
+                  <div class="text-gray-600 text-sm">Social media</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-semibold text-gray-900">12.4%</div>
+                  <div class="text-gray-600 text-sm">291 visits</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                <div>
+                  <div class="font-medium text-gray-900">Referral Sites</div>
+                  <div class="text-gray-600 text-sm">Other websites</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-semibold text-gray-900">6.1%</div>
+                  <div class="text-gray-600 text-sm">143 visits</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between py-3">
+                <div>
+                  <div class="font-medium text-gray-900">Instagram</div>
+                  <div class="text-gray-600 text-sm">Social media</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-semibold text-gray-900">3.5%</div>
+                  <div class="text-gray-600 text-sm">82 visits</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <Footer />
+</Layout>

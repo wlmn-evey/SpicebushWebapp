@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="100" fill="#4a7c59"/>
+  <text x="100" y="120" font-family="Arial, sans-serif" font-size="80" text-anchor="middle" fill="white">LW</text>
+</svg>
+EOF < /dev/null

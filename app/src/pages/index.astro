@@ -1,0 +1,125 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import HeroSection from '../components/HeroSection.astro';
+import ImageGrid from '../components/ImageGrid.astro';
+import PhotoFeature from '../components/PhotoFeature.astro';
+import NonDiscriminationPolicy from '../components/NonDiscriminationPolicy.astro';
+import ValuePropositions from '../components/ValuePropositions.astro';
+import Testimonials from '../components/Testimonials.astro';
+import ProgramsOverview from '../components/ProgramsOverview.astro';
+import InclusionCommitment from '../components/InclusionCommitment.astro';
+import CallToAction from '../components/CallToAction.astro';
+import RecentBlogPosts from '../components/RecentBlogPosts.astro';
+import FeaturedTeachers from '../components/FeaturedTeachers.astro';
+import TrustIndicators from '../components/TrustIndicators.astro';
+import { CheckCircle, ArrowRight } from 'lucide-astro';
+---
+
+<Layout 
+  title="Spicebush Montessori School - Inclusive Montessori Education for Ages 3-6"
+  description="Discover individualized, inclusive Montessori education at Spicebush. We welcome all learners with accessible tuition, neurodiversity support, and authentic Montessori methods."
+  keywords="Montessori school, inclusive preschool, neurodiversity education, accessible tuition, early childhood education, autism friendly school, ADHD support"
+>
+  <Header />
+  
+  <main id="main-content">
+    <!-- New Hero Section with full-width image -->
+    <HeroSection />
+    
+    <!-- Trust Indicators -->
+    <TrustIndicators />
+    
+    <!-- Content Section with Photo Feature -->
+    <section class="py-16 bg-moss-green text-light-stone">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto text-center">
+          <h2 class="text-3xl lg:text-4xl font-heading font-bold mb-8 tracking-tight">
+            Where Children Flourish as Themselves
+          </h2>
+          <p class="text-lg lg:text-xl leading-relaxed-plus font-light max-w-3xl mx-auto tracking-wide">
+            We believe each child is already whole and wonderful. Our job is simply to create a space where their natural curiosity can unfold, where they feel deeply seen and loved, and where learning feels as natural as breathing.
+          </p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Authentic Montessori Section with Photo Feature -->
+    <PhotoFeature 
+      title="Learning the Montessori Way" 
+      content="Dr. Montessori discovered something beautiful: when children are free to follow their interests in a thoughtfully prepared environment, they naturally develop concentration, independence, and a deep love of learning. We stay true to these discoveries while making sure every child—regardless of how they learn—can experience this magic."
+      photoSlug="individual-montessori-concentration-img-7291-1770x1931"
+      ctaLink="/our-principles"
+      ctaText="Learn About Our Approach"
+      imagePosition="right"
+    />
+    
+    <!-- Remove the duplicate sections -->
+    <!-- <section class="py-16 bg-moss-green text-light-stone">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto text-center">
+          <div>
+            <h2 class="text-3xl lg:text-4xl font-heading font-bold mb-8 tracking-tight">
+              Nurturing Their<br>Unique Journey.
+            </h2>
+            <p class="text-lg lg:text-xl leading-relaxed-plus font-light">
+              At Spicebush, we honor every child's individual path. Our guides thoughtfully prepare a learning experience that fosters their natural curiosity, while our mixed-age classrooms allow children to inspire and learn from one another, building kindness and connection every day.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section> -->
+    
+    <!-- Component Sections -->
+    <ValuePropositions />
+    <Testimonials />
+    
+    <!-- Photo Gallery Grid -->
+    <ImageGrid 
+      title="Life at Spicebush Montessori"
+      subtitle="Explore our vibrant community and see our Montessori philosophy in action"
+      columns={3}
+      images={[
+        {
+          photoSlug: "individual-montessori-concentration-img-7293-1732x2057",
+          caption: "Deep concentration and self-directed learning"
+        },
+        {
+          photoSlug: "materials-montessori-montessori-materials-img-6678-1499x1814",
+          caption: "Hands-on exploration with Montessori materials"
+        },
+        {
+          photoSlug: "individual-montessori-concentration-img-6989-1423x1897",
+          caption: "Independent discovery and joyful learning"
+        },
+        {
+          photoSlug: "gallery-montessori-watercolor-painting-artistic-expression",
+          caption: "Creative expression through art"
+        },
+        {
+          photoSlug: "group-montessori-collaboration-img-6543-1933x1450",
+          caption: "Our diverse classroom community working together"
+        },
+        {
+          photoSlug: "outdoor-montessori-outdoor-education-img-9428-1310x1746",
+          caption: "Exploring and learning in nature"
+        }
+      ]}
+    />
+    
+    <ProgramsOverview />
+    <FeaturedTeachers />
+    <InclusionCommitment />
+    
+    <!-- Non-Discrimination Policy Section -->
+    <NonDiscriminationPolicy />
+    
+    <!-- Recent Blog Posts -->
+    <RecentBlogPosts />
+    
+    <!-- Call to Action Section -->
+    <CallToAction />
+  </main>
+  
+  <Footer />

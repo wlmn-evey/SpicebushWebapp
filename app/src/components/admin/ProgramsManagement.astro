@@ -1,0 +1,21 @@
+---
+import { Users, Plus } from 'lucide-astro';
+---
+
+<!-- Programs Management Section -->
+<div id="programs-section" class="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center">
+      <Users className="w-6 h-6 text-moss-green mr-3" />
+      <h2 class="text-2xl font-bold text-earth-brown">Program Management</h2>
+    </div>
+    <button id="add-program-btn" class="bg-moss-green hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
+      <Plus className="w-4 h-4 mr-2" />
+      Add Program
+    </button>
+  </div>
+  
+  <div id="programs-list" class="space-y-4">
+    <!-- Programs will be loaded here -->
+  </div>
+</div>

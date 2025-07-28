@@ -1,0 +1,113 @@
+---
+/**
+ * TextInput Component
+ * 
+ * A versatile text input component supporting various input types including
+ * text, email, url, tel, number, date, and more. Provides consistent styling
+ * and accessibility features.
+ * 
+ * @prop {string} name - The input name attribute
+ * @prop {string} type - The input type (text, email, url, tel, number, date, etc.)
+ * @prop {string} value - The current value
+ * @prop {string} placeholder - Placeholder text
+ * @prop {boolean} required - Whether the field is required
+ * @prop {boolean} disabled - Whether the field is disabled
+ * @prop {boolean} readonly - Whether the field is readonly
+ * @prop {string} pattern - HTML5 pattern for validation
+ * @prop {string|number} min - Minimum value (for number/date inputs)
+ * @prop {string|number} max - Maximum value (for number/date inputs)
+ * @prop {number} step - Step value (for number inputs)
+ * @prop {number} maxLength - Maximum character length
+ * @prop {string} className - Additional CSS classes
+ * @prop {string} fieldId - ID for the input (usually provided by FormField)
+ * @prop {string} ariaDescribedBy - IDs of elements that describe this input
+ */
+export interface Props {
+  name: string;
+  type?: 'text' | 'email' | 'url' | 'tel' | 'number' | 'date' | 'time' | 'datetime-local' | 'search' | 'password';
+  value?: string | number;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  readonly?: boolean;
+  pattern?: string;
+  min?: string | number;
+  max?: string | number;
+  step?: number;
+  maxLength?: number;
+  className?: string;
+  fieldId?: string;
+  ariaDescribedBy?: string;
+}
+
+const {
+  name,
+  type = 'text',
+  value = '',
+  placeholder,
+  required = false,
+  disabled = false,
+  readonly = false,
+  pattern,
+  min,
+  max,
+  step,
+  maxLength,
+  className = '',
+  fieldId,
+  ariaDescribedBy
+} = Astro.props;
+
+const inputId = fieldId || `field-${name}`;
+---
+
+<input
+  id={inputId}
+  name={name}
+  type={type}
+  value={value}
+  placeholder={placeholder}
+  required={required}
+  disabled={disabled}
+  readonly={readonly}
+  pattern={pattern}
+  min={min}
+  max={max}
+  step={step}
+  maxlength={maxLength}
+  aria-describedby={ariaDescribedBy}
+  class={`text-input ${className}`}
+/>
+
+<style>
+  .text-input {
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm;
+    @apply text-gray-900 placeholder-gray-400;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+    @apply disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed;
+    @apply read-only:bg-gray-50 read-only:cursor-not-allowed;
+    @apply transition-colors duration-200;
+  }
+  
+  /* Number input specific styles */
+  .text-input[type="number"] {
+    @apply pr-8; /* Space for spinner buttons */
+  }
+  
+  /* Date/time input specific styles */
+  .text-input[type="date"],
+  .text-input[type="time"],
+  .text-input[type="datetime-local"] {
+    @apply cursor-pointer;
+  }
+  
+  /* Search input specific styles */
+  .text-input[type="search"] {
+    @apply pr-8; /* Space for clear button */
+  }
+  
+  /* Invalid state (HTML5 validation) */
+  .text-input:invalid:not(:placeholder-shown) {
+    @apply border-red-300 focus:border-red-500 focus:ring-red-500;
+  }
+</style>

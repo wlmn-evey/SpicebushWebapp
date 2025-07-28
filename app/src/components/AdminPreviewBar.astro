@@ -1,0 +1,101 @@
+---
+// Check if user is admin and coming soon mode is enabled
+const isAdmin = Astro.cookies.get('sbms-admin-auth')?.value === 'true';
+import { getEntry } from 'astro:content';
+
+const comingSoonConfig = await getEntry('coming-soon', 'config');
+const isComingSoonEnabled = comingSoonConfig?.data?.enabled || false;
+
+// Only show bar if admin and coming soon mode is enabled
+const showBar = isAdmin && isComingSoonEnabled;
+---
+
+{showBar && (
+  <div class="admin-preview-bar">
+    <div class="admin-preview-content">
+      <span class="admin-preview-text">
+        🔒 Admin Preview Mode - Coming Soon mode is active
+      </span>
+      <button 
+        id="toggle-preview" 
+        class="admin-preview-button"
+        data-current-mode="preview"
+      >
+        View Coming Soon Page
+      </button>
+    </div>
+  </div>
+)}
+
+<style>
+  .admin-preview-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #1a4d35;
+    color: white;
+    padding: 0.75rem;
+    z-index: 9999;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .admin-preview-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .admin-preview-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .admin-preview-button {
+    background: white;
+    color: #1a4d35;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .admin-preview-button:hover {
+    background: #f0f0f0;
+  }
+
+  @media (max-width: 640px) {
+    .admin-preview-content {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .admin-preview-button {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  const toggleButton = document.getElementById('toggle-preview');
+  
+  if (toggleButton) {
+    toggleButton.addEventListener('click', () => {
+      const currentMode = toggleButton.getAttribute('data-current-mode');
+      
+      if (currentMode === 'preview') {
+        // Go to coming soon page
+        window.location.href = '/coming-soon';
+      } else {
+        // Go back to home page
+        window.location.href = '/';
+      }
+    });
+  }
+</script>

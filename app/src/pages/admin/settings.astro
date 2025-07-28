@@ -1,0 +1,2055 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ImageManagementSettings from '../../components/admin/ImageManagementSettings.astro';
+import { checkAdminAuth } from '../../lib/admin-auth-check';
+import { 
+  ArrowLeft,
+  Settings, 
+  Shield, 
+  Bell,
+  Globe,
+  Database,
+  Key,
+  Mail,
+  Smartphone,
+  Save,
+  Eye,
+  EyeOff,
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  Image,
+  BarChart4,
+  CreditCard,
+  MapPin,
+  BarChart3,
+  Send,
+  Facebook,
+  Instagram,
+  Copy,
+  ExternalLink,
+  Edit
+} from 'lucide-astro';
+
+// Check if user is authenticated and has admin access
+const { isAuthenticated } = await checkAdminAuth(Astro);
+
+if (!isAuthenticated) {
+  return Astro.redirect('/auth/login?redirect=/admin/settings');
+}
+---
+
+<Layout 
+  title="System Settings - Admin Panel"
+  description="Configure system settings, security preferences, API keys, and administrative options."
+  keywords="admin settings, system configuration, security settings, API keys"
+>
+  <Header />
+  
+  <main id="main-content">
+
+    <!-- Header -->
+    <section class="bg-gradient-to-br from-gray-600 to-gray-700 py-12">
+      <div class="container mx-auto px-4">
+        <div class="max-w-6xl mx-auto">
+          <!-- Back to Dashboard Navigation -->
+          <div class="mb-6">
+            <a href="/admin" class="inline-flex items-center text-gray-300 hover:text-white transition-colors group">
+              <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+              <span class="text-sm font-medium">Back to Admin Dashboard</span>
+            </a>
+          </div>
+    <!-- Settings Content -->
+    <section class="py-12 bg-gray-50 min-h-screen">
+      <div class="container mx-auto px-4 max-w-6xl">
+        
+        <!-- Settings Navigation -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+          <div class="border-b border-gray-200">
+            <nav class="flex space-x-8 px-6" aria-label="Settings navigation">
+              <button class="settings-tab active py-4 px-2 border-b-2 font-medium text-sm" data-tab="general">
+                General
+              </button>
+              <button class="settings-tab py-4 px-2 border-b-2 font-medium text-sm" data-tab="api-keys">
+                API Keys
+              </button>
+              <button class="settings-tab py-4 px-2 border-b-2 font-medium text-sm" data-tab="security">
+                Security
+              </button>
+              <button class="settings-tab py-4 px-2 border-b-2 font-medium text-sm" data-tab="notifications">
+                Notifications
+              </button>
+              <button class="settings-tab py-4 px-2 border-b-2 font-medium text-sm" data-tab="analytics">
+                Analytics
+              </button>
+              <button class="settings-tab py-4 px-2 border-b-2 font-medium text-sm" data-tab="database">
+                Database
+              </button>
+              <button class="settings-tab py-4 px-2 border-b-2 font-medium text-sm" data-tab="image">
+                Image Management
+              </button>
+              <button class="settings-tab py-4 px-2 border-b-2 font-medium text-sm" data-tab="storage">
+                Storage
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        <!-- General Settings -->
+        <div id="general-settings" class="settings-panel">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <Globe className="w-6 h-6 text-gray-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">Site Configuration</h3>
+              </div>
+              
+              <form id="site-config-form" class="space-y-6">
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">School Name</label>
+                  <input 
+                    type="text" 
+                    id="school-name" 
+                    name="school_name"
+                    value="Spicebush Montessori School" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent" 
+                  />
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Contact Email</label>
+                  <input 
+                    type="email" 
+                    id="contact-email"
+                    name="contact_email"
+                    value="information@spicebushmontessori.org" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent" 
+                  />
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Phone Number</label>
+                  <input 
+                    type="tel" 
+                    id="phone-number"
+                    name="phone_number"
+                    value="(484) 202-0712" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent" 
+                  />
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">School Address</label>
+                  <textarea 
+                    rows="3" 
+                    id="school-address"
+                    name="school_address"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                  >827 Concord Road
+Glen Mills, PA 19342</textarea>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Contact Form Recipient</label>
+                  <input 
+                    type="email" 
+                    id="contact-form-recipient"
+                    name="contact_form_recipient"
+                    placeholder="Where contact form submissions are sent"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent" 
+                  />
+                  <p class="text-xs text-gray-500 mt-1">Email address to receive contact form submissions</p>
+                </div>
+                
+                <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                  Save Changes
+                </button>
+              </form>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <Settings className="w-6 h-6 text-gray-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">System Preferences</h3>
+              </div>
+              
+              <form id="system-preferences-form" class="space-y-6">
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Timezone</label>
+                  <select 
+                    id="timezone"
+                    name="timezone"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                  >
+                    <option selected>America/New_York (EST/EDT)</option>
+                    <option>America/Chicago (CST/CDT)</option>
+                    <option>America/Denver (MST/MDT)</option>
+                    <option>America/Los_Angeles (PST/PDT)</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Date Format</label>
+                  <select 
+                    id="date-format"
+                    name="date_format"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                  >
+                    <option selected>MM/DD/YYYY</option>
+                    <option>DD/MM/YYYY</option>
+                    <option>YYYY-MM-DD</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Maintenance Mode</label>
+                  <div class="flex items-center space-x-3">
+                    <input type="checkbox" id="maintenance-mode" name="maintenance_mode" class="text-gray-600 focus:ring-gray-500" />
+                    <label for="maintenance-mode" class="text-sm text-gray-600">Enable maintenance mode</label>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">Temporarily restrict access to the website</p>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Debug Mode</label>
+                  <div class="flex items-center space-x-3">
+                    <input type="checkbox" id="debug-mode" name="debug_mode" class="text-gray-600 focus:ring-gray-500" />
+                    <label for="debug-mode" class="text-sm text-gray-600">Enable debug mode</label>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">Show detailed error messages and debugging information (not recommended for production)</p>
+                </div>
+                
+                <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                  Save Changes
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- API Keys Settings -->
+        <div id="api-keys-settings" class="settings-panel hidden">
+          <div class="mb-6">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div class="flex items-start">
+                <Info className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                <div>
+                  <h4 class="text-sm font-medium text-blue-800">API Keys Security Notice</h4>
+                  <p class="text-sm text-blue-700 mt-1">
+                    API keys are sensitive information. Keep them secure and never share them publicly. 
+                    Keys are encrypted when stored and masked in this interface for security.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Payment & E-commerce -->
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <CreditCard className="w-6 h-6 text-green-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">Payment Processing</h3>
+              </div>
+              
+              <form class="space-y-6">
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-earth-brown">Stripe Publishable Key</label>
+                    <button type="button" class="text-xs text-blue-600 hover:text-blue-700" onclick="toggleVisibility('stripe-pub')">
+                      <Eye className="w-4 h-4 inline mr-1" />
+                      Show
+                    </button>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="stripe-pub"
+                      placeholder="pk_test_..." 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent pr-10"
+                    />
+                    <button type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600" onclick="copyToClipboard('stripe-pub')">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">Used for client-side Stripe integration</p>
+                </div>
+                
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-earth-brown">Stripe Secret Key</label>
+                    <button type="button" class="text-xs text-blue-600 hover:text-blue-700" onclick="toggleVisibility('stripe-secret')">
+                      <Eye className="w-4 h-4 inline mr-1" />
+                      Show
+                    </button>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="stripe-secret"
+                      placeholder="sk_test_..." 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent pr-10"
+                    />
+                    <button type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600" onclick="copyToClipboard('stripe-secret')">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">⚠️ Keep this secret! Server-side only</p>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-earth-brown">Stripe Webhook Secret</label>
+                    <button type="button" class="text-xs text-blue-600 hover:text-blue-700" onclick="toggleVisibility('stripe-webhook')">
+                      <Eye className="w-4 h-4 inline mr-1" />
+                      Show
+                    </button>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="stripe-webhook"
+                      placeholder="whsec_..." 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent pr-10"
+                    />
+                    <button type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600" onclick="copyToClipboard('stripe-webhook')">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">For webhook event verification</p>
+                </div>
+
+                <div class="pt-4 border-t border-gray-200">
+                  <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-sm text-green-600 hover:text-green-700">
+                    <ExternalLink className="w-4 h-4 mr-1" />
+                    Manage in Stripe Dashboard
+                  </a>
+                </div>
+              </form>
+            </div>
+
+            <!-- Google Services -->
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <Globe className="w-6 h-6 text-blue-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">Google Services</h3>
+              </div>
+              
+              <form class="space-y-6">
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-earth-brown">Google Maps API Key</label>
+                    <button type="button" class="text-xs text-blue-600 hover:text-blue-700" onclick="toggleVisibility('google-maps')">
+                      <Eye className="w-4 h-4 inline mr-1" />
+                      Show
+                    </button>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="google-maps"
+                      placeholder="AIza..." 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                    />
+                    <button type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600" onclick="copyToClipboard('google-maps')">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">For maps and location features</p>
+                </div>
+                
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-earth-brown">Google Analytics Measurement ID</label>
+                    <button type="button" class="text-xs text-blue-600 hover:text-blue-700" onclick="toggleVisibility('google-analytics')">
+                      <Eye className="w-4 h-4 inline mr-1" />
+                      Show
+                    </button>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="google-analytics"
+                      placeholder="G-XXXXXXXXXX" 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                    />
+                    <button type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600" onclick="copyToClipboard('google-analytics')">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">For website analytics tracking</p>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-earth-brown">Google Tag Manager ID</label>
+                    <button type="button" class="text-xs text-blue-600 hover:text-blue-700" onclick="toggleVisibility('google-tag-manager')">
+                      <Eye className="w-4 h-4 inline mr-1" />
+                      Show
+                    </button>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="google-tag-manager"
+                      placeholder="GTM-XXXXXXX" 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                    />
+                    <button type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600" onclick="copyToClipboard('google-tag-manager')">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">For advanced tracking and tag management</p>
+                </div>
+
+                <div class="pt-4 border-t border-gray-200">
+                  <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-sm text-blue-600 hover:text-blue-700">
+                    <ExternalLink className="w-4 h-4 mr-1" />
+                    Manage in Google Cloud Console
+                  </a>
+                </div>
+              </form>
+            </div>
+
+            <!-- Email Services -->
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <Send className="w-6 h-6 text-purple-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">Email Services</h3>
+              </div>
+              
+              <form class="space-y-6">
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Email Service Provider</label>
+                  <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    <option value="">Select Provider</option>
+                    <option value="mailgun">Mailgun</option>
+                    <option value="sendgrid">SendGrid</option>
+                    <option value="ses">Amazon SES</option>
+                    <option value="netlify">Netlify Forms (Current)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-earth-brown">SendGrid API Key</label>
+                    <button type="button" class="text-xs text-blue-600 hover:text-blue-700" onclick="toggleVisibility('sendgrid-api')">
+                      <Eye className="w-4 h-4 inline mr-1" />
+                      Show
+                    </button>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="sendgrid-api"
+                      placeholder="SG...." 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent pr-10"
+                    />
+                    <button type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600" onclick="copyToClipboard('sendgrid-api')">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">For transactional emails and notifications</p>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-earth-brown">Mailgun API Key</label>
+                    <button type="button" class="text-xs text-blue-600 hover:text-blue-700" onclick="toggleVisibility('mailgun-api')">
+                      <Eye className="w-4 h-4 inline mr-1" />
+                      Show
+                    </button>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="mailgun-api"
+                      placeholder="key-..." 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent pr-10"
+                    />
+                    <button type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600" onclick="copyToClipboard('mailgun-api')">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">From Email Address</label>
+                  <input 
+                    type="email" 
+                    value="information@spicebushmontessori.org"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">Default sender address for outgoing emails</p>
+                </div>
+              </form>
+            </div>
+
+            <!-- Social Media -->
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <Facebook className="w-6 h-6 text-blue-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">Social Media Integration</h3>
+              </div>
+              
+              <form class="space-y-6">
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-earth-brown">Facebook App ID</label>
+                    <button type="button" class="text-xs text-blue-600 hover:text-blue-700" onclick="toggleVisibility('facebook-app-id')">
+                      <Eye className="w-4 h-4 inline mr-1" />
+                      Show
+                    </button>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="facebook-app-id"
+                      placeholder="123456789..." 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                    />
+                    <button type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600" onclick="copyToClipboard('facebook-app-id')">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">For Facebook integration and sharing</p>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-earth-brown">Instagram Basic Display App ID</label>
+                    <button type="button" class="text-xs text-blue-600 hover:text-blue-700" onclick="toggleVisibility('instagram-app-id')">
+                      <Eye className="w-4 h-4 inline mr-1" />
+                      Show
+                    </button>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="instagram-app-id"
+                      placeholder="123456789..." 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent pr-10"
+                    />
+                    <button type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600" onclick="copyToClipboard('instagram-app-id')">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">For Instagram feed integration</p>
+                </div>
+
+                <div class="pt-4 border-t border-gray-200">
+                  <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-sm text-blue-600 hover:text-blue-700">
+                    <ExternalLink className="w-4 h-4 mr-1" />
+                    Manage in Facebook Developer Console
+                  </a>
+                </div>
+              </form>
+            </div>
+
+            <!-- Additional Services -->
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <BarChart3 className="w-6 h-6 text-orange-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">Additional Services</h3>
+              </div>
+              
+              <form class="space-y-6">
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-earth-brown">Supabase URL</label>
+                    <span class="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">Connected</span>
+                  </div>
+                  <input 
+                    type="text" 
+                    value="https://ixztvxrnvdahpthcoymx.supabase.co"
+                    readonly
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">Database and authentication service</p>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-earth-brown">Netlify Site ID</label>
+                    <button type="button" class="text-xs text-blue-600 hover:text-blue-700" onclick="toggleVisibility('netlify-site-id')">
+                      <Eye className="w-4 h-4 inline mr-1" />
+                      Show
+                    </button>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="netlify-site-id"
+                      placeholder="abc123def-456..." 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent pr-10"
+                    />
+                    <button type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600" onclick="copyToClipboard('netlify-site-id')">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">For deployment and form management</p>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-earth-brown">reCAPTCHA Site Key</label>
+                    <button type="button" class="text-xs text-blue-600 hover:text-blue-700" onclick="toggleVisibility('recaptcha-site')">
+                      <Eye className="w-4 h-4 inline mr-1" />
+                      Show
+                    </button>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="recaptcha-site"
+                      placeholder="6Lc..." 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent pr-10"
+                    />
+                    <button type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600" onclick="copyToClipboard('recaptcha-site')">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">For spam protection on forms</p>
+                </div>
+              </form>
+            </div>
+
+            <!-- Environment Selector -->
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <Settings className="w-6 h-6 text-gray-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">Environment Configuration</h3>
+              </div>
+              
+              <div class="space-y-6">
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Current Environment</label>
+                  <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent">
+                    <option value="development">Development</option>
+                    <option value="staging">Staging</option>
+                    <option value="production" selected>Production</option>
+                  </select>
+                  <p class="text-xs text-gray-500 mt-1">Switch between different API key sets</p>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div class="flex items-start">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <div>
+                      <h4 class="text-sm font-medium text-amber-800">Environment Notice</h4>
+                      <p class="text-sm text-amber-700 mt-1">
+                        Make sure to use the correct API keys for each environment. Test keys should never be used in production.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" class="w-full bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                  Save All API Keys
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Settings -->
+        <div id="security-settings" class="settings-panel hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <Shield className="w-6 h-6 text-red-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">Authentication & Access</h3>
+              </div>
+              
+              <form id="auth-settings-form" class="space-y-6">
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Password Requirements</label>
+                  <div class="space-y-2">
+                    <label class="flex items-center">
+                      <input type="checkbox" name="password_min_length" checked class="text-red-600 focus:ring-red-500 mr-2" />
+                      <span class="text-sm text-gray-600">Minimum 8 characters</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="checkbox" name="password_uppercase" checked class="text-red-600 focus:ring-red-500 mr-2" />
+                      <span class="text-sm text-gray-600">Require uppercase letter</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="checkbox" name="password_number" checked class="text-red-600 focus:ring-red-500 mr-2" />
+                      <span class="text-sm text-gray-600">Require number</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="checkbox" name="password_special" class="text-red-600 focus:ring-red-500 mr-2" />
+                      <span class="text-sm text-gray-600">Require special character</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Session Timeout</label>
+                  <select 
+                    name="session_timeout"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  >
+                    <option value="1800">30 minutes</option>
+                    <option value="3600" selected>1 hour</option>
+                    <option value="14400">4 hours</option>
+                    <option value="28800">8 hours</option>
+                    <option value="0">Never</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Two-Factor Authentication</label>
+                  <div class="flex items-center space-x-3">
+                    <input type="checkbox" id="two-factor" name="two_factor_auth" class="text-red-600 focus:ring-red-500" />
+                    <label for="two-factor" class="text-sm text-gray-600">Enable 2FA for admin accounts</label>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">Recommended for enhanced security</p>
+                </div>
+                
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                  Update Security Settings
+                </button>
+              </form>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <Key className="w-6 h-6 text-red-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">API & Integrations</h3>
+              </div>
+              
+              <form id="api-settings-form" class="space-y-6">
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Supabase Connection</label>
+                  <div class="flex items-center space-x-3 mb-3">
+                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span class="text-sm text-green-600 font-medium">Connected</span>
+                  </div>
+                  <button 
+                    type="button" 
+                    id="regen-api-keys-btn" 
+                    class="text-red-600 hover:text-red-700 text-sm font-medium"
+                  >
+                    Regenerate API Keys
+                  </button>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Backup Settings</label>
+                  <div class="space-y-2">
+                    <label class="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        name="daily_backups" 
+                        checked 
+                        class="text-red-600 focus:ring-red-500 mr-2" 
+                      />
+                      <span class="text-sm text-gray-600">Daily automatic backups</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        name="retain_backups" 
+                        checked 
+                        class="text-red-600 focus:ring-red-500 mr-2" 
+                      />
+                      <span class="text-sm text-gray-600">Retain backups for 30 days</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">API Keys</label>
+                  
+                  <div class="space-y-3">
+                    <div>
+                      <label class="text-xs text-gray-500">Google Maps API Key</label>
+                      <div class="relative">
+                        <input 
+                          type="password" 
+                          id="google-maps-key" 
+                          name="google_maps_api_key" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent pr-10" 
+                        />
+                        <button 
+                          type="button" 
+                          class="toggle-visibility absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          data-target="google-maps-key"
+                        >
+                          <Eye className="w-4 h-4 visible" />
+                          <EyeOff className="w-4 h-4 hidden" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div class="flex items-start">
+                    <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <div>
+                      <h4 class="text-sm font-medium text-yellow-800">Security Notice</h4>
+                      <p class="text-sm text-yellow-700 mt-1">
+                        API keys should be regenerated regularly and never shared. Last regenerated 45 days ago.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                  Save API Settings
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div id="notification-settings" class="settings-panel hidden">
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center mb-6">
+              <Bell className="w-6 h-6 text-blue-600 mr-3" />
+              <h3 class="text-xl font-semibold text-earth-brown">Notification Preferences</h3>
+            </div>
+            
+            <form id="notification-settings-form" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div>
+                <h4 class="text-lg font-medium text-earth-brown mb-4">Email Notifications</h4>
+                <div class="space-y-4">
+                  <label class="flex items-center justify-between">
+                    <span class="text-sm text-gray-700">New user registrations</span>
+                    <input type="checkbox" name="notify_user_reg" checked class="text-blue-600 focus:ring-blue-500" />
+                  </label>
+                  <label class="flex items-center justify-between">
+                    <span class="text-sm text-gray-700">Contact form submissions</span>
+                    <input type="checkbox" name="notify_contact_form" checked class="text-blue-600 focus:ring-blue-500" />
+                  </label>
+                  <label class="flex items-center justify-between">
+                    <span class="text-sm text-gray-700">Tour requests</span>
+                    <input type="checkbox" name="notify_tour_requests" checked class="text-blue-600 focus:ring-blue-500" />
+                  </label>
+                  <label class="flex items-center justify-between">
+                    <span class="text-sm text-gray-700">System errors</span>
+                    <input type="checkbox" name="notify_system_errors" checked class="text-blue-600 focus:ring-blue-500" />
+                  </label>
+                  <label class="flex items-center justify-between">
+                    <span class="text-sm text-gray-700">Weekly analytics report</span>
+                    <input type="checkbox" name="notify_weekly_analytics" class="text-blue-600 focus:ring-blue-500" />
+                  </label>
+                </div>
+              </div>
+              
+              <div>
+                <h4 class="text-lg font-medium text-earth-brown mb-4">Alert Settings</h4>
+                <div class="space-y-4">
+                  <label class="flex items-center justify-between">
+                    <span class="text-sm text-gray-700">High traffic alerts</span>
+                    <input type="checkbox" name="alert_high_traffic" class="text-blue-600 focus:ring-blue-500" />
+                  </label>
+                  <label class="flex items-center justify-between">
+                    <span class="text-sm text-gray-700">Database backup failures</span>
+                    <input type="checkbox" name="alert_backup_failures" checked class="text-blue-600 focus:ring-blue-500" />
+                  </label>
+                  <label class="flex items-center justify-between">
+                    <span class="text-sm text-gray-700">Security login attempts</span>
+                    <input type="checkbox" name="alert_security_login" checked class="text-blue-600 focus:ring-blue-500" />
+                  </label>
+                  <label class="flex items-center justify-between">
+                    <span class="text-sm text-gray-700">System maintenance reminders</span>
+                    <input type="checkbox" name="alert_maintenance" checked class="text-blue-600 focus:ring-blue-500" />
+                  </label>
+                </div>
+                
+                <div class="space-y-4 mt-6">
+                  <div class="p-4 bg-blue-50 rounded-lg">
+                    <h5 class="text-sm font-medium text-blue-900 mb-2">Notification Email</h5>
+                    <input 
+                      type="email" 
+                      id="notification-email"
+                      name="notification_email"
+                      placeholder="admin@spicebushmontessori.org"
+                      class="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" 
+                    />
+                  </div>
+                  
+                  <div>
+                    <h5 class="text-sm font-medium text-blue-900 mb-2">SMTP Email Settings</h5>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <input 
+                          type="text" 
+                          name="smtp_host"
+                          placeholder="SMTP Host" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        />
+                      </div>
+                      <div>
+                        <input 
+                          type="text" 
+                          name="smtp_port"
+                          placeholder="SMTP Port (e.g., 587)" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        />
+                      </div>
+                      <div>
+                        <input 
+                          type="text" 
+                          name="smtp_username"
+                          placeholder="SMTP Username" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        />
+                      </div>
+                      <div class="relative">
+                        <input 
+                          type="password" 
+                          id="smtp-password"
+                          name="smtp_password"
+                          placeholder="SMTP Password" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm pr-10"
+                        />
+                        <button 
+                          type="button"
+                          class="toggle-visibility absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          data-target="smtp-password"
+                        >
+                          <Eye className="w-4 h-4 visible" />
+                          <EyeOff className="w-4 h-4 hidden" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="mt-8 pt-6 border-t border-gray-200">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                  Save Notification Settings
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Analytics Settings -->
+        <div id="analytics-settings" class="settings-panel hidden">
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center mb-6">
+              <BarChart4 className="w-6 h-6 text-purple-600 mr-3" />
+              <h3 class="text-xl font-semibold text-earth-brown">Analytics Configuration</h3>
+            </div>
+            
+            <form id="analytics-settings-form" class="space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-earth-brown mb-2">Google Analytics ID</label>
+                <input 
+                  type="text" 
+                  id="google-analytics-id" 
+                  name="google_analytics_id" 
+                  placeholder="G-XXXXXXXXXX or UA-XXXXXXXXX-X"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                />
+                <p class="text-xs text-gray-500 mt-1">Google Analytics 4 measurement ID</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-earth-brown mb-2">Google Tag Manager ID</label>
+                <input 
+                  type="text" 
+                  id="google-tag-manager-id" 
+                  name="google_tag_manager_id" 
+                  placeholder="GTM-XXXXXX"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                />
+                <p class="text-xs text-gray-500 mt-1">Google Tag Manager container ID</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-earth-brown mb-2">Analytics Options</label>
+                <div class="space-y-2">
+                  <label class="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      name="track_user_sessions" 
+                      checked 
+                      class="mr-2 text-purple-600 focus:ring-purple-500" 
+                    />
+                    <span class="text-sm text-gray-600">Track user sessions</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      name="track_page_views" 
+                      checked 
+                      class="mr-2 text-purple-600 focus:ring-purple-500" 
+                    />
+                    <span class="text-sm text-gray-600">Track page views</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      name="track_events" 
+                      checked 
+                      class="mr-2 text-purple-600 focus:ring-purple-500" 
+                    />
+                    <span class="text-sm text-gray-600">Track events (clicks, form submissions)</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      name="respect_dnt" 
+                      checked 
+                      class="mr-2 text-purple-600 focus:ring-purple-500" 
+                    />
+                    <span class="text-sm text-gray-600">Respect Do Not Track preferences</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <div class="flex items-start">
+                  <Info className="w-5 h-5 text-purple-600 mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <h4 class="text-sm font-medium text-purple-800">Privacy Compliance</h4>
+                    <p class="text-sm text-purple-700 mt-1">
+                      Ensure your analytics implementation complies with privacy regulations such as GDPR and CCPA.
+                      Always include appropriate consent mechanisms in your cookie policy.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                Save Analytics Settings
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Database Settings -->
+        <div id="database-settings" class="settings-panel hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <Database className="w-6 h-6 text-green-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">Database Status</h3>
+              </div>
+              
+              <div class="space-y-6">
+                <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span class="text-sm font-medium text-gray-700">Connection Status</span>
+                  <div class="flex items-center">
+                    <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <span class="text-sm text-green-600">Connected</span>
+                  </div>
+                </div>
+                
+                <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span class="text-sm font-medium text-gray-700">Total Records</span>
+                  <span class="text-sm text-gray-900">1,247</span>
+                </div>
+                
+                <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span class="text-sm font-medium text-gray-700">Database Size</span>
+                  <span class="text-sm text-gray-900">45.2 MB</span>
+                </div>
+                
+                <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span class="text-sm font-medium text-gray-700">Last Backup</span>
+                  <span class="text-sm text-gray-900">2 hours ago</span>
+                </div>
+                
+                <div class="flex items-center justify-between py-3">
+                  <span class="text-sm font-medium text-gray-700">Performance</span>
+                  <span class="text-sm text-green-600">Optimal</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <Shield className="w-6 h-6 text-green-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">Maintenance Actions</h3>
+              </div>
+              
+              <div class="space-y-4">
+                <button class="w-full text-left p-4 border border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all group">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-medium text-gray-900 group-hover:text-green-700">Create Manual Backup</h4>
+                      <p class="text-sm text-gray-600">Generate a backup of all data</p>
+                    </div>
+                    <Database className="w-5 h-5 text-gray-400 group-hover:text-green-600" />
+                  </div>
+                </button>
+                
+                <button class="w-full text-left p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all group">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-medium text-gray-900 group-hover:text-blue-700">Optimize Database</h4>
+                      <p class="text-sm text-gray-600">Clean up and optimize performance</p>
+                    </div>
+                    <Settings className="w-5 h-5 text-gray-400 group-hover:text-blue-600" />
+                  </div>
+                </button>
+                
+                <button class="w-full text-left p-4 border border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all group">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-medium text-gray-900 group-hover:text-orange-700">Export Data</h4>
+                      <p class="text-sm text-gray-600">Download database export</p>
+                    </div>
+                    <Database className="w-5 h-5 text-gray-400 group-hover:text-orange-600" />
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Image Management Settings -->
+        <div id="image-settings" class="settings-panel hidden">
+          <ImageManagementSettings />
+        </div>
+
+        <!-- Storage Settings -->
+        <div id="storage-settings" class="settings-panel hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Storage Provider Selection -->
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <Database className="w-6 h-6 text-indigo-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">Storage Provider</h3>
+              </div>
+              
+              <form id="storage-provider-form" class="space-y-6">
+                <div>
+                  <label class="block text-sm font-medium text-earth-brown mb-2">Active Storage Provider</label>
+                  <select 
+                    id="storage-provider"
+                    name="storage_provider"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  >
+                    <option value="local" selected>Local File System</option>
+                    <option value="gcs">Google Cloud Storage</option>
+                    <option value="r2">Cloudflare R2</option>
+                    <option value="b2">Backblaze B2</option>
+                  </select>
+                  <p class="text-xs text-gray-500 mt-1">Select where to store uploaded media files</p>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div class="flex items-start">
+                    <Info className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <div>
+                      <h4 class="text-sm font-medium text-blue-800">Storage Costs Comparison</h4>
+                      <ul class="text-sm text-blue-700 mt-1 space-y-1">
+                        <li>• <strong>Local</strong>: Free (development only)</li>
+                        <li>• <strong>Google Cloud</strong>: $0.020/GB/mo + bandwidth</li>
+                        <li>• <strong>Cloudflare R2</strong>: $0.015/GB/mo + FREE bandwidth!</li>
+                        <li>• <strong>Backblaze B2</strong>: $0.005/GB/mo + $0.01/GB bandwidth</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                  Save Provider Settings
+                </button>
+              </form>
+            </div>
+
+            <!-- Provider Configuration -->
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div class="flex items-center mb-6">
+                <Settings className="w-6 h-6 text-indigo-600 mr-3" />
+                <h3 class="text-xl font-semibold text-earth-brown">Provider Configuration</h3>
+              </div>
+              
+              <!-- Local Storage Config -->
+              <div id="config-local" class="provider-config">
+                <form id="local-config-form" class="space-y-6">
+                  <div>
+                    <label class="block text-sm font-medium text-earth-brown mb-2">Upload Directory</label>
+                    <input 
+                      type="text" 
+                      name="local_upload_dir"
+                      value="./public/uploads" 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      readonly
+                    />
+                    <p class="text-xs text-gray-500 mt-1">Local directory for file uploads</p>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-earth-brown mb-2">Max File Size (MB)</label>
+                    <input 
+                      type="number" 
+                      name="max_file_size"
+                      value="10"
+                      min="1"
+                      max="100"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                      <span class="text-sm text-green-800">Local storage is active and working</span>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Google Cloud Storage Config -->
+              <div id="config-gcs" class="provider-config hidden">
+                <form id="gcs-config-form" class="space-y-6">
+                  <div>
+                    <label class="block text-sm font-medium text-earth-brown mb-2">Project ID</label>
+                    <input 
+                      type="text" 
+                      name="gcs_project_id"
+                      placeholder="your-project-id"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-earth-brown mb-2">Bucket Name</label>
+                    <input 
+                      type="text" 
+                      name="gcs_bucket_name"
+                      placeholder="spicebush-media"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-earth-brown mb-2">Service Account Key (JSON)</label>
+                    <textarea 
+                      name="gcs_service_key"
+                      rows="4"
+                      placeholder='{"type": "service_account", "project_id": "..."}'
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono text-xs"
+                    ></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Paste your Google Cloud service account JSON key</p>
+                  </div>
+
+                  <button type="button" class="test-connection-btn bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    Test Connection
+                  </button>
+                </form>
+              </div>
+
+              <!-- Cloudflare R2 Config -->
+              <div id="config-r2" class="provider-config hidden">
+                <form id="r2-config-form" class="space-y-6">
+                  <div>
+                    <label class="block text-sm font-medium text-earth-brown mb-2">Account ID</label>
+                    <input 
+                      type="text" 
+                      name="r2_account_id"
+                      placeholder="your-account-id"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-earth-brown mb-2">Bucket Name</label>
+                    <input 
+                      type="text" 
+                      name="r2_bucket_name"
+                      placeholder="spicebush-media"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-earth-brown mb-2">Access Key ID</label>
+                    <input 
+                      type="password" 
+                      name="r2_access_key_id"
+                      placeholder="••••••••••••••••"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-earth-brown mb-2">Secret Access Key</label>
+                    <input 
+                      type="password" 
+                      name="r2_secret_access_key"
+                      placeholder="••••••••••••••••"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <button type="button" class="test-connection-btn bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    Test Connection
+                  </button>
+                </form>
+              </div>
+
+              <!-- Backblaze B2 Config -->
+              <div id="config-b2" class="provider-config hidden">
+                <form id="b2-config-form" class="space-y-6">
+                  <div>
+                    <label class="block text-sm font-medium text-earth-brown mb-2">Key ID</label>
+                    <input 
+                      type="text" 
+                      name="b2_key_id"
+                      placeholder="your-key-id"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-earth-brown mb-2">Application Key</label>
+                    <input 
+                      type="password" 
+                      name="b2_app_key"
+                      placeholder="••••••••••••••••"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-earth-brown mb-2">Bucket Name</label>
+                    <input 
+                      type="text" 
+                      name="b2_bucket_name"
+                      placeholder="spicebush-media"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <button type="button" class="test-connection-btn bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    Test Connection
+                  </button>
+                </form>
+              </div>
+
+              <button type="submit" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                Save Configuration
+              </button>
+            </div>
+          </div>
+
+          <!-- Migration Tools -->
+          <div class="mt-8 bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center mb-6">
+              <Database className="w-6 h-6 text-orange-600 mr-3" />
+              <h3 class="text-xl font-semibold text-earth-brown">Storage Migration</h3>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div class="text-center">
+                <h4 class="font-medium text-gray-900 mb-2">Current Storage</h4>
+                <p class="text-3xl font-bold text-gray-700" id="current-storage-size">0 MB</p>
+                <p class="text-sm text-gray-500">in <span id="current-file-count">0</span> files</p>
+              </div>
+
+              <div class="text-center">
+                <h4 class="font-medium text-gray-900 mb-2">Migration Status</h4>
+                <p class="text-sm text-gray-600" id="migration-status">No migration in progress</p>
+                <div class="mt-2 hidden" id="migration-progress">
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-orange-600 h-2 rounded-full" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-center">
+                <h4 class="font-medium text-gray-900 mb-2">Actions</h4>
+                <button 
+                  id="migrate-storage-btn"
+                  class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                  disabled
+                >
+                  Migrate to New Provider
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <Footer />
+</Layout>
+
+<style>
+  .settings-tab {
+    @apply text-gray-500 border-transparent;
+  }
+  
+  .settings-tab.active {
+    @apply text-gray-900 border-gray-900;
+  }
+  
+  .settings-tab:hover {
+    @apply text-gray-700 border-gray-300;
+  }
+</style>
+
+<script>
+// Include Supabase client
+import { supabase } from '../../lib/supabase.ts';
+
+document.addEventListener('DOMContentLoaded', function() {
+  const tabs = document.querySelectorAll('.settings-tab');
+  const panels = document.querySelectorAll('.settings-panel');
+  
+  // Load settings from database
+  loadAllSettings();
+  
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      const targetTab = this.getAttribute('data-tab');
+      
+      // Update active tab
+      tabs.forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      
+      // Show corresponding panel
+      panels.forEach(panel => {
+        if (panel.id === `${targetTab}-settings`) {
+          panel.classList.remove('hidden');
+        } else {
+          panel.classList.add('hidden');
+        }
+      });
+    });
+  });
+  
+  // Handle password/sensitive field visibility toggle
+  document.querySelectorAll('.toggle-visibility').forEach(toggle => {
+    toggle.addEventListener('click', function() {
+      const targetId = this.getAttribute('data-target');
+      const targetInput = document.getElementById(targetId);
+      const eyeOpen = this.querySelector('.visible');
+      const eyeClosed = this.querySelector('.hidden');
+      
+      if (targetInput.type === 'password') {
+        targetInput.type = 'text';
+        eyeOpen.classList.add('hidden');
+        eyeOpen.classList.remove('visible');
+        eyeClosed.classList.add('visible');
+        eyeClosed.classList.remove('hidden');
+      } else {
+        targetInput.type = 'password';
+        eyeOpen.classList.add('visible');
+        eyeOpen.classList.remove('hidden');
+        eyeClosed.classList.add('hidden');
+        eyeClosed.classList.remove('visible');
+      }
+    });
+  });
+  
+  // Load all settings from database
+  async function loadAllSettings() {
+    try {
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('*');
+      
+      if (error) throw error;
+      
+      if (data) {
+        const settings = data.reduce((acc, setting) => {
+          let value;
+          try {
+            value = JSON.parse(setting.setting_value);
+          } catch {
+            value = setting.setting_value;
+          }
+          
+          acc[setting.setting_key] = {
+            value,
+            category: setting.setting_category,
+            is_sensitive: setting.is_sensitive
+          };
+          return acc;
+        }, {});
+        
+        populateFormFields(settings);
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
+  }
+  
+  // Populate form fields with loaded settings
+  function populateFormFields(settings) {
+    // General Settings - Site Configuration
+    document.getElementById('school-name')?.setAttribute('value', settings.school_name?.value || 'Spicebush Montessori School');
+    document.getElementById('contact-email')?.setAttribute('value', settings.contact_email?.value || 'information@spicebushmontessori.org');
+    document.getElementById('phone-number')?.setAttribute('value', settings.phone_number?.value || '(484) 202-0712');
+    document.getElementById('school-address').value = settings.school_address?.value || '827 Concord Road\nGlen Mills, PA 19342';
+    document.getElementById('contact-form-recipient')?.setAttribute('value', settings.contact_form_recipient?.value || '');
+    
+    // System Preferences
+    if (document.getElementById('timezone')) {
+      const timezoneSelect = document.getElementById('timezone');
+      const timezone = settings.timezone?.value || 'America/New_York';
+      Array.from(timezoneSelect.options).forEach(option => {
+        if (option.text.includes(timezone)) {
+          option.selected = true;
+        }
+      });
+    }
+    
+    if (document.getElementById('date-format')) {
+      const formatSelect = document.getElementById('date-format');
+      const format = settings.date_format?.value || 'MM/DD/YYYY';
+      Array.from(formatSelect.options).forEach(option => {
+        if (option.text === format) {
+          option.selected = true;
+        }
+      });
+    }
+    
+    document.getElementById('maintenance-mode').checked = settings.maintenance_mode?.value === true;
+    document.getElementById('debug-mode').checked = settings.debug_mode?.value === true;
+    
+    // Security Settings
+    if (settings.password_requirements?.value) {
+      const requirements = settings.password_requirements.value;
+      document.querySelector('input[name="password_min_length"]').checked = requirements.min_length;
+      document.querySelector('input[name="password_uppercase"]').checked = requirements.uppercase;
+      document.querySelector('input[name="password_number"]').checked = requirements.number;
+      document.querySelector('input[name="password_special"]').checked = requirements.special;
+    }
+    
+    if (document.querySelector('select[name="session_timeout"]')) {
+      const timeoutSelect = document.querySelector('select[name="session_timeout"]');
+      const timeout = settings.session_timeout?.value || '3600';
+      Array.from(timeoutSelect.options).forEach(option => {
+        if (option.value === timeout) {
+          option.selected = true;
+        }
+      });
+    }
+    
+    document.getElementById('two-factor').checked = settings.two_factor_auth?.value === true;
+    document.getElementById('google-maps-key')?.setAttribute('value', settings.google_maps_api_key?.value || '');
+    
+    // Backup Settings
+    if (settings.backup_settings?.value) {
+      const backupSettings = settings.backup_settings.value;
+      document.querySelector('input[name="daily_backups"]').checked = backupSettings.daily_backups;
+      document.querySelector('input[name="retain_backups"]').checked = backupSettings.retain_30_days;
+    }
+    
+    // Notification Settings
+    document.querySelector('input[name="notify_user_reg"]').checked = settings.notify_user_reg?.value !== false;
+    document.querySelector('input[name="notify_contact_form"]').checked = settings.notify_contact_form?.value !== false;
+    document.querySelector('input[name="notify_tour_requests"]').checked = settings.notify_tour_requests?.value !== false;
+    document.querySelector('input[name="notify_system_errors"]').checked = settings.notify_system_errors?.value !== false;
+    document.querySelector('input[name="notify_weekly_analytics"]').checked = settings.notify_weekly_analytics?.value === true;
+    
+    document.querySelector('input[name="alert_high_traffic"]').checked = settings.alert_high_traffic?.value === true;
+    document.querySelector('input[name="alert_backup_failures"]').checked = settings.alert_backup_failures?.value !== false;
+    document.querySelector('input[name="alert_security_login"]').checked = settings.alert_security_login?.value !== false;
+    document.querySelector('input[name="alert_maintenance"]').checked = settings.alert_maintenance?.value !== false;
+    
+    document.getElementById('notification-email')?.setAttribute('value', settings.notification_email?.value || '');
+    document.querySelector('input[name="smtp_host"]')?.setAttribute('value', settings.smtp_host?.value || '');
+    document.querySelector('input[name="smtp_port"]')?.setAttribute('value', settings.smtp_port?.value || '587');
+    document.querySelector('input[name="smtp_username"]')?.setAttribute('value', settings.smtp_username?.value || '');
+    document.getElementById('smtp-password')?.setAttribute('value', settings.smtp_password?.value || '');
+    
+    // Analytics Settings
+    document.getElementById('google-analytics-id')?.setAttribute('value', settings.google_analytics_id?.value || '');
+    document.getElementById('google-tag-manager-id')?.setAttribute('value', settings.google_tag_manager_id?.value || '');
+    document.querySelector('input[name="track_user_sessions"]').checked = settings.track_user_sessions?.value !== false;
+    document.querySelector('input[name="track_page_views"]').checked = settings.track_page_views?.value !== false;
+    document.querySelector('input[name="track_events"]').checked = settings.track_events?.value !== false;
+    document.querySelector('input[name="respect_dnt"]').checked = settings.respect_dnt?.value !== false;
+    
+    // Storage Settings
+    const storageProvider = settings.storage_provider?.value || 'local';
+    document.getElementById('storage-provider').value = storageProvider;
+    
+    // Local storage settings
+    if (settings.max_file_size?.value) {
+      document.querySelector('input[name="max_file_size"]').value = settings.max_file_size.value;
+    }
+    
+    // Load provider-specific settings
+    if (storageProvider === 'gcs' && settings.gcs_config?.value) {
+      const gcsConfig = settings.gcs_config.value;
+      document.querySelector('input[name="gcs_project_id"]').value = gcsConfig.project_id || '';
+      document.querySelector('input[name="gcs_bucket_name"]').value = gcsConfig.bucket_name || '';
+      document.querySelector('textarea[name="gcs_service_key"]').value = gcsConfig.service_key || '';
+    }
+    
+    if (storageProvider === 'r2' && settings.r2_config?.value) {
+      const r2Config = settings.r2_config.value;
+      document.querySelector('input[name="r2_account_id"]').value = r2Config.account_id || '';
+      document.querySelector('input[name="r2_bucket_name"]').value = r2Config.bucket_name || '';
+      document.querySelector('input[name="r2_access_key_id"]').value = r2Config.access_key_id || '';
+      document.querySelector('input[name="r2_secret_access_key"]').value = r2Config.secret_access_key || '';
+    }
+    
+    if (storageProvider === 'b2' && settings.b2_config?.value) {
+      const b2Config = settings.b2_config.value;
+      document.querySelector('input[name="b2_key_id"]').value = b2Config.key_id || '';
+      document.querySelector('input[name="b2_app_key"]').value = b2Config.app_key || '';
+      document.querySelector('input[name="b2_bucket_name"]').value = b2Config.bucket_name || '';
+    }
+    
+    // Update storage stats
+    updateStorageStats();
+  }
+  
+  // Set up form submission handlers
+  setupFormHandlers();
+  
+  function setupFormHandlers() {
+    // Site Config form
+    const siteConfigForm = document.getElementById('site-config-form');
+    if (siteConfigForm) {
+      siteConfigForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveSettings(this, 'general', showSuccessMessage);
+      });
+    }
+    
+    // System Preferences form
+    const systemPreferencesForm = document.getElementById('system-preferences-form');
+    if (systemPreferencesForm) {
+      systemPreferencesForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveSettings(this, 'system', showSuccessMessage);
+      });
+    }
+    
+    // Auth Settings form
+    const authSettingsForm = document.getElementById('auth-settings-form');
+    if (authSettingsForm) {
+      authSettingsForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Create password requirements object
+        const passwordRequirements = {
+          min_length: this.querySelector('input[name="password_min_length"]').checked,
+          uppercase: this.querySelector('input[name="password_uppercase"]').checked,
+          number: this.querySelector('input[name="password_number"]').checked,
+          special: this.querySelector('input[name="password_special"]').checked
+        };
+        
+        const settings = [
+          {
+            setting_key: 'password_requirements',
+            setting_value: JSON.stringify(passwordRequirements),
+            setting_category: 'security'
+          },
+          {
+            setting_key: 'session_timeout',
+            setting_value: this.querySelector('select[name="session_timeout"]').value,
+            setting_category: 'security'
+          },
+          {
+            setting_key: 'two_factor_auth',
+            setting_value: JSON.stringify(this.querySelector('#two-factor').checked),
+            setting_category: 'security'
+          }
+        ];
+        
+        saveSettingsArray(settings, showSuccessMessage);
+      });
+    }
+    
+    // API Settings form
+    const apiSettingsForm = document.getElementById('api-settings-form');
+    if (apiSettingsForm) {
+      apiSettingsForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Create backup settings object
+        const backupSettings = {
+          daily_backups: this.querySelector('input[name="daily_backups"]').checked,
+          retain_30_days: this.querySelector('input[name="retain_backups"]').checked
+        };
+        
+        const settings = [
+          {
+            setting_key: 'backup_settings',
+            setting_value: JSON.stringify(backupSettings),
+            setting_category: 'security'
+          },
+          {
+            setting_key: 'google_maps_api_key',
+            setting_value: JSON.stringify(this.querySelector('#google-maps-key').value),
+            setting_category: 'maps',
+            is_sensitive: true
+          }
+        ];
+        
+        saveSettingsArray(settings, showSuccessMessage);
+      });
+    }
+    
+    // Regenerate API Keys button
+    const regenApiKeysBtn = document.getElementById('regen-api-keys-btn');
+    if (regenApiKeysBtn) {
+      regenApiKeysBtn.addEventListener('click', function() {
+        if (confirm('Are you sure you want to regenerate the API keys? This may affect integrations and require reconfiguration.')) {
+          alert('API keys would be regenerated in a production environment. This is a demo.');
+        }
+      });
+    }
+    
+    // Notification Settings form
+    const notificationSettingsForm = document.getElementById('notification-settings-form');
+    if (notificationSettingsForm) {
+      notificationSettingsForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const settings = [];
+        
+        // Email notification settings
+        ['notify_user_reg', 'notify_contact_form', 'notify_tour_requests', 
+         'notify_system_errors', 'notify_weekly_analytics'].forEach(key => {
+           settings.push({
+             setting_key: key,
+             setting_value: JSON.stringify(this.querySelector(`input[name="${key}"]`).checked),
+             setting_category: 'notifications'
+           });
+         });
+        
+        // Alert settings
+        ['alert_high_traffic', 'alert_backup_failures', 
+         'alert_security_login', 'alert_maintenance'].forEach(key => {
+           settings.push({
+             setting_key: key,
+             setting_value: JSON.stringify(this.querySelector(`input[name="${key}"]`).checked),
+             setting_category: 'notifications'
+           });
+         });
+        
+        // Email settings
+        settings.push({
+          setting_key: 'notification_email',
+          setting_value: JSON.stringify(this.querySelector('#notification-email').value),
+          setting_category: 'notifications'
+        });
+        
+        // SMTP settings
+        ['smtp_host', 'smtp_port', 'smtp_username'].forEach(key => {
+          settings.push({
+            setting_key: key,
+            setting_value: JSON.stringify(this.querySelector(`input[name="${key}"]`).value),
+            setting_category: 'email'
+          });
+        });
+        
+        settings.push({
+          setting_key: 'smtp_password',
+          setting_value: JSON.stringify(this.querySelector('#smtp-password').value),
+          setting_category: 'email',
+          is_sensitive: true
+        });
+        
+        saveSettingsArray(settings, showSuccessMessage);
+      });
+    }
+    
+    // Analytics Settings form
+    const analyticsSettingsForm = document.getElementById('analytics-settings-form');
+    if (analyticsSettingsForm) {
+      analyticsSettingsForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const settings = [];
+        
+        // Google Analytics and Tag Manager
+        settings.push({
+          setting_key: 'google_analytics_id',
+          setting_value: JSON.stringify(this.querySelector('#google-analytics-id').value),
+          setting_category: 'analytics'
+        });
+        
+        settings.push({
+          setting_key: 'google_tag_manager_id',
+          setting_value: JSON.stringify(this.querySelector('#google-tag-manager-id').value),
+          setting_category: 'analytics'
+        });
+        
+        // Tracking options
+        ['track_user_sessions', 'track_page_views', 'track_events', 'respect_dnt'].forEach(key => {
+          settings.push({
+            setting_key: key,
+            setting_value: JSON.stringify(this.querySelector(`input[name="${key}"]`).checked),
+            setting_category: 'analytics'
+          });
+        });
+        
+        saveSettingsArray(settings, showSuccessMessage);
+      });
+    }
+    
+    // Storage Provider form
+    const storageProviderForm = document.getElementById('storage-provider-form');
+    if (storageProviderForm) {
+      storageProviderForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const provider = document.getElementById('storage-provider').value;
+        const settings = [{
+          setting_key: 'storage_provider',
+          setting_value: JSON.stringify(provider),
+          setting_category: 'storage'
+        }];
+        
+        saveSettingsArray(settings, () => {
+          showSuccessMessage(this);
+          // Show/hide provider config forms
+          updateProviderConfigVisibility(provider);
+        });
+      });
+    }
+    
+    // Storage provider config forms
+    const configForms = ['local-config-form', 'gcs-config-form', 'r2-config-form', 'b2-config-form'];
+    configForms.forEach(formId => {
+      const form = document.getElementById(formId);
+      if (form) {
+        const provider = formId.replace('-config-form', '');
+        
+        // Find the save button in the parent container
+        const saveBtn = form.closest('.provider-config')?.parentElement?.querySelector('button[type="submit"]');
+        if (saveBtn) {
+          saveBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            saveProviderConfig(provider, form);
+          });
+        }
+      }
+    });
+    
+    // Storage provider dropdown change
+    document.getElementById('storage-provider')?.addEventListener('change', function() {
+      updateProviderConfigVisibility(this.value);
+    });
+    
+    // Test connection buttons
+    document.querySelectorAll('.test-connection-btn').forEach(btn => {
+      btn.addEventListener('click', async function() {
+        const form = this.closest('form');
+        const provider = form.id.replace('-config-form', '');
+        await testStorageConnection(provider, form);
+      });
+    });
+    
+    // Initialize provider visibility
+    const currentProvider = document.getElementById('storage-provider')?.value || 'local';
+    updateProviderConfigVisibility(currentProvider);
+  }
+  
+  // Helper to save form settings
+  async function saveSettings(form, category, callback) {
+    const formData = new FormData(form);
+    const settings = [];
+    
+    for (const [key, value] of formData.entries()) {
+      let processedValue = value;
+      
+      // Convert checkbox values to boolean
+      if (form.querySelector(`input[name="${key}"]`)?.type === 'checkbox') {
+        processedValue = form.querySelector(`input[name="${key}"]`).checked;
+      }
+      
+      settings.push({
+        setting_key: key,
+        setting_value: JSON.stringify(processedValue),
+        setting_category: category
+      });
+    }
+    
+    await saveSettingsArray(settings, callback, form);
+  }
+  
+  // Helper to save array of settings
+  async function saveSettingsArray(settings, callback, form) {
+    try {
+      // Update each setting
+      for (const setting of settings) {
+        const { error } = await supabase
+          .from('admin_settings')
+          .upsert(setting, { onConflict: 'setting_key' });
+          
+        if (error) throw error;
+      }
+      
+      callback(form || document.activeElement?.closest('form'));
+      
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Error saving settings. Please try again.');
+    }
+  }
+  
+  // Show success message for settings save
+  function showSuccessMessage(form) {
+    if (!form) return;
+    
+    const button = form.querySelector('button[type="submit"]');
+    if (!button) return;
+    
+    const originalText = button.textContent.trim();
+    const originalBg = button.className.match(/bg-[a-z]+-\d+/)[0];
+    const originalHover = button.className.match(/hover:bg-[a-z]+-\d+/)[0];
+    
+    button.textContent = 'Saved!';
+    button.classList.add('bg-green-600', 'hover:bg-green-700');
+    
+    // Remove original background classes
+    button.classList.remove(originalBg, originalHover);
+    
+    setTimeout(() => {
+      button.textContent = originalText;
+      button.classList.remove('bg-green-600', 'hover:bg-green-700');
+      
+      // Restore original background classes
+      button.classList.add(originalBg, originalHover);
+    }, 2000);
+  }
+  
+  // Storage provider helper functions
+  function updateProviderConfigVisibility(provider) {
+    // Hide all provider configs
+    document.querySelectorAll('.provider-config').forEach(el => {
+      el.classList.add('hidden');
+    });
+    
+    // Show selected provider config
+    const configEl = document.getElementById(`config-${provider}`);
+    if (configEl) {
+      configEl.classList.remove('hidden');
+    }
+    
+    // Enable/disable migration button
+    const migrateBtn = document.getElementById('migrate-storage-btn');
+    if (migrateBtn) {
+      migrateBtn.disabled = provider === 'local';
+    }
+  }
+  
+  async function saveProviderConfig(provider, form) {
+    const formData = new FormData(form);
+    const config = {};
+    
+    for (const [key, value] of formData.entries()) {
+      // Remove provider prefix from key
+      const cleanKey = key.replace(`${provider}_`, '');
+      config[cleanKey] = value;
+    }
+    
+    const settings = [];
+    
+    if (provider === 'local') {
+      settings.push({
+        setting_key: 'max_file_size',
+        setting_value: JSON.stringify(parseInt(config.max_file_size)),
+        setting_category: 'storage'
+      });
+    } else {
+      // Save provider-specific config
+      settings.push({
+        setting_key: `${provider}_config`,
+        setting_value: JSON.stringify(config),
+        setting_category: 'storage',
+        is_sensitive: true
+      });
+    }
+    
+    await saveSettingsArray(settings, () => {
+      showSuccessMessage(form.closest('.bg-white'));
+    });
+  }
+  
+  async function testStorageConnection(provider, form) {
+    const btn = form.querySelector('.test-connection-btn');
+    const originalText = btn.textContent;
+    
+    btn.disabled = true;
+    btn.textContent = 'Testing...';
+    
+    try {
+      const formData = new FormData(form);
+      const config = {};
+      
+      for (const [key, value] of formData.entries()) {
+        config[key] = value;
+      }
+      
+      const response = await fetch('/api/storage/test-connection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ provider, config }),
+        credentials: 'include'
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        btn.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+        btn.classList.add('bg-green-600', 'hover:bg-green-700');
+        btn.textContent = 'Connected!';
+        
+        setTimeout(() => {
+          btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+          btn.classList.add('bg-gray-600', 'hover:bg-gray-700');
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }, 3000);
+      } else {
+        btn.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+        btn.classList.add('bg-red-600', 'hover:bg-red-700');
+        btn.textContent = 'Connection Failed';
+        
+        alert(result.error || 'Connection test failed');
+        
+        setTimeout(() => {
+          btn.classList.remove('bg-red-600', 'hover:bg-red-700');
+          btn.classList.add('bg-gray-600', 'hover:bg-gray-700');
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Test connection error:', error);
+      btn.textContent = originalText;
+      btn.disabled = false;
+      alert('Connection test failed: ' + error.message);
+    }
+  }
+  
+  async function updateStorageStats() {
+    try {
+      const response = await fetch('/api/storage/stats', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const stats = await response.json();
+        
+        document.getElementById('current-storage-size').textContent = 
+          `${(stats.totalSize / 1024 / 1024).toFixed(2)} MB`;
+        document.getElementById('current-file-count').textContent = stats.fileCount;
+      }
+    } catch (error) {
+      console.error('Error fetching storage stats:', error);
+    }
+  }
+});
+</script>

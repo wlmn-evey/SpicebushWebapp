@@ -1,0 +1,77 @@
+---
+import { getCollection } from '../lib/content-db';
+import { ArrowRight } from 'lucide-astro';
+
+// Get all staff members from Supabase
+const staff = await getCollection('staff');
+
+// Sort by display order and take first 2-3
+const featuredStaff = staff
+  .sort((a, b) => (a.data.order || 999) - (b.data.order || 999))
+  .slice(0, 3);
+---
+
+<!-- Featured Teachers Section -->
+<section class="py-16 bg-white">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl lg:text-4xl font-heading font-bold text-earth-brown mb-4 tracking-tight">
+        Meet Our Teachers
+      </h2>
+      <p class="text-lg text-earth-brown max-w-3xl mx-auto leading-relaxed-plus font-light">
+        Experienced Montessori guides who see the unique light in every child
+      </p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+      {featuredStaff.map((teacher) => (
+        <div class="text-center">
+          <div class="mb-6 relative inline-block">
+            {teacher.data.photo ? (
+              <img 
+                src={teacher.data.photo}
+                alt={teacher.data.name}
+                class="w-48 h-48 rounded-full object-cover mx-auto shadow-lg"
+              />
+            ) : (
+              <div class="w-48 h-48 rounded-full bg-gradient-to-br from-forest-canopy to-moss-green flex items-center justify-center mx-auto shadow-lg">
+                <span class="text-white text-4xl font-bold">
+                  {teacher.data.name.split(' ').map(n => n[0]).join('')}
+                </span>
+              </div>
+            )}
+            {teacher.data.credentials && teacher.data.credentials.length > 0 && (
+              <div class="absolute -bottom-2 -right-2 bg-sunlight-gold text-white rounded-full w-12 h-12 flex items-center justify-center text-xs font-bold shadow-md">
+                AMI
+              </div>
+            )}
+          </div>
+          
+          <h3 class="text-xl font-semibold text-earth-brown mb-1">
+            {teacher.data.name}
+          </h3>
+          <p class="text-forest-canopy font-medium mb-2">
+            {teacher.data.role}
+          </p>
+          <p class="text-sm text-earth-brown/80 mb-3">
+            {teacher.data.startYear && `Since ${teacher.data.startYear}`}
+          </p>
+          
+          {teacher.body && (
+            <div class="text-earth-brown leading-relaxed text-sm max-w-sm mx-auto" set:html={teacher.body.split('.')[0] + '.'} />
+          )}
+        </div>
+      ))}
+    </div>
+    
+    <div class="text-center">
+      <a 
+        href="/about#teachers" 
+        class="inline-flex items-center text-forest-canopy hover:text-moss-green transition-colors font-semibold text-lg"
+      >
+        Meet Our Full Team
+        <ArrowRight className="w-5 h-5 ml-2" />
+      </a>
+    </div>
+  </div>
+</section>

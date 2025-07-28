@@ -1,0 +1,146 @@
+---
+import '../styles/global.css';
+import MobileBottomNav from '../components/MobileBottomNav.astro';
+import AdminPreviewBar from '../components/AdminPreviewBar.astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+  keywords?: string;
+}
+
+const { title, description = "Spicebush Montessori School provides individualized, inclusive Montessori education for children ages 3-6. Welcoming all learners with accessible tuition and neurodiversity support.", keywords = "Montessori school, inclusive preschool, neurodiversity education, accessible tuition, early childhood education" } = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <!-- SEO Meta Tags -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="keywords" content={keywords} />
+    <link rel="canonical" href={canonicalURL} />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={`${Astro.site}SpicebushLogo-03.png`} />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={canonicalURL} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={`${Astro.site}SpicebushLogo-03.png`} />
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "Spicebush Montessori School",
+        "description": "Inclusive Montessori education for children ages 3-6",
+        "url": "https://spicebushmontessori.org",
+        "telephone": "(484) 202-0712",
+        "email": "information@spicebushmontessori.org",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "827 Concord Road",
+          "addressLocality": "Glen Mills",
+          "addressRegion": "PA",
+          "postalCode": "19342",
+          "addressCountry": "US"
+        }
+      }
+    </script>
+    
+    <!-- Responsive Image Positioning -->
+    <script src="/js/responsive-images.js" defer></script>
+  </head>
+  <body class="font-sans text-earth-brown bg-warm-white antialiased">
+    <slot />
+    <MobileBottomNav />
+    <AdminPreviewBar />
+  </body>
+</html>
+
+<style>
+  body {
+    line-height: 1.6;
+  }
+  
+  /* Focus styles for accessibility */
+  *:focus {
+    outline: 2px solid #2E4A3B !important;
+    outline-offset: 2px;
+  }
+  
+  /* Additional focus styles for better visibility */
+  *:focus-visible {
+    outline: 2px solid #2E4A3B !important;
+    outline-offset: 2px;
+  }
+  
+  /* Screen reader only content */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  
+  /* Add padding for mobile bottom nav */
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: 60px;
+    }
+  }
+  
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .bg-sunlight-gold {
+      background-color: #B8860B !important;
+    }
+    
+    .bg-forest-canopy {
+      background-color: #1a2a21 !important;
+    }
+    
+    .text-earth-brown {
+      color: #000000 !important;
+    }
+  }
+  
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    
+    html {
+      scroll-behavior: auto;
+    }
+  }
+</style>

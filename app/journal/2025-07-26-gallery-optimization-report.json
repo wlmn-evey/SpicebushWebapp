@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-07-26T20:44:17.008Z",
+  "sourcePath": "/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/public/images/gallery-staging",
+  "outputPath": "/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/public/images/optimized/gallery",
+  "stats": {
+    "totalProcessed": 58,
+    "totalGenerated": 464,
+    "averageFilesPerImage": 8
+  },
+  "categories": {
+    "art": {
+      "fileCount": 64,
+      "webpCount": 48,
+      "jpgCount": 16
+    },
+    "classroom": {
+      "fileCount": 48,
+      "webpCount": 36,
+      "jpgCount": 12
+    },
+    "events": {
+      "fileCount": 56,
+      "webpCount": 42,
+      "jpgCount": 14
+    },
+    "group": {
+      "fileCount": 48,
+      "webpCount": 36,
+      "jpgCount": 12
+    },
+    "individual": {
+      "fileCount": 72,
+      "webpCount": 54,
+      "jpgCount": 18
+    },
+    "materials": {
+      "fileCount": 64,
+      "webpCount": 48,
+      "jpgCount": 16
+    },
+    "outdoor": {
+      "fileCount": 48,
+      "webpCount": 36,
+      "jpgCount": 12
+    },
+    "practical": {
+      "fileCount": 64,
+      "webpCount": 48,
+      "jpgCount": 16
+    }
+  }
+}

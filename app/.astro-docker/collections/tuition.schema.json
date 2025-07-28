@@ -1,0 +1,113 @@
+{
+  "$ref": "#/definitions/tuition",
+  "definitions": {
+    "tuition": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "program",
+            "rate"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "program_type": {
+          "type": "string",
+          "enum": [
+            "Full Day",
+            "Half Day",
+            "Extended Care"
+          ]
+        },
+        "days_per_week": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 7,
+          "default": 5
+        },
+        "daily_hours": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 12,
+          "default": 6.5
+        },
+        "description": {
+          "type": "string"
+        },
+        "rate_label": {
+          "type": "string"
+        },
+        "program_id": {
+          "type": "string"
+        },
+        "tuition_price": {
+          "type": "number"
+        },
+        "extended_care_price": {
+          "type": "number",
+          "default": 0
+        },
+        "extended_care_available": {
+          "type": "boolean",
+          "default": false
+        },
+        "is_constant_rate": {
+          "type": "boolean",
+          "default": false
+        },
+        "school_year": {
+          "type": "string",
+          "default": "2025-2026"
+        },
+        "income_threshold_type": {
+          "type": "string",
+          "enum": [
+            "Greater Than or Equal To",
+            "Less Than"
+          ],
+          "default": "Greater Than or Equal To"
+        },
+        "income_threshold_family_2": {
+          "type": "number"
+        },
+        "income_threshold_family_3": {
+          "type": "number"
+        },
+        "income_threshold_family_4": {
+          "type": "number"
+        },
+        "income_threshold_family_5": {
+          "type": "number"
+        },
+        "income_threshold_family_6": {
+          "type": "number"
+        },
+        "income_threshold_family_7": {
+          "type": "number"
+        },
+        "income_threshold_family_8_plus": {
+          "type": "number"
+        },
+        "display_order": {
+          "type": "number",
+          "default": 0
+        },
+        "active": {
+          "type": "boolean",
+          "default": true
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

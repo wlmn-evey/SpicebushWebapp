@@ -1,0 +1,325 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { checkAdminAuth } from '../../lib/admin-auth-check';
+import { 
+  ArrowLeft,
+  Users, 
+  Search, 
+  Plus,
+  Mail,
+  Edit,
+  Trash2,
+  Shield,
+  UserCheck,
+  Clock
+} from 'lucide-astro';
+
+// Check if user is authenticated and has admin access
+const { isAuthenticated } = await checkAdminAuth(Astro);
+
+if (!isAuthenticated) {
+  return Astro.redirect('/auth/login?redirect=/admin/users');
+}
+---
+
+<Layout 
+  title="Admin User Management - Admin Panel"
+  description="Manage administrative user accounts and permissions."
+  keywords="admin users, account management, administrator profiles"
+>
+  <Header />
+  
+  <main id="main-content">
+
+    <!-- Header -->
+    <section class="bg-gradient-to-br from-moss-green to-forest-canopy py-12">
+      <div class="container mx-auto px-4">
+        <div class="max-w-6xl mx-auto">
+          <!-- Back to Dashboard Navigation -->
+          <div class="mb-6">
+            <a href="/admin" class="inline-flex items-center text-green-200 hover:text-white transition-colors group">
+              <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+              <span class="text-sm font-medium">Back to Admin Dashboard</span>
+            </a>
+          </div>
+          
+          <div>
+            <h1 class="text-3xl lg:text-4xl font-heading font-bold text-white tracking-tight">
+              Admin User Management
+            </h1>
+            <p class="text-green-100 text-lg max-w-3xl">
+              Manage administrative accounts and permissions for school staff.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- User Management Dashboard -->
+    <section class="py-12 bg-gray-50 min-h-screen">
+      <div class="container mx-auto px-4 max-w-7xl">
+        
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center">
+              <Users className="w-8 h-8 text-moss-green mr-3" />
+              <div>
+                <div class="text-2xl font-bold text-earth-brown">5</div>
+                <div class="text-gray-600 text-sm">Total Admins</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center">
+              <UserCheck className="w-8 h-8 text-green-600 mr-3" />
+              <div>
+                <div class="text-2xl font-bold text-earth-brown">4</div>
+                <div class="text-gray-600 text-sm">Active Admins</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center">
+              <Clock className="w-8 h-8 text-orange-600 mr-3" />
+              <div>
+                <div class="text-2xl font-bold text-earth-brown">1</div>
+                <div class="text-gray-600 text-sm">Pending Invitation</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-8">
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div class="flex-1 flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+              <div class="relative flex-1 lg:max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input 
+                  type="text" 
+                  placeholder="Search administrators..." 
+                  class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-moss-green focus:border-transparent"
+                />
+              </div>
+            </div>
+            <button class="bg-moss-green hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center">
+              <Plus className="w-4 h-4 mr-2" />
+              Invite Admin
+            </button>
+          </div>
+        </div>
+
+        <!-- Admin Users Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-earth-brown">Administrative Accounts</h2>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="text-left text-sm font-medium text-gray-600 px-6 py-3">Name</th>
+                  <th class="text-left text-sm font-medium text-gray-600 px-6 py-3">Email</th>
+                  <th class="text-left text-sm font-medium text-gray-600 px-6 py-3">Role</th>
+                  <th class="text-left text-sm font-medium text-gray-600 px-6 py-3">Status</th>
+                  <th class="text-left text-sm font-medium text-gray-600 px-6 py-3">Last Login</th>
+                  <th class="text-left text-sm font-medium text-gray-600 px-6 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <div class="flex items-center">
+                      <div class="w-10 h-10 bg-moss-green rounded-full flex items-center justify-center text-white font-medium">
+                        KF
+                      </div>
+                      <div class="ml-3">
+                        <div class="font-medium text-earth-brown">Kirsti Forrest</div>
+                        <div class="text-sm text-gray-600">Lead Teacher</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center text-sm text-gray-600">
+                      <Mail className="w-3 h-3 mr-2" />
+                      kirsti@spicebushmontessori.org
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="flex items-center text-sm">
+                      <Shield className="w-4 h-4 mr-1 text-blue-600" />
+                      <span class="font-medium text-earth-brown">Super Admin</span>
+                    </span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                      Active
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-600">
+                    2 hours ago
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center space-x-2">
+                      <button class="text-gray-500 hover:text-moss-green transition-colors">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button class="text-gray-500 hover:text-red-600 transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <div class="flex items-center">
+                      <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-medium">
+                        LW
+                      </div>
+                      <div class="ml-3">
+                        <div class="font-medium text-earth-brown">Leah Walker</div>
+                        <div class="text-sm text-gray-600">Teacher</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center text-sm text-gray-600">
+                      <Mail className="w-3 h-3 mr-2" />
+                      leah@spicebushmontessori.org
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="text-sm font-medium text-earth-brown">Admin</span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                      Active
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-600">
+                    Yesterday
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center space-x-2">
+                      <button class="text-gray-500 hover:text-moss-green transition-colors">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button class="text-gray-500 hover:text-red-600 transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <div class="flex items-center">
+                      <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-medium">
+                        KM
+                      </div>
+                      <div class="ml-3">
+                        <div class="font-medium text-earth-brown">Kira Messinger</div>
+                        <div class="text-sm text-gray-600">Assistant Teacher</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center text-sm text-gray-600">
+                      <Mail className="w-3 h-3 mr-2" />
+                      kira@spicebushmontessori.org
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="text-sm font-medium text-earth-brown">Admin</span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                      Active
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-600">
+                    3 days ago
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center space-x-2">
+                      <button class="text-gray-500 hover:text-moss-green transition-colors">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button class="text-gray-500 hover:text-red-600 transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <div class="flex items-center">
+                      <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-medium">
+                        ?
+                      </div>
+                      <div class="ml-3">
+                        <div class="font-medium text-earth-brown">Pending Invitation</div>
+                        <div class="text-sm text-gray-600">Office Administrator</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center text-sm text-gray-600">
+                      <Mail className="w-3 h-3 mr-2" />
+                      admin@spicebushmontessori.org
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="text-sm font-medium text-earth-brown">Admin</span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                      Invited
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-600">
+                    Never
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center space-x-2">
+                      <button class="text-sm text-moss-green hover:text-green-700 font-medium">
+                        Resend
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-blue-900">Admin Access Control</h3>
+              <p class="mt-1 text-sm text-blue-700">
+                Only users with @spicebushmontessori.org email addresses or explicitly granted admin permissions can access the administrative panel. 
+                Super Admin users can manage other administrators and have full system access.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

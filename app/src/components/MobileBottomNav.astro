@@ -1,0 +1,44 @@
+---
+import { Calculator, Calendar, Phone } from 'lucide-astro';
+---
+
+<!-- Sticky Mobile Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg md:hidden z-50" aria-label="Mobile quick actions">
+  <div class="grid grid-cols-3 gap-px bg-gray-200">
+    <a 
+      href="/admissions/tuition-calculator" 
+      class="bg-white py-3 px-2 flex flex-col items-center justify-center hover:bg-stone-beige transition-colors"
+      aria-label="Calculate tuition"
+    >
+      <Calculator className="w-6 h-6 text-forest-canopy mb-1" />
+      <span class="text-xs font-medium text-earth-brown">Tuition</span>
+    </a>
+    
+    <a 
+      href="/admissions/schedule-tour" 
+      class="bg-sunlight-gold py-3 px-2 flex flex-col items-center justify-center hover:bg-orange-600 transition-colors"
+      aria-label="Schedule a tour"
+    >
+      <Calendar className="w-6 h-6 text-white mb-1" />
+      <span class="text-xs font-medium text-white">Tour</span>
+    </a>
+    
+    <a 
+      href="tel:484-202-0712" 
+      class="bg-white py-3 px-2 flex flex-col items-center justify-center hover:bg-stone-beige transition-colors"
+      aria-label="Call us"
+    >
+      <Phone className="w-6 h-6 text-forest-canopy mb-1" />
+      <span class="text-xs font-medium text-earth-brown">Call</span>
+    </a>
+  </div>
+</nav>
+
+<!-- Add padding to body on mobile to account for fixed nav -->
+<style>
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: 60px;
+    }
+  }
+</style>
