@@ -30,16 +30,17 @@ RUN npm install -g npm@latest
 COPY --chown=node:node package*.json ./
 
 # Install dependencies with legacy peer deps flag
-# We do this as root to avoid permission issues during install
-RUN npm ci --legacy-peer-deps && \
-    # Fix permissions after install
-    chown -R node:node /app && \
-    # Pre-create .astro directory with correct ownership and permissions
+# Use cache mount to speed up installs and add timeout
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --legacy-peer-deps --loglevel=error --no-audit --no-fund && \
+    # Install the correct rollup binary for x64 (since we're using platform: linux/amd64)
+    npm install @rollup/rollup-linux-x64-musl --no-save --force || true && \
+    # Pre-create .astro directory
     mkdir -p /app/.astro && \
-    chown -R node:node /app/.astro && \
+    # Set permissions more efficiently
     chmod -R 775 /app/.astro && \
-    # Ensure node_modules has correct permissions
-    chmod -R 755 /app/node_modules
+    # Fix ownership of entire app directory to avoid permission issues
+    chown -R node:node /app
 
 # Copy entrypoint script
 COPY --chown=node:node docker-entrypoint.sh /usr/local/bin/

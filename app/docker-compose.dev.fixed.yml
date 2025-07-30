@@ -1,0 +1,194 @@
+# Fixed Docker Compose for Development
+# Addresses Bug #032 - Docker Missing Dependencies
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+        - NODE_ENV=development
+    ports:
+      - "4321:4321"
+    volumes:
+      # Mount source code for hot reload
+      - .:/app:delegated
+      # CRITICAL: Preserve node_modules from the image
+      - /app/node_modules
+      # Preserve .astro directory
+      - /app/.astro
+      # Add npm cache volume for faster rebuilds
+      - npm-cache:/home/astro/.npm
+    environment:
+      - NODE_ENV=development
+      - NPM_CONFIG_LOGLEVEL=warn
+      # Force npm to use the container's node_modules
+      - NODE_PATH=/app/node_modules
+      # Supabase connection
+      - PUBLIC_SUPABASE_URL=${PUBLIC_SUPABASE_URL:-http://localhost:54321}
+      - PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjIwNjkwODE2OTYsImlhdCI6MTc1MzcyMTY5Nn0.uL8kczyPGK0ku_GIaIOjXlI75rbaZ-8W81-wx5SEEdw}
+      # Memory settings for Node
+      - NODE_OPTIONS=--max-old-space-size=4096
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    networks:
+      - spicebush-network
+    # Add init for proper signal handling
+    init: true
+    # Add restart policy
+    restart: unless-stopped
+    # Resource limits to prevent OOM during npm operations
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2'
+        reservations:
+          memory: 2G
+          cpus: '1'
+    # Health check with extended timeouts for development
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4321", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # Include all the Supabase services from the main docker-compose.yml
+  # (These remain unchanged from the original configuration)
+  
+  supabase-db:
+    image: supabase/postgres:15.1.1.78
+    healthcheck:
+      test: pg_isready -U postgres -h localhost
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - log_min_messages=fatal
+    restart: unless-stopped
+    ports:
+      - "54322:5432"
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-token-with-at-least-32-characters-long}
+      JWT_EXP: 3600
+    volumes:
+      - ./docker/volumes/db/00-supabase-users.sql:/docker-entrypoint-initdb.d/init-scripts/00-supabase-users.sql:Z
+      - ./supabase/migrations:/docker-entrypoint-initdb.d/migrations:Z
+      - supabase-db-data:/var/lib/postgresql/data:Z
+      - ./docker/volumes/db/postgresql.conf:/etc/postgresql/postgresql.conf
+    networks:
+      - spicebush-network
+
+  # Minimal required Supabase services for development
+  supabase-kong:
+    image: kong:2.8.1
+    restart: unless-stopped
+    ports:
+      - "54321:8000"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
+    volumes:
+      - ./docker/volumes/api/kong.yml:/var/lib/kong/kong.yml:ro
+    depends_on:
+      - supabase-auth
+      - supabase-rest
+    networks:
+      - spicebush-network
+
+  supabase-auth:
+    image: supabase/gotrue:v2.158.1
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: http://localhost:54321
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}@supabase-db:5432/postgres
+      GOTRUE_SITE_URL: http://localhost:4321
+      GOTRUE_URI_ALLOW_LIST: "http://localhost:4321,http://localhost:3000"
+      GOTRUE_JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-token-with-at-least-32-characters-long}
+      GOTRUE_JWT_EXP: 3600
+    networks:
+      - spicebush-network
+
+  supabase-rest:
+    image: postgrest/postgrest:v12.2.0
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}@supabase-db:5432/postgres
+      PGRST_DB_SCHEMAS: public,storage,graphql_public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-token-with-at-least-32-characters-long}
+    networks:
+      - spicebush-network
+
+  supabase-meta:
+    image: supabase/postgres-meta:v0.68.0
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8080/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: supabase-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
+    networks:
+      - spicebush-network
+
+  # Development email service
+  mailhog:
+    image: mailhog/mailhog:latest
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    networks:
+      - spicebush-network
+
+networks:
+  spicebush-network:
+    driver: bridge
+
+volumes:
+  npm-cache:
+    driver: local
+  supabase-db-data:
+    driver: local

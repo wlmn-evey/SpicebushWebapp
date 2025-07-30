@@ -13,10 +13,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
-    autoRefreshToken: true,
+    autoRefreshToken: true
   },
   db: {
-    schema: 'public',
+    schema: 'public'
   },
   global: {
     headers: {
@@ -31,7 +31,7 @@ export const auth = {
   async signUp(email: string, password: string) {
     const { data, error } = await supabase.auth.signUp({
       email,
-      password,
+      password
     });
     return { data, error };
   },
@@ -40,7 +40,7 @@ export const auth = {
   async signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password,
+      password
     });
     return { data, error };
   },
@@ -56,7 +56,7 @@ export const auth = {
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     });
     return { data, error };
@@ -65,7 +65,7 @@ export const auth = {
   // Reset password
   async resetPassword(email: string) {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/update-password`,
+      redirectTo: `${window.location.origin}/auth/update-password`
     });
     return { data, error };
   },
@@ -73,7 +73,7 @@ export const auth = {
   // Update password
   async updatePassword(password: string) {
     const { data, error } = await supabase.auth.updateUser({
-      password,
+      password
     });
     return { data, error };
   },

@@ -1,5 +1,5 @@
 ---
-import { getEntry } from '../lib/content-db';
+import { getEntry } from '@lib/content-db';
 import { Phone, Mail, MapPin } from 'lucide-astro';
 
 interface Props {
@@ -35,7 +35,7 @@ const containerClass = inline ? 'flex flex-wrap gap-4' : 'space-y-2';
     {showLabels && <span class="text-earth-brown/80">Email:</span>}
     <a 
       href={`mailto:${email}`}
-      class="text-earth-brown hover:text-forest-canopy transition-colors"
+      class="text-earth-brown hover:text-forest-canopy transition-colors break-all sm:break-normal"
     >
       {email}
     </a>

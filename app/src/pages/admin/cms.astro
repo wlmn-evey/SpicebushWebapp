@@ -1,6 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { checkAdminAuth } from '../../lib/admin-auth-check';
+import { checkAdminAuth } from '@lib/admin-auth-check';
 
 // Check if user is authenticated and has admin access
 const { isAuthenticated, user } = await checkAdminAuth(Astro);
@@ -75,7 +75,7 @@ if (!isAuthenticated) {
 
   <!-- Decap CMS Scripts -->
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
-  <script src="/js/simple-cms-backend.js"></script>
+  <script src="/js/simple-cms-backend.js" is:inline></script>
   
   <script>
     
@@ -109,121 +109,121 @@ if (!isAuthenticated) {
       // Initialize CMS with Supabase backend
       console.log('Initializing CMS with config...');
       window.CMS.init({
-            load_config_file: false, // Explicitly disable YAML loading
-            backend: {
-              name: 'supabase',
-              branch: 'main'
-            },
-            media_folder: "public/uploads",
-            public_folder: "/uploads",
-            site_url: window.location.origin,
-            display_url: window.location.origin,
-            collections: [
+        load_config_file: false, // Explicitly disable YAML loading
+        backend: {
+          name: 'supabase',
+          branch: 'main'
+        },
+        media_folder: 'public/uploads',
+        public_folder: '/uploads',
+        site_url: window.location.origin,
+        display_url: window.location.origin,
+        collections: [
+          {
+            name: 'blog',
+            label: 'Blog Posts',
+            folder: 'blog',
+            create: true,
+            slug: '{{year}}-{{month}}-{{day}}-{{slug}}',
+            fields: [
+              {label: 'Title', name: 'title', widget: 'string'},
+              {label: 'Publish Date', name: 'date', widget: 'datetime'},
+              {label: 'Author', name: 'author', widget: 'string', default: 'Spicebush Team'},
+              {label: 'Body', name: 'body', widget: 'markdown'}
+            ]
+          },
+          {
+            name: 'staff',
+            label: 'Staff & Teachers',
+            folder: 'staff',
+            create: true,
+            slug: '{{slug}}',
+            fields: [
+              {label: 'Name', name: 'name', widget: 'string'},
+              {label: 'Role', name: 'role', widget: 'string'},
+              {label: 'Bio', name: 'bio', widget: 'markdown'}
+            ]
+          },
+          {
+            name: 'hours',
+            label: 'School Hours',
+            folder: 'hours',
+            create: false,
+            slug: '{{day}}',
+            fields: [
+              {label: 'Day', name: 'day', widget: 'string'},
+              {label: 'Open Time', name: 'open_time', widget: 'string'},
+              {label: 'Close Time', name: 'close_time', widget: 'string'},
+              {label: 'Is Closed', name: 'is_closed', widget: 'boolean', default: false}
+            ]
+          },
+          {
+            name: 'tuition',
+            label: 'Tuition Programs & Rates',
+            folder: 'tuition',
+            create: true,
+            slug: '{{slug}}',
+            fields: [
+              {label: 'Type', name: 'type', widget: 'select', options: ['program', 'rate']},
+              {label: 'Name', name: 'name', widget: 'string'},
+              {label: 'Description', name: 'description', widget: 'text'}
+            ]
+          },
+          {
+            name: 'announcements',
+            label: 'Announcements & Notices',
+            folder: 'announcements',
+            create: true,
+            slug: '{{year}}-{{month}}-{{day}}-{{slug}}',
+            fields: [
+              {label: 'Title', name: 'title', widget: 'string'},
+              {label: 'Type', name: 'type', widget: 'select', options: ['notice', 'closure', 'event', 'update']},
+              {label: 'Priority', name: 'priority', widget: 'select', options: ['low', 'normal', 'high', 'urgent']},
+              {label: 'Content', name: 'body', widget: 'markdown'}
+            ]
+          },
+          {
+            name: 'photos',
+            label: 'Photo Gallery',
+            folder: 'photos',
+            create: true,
+            slug: '{{slug}}',
+            fields: [
+              {label: 'Original Filename', name: 'originalFilename', widget: 'string'},
+              {label: 'Category', name: 'category', widget: 'select', options: ['homepage', 'about', 'programs', 'admissions', 'gallery']},
+              {label: 'Alt Text', name: 'altText', widget: 'text'}
+            ]
+          },
+          {
+            name: 'coming_soon',
+            label: 'Coming Soon Mode',
+            folder: 'coming-soon',
+            files: [
               {
-                name: 'blog',
-                label: 'Blog Posts',
-                folder: 'blog',
-                create: true,
-                slug: '{{year}}-{{month}}-{{day}}-{{slug}}',
+                name: 'config',
+                label: 'Coming Soon Configuration',
+                file: 'coming-soon-config',
                 fields: [
-                  {label: 'Title', name: 'title', widget: 'string'},
-                  {label: 'Publish Date', name: 'date', widget: 'datetime'},
-                  {label: 'Author', name: 'author', widget: 'string', default: 'Spicebush Team'},
-                  {label: 'Body', name: 'body', widget: 'markdown'}
-                ]
-              },
-              {
-                name: 'staff',
-                label: 'Staff & Teachers',
-                folder: 'staff',
-                create: true,
-                slug: '{{slug}}',
-                fields: [
-                  {label: 'Name', name: 'name', widget: 'string'},
-                  {label: 'Role', name: 'role', widget: 'string'},
-                  {label: 'Bio', name: 'bio', widget: 'markdown'}
-                ]
-              },
-              {
-                name: 'hours',
-                label: 'School Hours',
-                folder: 'hours',
-                create: false,
-                slug: '{{day}}',
-                fields: [
-                  {label: 'Day', name: 'day', widget: 'string'},
-                  {label: 'Open Time', name: 'open_time', widget: 'string'},
-                  {label: 'Close Time', name: 'close_time', widget: 'string'},
-                  {label: 'Is Closed', name: 'is_closed', widget: 'boolean', default: false}
-                ]
-              },
-              {
-                name: 'tuition',
-                label: 'Tuition Programs & Rates',
-                folder: 'tuition',
-                create: true,
-                slug: '{{slug}}',
-                fields: [
-                  {label: 'Type', name: 'type', widget: 'select', options: ['program', 'rate']},
-                  {label: 'Name', name: 'name', widget: 'string'},
-                  {label: 'Description', name: 'description', widget: 'text'}
-                ]
-              },
-              {
-                name: 'announcements',
-                label: 'Announcements & Notices',
-                folder: 'announcements',
-                create: true,
-                slug: '{{year}}-{{month}}-{{day}}-{{slug}}',
-                fields: [
-                  {label: 'Title', name: 'title', widget: 'string'},
-                  {label: 'Type', name: 'type', widget: 'select', options: ['notice', 'closure', 'event', 'update']},
-                  {label: 'Priority', name: 'priority', widget: 'select', options: ['low', 'normal', 'high', 'urgent']},
-                  {label: 'Content', name: 'body', widget: 'markdown'}
-                ]
-              },
-              {
-                name: 'photos',
-                label: 'Photo Gallery',
-                folder: 'photos',
-                create: true,
-                slug: '{{slug}}',
-                fields: [
-                  {label: 'Original Filename', name: 'originalFilename', widget: 'string'},
-                  {label: 'Category', name: 'category', widget: 'select', options: ['homepage', 'about', 'programs', 'admissions', 'gallery']},
-                  {label: 'Alt Text', name: 'altText', widget: 'text'}
-                ]
-              },
-              {
-                name: 'coming_soon',
-                label: 'Coming Soon Mode',
-                folder: 'coming-soon',
-                files: [
-                  {
-                    name: 'config',
-                    label: 'Coming Soon Configuration',
-                    file: 'coming-soon-config',
-                    fields: [
-                      {label: 'Enable Coming Soon Mode', name: 'enabled', widget: 'boolean', default: false}
-                    ]
-                  }
+                  {label: 'Enable Coming Soon Mode', name: 'enabled', widget: 'boolean', default: false}
                 ]
               }
             ]
-        });
-        
-        // Hide loading state after init
-        setTimeout(() => {
-          const loading = document.getElementById('cms-loading');
-          if (loading) {
-            loading.style.display = 'none';
           }
-        }, 1000);
-      }
+        ]
+      });
+        
+      // Hide loading state after init
+      setTimeout(() => {
+        const loading = document.getElementById('cms-loading');
+        if (loading) {
+          loading.style.display = 'none';
+        }
+      }, 1000);
+    }
       
-      // Add custom styling
-      const style = document.createElement('style');
-      style.textContent = `
+    // Add custom styling
+    const style = document.createElement('style');
+    style.textContent = `
         /* Custom CMS styling */
         .nc-app-header {
           background-color: #0f4c3a !important;
@@ -250,8 +250,7 @@ if (!isAuthenticated) {
           background-color: #10b981 !important;
         }
       `;
-      document.head.appendChild(style);
-    }
+    document.head.appendChild(style);
     
     // Start initialization when DOM is ready
     if (document.readyState === 'loading') {

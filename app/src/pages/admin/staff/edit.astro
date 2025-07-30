@@ -11,13 +11,13 @@ import TextInput from '../../../components/forms/TextInput.astro';
 import TextArea from '../../../components/forms/TextArea.astro';
 import SelectField from '../../../components/forms/SelectField.astro';
 import ImageUpload from '../../../components/forms/ImageUpload.astro';
-import { checkAdminAuth } from '../../../lib/admin-auth-check';
-import { getEntry } from '../../../lib/content-db';
+import { checkAdminAuth } from '@lib/admin-auth-check';
+import { getEntry } from '@lib/content-db';
 
 // Check authentication
 const { isAuthenticated } = await checkAdminAuth(Astro);
 if (!isAuthenticated) {
-  return Astro.redirect('/auth/login?redirect=' + Astro.url.pathname);
+  return Astro.redirect(`/auth/login?redirect=${  Astro.url.pathname}`);
 }
 
 // Get slug from URL
@@ -52,7 +52,7 @@ if (Astro.request.method === 'POST') {
       languages: formData.get('languages')?.toString().split(',').map(lang => lang.trim()).filter(Boolean) || ['English'],
       startYear: parseInt(formData.get('startYear')?.toString()) || new Date().getFullYear(),
       order: parseInt(formData.get('order')?.toString()) || 99,
-      active: formData.get('active') === 'on',
+      active: formData.get('active') === 'on'
     };
     
     // Validation
@@ -101,7 +101,7 @@ if (Astro.request.method === 'POST') {
       const response = await fetch(apiEndpoint, {
         method: isEdit ? 'PUT' : 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(contentData)
       });
@@ -131,7 +131,7 @@ const defaultData = staffMember ? {
   languages: staffMember.data.languages?.join(', ') || 'English',
   startYear: staffMember.data.startYear || new Date().getFullYear(),
   order: staffMember.data.order || 99,
-  active: staffMember.data.active !== false,
+  active: staffMember.data.active !== false
 } : {
   name: '',
   slug: '',
@@ -143,7 +143,7 @@ const defaultData = staffMember ? {
   languages: 'English',
   startYear: new Date().getFullYear(),
   order: 99,
-  active: true,
+  active: true
 };
 
 // Role options
@@ -154,7 +154,7 @@ const roleOptions = [
   { value: 'Head of School', label: 'Head of School' },
   { value: 'Director', label: 'Director' },
   { value: 'Administrator', label: 'Administrator' },
-  { value: 'Support Staff', label: 'Support Staff' },
+  { value: 'Support Staff', label: 'Support Staff' }
 ];
 
 const pageTitle = isEdit ? `Edit: ${staffMember?.data.name}` : 'New Staff Member';

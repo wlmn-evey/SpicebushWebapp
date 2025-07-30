@@ -5,7 +5,7 @@ import {
   getEntry,
   getEntries,
   getSetting
-} from '../../lib/content-db-direct';
+} from '@lib/content-db-direct';
 
 // Mock the pg module
 vi.mock('pg', () => {
@@ -38,8 +38,8 @@ describe('content-db-direct Edge Cases and Error Handling', () => {
       const maliciousInputs = [
         "blog'; DROP TABLE content; --",
         "blog' OR '1'='1",
-        "blog\"; DELETE FROM content WHERE \"1\"=\"1",
-        "blog`; UPDATE settings SET value='hacked'",
+        'blog"; DELETE FROM content WHERE "1"="1',
+        "blog`; UPDATE settings SET value='hacked'"
       ];
 
       for (const input of maliciousInputs) {

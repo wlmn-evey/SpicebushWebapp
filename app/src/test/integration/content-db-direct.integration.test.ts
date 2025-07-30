@@ -5,7 +5,7 @@ import {
   getEntry,
   getEntries,
   getSetting
-} from '../../lib/content-db-direct';
+} from '@lib/content-db-direct';
 
 const { Client } = pg;
 

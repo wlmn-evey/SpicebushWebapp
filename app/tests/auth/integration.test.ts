@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
-import { isAdminEmail } from '../../src/lib/admin-config';
+import { isAdminEmail } from '@lib/admin-config';
 
 // Test configuration
 const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL || 'http://localhost:54321';

@@ -1,0 +1,482 @@
+---
+export interface Props {
+  variant?: 'inline' | 'card' | 'footer';
+  title?: string;
+  description?: string;
+  buttonText?: string;
+  showName?: boolean;
+  subscriptionType?: string;
+  className?: string;
+}
+
+const { 
+  variant = 'inline',
+  title = 'Stay Connected',
+  description = 'Get updates about our school, events, and Montessori education tips.',
+  buttonText = 'Subscribe',
+  showName = false,
+  subscriptionType = 'general',
+  className = ''
+} = Astro.props;
+
+const formId = `newsletter-form-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div class={`newsletter-signup newsletter-${variant} ${className}`}>
+  {variant === 'card' && (
+    <div class="newsletter-card">
+      <h3 class="newsletter-title">{title}</h3>
+      <p class="newsletter-description">{description}</p>
+      <form id={formId} class="newsletter-form">
+        {showName && (
+          <div class="form-row">
+            <div class="form-group">
+              <label for={`${formId}-fname`} class="sr-only">First Name</label>
+              <input 
+                type="text" 
+                id={`${formId}-fname`}
+                name="first_name" 
+                placeholder="First Name"
+                class="form-input"
+              />
+            </div>
+            <div class="form-group">
+              <label for={`${formId}-lname`} class="sr-only">Last Name</label>
+              <input 
+                type="text" 
+                id={`${formId}-lname`}
+                name="last_name" 
+                placeholder="Last Name"
+                class="form-input"
+              />
+            </div>
+          </div>
+        )}
+        <div class="form-row">
+          <div class="form-group email-group">
+            <label for={`${formId}-email`} class="sr-only">Email Address</label>
+            <input 
+              type="email" 
+              id={`${formId}-email`}
+              name="email" 
+              placeholder="Enter your email"
+              required
+              class="form-input"
+            />
+          </div>
+          <button type="submit" class="submit-button">
+            {buttonText}
+          </button>
+        </div>
+        <input type="hidden" name="subscription_type" value={subscriptionType} />
+        <input type="hidden" name="signup_source" value={`website_${variant}`} />
+      </form>
+      <div class="form-message" id={`${formId}-message`}></div>
+    </div>
+  )}
+
+  {variant === 'inline' && (
+    <form id={formId} class="newsletter-form-inline">
+      <h4 class="newsletter-title-inline">{title}</h4>
+      <div class="form-inline-wrapper">
+        <label for={`${formId}-email`} class="sr-only">Email Address</label>
+        <input 
+          type="email" 
+          id={`${formId}-email`}
+          name="email" 
+          placeholder="Your email address"
+          required
+          class="form-input-inline"
+        />
+        <button type="submit" class="submit-button-inline">
+          {buttonText}
+        </button>
+      </div>
+      <input type="hidden" name="subscription_type" value={subscriptionType} />
+      <input type="hidden" name="signup_source" value={`website_${variant}`} />
+      <div class="form-message-inline" id={`${formId}-message`}></div>
+    </form>
+  )}
+
+  {variant === 'footer' && (
+    <div class="newsletter-footer">
+      <h4 class="newsletter-title-footer">{title}</h4>
+      <p class="newsletter-description-footer">{description}</p>
+      <form id={formId} class="newsletter-form-footer">
+        <div class="form-footer-wrapper">
+          <label for={`${formId}-email`} class="sr-only">Email Address</label>
+          <input 
+            type="email" 
+            id={`${formId}-email`}
+            name="email" 
+            placeholder="Your email"
+            required
+            class="form-input-footer"
+          />
+          <button type="submit" class="submit-button-footer">
+            {buttonText}
+          </button>
+        </div>
+        <input type="hidden" name="subscription_type" value={subscriptionType} />
+        <input type="hidden" name="signup_source" value={`website_${variant}`} />
+      </form>
+      <div class="form-message-footer" id={`${formId}-message`}></div>
+    </div>
+  )}
+</div>
+
+<style>
+  /* Base styles */
+  .newsletter-signup {
+    font-family: var(--font-body);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Card variant */
+  .newsletter-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-light);
+  }
+
+  .newsletter-title {
+    font-size: 1.5rem;
+    color: var(--forest-canopy);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  .newsletter-description {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  .newsletter-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .newsletter-form .email-group {
+    flex: 1;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: var(--moss-green);
+    box-shadow: 0 0 0 3px rgba(90, 128, 101, 0.1);
+  }
+
+  .submit-button {
+    background: var(--moss-green);
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+  }
+
+  .submit-button:hover:not(:disabled) {
+    background: var(--forest-canopy);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(90, 128, 101, 0.3);
+  }
+
+  .submit-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Inline variant */
+  .newsletter-form-inline {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .newsletter-title-inline {
+    font-size: 1.125rem;
+    color: var(--forest-canopy);
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .form-inline-wrapper {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .form-input-inline {
+    flex: 1;
+    padding: 0.625rem 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background: white;
+  }
+
+  .form-input-inline:focus {
+    outline: none;
+    border-color: var(--moss-green);
+    box-shadow: 0 0 0 3px rgba(90, 128, 101, 0.1);
+  }
+
+  .submit-button-inline {
+    background: var(--sunlight-gold);
+    color: white;
+    border: none;
+    padding: 0.625rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .submit-button-inline:hover:not(:disabled) {
+    background: var(--orange-hover);
+    transform: translateY(-1px);
+  }
+
+  /* Footer variant */
+  .newsletter-footer {
+    max-width: 400px;
+  }
+
+  .newsletter-title-footer {
+    font-size: 1rem;
+    color: var(--sunlight-gold);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  .newsletter-description-footer {
+    color: var(--light-stone);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+
+  .form-footer-wrapper {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .form-input-footer {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 0.875rem;
+  }
+
+  .form-input-footer::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .form-input-footer:focus {
+    outline: none;
+    border-color: var(--sunlight-gold);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .submit-button-footer {
+    background: var(--sunlight-gold);
+    color: white;
+    border: none;
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+  }
+
+  .submit-button-footer:hover:not(:disabled) {
+    background: var(--orange-hover);
+    transform: translateY(-1px);
+  }
+
+  /* Messages */
+  .form-message,
+  .form-message-inline,
+  .form-message-footer {
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    display: none;
+  }
+
+  .form-message.show,
+  .form-message-inline.show,
+  .form-message-footer.show {
+    display: block;
+  }
+
+  .form-message.success,
+  .form-message-inline.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+
+  .form-message-footer.success {
+    background: rgba(212, 237, 218, 0.15);
+    color: #a3d5a9;
+    border: 1px solid rgba(195, 230, 203, 0.3);
+  }
+
+  .form-message.error,
+  .form-message-inline.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+
+  .form-message-footer.error {
+    background: rgba(248, 215, 218, 0.15);
+    color: #f5c6cb;
+    border: 1px solid rgba(245, 198, 203, 0.3);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .newsletter-form .form-row {
+      grid-template-columns: 1fr;
+    }
+
+    .form-inline-wrapper {
+      flex-direction: column;
+    }
+
+    .submit-button-inline {
+      width: 100%;
+    }
+  }
+</style>
+
+<script define:vars={{ formId }}>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { enhanceForm } = await import('../lib/form-enhance');
+    const { validators } = await import('../lib/form-validation');
+    const form = document.getElementById(formId);
+    const messageEl = document.getElementById(`${formId}-message`);
+    
+    if (!form) return;
+    
+    // Add progressive validation
+    enhanceForm(form, {
+      validationSchema: {
+        email: [validators.required, validators.email],
+        first_name: [validators.minLength(2)],
+        last_name: [validators.minLength(2)]
+      },
+      displayError: (fieldName, error) => {
+        const field = form.querySelector(`[name="${fieldName}"]`);
+        if (!field) return;
+        
+        // Create or update error element
+        let errorEl = field.parentElement.querySelector('.field-error');
+        if (!errorEl && error) {
+          errorEl = document.createElement('span');
+          errorEl.className = 'field-error text-xs text-red-600 mt-1 block';
+          field.parentElement.appendChild(errorEl);
+        }
+        
+        if (errorEl) {
+          errorEl.textContent = error || '';
+          errorEl.style.display = error ? 'block' : 'none';
+        }
+      }
+    });
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitButton = form.querySelector('button[type="submit"]');
+      const originalText = submitButton.textContent;
+      
+      // Show loading state
+      submitButton.disabled = true;
+      submitButton.textContent = 'Subscribing...';
+      
+      // Get form data
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData);
+      data.signup_page = window.location.pathname;
+      
+      try {
+        const response = await fetch('/api/newsletter/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          // Show success message
+          showMessage('success', result.message || 'Thank you for subscribing!');
+          form.reset();
+        } else {
+          // Show error message
+          showMessage('error', result.error || 'Something went wrong. Please try again.');
+        }
+      } catch (error) {
+        console.error('Newsletter signup error:', error);
+        showMessage('error', 'Unable to subscribe. Please try again later.');
+      } finally {
+        // Reset button
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+      }
+    });
+    
+    function showMessage(type, text) {
+      if (!messageEl) return;
+      
+      messageEl.textContent = text;
+      messageEl.className = messageEl.className.replace(/\s*(success|error|show)/g, '');
+      messageEl.classList.add('show', type);
+      
+      // Hide message after 5 seconds
+      setTimeout(() => {
+        messageEl.classList.remove('show');
+      }, 5000);
+    }
+  });
+</script>

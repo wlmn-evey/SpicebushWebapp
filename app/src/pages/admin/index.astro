@@ -6,13 +6,13 @@
  * and system status for admin users.
  */
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { checkAdminAuth } from '../../lib/admin-auth-check';
-import { getCollection, getAllSettings } from '../../lib/content-db';
+import { checkAdminAuth } from '@lib/admin-auth-check';
+import { getCollection, getAllSettings } from '@lib/content-db';
 
 // Check authentication
 const { isAuthenticated } = await checkAdminAuth(Astro);
 if (!isAuthenticated) {
-  return Astro.redirect('/auth/login?redirect=' + Astro.url.pathname);
+  return Astro.redirect(`/auth/login?redirect=${  Astro.url.pathname}`);
 }
 
 // Load dashboard data
@@ -284,7 +284,7 @@ function formatRelativeTime(dateString: string): string {
                 {post.data.excerpt && (
                   <p class="activity-excerpt">
                     {post.data.excerpt.length > 120 
-                      ? post.data.excerpt.substring(0, 120) + '...' 
+                      ? `${post.data.excerpt.substring(0, 120)  }...` 
                       : post.data.excerpt
                     }
                   </p>

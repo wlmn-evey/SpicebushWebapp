@@ -6,13 +6,13 @@
  * each day's schedule and settings.
  */
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { checkAdminAuth } from '../../../lib/admin-auth-check';
-import { getCollection } from '../../../lib/content-db';
+import { checkAdminAuth } from '@lib/admin-auth-check';
+import { getCollection } from '@lib/content-db';
 
 // Check authentication
 const { isAuthenticated } = await checkAdminAuth(Astro);
 if (!isAuthenticated) {
-  return Astro.redirect('/auth/login?redirect=' + Astro.url.pathname);
+  return Astro.redirect(`/auth/login?redirect=${  Astro.url.pathname}`);
 }
 
 // Load hours
@@ -252,11 +252,11 @@ function getDayIcon(day: string): string {
           const response = await fetch('/api/cms/entry', {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify({
               type: 'hours',
-              slug: slug
+              slug
             })
           });
           
@@ -322,7 +322,7 @@ function getDayIcon(day: string): string {
             await fetch('/api/cms/entry', {
               method: 'POST',
               headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
               },
               body: JSON.stringify(contentData)
             });

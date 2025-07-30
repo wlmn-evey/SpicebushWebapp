@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { auth } from '../../lib/supabase';
-import { isAdminEmail } from '../../lib/admin-config';
+import { auth } from '@lib/supabase';
+import { isAdminEmail } from '@lib/admin-config';
 
 // Mock Supabase client
 const mockSupabase = {
@@ -10,25 +10,25 @@ const mockSupabase = {
     getSession: vi.fn(),
     signOut: vi.fn(),
     exchangeCodeForSession: vi.fn(),
-    onAuthStateChange: vi.fn(),
-  },
+    onAuthStateChange: vi.fn()
+  }
 };
 
 // Mock window object for tests
 Object.defineProperty(window, 'location', {
   value: {
     origin: 'http://localhost:3000',
-    href: 'http://localhost:3000/auth/callback',
+    href: 'http://localhost:3000/auth/callback'
   },
-  writable: true,
+  writable: true
 });
 
 // Mock the supabase import
-vi.mock('../../lib/supabase', async () => {
-  const actual = await vi.importActual('../../lib/supabase');
+vi.mock('@lib/supabase', async () => {
+  const actual = await vi.importActual('@lib/supabase');
   return {
     ...actual,
-    supabase: mockSupabase,
+    supabase: mockSupabase
   };
 });
 
@@ -48,7 +48,7 @@ describe('Magic Link Authentication Functions', () => {
       
       mockSupabase.auth.signInWithOtp.mockResolvedValue({
         data: { session: null, user: null },
-        error: null,
+        error: null
       });
 
       const result = await auth.signInWithMagicLink(testEmail);
@@ -56,8 +56,8 @@ describe('Magic Link Authentication Functions', () => {
       expect(mockSupabase.auth.signInWithOtp).toHaveBeenCalledWith({
         email: testEmail,
         options: {
-          emailRedirectTo: expectedRedirectUrl,
-        },
+          emailRedirectTo: expectedRedirectUrl
+        }
       });
       expect(result.error).toBeNull();
     });
@@ -68,12 +68,12 @@ describe('Magic Link Authentication Functions', () => {
         '',
         'test@',
         '@domain.com',
-        'spaces in@email.com',
+        'spaces in@email.com'
       ];
 
       mockSupabase.auth.signInWithOtp.mockResolvedValue({
         data: null,
-        error: { message: 'Invalid email' },
+        error: { message: 'Invalid email' }
       });
 
       for (const email of invalidEmails) {
@@ -95,7 +95,7 @@ describe('Magic Link Authentication Functions', () => {
       
       mockSupabase.auth.signInWithOtp.mockResolvedValue({
         data: null,
-        error: { message: 'Email rate limit exceeded' },
+        error: { message: 'Email rate limit exceeded' }
       });
 
       const result = await auth.signInWithMagicLink(testEmail);
@@ -108,12 +108,12 @@ describe('Magic Link Authentication Functions', () => {
       const mockUser = {
         id: '123',
         email: 'admin@spicebushmontessori.org',
-        email_confirmed_at: new Date().toISOString(),
+        email_confirmed_at: new Date().toISOString()
       };
 
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: mockUser },
-        error: null,
+        error: null
       });
 
       const user = await auth.getCurrentUser();
@@ -123,7 +123,7 @@ describe('Magic Link Authentication Functions', () => {
     it('should return null when not authenticated', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: null },
-        error: null,
+        error: null
       });
 
       const user = await auth.getCurrentUser();
@@ -133,7 +133,7 @@ describe('Magic Link Authentication Functions', () => {
     it('should handle auth errors', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: null },
-        error: { message: 'Auth error' },
+        error: { message: 'Auth error' }
       });
 
       const user = await auth.getCurrentUser();
@@ -146,12 +146,12 @@ describe('Magic Link Authentication Functions', () => {
       const mockSession = {
         access_token: 'mock-token',
         user: { id: '123', email: 'admin@spicebushmontessori.org' },
-        expires_at: Date.now() + 3600000, // 1 hour from now
+        expires_at: Date.now() + 3600000 // 1 hour from now
       };
 
       mockSupabase.auth.getSession.mockResolvedValue({
         data: { session: mockSession },
-        error: null,
+        error: null
       });
 
       const session = await auth.getCurrentSession();
@@ -161,7 +161,7 @@ describe('Magic Link Authentication Functions', () => {
     it('should return null for expired session', async () => {
       mockSupabase.auth.getSession.mockResolvedValue({
         data: { session: null },
-        error: null,
+        error: null
       });
 
       const session = await auth.getCurrentSession();
@@ -174,13 +174,13 @@ describe('Magic Link Authentication Functions', () => {
       const adminEmails = [
         'admin@spicebushmontessori.org',
         'director@spicebushmontessori.org',
-        'evey@eveywinters.com',
+        'evey@eveywinters.com'
       ];
 
       for (const email of adminEmails) {
         mockSupabase.auth.getUser.mockResolvedValue({
           data: { user: { email } },
-          error: null,
+          error: null
         });
 
         const isAdmin = await auth.isAdmin();
@@ -192,13 +192,13 @@ describe('Magic Link Authentication Functions', () => {
       const nonAdminEmails = [
         'parent@example.com',
         'teacher@otherschool.org',
-        'student@university.edu',
+        'student@university.edu'
       ];
 
       for (const email of nonAdminEmails) {
         mockSupabase.auth.getUser.mockResolvedValue({
           data: { user: { email } },
-          error: null,
+          error: null
         });
 
         const isAdmin = await auth.isAdmin();
@@ -209,7 +209,7 @@ describe('Magic Link Authentication Functions', () => {
     it('should return false when no user is logged in', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: null },
-        error: null,
+        error: null
       });
 
       const isAdmin = await auth.isAdmin();
@@ -219,7 +219,7 @@ describe('Magic Link Authentication Functions', () => {
     it('should handle auth errors gracefully', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: null },
-        error: { message: 'Auth error' },
+        error: { message: 'Auth error' }
       });
 
       const isAdmin = await auth.isAdmin();
@@ -230,7 +230,7 @@ describe('Magic Link Authentication Functions', () => {
   describe('signOut', () => {
     it('should sign out successfully', async () => {
       mockSupabase.auth.signOut.mockResolvedValue({
-        error: null,
+        error: null
       });
 
       const result = await auth.signOut();
@@ -240,7 +240,7 @@ describe('Magic Link Authentication Functions', () => {
 
     it('should handle sign out errors', async () => {
       mockSupabase.auth.signOut.mockResolvedValue({
-        error: { message: 'Sign out failed' },
+        error: { message: 'Sign out failed' }
       });
 
       const result = await auth.signOut();
@@ -254,7 +254,7 @@ describe('Magic Link Authentication Functions', () => {
       const mockUnsubscribe = vi.fn();
       
       mockSupabase.auth.onAuthStateChange.mockReturnValue({
-        data: { subscription: mockUnsubscribe },
+        data: { subscription: mockUnsubscribe }
       });
 
       const unsubscribe = auth.onAuthStateChange(mockCallback);
@@ -273,7 +273,7 @@ describe('Admin Configuration Tests', () => {
         'director@spicebushmontessori.org',
         'evey@eveywinters.com',
         'ADMIN@SPICEBUSHMONTESSORI.ORG', // Test case insensitive
-        ' admin@spicebushmontessori.org ', // Test whitespace handling
+        ' admin@spicebushmontessori.org ' // Test whitespace handling
       ];
 
       adminEmails.forEach(email => {
@@ -289,7 +289,7 @@ describe('Admin Configuration Tests', () => {
         'admin@fake-spicebushmontessori.org', // Subdomain attack
         '', // Empty string
         null, // Null
-        undefined, // Undefined
+        undefined // Undefined
       ];
 
       nonAdminEmails.forEach(email => {
@@ -301,7 +301,7 @@ describe('Admin Configuration Tests', () => {
       const domainAdmins = [
         'newteacher@spicebushmontessori.org',
         'staff@spicebushmontessori.org',
-        'substitute@spicebushmontessori.org',
+        'substitute@spicebushmontessori.org'
       ];
 
       domainAdmins.forEach(email => {
@@ -312,13 +312,13 @@ describe('Admin Configuration Tests', () => {
     it('should handle development test emails in dev mode', () => {
       // Mock dev environment
       vi.mock('astro:env', () => ({
-        DEV: true,
+        DEV: true
       }));
 
       const testEmails = [
         'admin@spicebushmontessori.test',
         'admin@example.com',
-        'admin@localhost',
+        'admin@localhost'
       ];
 
       // Note: This test assumes dev mode behavior
@@ -333,7 +333,7 @@ describe('Magic Link Security Tests', () => {
     
     mockSupabase.auth.signInWithOtp.mockResolvedValue({
       data: { session: null, user: null },
-      error: null,
+      error: null
     });
 
     // Magic link should be sent...
@@ -343,7 +343,7 @@ describe('Magic Link Security Tests', () => {
     // But authentication should fail later in the callback
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: { email: nonAdminEmail } },
-      error: null,
+      error: null
     });
 
     const isAdmin = await auth.isAdmin();
@@ -355,12 +355,12 @@ describe('Magic Link Security Tests', () => {
       '<script>alert("xss")</script>@example.com',
       'admin@spicebushmontessori.org<script>',
       '../../admin@spicebushmontessori.org',
-      'admin@spicebushmontessori.org?redirect=evil.com',
+      'admin@spicebushmontessori.org?redirect=evil.com'
     ];
 
     mockSupabase.auth.signInWithOtp.mockResolvedValue({
       data: null,
-      error: { message: 'Invalid email' },
+      error: { message: 'Invalid email' }
     });
 
     for (const maliciousEmail of maliciousInputs) {
@@ -380,8 +380,8 @@ describe('Magic Link Security Tests', () => {
     expect(mockSupabase.auth.signInWithOtp).toHaveBeenCalledWith({
       email: 'admin@spicebushmontessori.org',
       options: {
-        emailRedirectTo: 'https://evil.com/auth/callback',
-      },
+        emailRedirectTo: 'https://evil.com/auth/callback'
+      }
     });
     
     // Restore original origin
@@ -403,7 +403,7 @@ describe('Error Handling and Edge Cases', () => {
   it('should handle invalid tokens gracefully', async () => {
     mockSupabase.auth.exchangeCodeForSession.mockResolvedValue({
       data: { session: null },
-      error: { message: 'Invalid or expired token' },
+      error: { message: 'Invalid or expired token' }
     });
 
     // This would be tested in the callback handler
@@ -416,7 +416,7 @@ describe('Error Handling and Edge Cases', () => {
     
     mockSupabase.auth.signInWithOtp.mockResolvedValue({
       data: { session: null, user: null },
-      error: null,
+      error: null
     });
 
     // Simulate multiple rapid calls
@@ -438,7 +438,7 @@ describe('Error Handling and Edge Cases', () => {
   it('should handle email delivery failures', async () => {
     mockSupabase.auth.signInWithOtp.mockResolvedValue({
       data: null,
-      error: { message: 'Email delivery failed' },
+      error: { message: 'Email delivery failed' }
     });
 
     const result = await auth.signInWithMagicLink('admin@spicebushmontessori.org');
@@ -449,7 +449,7 @@ describe('Error Handling and Edge Cases', () => {
     // Mock expired session
     mockSupabase.auth.getSession.mockResolvedValue({
       data: { session: null },
-      error: { message: 'Session expired' },
+      error: { message: 'Session expired' }
     });
 
     const session = await auth.getCurrentSession();

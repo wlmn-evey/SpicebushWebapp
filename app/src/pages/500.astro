@@ -1,0 +1,180 @@
+---
+// Minimal layout to avoid potential errors from main Layout
+const isProduction = import.meta.env.PROD;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Error - Spicebush Montessori</title>
+    <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #fafafa;
+      color: #1a1a1a;
+    }
+    .container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .content {
+      max-width: 600px;
+      text-align: center;
+    }
+    .error-code {
+      font-size: 120px;
+      font-weight: bold;
+      color: #2d4a2b;
+      margin: 0 0 20px;
+      line-height: 1;
+    }
+    .error-title {
+      font-size: 32px;
+      font-weight: 600;
+      color: #4a4a4a;
+      margin: 0 0 16px;
+    }
+    .error-message {
+      font-size: 18px;
+      color: #666;
+      margin: 0 0 32px;
+      line-height: 1.6;
+    }
+    .error-details {
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 32px;
+      text-align: left;
+    }
+    .error-details h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      color: #666;
+    }
+    .error-details p {
+      margin: 0;
+      font-size: 14px;
+      color: #999;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      font-size: 16px;
+    }
+    .btn-primary {
+      background: #2d4a2b;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #4a7c47;
+    }
+    .btn-secondary {
+      background: white;
+      color: #2d4a2b;
+      border: 2px solid #2d4a2b;
+    }
+    .btn-secondary:hover {
+      background: #f5f5f5;
+    }
+    .helpful-links {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid #e0e0e0;
+    }
+    .helpful-links p {
+      font-size: 14px;
+      color: #666;
+      margin: 0 0 16px;
+    }
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .links a {
+      color: #2d4a2b;
+      text-decoration: none;
+    }
+    .links a:hover {
+      text-decoration: underline;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="content">
+      <!-- Error Code -->
+      <h1 class="error-code">500</h1>
+      
+      <!-- Message -->
+      <h2 class="error-title">Server Error</h2>
+      
+      <p class="error-message">
+        We apologize for the inconvenience. Something went wrong on our end. 
+        Our team has been notified and we're working to fix this issue.
+      </p>
+      
+      <!-- Error Details (only in development) -->
+      {!isProduction && (
+        <div class="error-details">
+          <h3>Error Details (Development Only)</h3>
+          <p>Check the server console for more information about this error.</p>
+        </div>
+      )}
+      
+      <!-- Action Buttons -->
+      <div class="actions">
+        <a href="/" class="btn btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          Go Home
+        </a>
+        
+        <button onclick="location.reload()" class="btn btn-secondary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Try Again
+        </button>
+      </div>
+      
+      <!-- Helpful Links -->
+      <div class="helpful-links">
+        <p>In the meantime, you can:</p>
+        <div class="links">
+          <a href="/contact">Contact Us</a>
+          <a href="tel:4843566728">Call (484) 356-6728</a>
+          <a href="/resources/faq">View FAQ</a>
+          <a href="/about">Learn About Us</a>
+        </div>
+      </div>
+      </div>
+    </div>
+  </body>
+</html>

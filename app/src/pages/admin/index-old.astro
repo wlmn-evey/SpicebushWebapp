@@ -33,9 +33,9 @@ import {
   <main id="main-content">
     <!-- Admin Auth Check -->
     <script>
-      import { auth } from '../../lib/supabase.ts';
+      import { auth } from '@lib/supabase.ts';
       
-      document.addEventListener('DOMContentLoaded', async function() {
+      document.addEventListener('DOMContentLoaded', async () => {
         try {
           const user = await auth.getCurrentUser();
           if (!user) {
@@ -463,9 +463,9 @@ import {
 </Layout>
 
 <script>
-  import { supabase } from '../../lib/supabase.ts';
+  import { supabase } from '@lib/supabase.ts';
 
-  document.addEventListener('DOMContentLoaded', async function() {
+  document.addEventListener('DOMContentLoaded', async () => {
     // Load dashboard stats
     async function loadDashboardStats() {
       try {
@@ -516,13 +516,13 @@ import {
     const quickMessageBtn = document.getElementById('quick-message-btn');
 
     if (quickHolidayBtn) {
-      quickHolidayBtn.addEventListener('click', function() {
+      quickHolidayBtn.addEventListener('click', () => {
         window.location.href = '/admin/hours#add-holiday';
       });
     }
 
     if (quickMessageBtn) {
-      quickMessageBtn.addEventListener('click', function() {
+      quickMessageBtn.addEventListener('click', () => {
         window.location.href = '/admin/communications#new-message';
       });
     }

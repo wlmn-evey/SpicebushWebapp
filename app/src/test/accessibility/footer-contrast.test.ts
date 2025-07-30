@@ -6,10 +6,10 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-      }
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    }
     : { r: 0, g: 0, b: 0 };
 }
 
@@ -38,7 +38,7 @@ const COLORS = {
   lightStone: '#e8dcc6',   // Light stone text color
   sunlightGold: '#ff8800', // Gold accent color
   white: '#ffffff',
-  mossGreen: '#7a8450',
+  mossGreen: '#7a8450'
 };
 
 describe('Footer Accessibility - Color Contrast', () => {
@@ -224,7 +224,7 @@ describe('Footer Accessibility - Color Contrast', () => {
         'input',
         'select',
         'textarea',
-        '[tabindex]:not([tabindex="-1"])',
+        '[tabindex]:not([tabindex="-1"])'
       ];
       
       // This would be tested with actual CSS styles

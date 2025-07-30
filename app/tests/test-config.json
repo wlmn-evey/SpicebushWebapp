@@ -1,0 +1,52 @@
+{
+  "database_write_operations_tests": {
+    "description": "Tests for verifying database write operations are properly separated",
+    "test_files": [
+      "tests/database-write-operations.test.ts",
+      "tests/e2e-database-test.ts",
+      "tests/browser-admin-test.spec.ts"
+    ],
+    "key_verifications": {
+      "read_only_module": {
+        "file": "src/lib/content-db-direct.ts",
+        "checks": [
+          "No write functions present",
+          "Only uses DB_READONLY credentials",
+          "All read functions working"
+        ]
+      },
+      "api_endpoints": {
+        "settings": "/api/admin/settings.ts",
+        "newsletter_subscribe": "/api/newsletter/subscribe.ts",
+        "newsletter_admin": "/api/admin/newsletter.ts",
+        "communications": "/api/admin/communications.ts",
+        "templates": "/api/admin/communications/templates.ts",
+        "cms_entry": "/api/cms/entry.ts"
+      },
+      "write_operations": [
+        "Settings updates use Supabase",
+        "Newsletter subscriptions use Supabase",
+        "Communications saved via Supabase",
+        "Templates created via Supabase",
+        "Content management uses Supabase"
+      ]
+    },
+    "test_commands": {
+      "unit_tests": "npm run test tests/database-write-operations.test.ts",
+      "e2e_tests": "npm run test:e2e",
+      "browser_tests": "npx playwright test tests/browser-admin-test.spec.ts",
+      "all_tests": "npm run test:db-operations"
+    },
+    "manual_verification_steps": [
+      "1. Start the development server: npm run dev",
+      "2. Login to admin panel at /admin",
+      "3. Test Settings: Update any setting and verify it saves",
+      "4. Test Newsletter: Add a test subscriber and unsubscribe them",
+      "5. Test Communications: Send a test message",
+      "6. Test Templates: Create a new template",
+      "7. Test CMS: Create, edit, and delete a test page",
+      "8. Check browser console for any database write errors",
+      "9. Verify all operations complete without errors"
+    ]
+  }
+}

@@ -68,9 +68,9 @@ import { Database, Key, Shield, Eye, EyeOff } from 'lucide-astro';
 </div>
 
 <script>
-  import { supabase } from '../../lib/supabase.ts';
+  import { supabase } from '@lib/supabase.ts';
   
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('image-settings-form');
     const cloudNameInput = document.getElementById('cloudinary-cloud-name');
     const uploadPresetInput = document.getElementById('cloudinary-upload-preset');
@@ -81,7 +81,7 @@ import { Database, Key, Shield, Eye, EyeOff } from 'lucide-astro';
     
     // Form submission
     if (form) {
-      form.addEventListener('submit', async function(e) {
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
         await saveImageSettings();
       });

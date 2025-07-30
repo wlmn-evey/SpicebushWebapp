@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getAdminConfig, isAdminEmail } from '../../lib/admin-config';
+import { getAdminConfig, isAdminEmail } from '@lib/admin-config';
 
 describe('Admin Configuration Module', () => {
   // Reset environment variables before each test
@@ -16,7 +16,7 @@ describe('Admin Configuration Module', () => {
       
       expect(config.adminEmails).toEqual([
         'admin@spicebushmontessori.org',
-        'director@spicebushmontessori.org',
+        'director@spicebushmontessori.org'
       ]);
       expect(config.adminDomains).toEqual(['@spicebushmontessori.org']);
     });
@@ -54,7 +54,7 @@ describe('Admin Configuration Module', () => {
       // Should fall back to defaults when env vars are empty
       expect(config.adminEmails).toEqual([
         'admin@spicebushmontessori.org',
-        'director@spicebushmontessori.org',
+        'director@spicebushmontessori.org'
       ]);
       expect(config.adminDomains).toEqual(['@spicebushmontessori.org']);
     });
@@ -167,7 +167,7 @@ describe('Admin Configuration Module', () => {
           'admin@spicebushmontessori.org.attacker.com',
           'admin@spicebushmontessori_org',
           'admin@spicebushmontessori%2Eorg',
-          'admin@[spicebushmontessori.org]',
+          'admin@[spicebushmontessori.org]'
         ];
 
         maliciousEmails.forEach(email => {
@@ -176,7 +176,7 @@ describe('Admin Configuration Module', () => {
       });
 
       it('should handle very long email addresses', () => {
-        const longEmail = 'a'.repeat(1000) + '@spicebushmontessori.org';
+        const longEmail = `${'a'.repeat(1000)  }@spicebushmontessori.org`;
         expect(isAdminEmail(longEmail)).toBe(true); // Should still work with long local parts
       });
 
@@ -195,13 +195,13 @@ describe('Admin Configuration Module', () => {
         'admin@spicebushmontessori.org',
         'director@spicebushmontessori.org',
         'teacher@spicebushmontessori.org',
-        'staff@spicebushmontessori.org',
+        'staff@spicebushmontessori.org'
       ];
 
       const nonAdminEmails = [
         'parent@gmail.com',
         'user@example.com',
-        'admin@fakespicebushmontessori.org',
+        'admin@fakespicebushmontessori.org'
       ];
 
       adminEmails.forEach(email => {

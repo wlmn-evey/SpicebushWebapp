@@ -3,7 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ImageManagementSettings from '../../components/admin/ImageManagementSettings.astro';
-import { checkAdminAuth } from '../../lib/admin-auth-check';
+import { checkAdminAuth } from '@lib/admin-auth-check';
 import { 
   ArrowLeft,
   Settings, 
@@ -1399,7 +1399,7 @@ Glen Mills, PA 19342</textarea>
 
 <script>
 // Include Supabase client
-import { supabase } from '../../lib/supabase.ts';
+import { supabase } from '@lib/supabase.ts';
 
 document.addEventListener('DOMContentLoaded', function() {
   const tabs = document.querySelectorAll('.settings-tab');

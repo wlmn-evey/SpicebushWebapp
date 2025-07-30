@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { checkAdminAuth } from '../../../lib/admin-auth-check';
+import { checkAdminAuth } from '@lib/admin-auth-check';
 
 export const GET: APIRoute = async ({ cookies }) => {
   try {
@@ -15,7 +15,7 @@ export const GET: APIRoute = async ({ cookies }) => {
     }
     
     // Check Supabase session
-    const { supabase } = await import('../../../lib/supabase');
+    const { supabase } = await import('@lib/supabase');
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -26,7 +26,7 @@ export const GET: APIRoute = async ({ cookies }) => {
     }
     
     // Verify admin email
-    const { isAdminEmail } = await import('../../../lib/admin-config');
+    const { isAdminEmail } = await import('@lib/admin-config');
     if (!isAdminEmail(user.email)) {
       return new Response(JSON.stringify({ authenticated: false }), {
         status: 403,

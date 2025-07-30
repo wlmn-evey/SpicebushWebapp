@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../../lib/supabase';
-import { isAdminEmail } from '../../../lib/admin-config';
+import { supabase } from '@lib/supabase';
+import { isAdminEmail } from '@lib/admin-config';
 
 export const GET: APIRoute = async ({ cookies, redirect }) => {
   // Check if user is authenticated

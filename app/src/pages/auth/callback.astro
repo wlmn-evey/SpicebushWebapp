@@ -45,8 +45,8 @@ import { CheckCircle, Loader2 } from 'lucide-astro';
   </div>
 
   <script>
-    import { supabase } from '../../lib/supabase';
-    import { isAdminEmail } from '../../lib/admin-config';
+    import { supabase } from '@lib/supabase';
+    import { isAdminEmail } from '@lib/admin-config';
     
     const processing = document.getElementById('processing') as HTMLDivElement;
     const success = document.getElementById('success') as HTMLDivElement;

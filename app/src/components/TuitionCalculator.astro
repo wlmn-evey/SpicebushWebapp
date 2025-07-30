@@ -135,9 +135,9 @@ const tuitionData = {
                 <li>
                   <strong class="text-green-800">Pennsylvania Residents:</strong> You are expected to apply for the PA Child Care Works (CCW) subsidized child care program. 
                   <a href="https://www.dhs.pa.gov/Services/Children/Pages/Child-Care-Works-Program.aspx" 
-                     target="_blank" 
-                     rel="noopener noreferrer"
-                     class="text-green-600 hover:text-green-800 underline font-medium transition-colors focus:ring-2 focus:ring-green-300 focus:ring-offset-1 rounded">
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    class="text-green-600 hover:text-green-800 underline font-medium transition-colors focus:ring-2 focus:ring-green-300 focus:ring-offset-1 rounded">
                     Learn more about the PA CCW Program here.
                   </a>
                 </li>
@@ -400,7 +400,7 @@ const tuitionData = {
   // Use the data passed from server-side
   const { programs, rates, settings } = tuitionData;
 
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('tuition-calculator-form');
     const familySizeSelect = document.getElementById('family-size');
     const resultsSection = document.getElementById('results-section');
@@ -439,8 +439,8 @@ const tuitionData = {
           // Store card data
           preRenderedCards.set(cardKey, {
             element: cardElement,
-            program: program,
-            rate: rate,
+            program,
+            rate,
             baseTuition: rate.tuition_price,
             extendedCarePrice: rate.extended_care_price || 0,
             extendedCareAvailable: rate.extended_care_available
@@ -707,7 +707,7 @@ const tuitionData = {
       });
     });
 
-    clearButton.addEventListener('click', function() {
+    clearButton.addEventListener('click', () => {
       clearHighlights();
     });
 
@@ -751,7 +751,7 @@ const tuitionData = {
     }
 
     // Form submission
-    form.addEventListener('submit', async function(e) {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       calculateTuition();
     });
@@ -814,7 +814,7 @@ const tuitionData = {
             baseTuition: applicableRate.tuition_price,
             extendedCarePrice: applicableRate.extended_care_price || 0,
             extendedCareAvailable: applicableRate.extended_care_available,
-            childrenCount: childrenCount
+            childrenCount
           });
         }
       });

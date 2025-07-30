@@ -1,0 +1,67 @@
+{
+  "$ref": "#/definitions/coming-soon",
+  "definitions": {
+    "coming-soon": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "launchDate": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "integer",
+              "format": "unix-time"
+            }
+          ]
+        },
+        "headline": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "showNewsletter": {
+          "type": "boolean",
+          "default": false
+        },
+        "newsletterHeading": {
+          "type": "string"
+        },
+        "newsletterText": {
+          "type": "string"
+        },
+        "showContact": {
+          "type": "boolean",
+          "default": false
+        },
+        "showSocial": {
+          "type": "boolean",
+          "default": false
+        },
+        "backgroundImage": {
+          "type": "string"
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "launchDate",
+        "headline",
+        "message"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

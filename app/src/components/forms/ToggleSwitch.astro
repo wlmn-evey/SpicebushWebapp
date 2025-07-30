@@ -113,7 +113,7 @@ const helpId = helpText ? `${toggleId}-help` : undefined;
   }
   
   .toggle-help {
-    @apply ml-13 text-sm text-gray-500;
+    @apply ml-3 text-sm text-gray-500;
   }
   
   /* Checked state */
@@ -148,11 +148,11 @@ const helpId = helpText ? `${toggleId}-help` : undefined;
   }
   
   /* Hover state (when not disabled) */
-  .toggle-label:hover .toggle-switch:not(.toggle-input:disabled ~ .toggle-label .toggle-switch) {
+  .toggle-input:not(:disabled) ~ .toggle-label:hover .toggle-switch {
     @apply bg-gray-400;
   }
   
-  .toggle-input:checked ~ .toggle-label:hover .toggle-switch:not(.toggle-input:disabled ~ .toggle-label .toggle-switch) {
+  .toggle-input:checked:not(:disabled) ~ .toggle-label:hover .toggle-switch {
     @apply bg-blue-700;
   }
 </style>

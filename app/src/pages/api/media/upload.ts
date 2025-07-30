@@ -1,29 +1,24 @@
 import type { APIRoute } from 'astro';
-import { checkAdminAuth } from '../../../lib/admin-auth-check';
-import { handleMediaUpload, validateFile } from '../../../lib/media-storage';
+import { checkAdminAuth } from '@lib/admin-auth-check';
+import { handleMediaUpload, validateFile } from '@lib/media-storage';
+import { AuditLogger } from '@lib/audit-logger';
+import { errorResponse } from '@lib/api-utils';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
-    // Check admin authentication
-    const authCookie = cookies.get('sbms-admin-auth');
-    const { supabase } = await import('../../../lib/supabase');
+    // Check authentication
+    const { isAuthenticated, session, user } = await checkAdminAuth({ cookies, request } as any);
     
-    let userId: string | null = null;
-    
-    // Check for bypass cookie in development
-    if (authCookie?.value === 'bypass' && import.meta.env.DEV) {
-      userId = 'dev-admin@spicebushmontessori.org';
-    } else {
-      // Check actual Supabase session
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-      userId = user.email || user.id;
+    if (!isAuthenticated || !session) {
+      return errorResponse('Unauthorized', 401);
     }
+    
+    const userId = user?.email || session.userEmail;
+    
+    // Initialize audit logger
+    const ipAddress = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip');
+    const audit = new AuditLogger(session, ipAddress || undefined);
     
     // Parse multipart form data
     const formData = await request.formData();
@@ -69,6 +64,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         headers: { 'Content-Type': 'application/json' }
       });
     }
+    
+    // Log the upload
+    await audit.logMediaUpload(file.name, file.size, result.url);
     
     return new Response(JSON.stringify({ 
       success: true, 

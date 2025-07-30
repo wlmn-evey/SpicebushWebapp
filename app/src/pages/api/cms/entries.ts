@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { checkAdminAuth } from '../../../lib/admin-auth-check';
+import { checkAdminAuth } from '@lib/admin-auth-check';
 
 export const GET: APIRoute = async ({ url, cookies }) => {
   try {
@@ -7,7 +7,7 @@ export const GET: APIRoute = async ({ url, cookies }) => {
     const authCookie = cookies.get('sbms-admin-auth');
     
     if (authCookie?.value !== 'bypass' && !import.meta.env.DEV) {
-      const { supabase } = await import('../../../lib/supabase');
+      const { supabase } = await import('@lib/supabase');
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -26,7 +26,7 @@ export const GET: APIRoute = async ({ url, cookies }) => {
       });
     }
     
-    const { supabase } = await import('../../../lib/supabase');
+    const { supabase } = await import('@lib/supabase');
     const { data, error } = await supabase
       .from('content')
       .select('*')

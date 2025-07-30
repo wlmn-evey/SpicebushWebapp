@@ -1,0 +1,10 @@
+---
+import Layout from '@layouts/Layout.astro';
+import { logoutAdmin } from '@lib/admin-auth-check';
+
+// Perform logout
+await logoutAdmin(Astro);
+
+// Redirect to login page
+return Astro.redirect('/auth/login?message=Logged out successfully');
+---

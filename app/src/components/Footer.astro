@@ -3,11 +3,20 @@ import { Facebook, Instagram } from 'lucide-astro';
 import HoursWidget from './HoursWidget.astro';
 import OptimizedImage from './OptimizedImage.astro';
 import ContactInfo from './ContactInfo.astro';
-import { getEntry } from '../lib/content-db';
+import NewsletterSignup from './NewsletterSignup.astro';
+import { getEntry } from '@lib/content-db';
 
-// Get school info for social media links from Supabase
-const schoolInfo = await getEntry('school-info', 'general');
-const { socialMedia } = schoolInfo.data;
+// Get school info for social media links from Supabase with error handling
+let socialMedia = { facebook: null, instagram: null };
+try {
+  const schoolInfo = await getEntry('school-info', 'general');
+  if (schoolInfo?.data?.socialMedia) {
+    socialMedia = schoolInfo.data.socialMedia;
+  }
+} catch (error) {
+  console.error('Error loading school info in Footer:', error);
+  // Use default empty social media links
+}
 ---
 
 <footer class="bg-forest-canopy text-white">
@@ -55,17 +64,28 @@ const { socialMedia } = schoolInfo.data;
             </ul>
           </div>
           
-          <!-- Grid Cell 3: Resources -->
-          <div class="space-y-4">
-            <h3 class="text-lg font-semibold text-sunlight-gold">Resources</h3>
-            <ul class="space-y-2 text-sm">
-              <li><a href="/resources/faq" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">FAQ</a></li>
-              <li><a href="/resources/parent-resources" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Caregiver Resources</a></li>
-              <li><a href="/blog" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Blog</a></li>
-              <li><a href="/resources/events" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Community Events</a></li>
-              <li><a href="/policies" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Policies</a></li>
-              <li><a href="/contact" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Contact</a></li>
-            </ul>
+          <!-- Grid Cell 3: Resources & Newsletter -->
+          <div class="space-y-6">
+            <div class="space-y-4">
+              <h3 class="text-lg font-semibold text-sunlight-gold">Resources</h3>
+              <ul class="space-y-2 text-sm">
+                <li><a href="/resources/faq" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">FAQ</a></li>
+                <li><a href="/resources/parent-resources" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Caregiver Resources</a></li>
+                <li><a href="/blog" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Blog</a></li>
+                <li><a href="/resources/events" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Community Events</a></li>
+                <li><a href="/policies" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Policies</a></li>
+                <li><a href="/contact" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Contact</a></li>
+              </ul>
+            </div>
+            
+            <!-- Newsletter Signup -->
+            <NewsletterSignup 
+              variant="footer"
+              title="Newsletter"
+              description="Stay updated with school news and events"
+              buttonText="Subscribe"
+              subscriptionType="general"
+            />
           </div>
           
           <!-- Grid Cell 4: Contact Info -->

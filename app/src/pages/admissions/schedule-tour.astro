@@ -1,8 +1,5 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import ContactInfo from '../../components/ContactInfo.astro';
 import { Calendar, Clock, MapPin, Phone, Mail, CheckCircle } from 'lucide-astro';
 import { getEntry } from 'astro:content';
 
@@ -16,7 +13,6 @@ const { phone, email, address } = schoolInfo.data;
   description="Schedule a personal tour of our Montessori classrooms and meet our teachers. See our inclusive education environment in action."
   keywords="schedule Montessori tour, visit school, classroom observation, meet teachers"
 >
-  <Header />
   
   <main id="main-content">
     <!-- Hero Section -->
@@ -209,6 +205,18 @@ const { phone, email, address } = schoolInfo.data;
                   Request Tour
                 </button>
               </form>
+
+              <!-- Success Message (hidden by default) -->
+              <div id="success-message" class="hidden mt-6 p-4 bg-moss-green/20 border border-moss-green rounded-lg">
+                <p class="text-moss-green font-semibold">Thank you for your interest!</p>
+                <p class="text-earth-brown/80 mt-1">We've received your tour request and will contact you within 1-2 business days to schedule your visit.</p>
+              </div>
+
+              <!-- Error Message (hidden by default) -->
+              <div id="error-message" class="hidden mt-6 p-4 bg-red-100 border border-red-300 rounded-lg">
+                <p class="text-red-700 font-semibold">Something went wrong</p>
+                <p class="text-red-600 mt-1">Please try again or contact us directly at <a href={`tel:${phone.replace(/[^0-9]/g, '')}`} class="underline">{phone}</a>.</p>
+              </div>
               
               <!-- Alternative Contact -->
               <div class="mt-8 pt-8 border-t border-gray-200">
@@ -256,50 +264,64 @@ const { phone, email, address } = schoolInfo.data;
       </div>
     </section>
   </main>
-  
-  <Footer />
 </Layout>
 
 <script define:vars={{ schoolEmail: email, schoolPhone: phone }}>
   // Form submission handler
-  document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('tour-form') as HTMLFormElement;
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('tour-form');
+    const successMessage = document.getElementById('success-message');
+    const errorMessage = document.getElementById('error-message');
     
     if (form) {
-      form.addEventListener('submit', function(e) {
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        // Hide any existing messages
+        successMessage.classList.add('hidden');
+        errorMessage.classList.add('hidden');
         
         // Get form data
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
         
-        // For now, we'll construct a mailto link
-        // In production, this would submit to a backend service
-        const subject = 'Tour Request for Spicebush Montessori';
-        const body = `
-New tour request from ${data['parent-name']}
+        try {
+          // Send form data to API endpoint
+          const response = await fetch('/api/schedule-tour', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              parentName: data['parent-name'],
+              email: data.email,
+              phone: data.phone,
+              childAge: data['child-age'],
+              preferredTimes: data['preferred-times'] || '',
+              questions: data.questions || '',
+              schoolEmail
+            })
+          });
 
-Contact Information:
-- Email: ${data.email}
-- Phone: ${data.phone}
-
-Child's Age: ${data['child-age']}
-
-Preferred Times:
-${data['preferred-times'] || 'No preference specified'}
-
-Questions/Special Considerations:
-${data.questions || 'None'}
-        `.trim();
-        
-        // Create mailto link
-        const mailtoLink = `mailto:${schoolEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        
-        // Open email client
-        window.location.href = mailtoLink;
-        
-        // Show success message
-        alert(`Thank you for your interest! Your default email client should open with your tour request. If it doesn't, please email us directly at ${schoolEmail} or call ${schoolPhone}.`);
+          if (response.ok) {
+            // Show success message
+            successMessage.classList.remove('hidden');
+            form.reset();
+            
+            // Scroll to success message
+            successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          } else {
+            throw new Error('Failed to submit form');
+          }
+        } catch (error) {
+          console.error('Form submission error:', error);
+          
+          // Show error message
+          errorMessage.classList.remove('hidden');
+          
+          // Scroll to error message
+          errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
       });
     }
   });

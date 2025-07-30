@@ -53,9 +53,9 @@ import { User, LogOut } from 'lucide-astro';
 </div>
 
 <script>
-  import { auth } from '../lib/supabase.ts';
+  import { auth } from '@lib/supabase.ts';
 
-  document.addEventListener('DOMContentLoaded', async function() {
+  document.addEventListener('DOMContentLoaded', async () => {
     const authNav = document.getElementById('auth-nav');
     const guestNav = document.getElementById('auth-nav-guest');
     const userNav = document.getElementById('auth-nav-user');
@@ -90,14 +90,14 @@ import { User, LogOut } from 'lucide-astro';
 
     // Toggle user menu
     if (userMenuButton && userMenu) {
-      userMenuButton.addEventListener('click', function() {
+      userMenuButton.addEventListener('click', () => {
         const isExpanded = userMenuButton.getAttribute('aria-expanded') === 'true';
         userMenuButton.setAttribute('aria-expanded', (!isExpanded).toString());
         userMenu.classList.toggle('hidden');
       });
 
       // Close menu when clicking outside
-      document.addEventListener('click', function(event) {
+      document.addEventListener('click', (event) => {
         if (!authNav.contains(event.target)) {
           userMenu.classList.add('hidden');
           userMenuButton.setAttribute('aria-expanded', 'false');
@@ -107,7 +107,7 @@ import { User, LogOut } from 'lucide-astro';
 
     // Sign out functionality
     if (signOutBtn) {
-      signOutBtn.addEventListener('click', async function() {
+      signOutBtn.addEventListener('click', async () => {
         try {
           const { error } = await auth.signOut();
           if (error) throw error;

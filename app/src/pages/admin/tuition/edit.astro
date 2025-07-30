@@ -10,8 +10,9 @@ import FormField from '../../../components/forms/FormField.astro';
 import TextInput from '../../../components/forms/TextInput.astro';
 import TextArea from '../../../components/forms/TextArea.astro';
 import SelectField from '../../../components/forms/SelectField.astro';
-import { checkAdminAuth } from '../../../lib/admin-auth-check';
-import { getEntry, getCollection } from '../../../lib/content-db';
+import { Fragment } from 'astro/jsx-runtime';
+import { checkAdminAuth } from '@lib/admin-auth-check';
+import { getEntry, getCollection } from '@lib/content-db';
 
 // Check authentication
 const { isAuthenticated } = await checkAdminAuth(Astro);
@@ -244,6 +245,14 @@ const thresholdTypeOptions = [
 const pageTitle = isEdit 
   ? `Edit: ${type === 'program' ? tuitionEntry?.data.name : tuitionEntry?.data.rate_label}` 
   : `New ${type === 'program' ? 'Program' : 'Tuition Rate'}`;
+
+// Generate threshold form fields for family sizes 2-8+
+const thresholdFields = Array.from({ length: 7 }, (_, i) => {
+  const familySize = i + 2;
+  const fieldName = (familySize <= 7) ? `income_threshold_family_${familySize}` : 'income_threshold_family_8_plus';
+  const label = (familySize <= 7) ? `Family of ${familySize}` : 'Family of 8+';
+  return { fieldName, label };
+});
 ---
 
 <AdminLayout title={pageTitle} description={isEdit ? `Edit ${type}` : `Add a new ${type}`}>
@@ -262,7 +271,7 @@ const pageTitle = isEdit
         <div class="form-main">
           {type === 'program' ? (
             <!-- Program Fields -->
-            <>
+            <Fragment>
               <FormField
                 label="Program Name"
                 name="name"
@@ -344,10 +353,10 @@ const pageTitle = isEdit
                   placeholder="Describe the program, its focus, and what makes it unique..."
                 />
               </FormField>
-            </>
+            </Fragment>
           ) : (
             <!-- Rate Fields -->
-            <>
+            <Fragment>
               <FormField
                 label="Rate Label"
                 name="rate_label"
@@ -486,31 +495,25 @@ const pageTitle = isEdit
                 </FormField>
                 
                 <div class="thresholds-grid">
-                  {Array.from({ length: 7 }, (_, i) => {
-                    const familySize = i + 2;
-                    const fieldName = familySize <= 7 ? `income_threshold_family_${familySize}` : 'income_threshold_family_8_plus';
-                    const label = familySize <= 7 ? `Family of ${familySize}` : 'Family of 8+';
-                    
-                    return (
-                      <FormField
-                        label={label}
+                  {thresholdFields.map(({ fieldName, label }) => (
+                    <FormField
+                      label={label}
+                      name={fieldName}
+                      help={`Income threshold for ${label.toLowerCase()}`}
+                    >
+                      <TextInput
                         name={fieldName}
-                        help={`Income threshold for ${label.toLowerCase()}`}
-                      >
-                        <TextInput
-                          name={fieldName}
-                          type="number"
-                          step="0.01"
-                          value={defaultData[fieldName].toString()}
-                          min="0"
-                          placeholder="0"
-                        />
-                      </FormField>
-                    );
-                  })}
+                        type="number"
+                        step="0.01"
+                        value={defaultData[fieldName].toString()}
+                        min="0"
+                        placeholder="0"
+                      />
+                    </FormField>
+                  ))}
                 </div>
               </div>
-            </>
+            </Fragment>
           )}
         </div>
         

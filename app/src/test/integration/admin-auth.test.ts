@@ -1,25 +1,25 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { isAdminEmail } from '../../lib/admin-config';
-import { supabase } from '../../lib/supabase';
+import { isAdminEmail } from '@lib/admin-config';
+import { supabase } from '@lib/supabase';
 
 // Mock Supabase client
-vi.mock('../../lib/supabase', () => ({
+vi.mock('@lib/supabase', () => ({
   supabase: {
     auth: {
       getUser: vi.fn(),
       signInWithPassword: vi.fn(),
       signOut: vi.fn(),
-      onAuthStateChange: vi.fn(),
+      onAuthStateChange: vi.fn()
     },
-    from: vi.fn(),
-  },
+    from: vi.fn()
+  }
 }));
 
 describe('Admin Authentication Integration', () => {
-  let mockUser = {
+  const mockUser = {
     id: 'test-user-id',
     email: 'admin@spicebushmontessori.org',
-    created_at: new Date().toISOString(),
+    created_at: new Date().toISOString()
   };
 
   beforeEach(() => {
@@ -44,16 +44,16 @@ describe('Admin Authentication Integration', () => {
             token_type: 'bearer',
             expires_in: 3600,
             refresh_token: 'mock-refresh',
-            user: mockUser,
-          },
+            user: mockUser
+          }
         },
-        error: null,
+        error: null
       });
 
       // Perform authentication
       const result = await supabase.auth.signInWithPassword({
         email: adminEmail,
-        password,
+        password
       });
 
       expect(result.error).toBeNull();
@@ -74,15 +74,15 @@ describe('Admin Authentication Integration', () => {
             token_type: 'bearer',
             expires_in: 3600,
             refresh_token: 'mock-refresh',
-            user: { ...mockUser, email: nonAdminEmail },
-          },
+            user: { ...mockUser, email: nonAdminEmail }
+          }
         },
-        error: null,
+        error: null
       });
 
       const result = await supabase.auth.signInWithPassword({
         email: nonAdminEmail,
-        password,
+        password
       });
 
       // Authentication succeeds
@@ -103,13 +103,13 @@ describe('Admin Authentication Integration', () => {
         error: {
           message: 'Invalid login credentials',
           status: 400,
-          code: 'invalid_credentials',
-        },
+          code: 'invalid_credentials'
+        }
       });
 
       const result = await supabase.auth.signInWithPassword({
         email: adminEmail,
-        password: wrongPassword,
+        password: wrongPassword
       });
 
       expect(result.error).toBeTruthy();
@@ -129,15 +129,15 @@ describe('Admin Authentication Integration', () => {
             token_type: 'bearer',
             expires_in: 3600,
             refresh_token: 'mock-refresh',
-            user: { ...mockUser, email: directorEmail },
-          },
+            user: { ...mockUser, email: directorEmail }
+          }
         },
-        error: null,
+        error: null
       });
 
       const result = await supabase.auth.signInWithPassword({
         email: directorEmail,
-        password,
+        password
       });
 
       expect(result.error).toBeNull();
@@ -156,15 +156,15 @@ describe('Admin Authentication Integration', () => {
             token_type: 'bearer',
             expires_in: 3600,
             refresh_token: 'mock-refresh',
-            user: { ...mockUser, email: staffEmail },
-          },
+            user: { ...mockUser, email: staffEmail }
+          }
         },
-        error: null,
+        error: null
       });
 
       const result = await supabase.auth.signInWithPassword({
         email: staffEmail,
-        password,
+        password
       });
 
       expect(result.error).toBeNull();
@@ -176,7 +176,7 @@ describe('Admin Authentication Integration', () => {
     it('should retrieve current admin user session', async () => {
       vi.mocked(supabase.auth.getUser).mockResolvedValueOnce({
         data: { user: mockUser },
-        error: null,
+        error: null
       });
 
       const result = await supabase.auth.getUser();
@@ -192,8 +192,8 @@ describe('Admin Authentication Integration', () => {
         error: {
           message: 'Session expired',
           status: 401,
-          code: 'session_expired',
-        },
+          code: 'session_expired'
+        }
       });
 
       const result = await supabase.auth.getUser();
@@ -205,7 +205,7 @@ describe('Admin Authentication Integration', () => {
 
     it('should sign out admin users successfully', async () => {
       vi.mocked(supabase.auth.signOut).mockResolvedValueOnce({
-        error: null,
+        error: null
       });
 
       const result = await supabase.auth.signOut();
@@ -234,7 +234,7 @@ describe('Admin Authentication Integration', () => {
     it('should authorize admin users', async () => {
       vi.mocked(supabase.auth.getUser).mockResolvedValueOnce({
         data: { user: mockUser },
-        error: null,
+        error: null
       });
 
       const result = await requireAdmin();
@@ -246,7 +246,7 @@ describe('Admin Authentication Integration', () => {
     it('should reject non-admin users', async () => {
       vi.mocked(supabase.auth.getUser).mockResolvedValueOnce({
         data: { user: { ...mockUser, email: 'parent@gmail.com' } },
-        error: null,
+        error: null
       });
 
       const result = await requireAdmin();
@@ -258,7 +258,7 @@ describe('Admin Authentication Integration', () => {
     it('should reject unauthenticated requests', async () => {
       vi.mocked(supabase.auth.getUser).mockResolvedValueOnce({
         data: { user: null },
-        error: null,
+        error: null
       });
 
       const result = await requireAdmin();
@@ -273,13 +273,13 @@ describe('Admin Authentication Integration', () => {
       const emailVariations = [
         'ADMIN@spicebushmontessori.org',
         'Admin@SpicebushMontessori.Org',
-        '  admin@spicebushmontessori.org  ',
+        '  admin@spicebushmontessori.org  '
       ];
 
       for (const email of emailVariations) {
         vi.mocked(supabase.auth.getUser).mockResolvedValueOnce({
           data: { user: { ...mockUser, email } },
-          error: null,
+          error: null
         });
 
         const result = await supabase.auth.getUser();
@@ -295,7 +295,7 @@ describe('Admin Authentication Integration', () => {
         'admin@spicebushmontessori',
         '',
         null,
-        undefined,
+        undefined
       ];
 
       for (const email of malformedEmails) {
@@ -313,15 +313,15 @@ describe('Admin Authentication Integration', () => {
               token_type: 'bearer',
               expires_in: 3600,
               refresh_token: `refresh-${i}`,
-              user: { ...mockUser, id: `user-${i}` },
-            },
+              user: { ...mockUser, id: `user-${i}` }
+            }
           },
-          error: null,
+          error: null
         });
 
         return supabase.auth.signInWithPassword({
           email: 'admin@spicebushmontessori.org',
-          password: 'password',
+          password: 'password'
         });
       });
 
@@ -348,7 +348,7 @@ describe('Admin Authentication Integration', () => {
 
       vi.mocked(supabase.auth.getUser).mockResolvedValueOnce({
         data: { user: { ...mockUser, email: testAdminEmail } },
-        error: null,
+        error: null
       });
 
       const result = await supabase.auth.getUser();

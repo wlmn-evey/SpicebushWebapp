@@ -12,8 +12,8 @@ const blogCollection = defineCollection({
     excerpt: z.string(),
     seoTitle: z.string().optional(),
     seoDescription: z.string().optional(),
-    draft: z.boolean().default(false),
-  }),
+    draft: z.boolean().default(false)
+  })
 });
 
 const staffCollection = defineCollection({
@@ -26,8 +26,8 @@ const staffCollection = defineCollection({
     credentials: z.array(z.string()).default([]),
     languages: z.array(z.string()).default(['English']),
     startYear: z.number(),
-    order: z.number().default(99),
-  }),
+    order: z.number().default(99)
+  })
 });
 
 const announcementsCollection = defineCollection({
@@ -38,8 +38,8 @@ const announcementsCollection = defineCollection({
     priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
     startDate: z.date(),
     endDate: z.date(),
-    audience: z.array(z.enum(['all', 'parents', 'staff', 'community'])).default(['all']),
-  }),
+    audience: z.array(z.enum(['all', 'parents', 'staff', 'community'])).default(['all'])
+  })
 });
 
 const eventsCollection = defineCollection({
@@ -53,8 +53,8 @@ const eventsCollection = defineCollection({
     image: z.string().optional(),
     rsvpRequired: z.boolean().default(false),
     rsvpLink: z.string().optional(),
-    cost: z.string().default('Free'),
-  }),
+    cost: z.string().default('Free')
+  })
 });
 
 const tuitionCollection = defineCollection({
@@ -84,8 +84,8 @@ const tuitionCollection = defineCollection({
     income_threshold_family_7: z.number().optional(),
     income_threshold_family_8_plus: z.number().optional(),
     display_order: z.number().default(0),
-    active: z.boolean().default(true),
-  }),
+    active: z.boolean().default(true)
+  })
 });
 
 const settingsCollection = defineCollection({
@@ -95,8 +95,8 @@ const settingsCollection = defineCollection({
     key: z.string(),
     value: z.string(),
     description: z.string().optional(),
-    type: z.enum(['string', 'number', 'boolean', 'json']).default('string'),
-  }),
+    type: z.enum(['string', 'number', 'boolean', 'json']).default('string')
+  })
 });
 
 const hoursCollection = defineCollection({
@@ -107,8 +107,8 @@ const hoursCollection = defineCollection({
     close_time: z.string(),
     is_closed: z.boolean().default(false),
     note: z.string().optional(),
-    order: z.number(),
-  }),
+    order: z.number()
+  })
 });
 
 const testimonialsCollection = defineCollection({
@@ -122,8 +122,8 @@ const testimonialsCollection = defineCollection({
     date: z.date(),
     category: z.enum(['general', 'teachers', 'programs', 'admissions', 'values']).default('general'),
     childAge: z.string().optional(),
-    yearsAtSpicebush: z.number().optional(),
-  }),
+    yearsAtSpicebush: z.number().optional()
+  })
 });
 
 const schoolInfoCollection = defineCollection({
@@ -136,7 +136,7 @@ const schoolInfoCollection = defineCollection({
       street: z.string(),
       city: z.string(),
       state: z.string(),
-      zip: z.string(),
+      zip: z.string()
     }),
     
     // School Details
@@ -148,13 +148,14 @@ const schoolInfoCollection = defineCollection({
     socialMedia: z.object({
       facebook: z.string().url().optional(),
       instagram: z.string().url().optional(),
-      twitter: z.string().url().optional(),
+      twitter: z.string().url().optional()
     }).optional(),
     
     // Other Info
     founded: z.number().optional(),
-    accreditation: z.array(z.string()).optional(),
-  }),
+    ein: z.string().optional(),
+    accreditation: z.array(z.string()).optional()
+  })
 });
 
 const photosCollection = defineCollection({
@@ -217,8 +218,8 @@ const photosCollection = defineCollection({
     hasWebP: z.boolean().default(true),
     hasSrcSet: z.boolean().default(true),
     lazyLoad: z.boolean().default(true),
-    priority: z.boolean().default(false), // For above-the-fold images
-  }),
+    priority: z.boolean().default(false) // For above-the-fold images
+  })
 });
 
 const comingSoonCollection = defineCollection({
@@ -233,8 +234,8 @@ const comingSoonCollection = defineCollection({
     newsletterText: z.string().optional(),
     showContact: z.boolean().default(false),
     showSocial: z.boolean().default(false),
-    backgroundImage: z.string().optional(),
-  }),
+    backgroundImage: z.string().optional()
+  })
 });
 
 export const collections = {
@@ -248,5 +249,5 @@ export const collections = {
   testimonials: testimonialsCollection,
   photos: photosCollection,
   'school-info': schoolInfoCollection,
-  'coming-soon': comingSoonCollection,
+  'coming-soon': comingSoonCollection
 };

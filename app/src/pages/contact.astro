@@ -17,6 +17,7 @@ import {
   Calendar,
   Heart
 } from 'lucide-astro';
+import ErrorMessage from '../components/ErrorMessage.astro';
 ---
 
 <Layout 
@@ -33,7 +34,7 @@ import {
         <div class="max-w-4xl mx-auto text-center">
           <div class="flex justify-center mb-6">
             <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
-              <MessageSquare className="w-8 h-8 text-white" />
+              <MessageSquare className="w-8 h-8 text-white" aria-hidden="true" />
             </div>
           </div>
           <h1 class="text-4xl lg:text-5xl font-heading font-bold text-white mb-6 tracking-tight">
@@ -55,7 +56,7 @@ import {
           <!-- Phone Contact -->
           <div class="text-center p-8 bg-stone-beige rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300">
             <div class="w-16 h-16 bg-forest-canopy rounded-full flex items-center justify-center mx-auto mb-6">
-              <Phone className="w-8 h-8 text-white" />
+              <Phone className="w-8 h-8 text-white" aria-hidden="true" />
             </div>
             <h3 class="text-xl font-semibold text-earth-brown mb-3">Call Us</h3>
             <p class="text-earth-brown mb-4 leading-relaxed">
@@ -73,7 +74,7 @@ import {
           <!-- Email Contact -->
           <div class="text-center p-8 bg-stone-beige rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300">
             <div class="w-16 h-16 bg-moss-green rounded-full flex items-center justify-center mx-auto mb-6">
-              <Mail className="w-8 h-8 text-white" />
+              <Mail className="w-8 h-8 text-white" aria-hidden="true" />
             </div>
             <h3 class="text-xl font-semibold text-earth-brown mb-3">Email Us</h3>
             <p class="text-earth-brown mb-4 leading-relaxed">
@@ -90,7 +91,7 @@ import {
           <!-- Visit Us -->
           <div class="text-center p-8 bg-stone-beige rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300">
             <div class="w-16 h-16 bg-sunlight-gold rounded-full flex items-center justify-center mx-auto mb-6">
-              <MapPin className="w-8 h-8 text-white" />
+              <MapPin className="w-8 h-8 text-white" aria-hidden="true" />
             </div>
             <h3 class="text-xl font-semibold text-earth-brown mb-3">Visit Us</h3>
             <p class="text-earth-brown mb-4 leading-relaxed">
@@ -117,21 +118,21 @@ import {
           <!-- Contact Form -->
           <div class="bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
             <div class="flex items-center mb-6">
-              <Send className="w-6 h-6 text-forest-canopy mr-3" />
+              <Send className="w-6 h-6 text-forest-canopy mr-3" aria-hidden="true" />
               <h2 class="text-2xl font-bold text-earth-brown">Send Us a Message</h2>
             </div>
             
             <!-- Form Alert Messages -->
             <div id="form-success" class="hidden mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
               <div class="flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                <CheckCircle className="w-5 h-5 text-green-600 mr-3" aria-hidden="true" />
                 <p class="text-green-800 font-medium">Thank you! Your message has been sent successfully. We'll get back to you within 24 hours.</p>
               </div>
             </div>
             
             <div id="form-error" class="hidden mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
               <div class="flex items-center">
-                <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
+                <AlertCircle className="w-5 h-5 text-red-600 mr-3" aria-hidden="true" />
                 <p class="text-red-800 font-medium">There was an error sending your message. Please try again or contact us directly.</p>
               </div>
             </div>
@@ -139,25 +140,24 @@ import {
             <!-- Contact Form -->
             <form 
               id="contact-form" 
-              name="contact" 
+              name="contact-form"
               method="POST" 
-              data-netlify="true" 
+              data-netlify="true"
               data-netlify-honeypot="bot-field"
+              action="/contact-success"
               class="space-y-6"
             >
-              <!-- Netlify form detection -->
-              <input type="hidden" name="form-name" value="contact" />
               
               <!-- Honeypot field for spam protection -->
-              <div style="display: none;">
-                <input name="bot-field" />
+              <div style="display: none;" aria-hidden="true">
+                <input name="bot-field" tabindex="-1" autocomplete="off" />
               </div>
 
               <!-- Name and Email Row -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label for="name" class="block text-sm font-medium text-earth-brown mb-2">
-                    <User className="w-4 h-4 inline mr-1" />
+                    <User className="w-4 h-4 inline mr-1" aria-hidden="true" />
                     Your Name *
                   </label>
                   <input 
@@ -168,10 +168,11 @@ import {
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent transition-colors"
                     placeholder="Enter your full name"
                   />
+                  <ErrorMessage error={null} fieldId="name" />
                 </div>
                 <div>
                   <label for="email" class="block text-sm font-medium text-earth-brown mb-2">
-                    <Mail className="w-4 h-4 inline mr-1" />
+                    <Mail className="w-4 h-4 inline mr-1" aria-hidden="true" />
                     Email Address *
                   </label>
                   <input 
@@ -182,6 +183,7 @@ import {
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent transition-colors"
                     placeholder="your.email@example.com"
                   />
+                  <ErrorMessage error={null} fieldId="email" />
                 </div>
               </div>
 
@@ -189,7 +191,7 @@ import {
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label for="phone" class="block text-sm font-medium text-earth-brown mb-2">
-                    <Phone className="w-4 h-4 inline mr-1" />
+                    <Phone className="w-4 h-4 inline mr-1" aria-hidden="true" />
                     Phone Number
                   </label>
                   <input 
@@ -199,10 +201,11 @@ import {
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent transition-colors"
                     placeholder="(555) 123-4567"
                   />
+                  <ErrorMessage error={null} fieldId="phone" />
                 </div>
                 <div>
                   <label for="child-age" class="block text-sm font-medium text-earth-brown mb-2">
-                    <Baby className="w-4 h-4 inline mr-1" />
+                    <Baby className="w-4 h-4 inline mr-1" aria-hidden="true" />
                     Child's Age (if applicable)
                   </label>
                   <select 
@@ -224,7 +227,7 @@ import {
               <!-- Subject -->
               <div>
                 <label for="subject" class="block text-sm font-medium text-earth-brown mb-2">
-                  <MessageSquare className="w-4 h-4 inline mr-1" />
+                  <MessageSquare className="w-4 h-4 inline mr-1" aria-hidden="true" />
                   Subject *
                 </label>
                 <select 
@@ -242,6 +245,7 @@ import {
                   <option value="general">General Questions</option>
                   <option value="other">Other</option>
                 </select>
+                <ErrorMessage error={null} fieldId="subject" />
               </div>
 
               <!-- Message -->
@@ -257,12 +261,13 @@ import {
                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent transition-colors resize-vertical"
                   placeholder="Tell us about your questions, interests, or how we can help you and your family..."
                 ></textarea>
+                <ErrorMessage error={null} fieldId="message" />
               </div>
 
               <!-- Tour Interest -->
               <div class="bg-stone-beige rounded-lg p-4">
                 <div class="flex items-center mb-3">
-                  <Calendar className="w-5 h-5 text-forest-canopy mr-2" />
+                  <Calendar className="w-5 h-5 text-forest-canopy mr-2" aria-hidden="true" />
                   <h3 class="text-lg font-semibold text-earth-brown">Interested in a Tour?</h3>
                 </div>
                 <p class="text-sm text-earth-brown mb-3">
@@ -285,7 +290,7 @@ import {
                 id="submit-btn"
                 class="w-full bg-forest-canopy hover:bg-moss-green text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Send className="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform" />
+                <Send className="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                 <span id="submit-text">Send Message</span>
                 <span id="submit-loading" class="hidden">Sending...</span>
               </button>
@@ -302,7 +307,7 @@ import {
             <!-- School Hours Widget -->
             <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
               <div class="flex items-center mb-4">
-                <Clock className="w-6 h-6 text-forest-canopy mr-3" />
+                <Clock className="w-6 h-6 text-forest-canopy mr-3" aria-hidden="true" />
                 <h3 class="text-xl font-semibold text-earth-brown">When We're Here</h3>
               </div>
               <HoursWidget />
@@ -311,7 +316,7 @@ import {
             <!-- Additional Information -->
             <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
               <div class="flex items-center mb-4">
-                <Heart className="w-6 h-6 text-forest-canopy mr-3" />
+                <Heart className="w-6 h-6 text-forest-canopy mr-3" aria-hidden="true" />
                 <h3 class="text-xl font-semibold text-earth-brown">More Ways to Connect</h3>
               </div>
               
@@ -362,7 +367,7 @@ import {
             <!-- Emergency Contact -->
             <div class="bg-orange-50 border border-orange-200 rounded-xl p-6">
               <div class="flex items-start">
-                <AlertCircle className="w-6 h-6 text-orange-600 mr-3 flex-shrink-0 mt-1" />
+                <AlertCircle className="w-6 h-6 text-orange-600 mr-3 flex-shrink-0 mt-1" aria-hidden="true" />
                 <div>
                   <h3 class="text-lg font-semibold text-orange-800 mb-2">Emergency Contact</h3>
                   <p class="text-orange-700 text-sm mb-3">
@@ -407,6 +412,7 @@ import {
                 loading="lazy" 
                 referrerpolicy="no-referrer-when-downgrade"
                 title="Spicebush Montessori School Location Map"
+                aria-describedby="school-address"
               ></iframe>
             </div>
           </div>
@@ -417,7 +423,7 @@ import {
               <h3 class="text-xl font-semibold text-earth-brown mb-4">Getting Here</h3>
               
               <div class="space-y-4">
-                <div>
+                <div id="school-address">
                   <h4 class="font-semibold text-earth-brown mb-2">Address</h4>
                   <address class="text-earth-brown not-italic">
                     827 Concord Road<br>
@@ -447,7 +453,7 @@ import {
                   rel="noopener noreferrer"
                   class="inline-flex items-center text-forest-canopy hover:text-moss-green font-medium transition-colors"
                 >
-                  <MapPin className="w-4 h-4 mr-2" />
+                  <MapPin className="w-4 h-4 mr-2" aria-hidden="true" />
                   Get Directions
                 </a>
               </div>
@@ -462,75 +468,36 @@ import {
 </Layout>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { enhanceForm } = await import('../lib/form-enhance');
+    const { validators } = await import('../lib/form-validation');
     const form = document.getElementById('contact-form');
     const submitBtn = document.getElementById('submit-btn');
     const submitText = document.getElementById('submit-text');
     const submitLoading = document.getElementById('submit-loading');
-    const successAlert = document.getElementById('form-success');
-    const errorAlert = document.getElementById('form-error');
-
+    
+    // Simple form enhancement for loading state
     if (form && submitBtn) {
-      form.addEventListener('submit', function(e) {
+      form.addEventListener('submit', (e) => {
         // Show loading state
         submitBtn.disabled = true;
         submitText.classList.add('hidden');
         submitLoading.classList.remove('hidden');
         
-        // Hide any existing alerts
-        successAlert.classList.add('hidden');
-        errorAlert.classList.add('hidden');
-        
-        // Let Netlify handle the form submission
-        // The loading state will be visible while the form submits
+        // Netlify Forms will handle the actual submission
+        // The loading state will persist until page redirect
       });
-      
-      // Check for Netlify form submission success/error in URL params
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('success') === 'true') {
-        successAlert.classList.remove('hidden');
-        form.reset();
-      } else if (urlParams.get('error') === 'true') {
-        errorAlert.classList.remove('hidden');
-        // Reset button state
-        submitBtn.disabled = false;
-        submitText.classList.remove('hidden');
-        submitLoading.classList.add('hidden');
-      }
     }
 
     // Enhanced form validation
-    const requiredFields = form.querySelectorAll('[required]');
-    requiredFields.forEach(field => {
-      field.addEventListener('blur', function() {
-        if (!this.value.trim()) {
-          this.classList.add('border-red-300');
-          this.classList.remove('border-gray-300');
-        } else {
-          this.classList.remove('border-red-300');
-          this.classList.add('border-gray-300');
-        }
-      });
-      
-      field.addEventListener('input', function() {
-        if (this.value.trim()) {
-          this.classList.remove('border-red-300');
-          this.classList.add('border-gray-300');
-        }
-      });
-    });
-
-    // Email validation
-    const emailField = document.getElementById('email');
-    if (emailField) {
-      emailField.addEventListener('blur', function() {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (this.value && !emailRegex.test(this.value)) {
-          this.classList.add('border-red-300');
-          this.classList.remove('border-gray-300');
-        } else if (this.value) {
-          this.classList.remove('border-red-300');
-          this.classList.add('border-gray-300');
+    if (form) {
+      enhanceForm(form, {
+        validationSchema: {
+          name: [validators.required],
+          email: [validators.required, validators.email],
+          phone: [validators.phone],
+          subject: [validators.required],
+          message: [validators.required, validators.minLength(10)]
         }
       });
     }

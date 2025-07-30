@@ -3,9 +3,10 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { ArrowLeft, Calendar, User, Clock, Share2 } from 'lucide-astro';
-import { getEntry } from '../../lib/content-db';
+import { getEntry } from '@lib/content-db';
 import { marked } from 'marked';
 import DOMPurify from 'isomorphic-dompurify';
+import { formatBlogDate, getISOString } from '@lib/date-utils';
 
 // Get the slug from the URL
 const { slug } = Astro.params;
@@ -34,7 +35,7 @@ const {
 const rawHtml = marked(entry.body || '');
 const contentHtml = DOMPurify.sanitize(rawHtml, {
   ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
-                 'blockquote', 'ul', 'ol', 'li', 'a', 'img', 'code', 'pre', 'span', 'div'],
+    'blockquote', 'ul', 'ol', 'li', 'a', 'img', 'code', 'pre', 'span', 'div'],
   ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id']
 });
 
@@ -91,8 +92,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=3600'); // 1 hour c
               )}
               <div class="flex items-center">
                 <Calendar className="w-5 h-5 mr-2 text-moss-green" />
-                <time datetime={publishedAt}>
-                  {new Date(publishedAt).toLocaleDateString('en-US', {
+                <time datetime={getISOString(publishedAt)}>
+                  {formatBlogDate(publishedAt, {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'

@@ -1,6 +1,6 @@
 ---
 import { Edit3, Upload, Crop, Smartphone, Tablet, Monitor, Save, X, RotateCcw } from 'lucide-astro';
-import { isAdminEmail } from '../lib/admin-config';
+import { isAdminEmail } from '@lib/admin-config';
 ---
 
 <!-- Admin Image Management Overlay System -->
@@ -279,8 +279,8 @@ import { isAdminEmail } from '../lib/admin-config';
 </div>
 
 <script>
-  import { supabase } from '../lib/supabase.ts';
-  import { isAdminEmail } from '../lib/admin-config.ts';
+  import { supabase } from '@lib/supabase.ts';
+  import { isAdminEmail } from '@lib/admin-config.ts';
 
   class AdminImageManager {
     constructor() {
@@ -325,7 +325,7 @@ import { isAdminEmail } from '../lib/admin-config';
         const { data, error } = await supabase
           .from('admin_settings')
           .select('setting_key, setting_value')
-          .in('setting_key', ['cloudinary_cloud_name', 'cloudinary_upload_preset', 'max_file_size'])
+          .in('setting_key', ['cloudinary_cloud_name', 'cloudinary_upload_preset', 'max_file_size']);
         
         if (error) throw error;
 
@@ -461,7 +461,7 @@ import { isAdminEmail } from '../lib/admin-config';
     openImageEditor(img, index) {
       this.currentImageData = {
         element: img,
-        index: index,
+        index,
         src: img.src,
         alt: img.alt,
         pagePath: window.location.pathname,
@@ -704,25 +704,25 @@ import { isAdminEmail } from '../lib/admin-config';
       let width, height;
       
       switch (device) {
-        case 'mobile':
-          width = 400;
-          height = 300;
-          break;
-        case 'tablet':
-          width = 600;
-          height = 400;
-          break;
-        case 'desktop':
-          width = 800;
-          height = 500;
-          break;
+      case 'mobile':
+        width = 400;
+        height = 300;
+        break;
+      case 'tablet':
+        width = 600;
+        height = 400;
+        break;
+      case 'desktop':
+        width = 800;
+        height = 500;
+        break;
       }
       
       // Create transformation string
       const transformations = [
         `w_${width}`,
         `h_${height}`,
-        `c_fill`,
+        'c_fill',
         `g_${position.y}_${position.x}`,
         `z_${position.zoom}`
       ].join(',');

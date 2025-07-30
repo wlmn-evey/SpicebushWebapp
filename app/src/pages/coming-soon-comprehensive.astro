@@ -17,21 +17,21 @@ const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 const todayHours = sortedHours.find(h => h.data.day === today);
 
 // Constants
-const applicationLink = "https://www.transparentclassroom.com/s/4693/online_applications/new";
+const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_applications/new';
 ---
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spicebush Montessori School - Coming Soon</title>
-  <meta name="description" content="Spicebush Montessori School in Glen Mills, PA. Inclusive Montessori education for ages 3-6 with income-based tuition. Apply now!">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spicebush Montessori School - Coming Soon</title>
+    <meta name="description" content="Spicebush Montessori School in Glen Mills, PA. Inclusive Montessori education for ages 3-6 with income-based tuition. Apply now!">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
     * {
       margin: 0;
       padding: 0;
@@ -499,9 +499,9 @@ const applicationLink = "https://www.transparentclassroom.com/s/4693/online_appl
     .stagger-2 { animation-delay: 0.2s; }
     .stagger-3 { animation-delay: 0.3s; }
     .stagger-4 { animation-delay: 0.4s; }
-  </style>
-</head>
-<body>
+    </style>
+  </head>
+  <body>
   <!-- Header Section -->
   <header class="header">
     <img src="/images/optimized/homepage/homepage-spicebush-logo-brand-identity-800x800.webp" alt="Spicebush Montessori School" class="logo">
@@ -515,7 +515,7 @@ const applicationLink = "https://www.transparentclassroom.com/s/4693/online_appl
     <div class="info-card fade-in stagger-1">
       <div class="info-card-icon">👶</div>
       <h3>Ages Served</h3>
-      <p>{schoolInfo?.data.agesServed || "3-6 years old"}</p>
+      <p>{schoolInfo?.data.agesServed || '3-6 years old'}</p>
       <p>Preschool & Primary</p>
     </div>
 
@@ -525,7 +525,7 @@ const applicationLink = "https://www.transparentclassroom.com/s/4693/online_appl
       <p>
         {todayHours && !todayHours.data.is_closed 
           ? `Today: ${todayHours.data.open_time} - ${todayHours.data.close_time}`
-          : "Mon-Thu: 8:00 AM - 5:30 PM"}
+          : 'Mon-Thu: 8:00 AM - 5:30 PM'}
       </p>
       {(!todayHours || todayHours.data.is_closed) && <p>Fri: 8:00 AM - 3:00 PM</p>}
       <p>Extended care available</p>
@@ -734,7 +734,7 @@ const applicationLink = "https://www.transparentclassroom.com/s/4693/online_appl
   <!-- Footer -->
   <footer class="footer">
     <p>© 2025 Spicebush Montessori School</p>
-    <p>A 501(c)(3) Non-Profit Organization | EIN: {schoolInfo?.data.ein || "88-0565930"}</p>
+    <p>A 501(c)(3) Non-Profit Organization | EIN: {schoolInfo?.data.ein || '88-0565930'}</p>
     <p>
       <a href="/non-discrimination-policy">Non-Discrimination Policy</a> | 
       <a href="/privacy-policy">Privacy Policy</a>
@@ -744,5 +744,5 @@ const applicationLink = "https://www.transparentclassroom.com/s/4693/online_appl
       privileges, programs, and activities generally accorded or made available to students at the school.
     </p>
   </footer>
-</body>
+  </body>
 </html>

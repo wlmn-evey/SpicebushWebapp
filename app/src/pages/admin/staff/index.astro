@@ -6,13 +6,13 @@
  * add new staff, and manage their status.
  */
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { checkAdminAuth } from '../../../lib/admin-auth-check';
-import { getCollection } from '../../../lib/content-db';
+import { checkAdminAuth } from '@lib/admin-auth-check';
+import { getCollection } from '@lib/content-db';
 
 // Check authentication
 const { isAuthenticated } = await checkAdminAuth(Astro);
 if (!isAuthenticated) {
-  return Astro.redirect('/auth/login?redirect=' + Astro.url.pathname);
+  return Astro.redirect(`/auth/login?redirect=${  Astro.url.pathname}`);
 }
 
 // Load staff members
@@ -208,11 +208,11 @@ function getStatusText(active: boolean): string {
           const response = await fetch('/api/cms/entry', {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify({
               type: 'staff',
-              slug: slug
+              slug
             })
           });
           

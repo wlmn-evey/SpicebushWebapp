@@ -178,46 +178,155 @@ const dropzoneId = `${inputId}-dropzone`;
     handleFiles(files) {
       const file = files[0]; // For now, handle single file
       
-      // Validate file
+      // Enhanced client-side validation
       const maxSize = parseInt(this.fileInput.closest('.image-upload').dataset.maxSize) || 10485760;
+      const acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
       
-      if (!file.type.startsWith('image/')) {
-        this.showError('Please select an image file');
+      // Check file type
+      if (!acceptedTypes.includes(file.type.toLowerCase())) {
+        this.showError('Please select a valid image file (JPG, PNG, WebP, or GIF)');
         return;
       }
       
+      // Check file size
       if (file.size > maxSize) {
-        this.showError(`File size must be less than ${(maxSize / 1024 / 1024).toFixed(0)}MB`);
+        const sizeMB = (maxSize / 1024 / 1024).toFixed(0);
+        this.showError(`File is too large. Please select an image under ${sizeMB}MB`);
         return;
       }
       
-      this.uploadFile(file);
+      // Optional: Check dimensions (requires reading the file)
+      this.validateImageDimensions(file).then(isValid => {
+        if (isValid) {
+          this.uploadFile(file);
+        }
+      });
     }
     
-    async uploadFile(file) {
+    async validateImageDimensions(file) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          
+          // Optional dimension checks (adjust as needed)
+          const minWidth = 200;
+          const minHeight = 200;
+          const maxWidth = 4000;
+          const maxHeight = 4000;
+          
+          if (img.width < minWidth || img.height < minHeight) {
+            this.showError(`Image is too small. Minimum size is ${minWidth}x${minHeight} pixels`);
+            resolve(false);
+          } else if (img.width > maxWidth || img.height > maxHeight) {
+            this.showError(`Image is too large. Maximum size is ${maxWidth}x${maxHeight} pixels`);
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        };
+        
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          this.showError('Could not read image file. Please try a different image.');
+          resolve(false);
+        };
+        
+        img.src = url;
+      });
+    }
+    
+    uploadFile(file) {
       const formData = new FormData();
       formData.append('file', file);
       
-      this.showProgress();
+      this.showProgress(0);
       
-      try {
-        const response = await fetch(this.endpoint, {
-          method: 'POST',
-          body: formData,
-          credentials: 'include'
-        });
-        
-        if (!response.ok) {
-          throw new Error('Upload failed');
+      const xhr = new XMLHttpRequest();
+      
+      // Progress tracking
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = (e.loaded / e.total) * 100;
+          this.updateProgress(percentComplete);
         }
-        
-        const data = await response.json();
-        this.updateValue(data.url);
+      });
+      
+      // Success handler
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            this.updateValue(data.url);
+            this.hideProgress();
+          } catch (error) {
+            this.showError('Server returned an invalid response. Please try again.');
+            this.hideProgress();
+          }
+        } else {
+          // Map error codes to user-friendly messages
+          this.handleUploadError(xhr.status, xhr.responseText);
+          this.hideProgress();
+        }
+      });
+      
+      // Error handler
+      xhr.addEventListener('error', () => {
+        this.showError('Network error. Please check your connection and try again.');
         this.hideProgress();
-      } catch (error) {
-        this.showError('Upload failed. Please try again.');
+      });
+      
+      // Abort handler
+      xhr.addEventListener('abort', () => {
+        this.showError('Upload cancelled.');
         this.hideProgress();
+      });
+      
+      // Send request
+      xhr.open('POST', this.endpoint);
+      xhr.withCredentials = true; // Include cookies
+      xhr.send(formData);
+      
+      // Store xhr for potential cancellation
+      this.currentUpload = xhr;
+    }
+    
+    handleUploadError(status, responseText) {
+      let message = 'Upload failed. Please try again.';
+      
+      // Try to parse error message from response
+      try {
+        const data = JSON.parse(responseText);
+        if (data.error) {
+          message = data.error;
+        }
+      } catch (e) {
+        // Use status code-based messages
+        switch (status) {
+        case 400:
+          message = 'Invalid file format or corrupted file. Please try a different image.';
+          break;
+        case 401:
+          message = 'You need to be logged in to upload images.';
+          break;
+        case 413:
+          message = 'File is too large. Please select a smaller image.';
+          break;
+        case 415:
+          message = 'File type not supported. Please use JPG, PNG, WebP, or GIF.';
+          break;
+        case 500:
+          message = 'Server error. Please try again later.';
+          break;
+        case 507:
+          message = 'Storage full. Please contact support.';
+          break;
+        }
       }
+      
+      this.showError(message);
     }
     
     updateValue(url) {
@@ -290,13 +399,25 @@ const dropzoneId = `${inputId}-dropzone`;
       this.valueInput.dispatchEvent(new Event('change', { bubbles: true }));
     }
     
-    showProgress() {
+    showProgress(percent = 0) {
       this.progressEl.classList.add('upload-progress--visible');
+      this.updateProgress(percent);
       this.hideError();
+    }
+    
+    updateProgress(percent) {
+      const rounded = Math.round(percent);
+      this.progressBar.style.width = `${rounded}%`;
+      this.progressText.textContent = `Uploading... ${rounded}%`;
     }
     
     hideProgress() {
       this.progressEl.classList.remove('upload-progress--visible');
+      // Reset progress bar
+      setTimeout(() => {
+        this.progressBar.style.width = '0%';
+        this.progressText.textContent = 'Uploading...';
+      }, 300);
     }
     
     showError(message) {
@@ -327,6 +448,7 @@ const dropzoneId = `${inputId}-dropzone`;
   
   .upload-dropzone--dragover {
     @apply border-blue-500 bg-blue-50;
+    @apply scale-[1.02] shadow-lg;
   }
   
   .upload-dropzone[data-disabled="true"] {
@@ -361,9 +483,10 @@ const dropzoneId = `${inputId}-dropzone`;
   }
   
   .upload-progress {
-    @apply absolute inset-0 bg-white bg-opacity-90 rounded-lg;
+    @apply absolute inset-0 bg-white bg-opacity-95 rounded-lg;
     @apply flex items-center justify-center;
     @apply invisible opacity-0 transition-opacity duration-200;
+    @apply overflow-hidden;
   }
   
   .upload-progress--visible {
@@ -372,7 +495,7 @@ const dropzoneId = `${inputId}-dropzone`;
   
   .upload-progress-bar {
     @apply absolute bottom-0 left-0 h-1 bg-blue-500;
-    @apply transition-all duration-300;
+    @apply transition-all duration-300 ease-out;
     width: 0%;
   }
   

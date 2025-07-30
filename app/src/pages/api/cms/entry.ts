@@ -1,20 +1,15 @@
 import type { APIRoute } from 'astro';
+import { checkAdminAuth } from '@lib/admin-auth-check';
+import { AuditLogger } from '@lib/audit-logger';
+import { errorResponse } from '@lib/api-utils';
 
 export const GET: APIRoute = async ({ url, cookies }) => {
   try {
-    // Check admin authentication
-    const authCookie = cookies.get('sbms-admin-auth');
+    // Check authentication
+    const { isAuthenticated } = await checkAdminAuth({ cookies } as any);
     
-    if (authCookie?.value !== 'bypass' && !import.meta.env.DEV) {
-      const { supabase } = await import('../../../lib/supabase');
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
+    if (!isAuthenticated) {
+      return errorResponse('Unauthorized', 401);
     }
     
     const collection = url.searchParams.get('collection');
@@ -27,7 +22,7 @@ export const GET: APIRoute = async ({ url, cookies }) => {
       });
     }
     
-    const { supabase } = await import('../../../lib/supabase');
+    const { supabase } = await import('@lib/supabase');
     const { data, error } = await supabase
       .from('content')
       .select('*')
@@ -67,22 +62,17 @@ export const GET: APIRoute = async ({ url, cookies }) => {
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
-    // Check admin authentication
-    const authCookie = cookies.get('sbms-admin-auth');
-    let userEmail = 'admin@spicebushmontessori.org';
+    // Check authentication
+    const { isAuthenticated, session } = await checkAdminAuth({ cookies, request } as any);
     
-    if (authCookie?.value !== 'bypass' && !import.meta.env.DEV) {
-      const { supabase } = await import('../../../lib/supabase');
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-      userEmail = user.email || userEmail;
+    if (!isAuthenticated || !session) {
+      return errorResponse('Unauthorized', 401);
     }
+    
+    // Initialize audit logger
+    const ipAddress = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip');
+    const audit = new AuditLogger(session, ipAddress || undefined);
     
     const contentData = await request.json();
     
@@ -94,16 +84,22 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       slug: entry.slug,
       title: entry.title,
       data: entry.data || {},
-      author_email: userEmail,
+      author_email: session.userEmail,
       status: entry.status || 'draft'
     };
     
-    const { supabase } = await import('../../../lib/supabase');
+    const { supabase } = await import('@lib/supabase');
     const { error } = await supabase
       .from('content')
       .upsert(content, { onConflict: 'type,slug' });
     
     if (error) throw error;
+    
+    // Log the action
+    await audit.logContentChange('CREATE', entry.type, entry.slug, {
+      title: entry.title,
+      status: entry.status || 'draft'
+    });
     
     return new Response(JSON.stringify({ success: true, data: content }), {
       status: 200,
@@ -121,22 +117,17 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
 export const PUT: APIRoute = async ({ request, cookies }) => {
   try {
-    // Check admin authentication
-    const authCookie = cookies.get('sbms-admin-auth');
-    let userEmail = 'admin@spicebushmontessori.org';
+    // Check authentication
+    const { isAuthenticated, session } = await checkAdminAuth({ cookies, request } as any);
     
-    if (authCookie?.value !== 'bypass' && !import.meta.env.DEV) {
-      const { supabase } = await import('../../../lib/supabase');
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-      userEmail = user.email || userEmail;
+    if (!isAuthenticated || !session) {
+      return errorResponse('Unauthorized', 401);
     }
+    
+    // Initialize audit logger
+    const ipAddress = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip');
+    const audit = new AuditLogger(session, ipAddress || undefined);
     
     const contentData = await request.json();
     
@@ -148,17 +139,23 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
       slug: entry.slug,
       title: entry.title,
       data: entry.data || {},
-      author_email: userEmail,
+      author_email: session.userEmail,
       status: entry.status || 'draft',
       updated_at: new Date().toISOString()
     };
     
-    const { supabase } = await import('../../../lib/supabase');
+    const { supabase } = await import('@lib/supabase');
     const { error } = await supabase
       .from('content')
       .upsert(content, { onConflict: 'type,slug' });
     
     if (error) throw error;
+    
+    // Log the action
+    await audit.logContentChange('UPDATE', entry.type, entry.slug, {
+      title: entry.title,
+      status: entry.status || 'draft'
+    });
     
     return new Response(JSON.stringify({ success: true, data: content }), {
       status: 200,
@@ -176,20 +173,17 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
 
 export const DELETE: APIRoute = async ({ url, request, cookies }) => {
   try {
-    // Check admin authentication
-    const authCookie = cookies.get('sbms-admin-auth');
+    // Check authentication
+    const { isAuthenticated, session } = await checkAdminAuth({ cookies, request } as any);
     
-    if (authCookie?.value !== 'bypass' && !import.meta.env.DEV) {
-      const { supabase } = await import('../../../lib/supabase');
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
+    if (!isAuthenticated || !session) {
+      return errorResponse('Unauthorized', 401);
     }
+    
+    // Initialize audit logger
+    const ipAddress = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip');
+    const audit = new AuditLogger(session, ipAddress || undefined);
     
     let collection, slug;
     
@@ -214,7 +208,7 @@ export const DELETE: APIRoute = async ({ url, request, cookies }) => {
       });
     }
     
-    const { supabase } = await import('../../../lib/supabase');
+    const { supabase } = await import('@lib/supabase');
     const { error } = await supabase
       .from('content')
       .delete()
@@ -222,6 +216,9 @@ export const DELETE: APIRoute = async ({ url, request, cookies }) => {
       .eq('slug', slug);
     
     if (error) throw error;
+    
+    // Log the action
+    await audit.logContentChange('DELETE', collection, slug);
     
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

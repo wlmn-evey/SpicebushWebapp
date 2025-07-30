@@ -29,15 +29,17 @@ FROM base AS deps
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies
-RUN npm ci --only=production --legacy-peer-deps && \
+# Install production dependencies with cache mount
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --only=production --legacy-peer-deps --loglevel=error --no-audit --no-fund && \
     npm cache clean --force
 
 # Copy production dependencies aside
 RUN cp -R node_modules prod_node_modules
 
-# Install all dependencies (including dev)
-RUN npm ci --legacy-peer-deps && \
+# Install all dependencies (including dev) with cache mount
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --legacy-peer-deps --loglevel=error --no-audit --no-fund && \
     npm cache clean --force
 
 # Stage 3: Build stage

@@ -21,7 +21,7 @@ const {
   imageAlt, 
   photoSlug,
   ctaLink, 
-  ctaText = "Learn More", 
+  ctaText = 'Learn More', 
   imagePosition = 'left',
   bgColor = 'bg-white'
 } = Astro.props;
@@ -49,8 +49,8 @@ const {
             decoding="async"
           />
         )}
-        <!-- Optional decorative element -->
-        <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-sunlight-gold opacity-80 rounded-full"></div>
+        <!-- Optional decorative element - hidden on mobile to prevent overflow -->
+        <div class="hidden sm:block absolute -bottom-6 -right-6 w-24 h-24 bg-sunlight-gold opacity-80 rounded-full"></div>
       </div>
       
       <!-- Text Side - 40% visual weight -->

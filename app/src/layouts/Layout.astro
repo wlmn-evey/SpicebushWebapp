@@ -2,16 +2,26 @@
 import '../styles/global.css';
 import MobileBottomNav from '../components/MobileBottomNav.astro';
 import AdminPreviewBar from '../components/AdminPreviewBar.astro';
+import { CRITICAL_IMAGES, generatePreloadLinks } from '../lib/image-preloader';
 
 export interface Props {
   title: string;
   description?: string;
   keywords?: string;
+  preloadImages?: boolean;
 }
 
-const { title, description = "Spicebush Montessori School provides individualized, inclusive Montessori education for children ages 3-6. Welcoming all learners with accessible tuition and neurodiversity support.", keywords = "Montessori school, inclusive preschool, neurodiversity education, accessible tuition, early childhood education" } = Astro.props;
+const { 
+  title, 
+  description = 'Spicebush Montessori School provides individualized, inclusive Montessori education for children ages 3-6. Welcoming all learners with accessible tuition and neurodiversity support.', 
+  keywords = 'Montessori school, inclusive preschool, neurodiversity education, accessible tuition, early childhood education',
+  preloadImages = false
+} = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+
+// Generate preload links for critical images on homepage
+const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
 ---
 
 <!DOCTYPE html>
@@ -42,6 +52,13 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta property="twitter:title" content={title} />
     <meta property="twitter:description" content={description} />
     <meta property="twitter:image" content={`${Astro.site}SpicebushLogo-03.png`} />
+    
+    <!-- Performance Optimization: Resource Hints -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    
+    <!-- Critical Image Preloading -->
+    {preloadImages && <Fragment set:html={preloadLinks} />}
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

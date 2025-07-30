@@ -188,14 +188,14 @@ const { type, title, subtitle } = Astro.props;
 </div>
 
 <script>
-  import { auth } from '../lib/supabase.ts';
-  import { isTestEmail, getAuthErrorMessage, isDevEnvironment } from '../lib/development-helpers.ts';
+  import { auth } from '@lib/supabase.ts';
+  import { isTestEmail, getAuthErrorMessage, isDevEnvironment } from '@lib/development-helpers.ts';
   
   // Get the form type from the data attribute
   const formElement = document.querySelector('#auth-form');
   const type = formElement?.closest('[data-auth-type]')?.getAttribute('data-auth-type') || 'login';
   
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('auth-form');
     const submitBtn = document.getElementById('submit-btn');
     const submitText = document.getElementById('submit-text');
@@ -209,7 +209,7 @@ const { type, title, subtitle } = Astro.props;
 
     // Password visibility toggle
     if (togglePassword && passwordInput) {
-      togglePassword.addEventListener('click', function() {
+      togglePassword.addEventListener('click', () => {
         const isPassword = passwordInput.type === 'password';
         passwordInput.type = isPassword ? 'text' : 'password';
         eyeOpen.classList.toggle('hidden', isPassword);
@@ -237,7 +237,7 @@ const { type, title, subtitle } = Astro.props;
     }
 
     // Form submission
-    form.addEventListener('submit', async function(e) {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideAlert();
       setLoading(true);

@@ -6,12 +6,12 @@
  * authentication checks, and UI structure for the admin interface.
  */
 import Layout from './Layout.astro';
-import { checkAdminAuth } from '../lib/admin-auth-check';
+import { checkAdminAuth } from '@lib/admin-auth-check';
 
 // Check authentication
 const { isAuthenticated } = await checkAdminAuth(Astro);
 if (!isAuthenticated) {
-  return Astro.redirect('/auth/login?redirect=' + Astro.url.pathname);
+  return Astro.redirect(`/auth/login?redirect=${  Astro.url.pathname}`);
 }
 
 export interface Props {
@@ -33,7 +33,9 @@ const navItems = [
   { href: '/admin/tuition', label: 'Tuition', icon: 'currency-dollar' },
   { href: '/admin/announcements', label: 'Announcements', icon: 'speakerphone' },
   { href: '/admin/photos', label: 'Photos', icon: 'photograph' },
-  { href: '/admin/settings', label: 'Settings', icon: 'cog' },
+  { href: '/admin/communications', label: 'Communications', icon: 'mail' },
+  { href: '/admin/newsletter', label: 'Newsletter', icon: 'mail-open' },
+  { href: '/admin/settings', label: 'Settings', icon: 'cog' }
 ];
 
 // Check for flash messages
@@ -47,7 +49,7 @@ const errorMessage = Astro.url.searchParams.get('error');
     <aside class="admin-sidebar">
       <div class="admin-logo">
         <a href="/admin" class="flex items-center space-x-2">
-          <img src="/SpicebushLogo-03.png" alt="Spicebush" class="h-8 w-8" />
+          <img src="/SpicebushLogo-03.png" alt="Spicebush Montessori School" class="h-8 w-8" />
           <span class="font-semibold text-lg">Admin</span>
         </a>
       </div>
@@ -81,6 +83,12 @@ const errorMessage = Astro.url.searchParams.get('error');
                   )}
                   {item.icon === 'photograph' && (
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  )}
+                  {item.icon === 'mail' && (
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  )}
+                  {item.icon === 'mail-open' && (
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
                   )}
                   {item.icon === 'cog' && (
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />

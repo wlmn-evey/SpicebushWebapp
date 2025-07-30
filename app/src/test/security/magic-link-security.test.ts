@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { isAdminEmail } from '../../lib/admin-config';
+import { isAdminEmail } from '@lib/admin-config';
 
 // Mock environment for security tests
 class SecurityTestEnvironment {
@@ -12,14 +12,14 @@ class SecurityTestEnvironment {
         url: url.toString(),
         method: options?.method || 'GET',
         headers: options?.headers || {},
-        body: options?.body,
+        body: options?.body
       });
       
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ success: true }),
         headers: new Map(),
-        status: 200,
+        status: 200
       });
     });
   }
@@ -50,7 +50,7 @@ describe('Magic Link Security Validation', () => {
         'javascript:alert("xss")@example.com',
         'data:text/html,<script>alert("xss")</script>@example.com',
         '><img src=x onerror=alert("xss")>@example.com',
-        '"><script>alert("xss")</script>@example.com',
+        '"><script>alert("xss")</script>@example.com'
       ];
       
       maliciousEmails.forEach(email => {
@@ -80,7 +80,7 @@ describe('Magic Link Security Validation', () => {
         'user@-example.com',
         'user@example-.com',
         'user@example.c',
-        'user@example.toolongtobevalid',
+        'user@example.toolongtobevalid'
       ];
       
       invalidEmails.forEach(email => {
@@ -94,7 +94,7 @@ describe('Magic Link Security Validation', () => {
         'admin@spicebushmontessori.org\nTo: victim@example.com',
         'admin@spicebushmontessori.org%0D%0ABcc: attacker@evil.com',
         'admin@spicebushmontessori.org\r\nSubject: Malicious Email',
-        'admin@spicebushmontessori.org\n\nMalicious body content',
+        'admin@spicebushmontessori.org\n\nMalicious body content'
       ];
       
       injectionAttempts.forEach(email => {
@@ -109,7 +109,7 @@ describe('Magic Link Security Validation', () => {
         'тест@example.com',
         '测试@example.com',
         'admin@spicebushmontessori.org\u0000',
-        'admin@spicebushmontessori.org\uFEFF',
+        'admin@spicebushmontessori.org\uFEFF'
       ];
       
       unicodeEmails.forEach(email => {
@@ -126,7 +126,7 @@ describe('Magic Link Security Validation', () => {
         'director@spicebushmontessori.org',
         'evey@eveywinters.com',
         'ADMIN@SPICEBUSHMONTESSORI.ORG', // Case insensitive
-        ' admin@spicebushmontessori.org ', // Whitespace handling
+        ' admin@spicebushmontessori.org ' // Whitespace handling
       ];
       
       authorizedEmails.forEach(email => {
@@ -143,7 +143,7 @@ describe('Magic Link Security Validation', () => {
         'teacher@spicebushmontessori.org',
         'student@spicebushmontessori.org',
         'hacker@attacker.com',
-        'social.engineer@phishing.com',
+        'social.engineer@phishing.com'
       ];
       
       unauthorizedEmails.forEach(email => {
@@ -157,7 +157,7 @@ describe('Magic Link Security Validation', () => {
         'admin@spicebushmontessori.org.evil.com',
         'admin@sub.spicebushmontessori.org',
         'admin@api.spicebushmontessori.org',
-        'admin@mail.spicebushmontessori.org',
+        'admin@mail.spicebushmontessori.org'
       ];
       
       subdomainAttacks.forEach(email => {
@@ -171,7 +171,7 @@ describe('Magic Link Security Validation', () => {
         'admin@spicebushmοntessori.org', // Greek 'o'
         'admin@spicebushmontessοri.org', // Greek 'o'
         'аdmin@spicebushmontessori.org', // Cyrillic 'a'
-        'admin@spicebushmontessоri.org', // Cyrillic 'o'
+        'admin@spicebushmontessоri.org' // Cyrillic 'o'
       ];
       
       homographAttacks.forEach(email => {
@@ -193,7 +193,7 @@ describe('Magic Link Security Validation', () => {
         'token123', // Predictable
         '../../../etc/passwd', // Path traversal
         '<script>alert("xss")</script>', // XSS
-        'SELECT * FROM users', // SQL injection
+        'SELECT * FROM users' // SQL injection
       ];
       
       invalidTokens.forEach(token => {
@@ -212,7 +212,7 @@ describe('Magic Link Security Validation', () => {
       const mockToken = {
         value: 'valid-token-string',
         expiresAt: Date.now() + 3600000, // 1 hour from now
-        issuedAt: Date.now(),
+        issuedAt: Date.now()
       };
       
       // Valid token
@@ -221,7 +221,7 @@ describe('Magic Link Security Validation', () => {
       // Expired token
       const expiredToken = {
         ...mockToken,
-        expiresAt: Date.now() - 1000, // 1 second ago
+        expiresAt: Date.now() - 1000 // 1 second ago
       };
       
       expect(expiredToken.expiresAt > Date.now()).toBe(false);
@@ -237,7 +237,7 @@ describe('Magic Link Security Validation', () => {
         sessions.set(sessionId, {
           userId,
           createdAt: Date.now(),
-          lastAccess: Date.now(),
+          lastAccess: Date.now()
         });
         return sessionId;
       };
@@ -273,7 +273,7 @@ describe('Magic Link Security Validation', () => {
           validRequests.push(now);
           this.requests.set(email, validRequests);
           return true;
-        },
+        }
       };
       
       const testEmail = 'admin@spicebushmontessori.org';
@@ -291,7 +291,7 @@ describe('Magic Link Security Validation', () => {
       const emails = [
         'admin@spicebushmontessori.org',
         'director@spicebushmontessori.org',
-        'evey@eveywinters.com',
+        'evey@eveywinters.com'
       ];
       
       // Simulate attack across multiple admin emails
@@ -307,7 +307,7 @@ describe('Magic Link Security Validation', () => {
           if (!this.isGloballyAllowed()) return false;
           this.totalRequests++;
           return true;
-        },
+        }
       };
       
       // Should allow some requests
@@ -326,7 +326,7 @@ describe('Magic Link Security Validation', () => {
       const validRedirects = [
         'http://localhost:3000/auth/callback',
         'https://spicebushmontessori.org/auth/callback',
-        'https://admin.spicebushmontessori.org/auth/callback',
+        'https://admin.spicebushmontessori.org/auth/callback'
       ];
       
       const invalidRedirects = [
@@ -337,7 +337,7 @@ describe('Magic Link Security Validation', () => {
         'file:///etc/passwd',
         'ftp://attacker.com/malware',
         '//evil.com/phishing',
-        'https://spicebushmontessori.org.evil.com/callback',
+        'https://spicebushmontessori.org.evil.com/callback'
       ];
       
       const isValidRedirect = (url: string) => {
@@ -346,7 +346,7 @@ describe('Magic Link Security Validation', () => {
           const allowedHosts = [
             'localhost',
             'spicebushmontessori.org',
-            'admin.spicebushmontessori.org',
+            'admin.spicebushmontessori.org'
           ];
           const allowedProtocols = ['http:', 'https:'];
           
@@ -372,7 +372,7 @@ describe('Magic Link Security Validation', () => {
         '/auth/callback?redirect=//evil.com',
         '/auth/callback?redirect=\\evil.com',
         '/auth/callback?redirect=%2F%2Fevil.com',
-        '/auth/callback?redirect=javascript:alert("xss")',
+        '/auth/callback?redirect=javascript:alert("xss")'
       ];
       
       const sanitizeRedirect = (redirectParam: string) => {
@@ -407,7 +407,7 @@ describe('Magic Link Security Validation', () => {
       const validOrigins = [
         'http://localhost:3000',
         'https://spicebushmontessori.org',
-        'https://admin.spicebushmontessori.org',
+        'https://admin.spicebushmontessori.org'
       ];
       
       const invalidOrigins = [
@@ -415,7 +415,7 @@ describe('Magic Link Security Validation', () => {
         'https://phishing.com',
         'https://spicebushmontessori.org.evil.com',
         'null',
-        '',
+        ''
       ];
       
       const isValidOrigin = (origin: string) => {
@@ -434,14 +434,14 @@ describe('Magic Link Security Validation', () => {
     it('should require proper referrer headers', () => {
       const validReferrers = [
         'https://spicebushmontessori.org/auth/magic-login',
-        'http://localhost:3000/auth/magic-login',
+        'http://localhost:3000/auth/magic-login'
       ];
       
       const invalidReferrers = [
         'https://evil.com/fake-login',
         'https://phishing.com/admin',
         '',
-        'null',
+        'null'
       ];
       
       const isValidReferrer = (referrer: string) => {
@@ -494,7 +494,7 @@ describe('Magic Link Security Validation', () => {
         'password123',
         'token-abc123',
         'session-xyz789',
-        'admin@spicebushmontessori.org',
+        'admin@spicebushmontessori.org'
       ];
       
       const mockLogger = {
@@ -509,7 +509,7 @@ describe('Magic Link Security Validation', () => {
               log.toLowerCase().includes(sensitive.toLowerCase())
             )
           );
-        },
+        }
       };
       
       // Simulate logging
@@ -531,7 +531,7 @@ describe('Magic Link Security Validation', () => {
         
         decrypt(encrypted: string): string {
           return Buffer.from(encrypted, 'base64').toString();
-        },
+        }
       };
       
       const sensitiveData = 'user-session-token';
@@ -553,7 +553,7 @@ describe('Magic Link Security Validation', () => {
         SECURE_COOKIES: true,
         HTTPS_ONLY: true,
         STRICT_TRANSPORT_SECURITY: true,
-        SESSION_TIMEOUT: 3600000, // 1 hour
+        SESSION_TIMEOUT: 3600000 // 1 hour
       };
       
       // Production should use secure settings
@@ -567,7 +567,7 @@ describe('Magic Link Security Validation', () => {
       const mockEnv = {
         PUBLIC_SUPABASE_URL: 'https://project.supabase.co',
         PUBLIC_SUPABASE_ANON_KEY: 'eyJ...valid-key',
-        ADMIN_EMAILS: 'admin@spicebushmontessori.org,director@spicebushmontessori.org',
+        ADMIN_EMAILS: 'admin@spicebushmontessori.org,director@spicebushmontessori.org'
       };
       
       const validateEnv = (env: any) => {

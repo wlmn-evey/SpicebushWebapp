@@ -1,0 +1,92 @@
+{
+  "$ref": "#/definitions/school-info",
+  "definitions": {
+    "school-info": {
+      "type": "object",
+      "properties": {
+        "phone": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "address": {
+          "type": "object",
+          "properties": {
+            "street": {
+              "type": "string"
+            },
+            "city": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "zip": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "street",
+            "city",
+            "state",
+            "zip"
+          ],
+          "additionalProperties": false
+        },
+        "agesServed": {
+          "type": "string"
+        },
+        "schoolYear": {
+          "type": "string"
+        },
+        "extendedCareUntil": {
+          "type": "string"
+        },
+        "socialMedia": {
+          "type": "object",
+          "properties": {
+            "facebook": {
+              "type": "string",
+              "format": "uri"
+            },
+            "instagram": {
+              "type": "string",
+              "format": "uri"
+            },
+            "twitter": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "additionalProperties": false
+        },
+        "founded": {
+          "type": "number"
+        },
+        "ein": {
+          "type": "string"
+        },
+        "accreditation": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "phone",
+        "email",
+        "address",
+        "agesServed",
+        "schoolYear"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -10,13 +10,13 @@ import FormField from '../../../components/forms/FormField.astro';
 import TextInput from '../../../components/forms/TextInput.astro';
 import TextArea from '../../../components/forms/TextArea.astro';
 import SelectField from '../../../components/forms/SelectField.astro';
-import { checkAdminAuth } from '../../../lib/admin-auth-check';
-import { getEntry } from '../../../lib/content-db';
+import { checkAdminAuth } from '@lib/admin-auth-check';
+import { getEntry } from '@lib/content-db';
 
 // Check authentication
 const { isAuthenticated } = await checkAdminAuth(Astro);
 if (!isAuthenticated) {
-  return Astro.redirect('/auth/login?redirect=' + Astro.url.pathname);
+  return Astro.redirect(`/auth/login?redirect=${  Astro.url.pathname}`);
 }
 
 // Get slug from URL
@@ -47,7 +47,7 @@ if (Astro.request.method === 'POST') {
       close_time: formData.get('close_time')?.toString() || '',
       is_closed: formData.get('is_closed') === 'on',
       note: formData.get('note')?.toString().trim() || '',
-      order: parseInt(formData.get('order')?.toString()) || 1,
+      order: parseInt(formData.get('order')?.toString()) || 1
     };
     
     // Validation
@@ -101,7 +101,7 @@ if (Astro.request.method === 'POST') {
       const response = await fetch(apiEndpoint, {
         method: isEdit ? 'PUT' : 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(contentData)
       });
@@ -127,7 +127,7 @@ const defaultData = hoursEntry ? {
   close_time: hoursEntry.data.close_time || '15:00',
   is_closed: hoursEntry.data.is_closed || false,
   note: hoursEntry.data.note || '',
-  order: hoursEntry.data.order || 1,
+  order: hoursEntry.data.order || 1
 } : {
   day: '',
   slug: '',
@@ -135,7 +135,7 @@ const defaultData = hoursEntry ? {
   close_time: '15:00',
   is_closed: false,
   note: '',
-  order: 1,
+  order: 1
 };
 
 // Day options
@@ -147,7 +147,7 @@ const dayOptions = [
   { value: 'Thursday', label: 'Thursday' },
   { value: 'Friday', label: 'Friday' },
   { value: 'Saturday', label: 'Saturday' },
-  { value: 'Sunday', label: 'Sunday' },
+  { value: 'Sunday', label: 'Sunday' }
 ];
 
 // Order options (1=Monday, 7=Sunday)
@@ -158,7 +158,7 @@ const orderOptions = [
   { value: '4', label: '4 (Thursday)' },
   { value: '5', label: '5 (Friday)' },
   { value: '6', label: '6 (Saturday)' },
-  { value: '7', label: '7 (Sunday)' },
+  { value: '7', label: '7 (Sunday)' }
 ];
 
 const pageTitle = isEdit ? `Edit: ${hoursEntry?.data.day} Hours` : 'New Day Schedule';

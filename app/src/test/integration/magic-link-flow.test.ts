@@ -16,7 +16,7 @@ beforeEach(() => {
     </html>`, {
     url: 'http://localhost:3000',
     pretendToBeVisual: true,
-    resources: 'usable',
+    resources: 'usable'
   });
   
   mockWindow = dom.window as Window & typeof globalThis;
@@ -37,23 +37,23 @@ const mockSupabaseAuth = {
   getSession: vi.fn(),
   exchangeCodeForSession: vi.fn(),
   signOut: vi.fn(),
-  onAuthStateChange: vi.fn(),
+  onAuthStateChange: vi.fn()
 };
 
 const mockSupabase = {
-  auth: mockSupabaseAuth,
+  auth: mockSupabaseAuth
 };
 
 // Mock the Supabase module
-vi.mock('../../lib/supabase', () => ({
+vi.mock('@lib/supabase', () => ({
   supabase: mockSupabase,
   auth: {
     signInWithMagicLink: async (email: string) => {
       return mockSupabaseAuth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
       });
     },
     getCurrentUser: () => mockSupabaseAuth.getUser(),
@@ -66,13 +66,13 @@ vi.mock('../../lib/supabase', () => ({
       const adminEmails = [
         'admin@spicebushmontessori.org',
         'director@spicebushmontessori.org',
-        'evey@eveywinters.com',
+        'evey@eveywinters.com'
       ];
       
       return adminEmails.includes(user.email.toLowerCase());
     },
-    signOut: () => mockSupabaseAuth.signOut(),
-  },
+    signOut: () => mockSupabaseAuth.signOut()
+  }
 }));
 
 describe('Magic Link Integration Flow', () => {
@@ -87,19 +87,19 @@ describe('Magic Link Integration Flow', () => {
       // Step 1: User requests magic link
       mockSupabaseAuth.signInWithOtp.mockResolvedValue({
         data: { session: null, user: null },
-        error: null,
+        error: null
       });
       
       // Simulate magic link request
-      const { auth } = await import('../../lib/supabase');
+      const { auth } = await import('@lib/supabase');
       const magicLinkResult = await auth.signInWithMagicLink(testEmail);
       
       expect(magicLinkResult.error).toBeNull();
       expect(mockSupabaseAuth.signInWithOtp).toHaveBeenCalledWith({
         email: testEmail,
         options: {
-          emailRedirectTo: 'http://localhost:3000/auth/callback',
-        },
+          emailRedirectTo: 'http://localhost:3000/auth/callback'
+        }
       });
       
       // Step 2: User clicks magic link (simulated)
@@ -109,19 +109,19 @@ describe('Magic Link Integration Flow', () => {
         user: {
           id: 'user-123',
           email: testEmail,
-          email_confirmed_at: new Date().toISOString(),
+          email_confirmed_at: new Date().toISOString()
         },
-        expires_at: Date.now() + 3600000,
+        expires_at: Date.now() + 3600000
       };
       
       mockSupabaseAuth.getSession.mockResolvedValue({
         data: { session: mockSession },
-        error: null,
+        error: null
       });
       
       mockSupabaseAuth.getUser.mockResolvedValue({
         data: { user: mockSession.user },
-        error: null,
+        error: null
       });
       
       // Step 3: Verify authentication status
@@ -142,10 +142,10 @@ describe('Magic Link Integration Flow', () => {
       // Step 1: Magic link sent successfully
       mockSupabaseAuth.signInWithOtp.mockResolvedValue({
         data: { session: null, user: null },
-        error: null,
+        error: null
       });
       
-      const { auth } = await import('../../lib/supabase');
+      const { auth } = await import('@lib/supabase');
       await auth.signInWithMagicLink(nonAdminEmail);
       
       // Step 2: User authenticated but not admin
@@ -154,14 +154,14 @@ describe('Magic Link Integration Flow', () => {
         user: {
           id: 'user-456',
           email: nonAdminEmail,
-          email_confirmed_at: new Date().toISOString(),
+          email_confirmed_at: new Date().toISOString()
         },
-        expires_at: Date.now() + 3600000,
+        expires_at: Date.now() + 3600000
       };
       
       mockSupabaseAuth.getUser.mockResolvedValue({
         data: { user: mockSession.user },
-        error: null,
+        error: null
       });
       
       // Step 3: Should not be admin
@@ -215,23 +215,23 @@ describe('Magic Link Integration Flow', () => {
       const mockSession = {
         access_token: 'persistent-token',
         user: { id: 'user-123', email: testEmail },
-        expires_at: Date.now() + 3600000,
+        expires_at: Date.now() + 3600000
       };
       
       // First call returns session
       mockSupabaseAuth.getSession.mockResolvedValueOnce({
         data: { session: mockSession },
-        error: null,
+        error: null
       });
       
-      const { auth } = await import('../../lib/supabase');
+      const { auth } = await import('@lib/supabase');
       const session1 = await auth.getCurrentSession();
       expect(session1).toEqual(mockSession);
       
       // Second call should also return session (persistence)
       mockSupabaseAuth.getSession.mockResolvedValueOnce({
         data: { session: mockSession },
-        error: null,
+        error: null
       });
       
       const session2 = await auth.getCurrentSession();
@@ -245,19 +245,19 @@ describe('Magic Link Integration Flow', () => {
           session: {
             access_token: 'expired-token',
             user: { id: 'user-123', email: 'admin@spicebushmontessori.org' },
-            expires_at: Date.now() - 1000, // Expired
-          },
+            expires_at: Date.now() - 1000 // Expired
+          }
         },
-        error: null,
+        error: null
       });
       
       // Second call returns no session (expired)
       mockSupabaseAuth.getSession.mockResolvedValueOnce({
         data: { session: null },
-        error: null,
+        error: null
       });
       
-      const { auth } = await import('../../lib/supabase');
+      const { auth } = await import('@lib/supabase');
       const session = await auth.getCurrentSession();
       expect(session).toBeNull();
     });
@@ -271,7 +271,7 @@ describe('Magic Link Integration Flow', () => {
         get: () => cookieValue,
         set: (value: string) => {
           cookieValue = value;
-        },
+        }
       });
       
       // Simulate setting admin cookie (from callback.astro)
@@ -294,7 +294,7 @@ describe('Magic Link Integration Flow', () => {
     it('should handle invalid magic link tokens', async () => {
       mockSupabaseAuth.exchangeCodeForSession.mockResolvedValue({
         data: { session: null },
-        error: { message: 'Invalid or expired link' },
+        error: { message: 'Invalid or expired link' }
       });
       
       const result = await mockSupabaseAuth.exchangeCodeForSession('invalid-code');
@@ -307,7 +307,7 @@ describe('Magic Link Integration Flow', () => {
         new Error('Failed to fetch')
       );
       
-      const { auth } = await import('../../lib/supabase');
+      const { auth } = await import('@lib/supabase');
       
       await expect(
         auth.signInWithMagicLink('admin@spicebushmontessori.org')
@@ -317,10 +317,10 @@ describe('Magic Link Integration Flow', () => {
     it('should handle Supabase service downtime', async () => {
       mockSupabaseAuth.signInWithOtp.mockResolvedValue({
         data: null,
-        error: { message: 'Service temporarily unavailable' },
+        error: { message: 'Service temporarily unavailable' }
       });
       
-      const { auth } = await import('../../lib/supabase');
+      const { auth } = await import('@lib/supabase');
       const result = await auth.signInWithMagicLink('admin@spicebushmontessori.org');
       
       expect(result.error.message).toContain('temporarily unavailable');
@@ -376,16 +376,16 @@ describe('Magic Link Integration Flow', () => {
       // First few requests succeed
       mockSupabaseAuth.signInWithOtp.mockResolvedValueOnce({
         data: { session: null, user: null },
-        error: null,
+        error: null
       });
       
       // Subsequent requests hit rate limit
       mockSupabaseAuth.signInWithOtp.mockResolvedValue({
         data: null,
-        error: { message: 'Email rate limit exceeded' },
+        error: { message: 'Email rate limit exceeded' }
       });
       
-      const { auth } = await import('../../lib/supabase');
+      const { auth } = await import('@lib/supabase');
       
       // First request succeeds
       const result1 = await auth.signInWithMagicLink(testEmail);
@@ -397,16 +397,16 @@ describe('Magic Link Integration Flow', () => {
     });
 
     it('should validate admin email before proceeding', async () => {
-      const { isAdminEmail } = await import('../../lib/admin-config');
+      const { isAdminEmail } = await import('@lib/admin-config');
       
       const validEmails = [
         'admin@spicebushmontessori.org',
-        'director@spicebushmontessori.org',
+        'director@spicebushmontessori.org'
       ];
       
       const invalidEmails = [
         'parent@example.com',
-        'attacker@evil.com',
+        'attacker@evil.com'
       ];
       
       validEmails.forEach(email => {
@@ -434,7 +434,7 @@ describe('Integration with MailHog (Development)', () => {
     const expectedEmailPattern = {
       to: testEmail,
       subject: /sign.*in|magic.*link|access/i,
-      body: /auth\/update-password.*type=magiclink/,
+      body: /auth\/update-password.*type=magiclink/
     };
     
     // Mock MailHog API response
@@ -442,8 +442,8 @@ describe('Integration with MailHog (Development)', () => {
       To: [{ Mailbox: 'admin', Domain: 'spicebushmontessori.org' }],
       Subject: 'Confirm your signup',
       Body: {
-        Text: 'Click here to sign in: http://localhost:3000/auth/update-password?type=magiclink&token=test-token',
-      },
+        Text: 'Click here to sign in: http://localhost:3000/auth/update-password?type=magiclink&token=test-token'
+      }
     };
     
     expect(mockMailHogEmail.To[0].Mailbox).toBe('admin');

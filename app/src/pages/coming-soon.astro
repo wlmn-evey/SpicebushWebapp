@@ -1,7 +1,8 @@
 ---
 export const prerender = false;
 
-import { getEntry, getCollection, getEntries, getSchoolInfo } from '../lib/content-db';
+import { getEntry, getCollection, getEntries, getSchoolInfo } from '@lib/content-db';
+import { Fragment } from 'astro/jsx-runtime';
 
 // Get all the data we need
 const schoolInfo = await getSchoolInfo();
@@ -33,21 +34,21 @@ function getTuitionRange(programId: string) {
 }
 
 // Constants
-const applicationLink = "https://www.transparentclassroom.com/s/4693/online_applications/new";
+const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_applications/new';
 ---
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spicebush Montessori School - Enrolling Now for Fall 2025</title>
-  <meta name="description" content="Spicebush Montessori School in Glen Mills, PA. Inclusive Montessori education for ages 3-6 with income-based tuition. Schedule a tour today!">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spicebush Montessori School - Enrolling Now for Fall 2025</title>
+    <meta name="description" content="Spicebush Montessori School in Glen Mills, PA. Inclusive Montessori education for ages 3-6 with income-based tuition. Schedule a tour today!">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
     * {
       margin: 0;
       padding: 0;
@@ -854,10 +855,10 @@ const applicationLink = "https://www.transparentclassroom.com/s/4693/online_appl
     .success-message.show {
       display: block;
     }
-  </style>
-</head>
-<body>
-  <a href="#main" class="skip-to-content">Skip to content</a>
+    </style>
+  </head>
+  <body>
+    <a href="#main" class="skip-to-content">Skip to content</a>
 
   <!-- Header Section -->
   <header class="header">
@@ -882,7 +883,7 @@ const applicationLink = "https://www.transparentclassroom.com/s/4693/online_appl
           </svg>
         </div>
         <h3>Ages Served</h3>
-        <p><strong>{schoolInfo?.data.agesServed || "3-6 years old"}</strong></p>
+        <p><strong>{schoolInfo?.data.agesServed || '3-6 years old'}</strong></p>
         <p>Preschool & Primary Programs</p>
       </div>
 
@@ -983,7 +984,7 @@ const applicationLink = "https://www.transparentclassroom.com/s/4693/online_appl
             </div>
           </div>
         )) : (
-          <>
+          <Fragment>
             <div class="testimonial-card">
               <div class="testimonial-rating">
                 <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
@@ -1008,7 +1009,7 @@ const applicationLink = "https://www.transparentclassroom.com/s/4693/online_appl
               <div class="testimonial-author">David L.</div>
               <div class="testimonial-role">Parent of 5-year-old</div>
             </div>
-          </>
+          </Fragment>
         )}
       </div>
     </section>
@@ -1258,7 +1259,7 @@ const applicationLink = "https://www.transparentclassroom.com/s/4693/online_appl
   <!-- Footer -->
   <footer class="footer">
     <p>© 2025 Spicebush Montessori School</p>
-    <p>A 501(c)(3) Non-Profit Organization | EIN: {schoolInfo?.data.ein || "88-0565930"}</p>
+    <p>A 501(c)(3) Non-Profit Organization | EIN: {schoolInfo?.data.ein || '88-0565930'}</p>
     <div class="footer-links">
       <a href="/non-discrimination-policy">Non-Discrimination Policy</a>
       <a href="/privacy-policy">Privacy Policy</a>
@@ -1325,5 +1326,5 @@ const applicationLink = "https://www.transparentclassroom.com/s/4693/online_appl
       });
     });
   </script>
-</body>
+  </body>
 </html>

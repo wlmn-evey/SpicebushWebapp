@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isTestEmail, isValidTestDomain } from '../../lib/development-helpers';
+import { isTestEmail, isValidTestDomain } from '@lib/development-helpers';
 
 describe('Development Helpers', () => {
   describe('isTestEmail', () => {

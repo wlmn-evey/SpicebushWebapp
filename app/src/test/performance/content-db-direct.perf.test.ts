@@ -4,7 +4,7 @@ import {
   getCollection,
   getEntry,
   getSetting
-} from '../../lib/content-db-direct';
+} from '@lib/content-db-direct';
 
 describe('content-db-direct Performance Tests', () => {
   const iterations = 100;

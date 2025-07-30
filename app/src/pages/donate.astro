@@ -2,8 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import DonationForm from '../components/DonationForm';
-import DonationOptions from '../components/DonationOptions.astro';
+import SimplifiedDonationForm from '../components/SimplifiedDonationForm';
 import { getEntry } from 'astro:content';
 
 const schoolInfo = await getEntry('school-info', 'general');
@@ -94,17 +93,8 @@ const schoolInfo = await getEntry('school-info', 'general');
     <section class="py-16 lg:py-24 bg-gray-50">
       <div class="container mx-auto px-4">
         <div class="max-w-2xl mx-auto">
-          <h2 class="text-3xl lg:text-4xl font-heading font-bold text-earth-brown mb-8 text-center">
-            Make Your Gift Today
-          </h2>
-          
-          <!-- Donation Options -->
-          <DonationOptions />
-          
-          <!-- Donation Form -->
-          <div class="bg-white rounded-lg shadow-lg p-8 mt-8">
-            <DonationForm client:load />
-          </div>
+          <!-- Simplified Donation Form -->
+          <SimplifiedDonationForm client:visible />
 
           <!-- Tax Information -->
           <div class="mt-8 p-6 bg-sunlight-gold/10 rounded-lg">
@@ -115,7 +105,7 @@ const schoolInfo = await getEntry('school-info', 'general');
               You will receive a receipt for your records.
             </p>
             <p class="text-sm text-gray-600 mt-2">
-              EIN: {schoolInfo?.data.ein || "88-0565930"}
+              EIN: {schoolInfo?.data.ein || '88-0565930'}
             </p>
           </div>
         </div>

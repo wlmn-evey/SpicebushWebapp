@@ -189,13 +189,14 @@ import { supabase } from '@/lib/supabase-client';
   // Initialize coming soon toggle state
   async function initToggle() {
     try {
-      const response = await fetch('/api/cms/settings/coming_soon');
+      const response = await fetch('/api/admin/settings');
       const data = await response.json();
       
       const toggle = document.getElementById('coming-soon-toggle') as HTMLInputElement;
-      if (toggle && data.value) {
-        toggle.checked = data.value.enabled || false;
-        toggle.dataset.currentState = String(data.value.enabled || false);
+      if (toggle && data.coming_soon_enabled !== undefined) {
+        const enabled = data.coming_soon_enabled === true || data.coming_soon_enabled === 'true';
+        toggle.checked = enabled;
+        toggle.dataset.currentState = String(enabled);
       }
     } catch (error) {
       console.error('Failed to load coming soon state:', error);
@@ -210,17 +211,14 @@ import { supabase } from '@/lib/supabase-client';
     showStatus('Updating coming soon mode...', 'loading');
     
     try {
-      const response = await fetch('/api/cms/settings/coming_soon', {
-        method: 'PUT',
+      const response = await fetch('/api/admin/settings', {
+        method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          enabled,
-          launchDate: '2025-02-01',
-          headline: "We're updating our site",
-          message: "While we work on bringing you an improved experience, you can still apply for enrollment!"
-        }),
+          coming_soon_enabled: enabled
+        })
       });
 
       if (!response.ok) throw new Error('Failed to update setting');
@@ -240,20 +238,20 @@ import { supabase } from '@/lib/supabase-client';
     }
   });
 
-  // Quick action functions
+  // Quick action functions - fixed to use existing working pages
   window.quickPostAnnouncement = function() {
-    showStatus('Opening announcement editor...', 'loading');
-    window.location.href = '/admin/cms#/collections/announcements/new';
+    showStatus('Opening communications center...', 'loading');
+    window.location.href = '/admin/communications';
   };
 
   window.updateSchoolHours = function() {
-    showStatus('Opening hours editor...', 'loading');
-    window.location.href = '/admin/cms#/collections/hours';
+    showStatus('Opening hours management...', 'loading');
+    window.location.href = '/admin/hours/edit';
   };
 
   window.addStaffMember = function() {
-    showStatus('Opening staff editor...', 'loading');
-    window.location.href = '/admin/cms#/collections/staff/new';
+    showStatus('Opening staff management...', 'loading');
+    window.location.href = '/admin/staff/edit';
   };
 
   // Show status message

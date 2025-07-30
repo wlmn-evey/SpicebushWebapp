@@ -6,13 +6,13 @@
  * Provides quick actions for editing, deleting, and changing post status.
  */
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { checkAdminAuth } from '../../../lib/admin-auth-check';
-import { getCollection } from '../../../lib/content-db';
+import { checkAdminAuth } from '@lib/admin-auth-check';
+import { getCollection } from '@lib/content-db';
 
 // Check authentication
 const { isAuthenticated } = await checkAdminAuth(Astro);
 if (!isAuthenticated) {
-  return Astro.redirect('/auth/login?redirect=' + Astro.url.pathname);
+  return Astro.redirect(`/auth/login?redirect=${  Astro.url.pathname}`);
 }
 
 // Get search and filter parameters
@@ -48,23 +48,23 @@ posts.sort((a, b) => {
   let aValue, bValue;
   
   switch (sortBy) {
-    case 'title':
-      aValue = a.data.title.toLowerCase();
-      bValue = b.data.title.toLowerCase();
-      break;
-    case 'author':
-      aValue = a.data.author?.toLowerCase() || '';
-      bValue = b.data.author?.toLowerCase() || '';
-      break;
-    case 'status':
-      aValue = a.data.status || 'draft';
-      bValue = b.data.status || 'draft';
-      break;
-    case 'date':
-    default:
-      aValue = new Date(a.data.publish_date || a.data.created_at);
-      bValue = new Date(b.data.publish_date || b.data.created_at);
-      break;
+  case 'title':
+    aValue = a.data.title.toLowerCase();
+    bValue = b.data.title.toLowerCase();
+    break;
+  case 'author':
+    aValue = a.data.author?.toLowerCase() || '';
+    bValue = b.data.author?.toLowerCase() || '';
+    break;
+  case 'status':
+    aValue = a.data.status || 'draft';
+    bValue = b.data.status || 'draft';
+    break;
+  case 'date':
+  default:
+    aValue = new Date(a.data.publish_date || a.data.created_at);
+    bValue = new Date(b.data.publish_date || b.data.created_at);
+    break;
   }
   
   if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
@@ -86,7 +86,7 @@ function formatDate(dateString: string): string {
 
 // Truncate text helper
 function truncate(text: string, length: number): string {
-  return text.length > length ? text.substring(0, length) + '...' : text;
+  return text.length > length ? `${text.substring(0, length)  }...` : text;
 }
 ---
 
@@ -336,21 +336,21 @@ function truncate(text: string, length: number): string {
         fetch('/api/cms/entry', {
           method: 'DELETE',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({ type: 'blog', slug })
         })
-        .then(response => {
-          if (response.ok) {
-            window.location.reload();
-          } else {
+          .then(response => {
+            if (response.ok) {
+              window.location.reload();
+            } else {
+              alert('Failed to delete post. Please try again.');
+            }
+          })
+          .catch(error => {
+            console.error('Delete error:', error);
             alert('Failed to delete post. Please try again.');
-          }
-        })
-        .catch(error => {
-          console.error('Delete error:', error);
-          alert('Failed to delete post. Please try again.');
-        });
+          });
       }
     }
   });

@@ -155,17 +155,17 @@ export async function getStorageProvider(): Promise<StorageProvider> {
   const settings = await getStorageSettings();
   
   switch (settings.provider) {
-    case 'gcs':
-      return new GoogleCloudStorage();
-    case 'r2':
-      // Future: return new CloudflareR2Storage();
-      return new LocalStorage(STORAGE_CONFIG.local.uploadDir);
-    case 'b2':
-      // Future: return new BackblazeB2Storage();
-      return new LocalStorage(STORAGE_CONFIG.local.uploadDir);
-    case 'local':
-    default:
-      return new LocalStorage(STORAGE_CONFIG.local.uploadDir);
+  case 'gcs':
+    return new GoogleCloudStorage();
+  case 'r2':
+    // Future: return new CloudflareR2Storage();
+    return new LocalStorage(STORAGE_CONFIG.local.uploadDir);
+  case 'b2':
+    // Future: return new BackblazeB2Storage();
+    return new LocalStorage(STORAGE_CONFIG.local.uploadDir);
+  case 'local':
+  default:
+    return new LocalStorage(STORAGE_CONFIG.local.uploadDir);
   }
 }
 
@@ -194,7 +194,7 @@ export async function handleMediaUpload(
       .from('media')
       .insert({
         filename: file.originalname,
-        url: url,
+        url,
         size: file.size,
         mimetype: file.mimetype,
         uploaded_by: userId,

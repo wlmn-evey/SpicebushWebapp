@@ -1,0 +1,448 @@
+---
+/**
+ * Photo Upload Page
+ * 
+ * Admin interface for uploading photos to the media library.
+ * Uses the existing ImageUpload component and follows established
+ * admin interface patterns.
+ */
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ImageUpload from '../../../components/forms/ImageUpload.astro';
+import { checkAdminAuth } from '@lib/admin-auth-check';
+import { validateForm, validators } from '@lib/form-validation';
+
+// Check authentication
+const { isAuthenticated } = await checkAdminAuth(Astro);
+if (!isAuthenticated) {
+  return Astro.redirect(`/auth/login?redirect=${Astro.url.pathname}`);
+}
+
+// Handle form submission
+let uploadResult: { success: boolean; message?: string; error?: string } | null = null;
+let formErrors: Record<string, string> = {};
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    
+    // Validate form data
+    const validationSchema = {
+      photo_title: [validators.required, validators.maxLength(200)],
+      photo_description: [validators.maxLength(500)],
+      photo_tags: [validators.maxLength(200)]
+    };
+    
+    formErrors = validateForm(formData, validationSchema);
+    
+    // Check if photo was uploaded
+    const photoUrl = formData.get('photo_url')?.toString();
+    if (!photoUrl) {
+      formErrors.photo_url = 'Please upload a photo';
+    }
+    
+    if (Object.keys(formErrors).length === 0) {
+      // If using the ImageUpload component, the file is already uploaded
+      // We just need to update the metadata in the database
+      const { supabase } = await import('@lib/supabase');
+      
+      // Get the media record by URL and update it with metadata
+      const { data: mediaRecord, error: fetchError } = await supabase
+        .from('media')
+        .select('*')
+        .eq('url', photoUrl)
+        .single();
+      
+      if (fetchError || !mediaRecord) {
+        throw new Error('Could not find uploaded photo record');
+      }
+      
+      // Update with metadata
+      const { error: updateError } = await supabase
+        .from('media')
+        .update({
+          title: formData.get('photo_title')?.toString(),
+          description: formData.get('photo_description')?.toString(),
+          tags: formData.get('photo_tags')?.toString()?.split(',').map(tag => tag.trim()).filter(Boolean),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', mediaRecord.id);
+      
+      if (updateError) {
+        throw updateError;
+      }
+      
+      uploadResult = { 
+        success: true, 
+        message: 'Photo uploaded and saved successfully!' 
+      };
+      
+      // Redirect to management page on success
+      return Astro.redirect('/admin/photos?success=Photo uploaded successfully');
+    }
+  } catch (error) {
+    console.error('Photo upload error:', error);
+    uploadResult = { 
+      success: false, 
+      error: 'Failed to save photo. Please try again.' 
+    };
+  }
+}
+
+// Get form values for repopulation
+const formValues = {
+  photo_title: '',
+  photo_description: '',
+  photo_tags: '',
+  photo_url: ''
+};
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    formValues.photo_title = formData.get('photo_title')?.toString() || '';
+    formValues.photo_description = formData.get('photo_description')?.toString() || '';
+    formValues.photo_tags = formData.get('photo_tags')?.toString() || '';
+    formValues.photo_url = formData.get('photo_url')?.toString() || '';
+  } catch (e) {
+    // Ignore form data errors for GET requests
+  }
+}
+---
+
+<AdminLayout 
+  title="Upload Photos" 
+  description="Add new photos to the media library with metadata and organization"
+>
+  <div class="photo-upload">
+    <!-- Header with navigation -->
+    <div class="page-header">
+      <div class="page-header__content">
+        <nav class="breadcrumb">
+          <a href="/admin" class="breadcrumb-link">Admin</a>
+          <span class="breadcrumb-separator">→</span>
+          <a href="/admin/photos" class="breadcrumb-link">Photos</a>
+          <span class="breadcrumb-separator">→</span>
+          <span class="breadcrumb-current">Upload</span>
+        </nav>
+        <h1 class="page-title">Upload Photos</h1>
+        <p class="page-description">
+          Upload new photos to the media library. All uploaded photos will be available for use throughout the website.
+        </p>
+      </div>
+      <div class="page-header__actions">
+        <a href="/admin/photos" class="btn btn--secondary">
+          <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Photos
+        </a>
+      </div>
+    </div>
+
+    <!-- Status Messages -->
+    {uploadResult && (
+      <div class={`status-message ${uploadResult.success ? 'status-message--success' : 'status-message--error'}`} role="alert">
+        {uploadResult.success ? uploadResult.message : uploadResult.error}
+      </div>
+    )}
+    
+    <!-- Upload Form -->
+    <div class="upload-form-container">
+      <form method="POST" class="upload-form" enctype="multipart/form-data">
+        <!-- Photo Upload Section -->
+        <div class="form-section">
+          <div class="form-section__header">
+            <h2 class="section-title">
+              <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Photo Upload
+            </h2>
+            <p class="section-description">
+              Select and upload your photo. Supported formats: JPG, PNG, WebP, GIF (max 10MB)
+            </p>
+          </div>
+          
+          <div class="form-field">
+            <ImageUpload
+              name="photo_url"
+              value={formValues.photo_url}
+              required={true}
+              className="upload-main"
+              uploadEndpoint="/api/media/upload"
+            />
+            {formErrors.photo_url && (
+              <div class="field-error" role="alert">
+                {formErrors.photo_url}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <!-- Photo Metadata Section -->
+        <div class="form-section">
+          <div class="form-section__header">
+            <h2 class="section-title">
+              <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Photo Information
+            </h2>
+            <p class="section-description">
+              Add a title and description to help organize and find your photos
+            </p>
+          </div>
+          
+          <div class="form-grid">
+            <!-- Photo Title -->
+            <div class="form-field">
+              <label for="photo_title" class="field-label">
+                Photo Title *
+              </label>
+              <input
+                type="text"
+                id="photo_title"
+                name="photo_title"
+                value={formValues.photo_title}
+                class={`field-input ${formErrors.photo_title ? 'field-input--error' : ''}`}
+                placeholder="Enter a descriptive title for this photo"
+                maxlength="200"
+                required
+                aria-invalid={formErrors.photo_title ? 'true' : undefined}
+                aria-describedby={formErrors.photo_title ? 'photo_title-error' : undefined}
+              />
+              {formErrors.photo_title && (
+                <div id="photo_title-error" class="field-error" role="alert">
+                  {formErrors.photo_title}
+                </div>
+              )}
+            </div>
+
+            <!-- Photo Description -->
+            <div class="form-field form-field--full">
+              <label for="photo_description" class="field-label">
+                Photo Description
+              </label>
+              <textarea
+                id="photo_description"
+                name="photo_description"
+                class={`field-textarea ${formErrors.photo_description ? 'field-input--error' : ''}`}
+                placeholder="Describe what's in the photo, when it was taken, or any other relevant details"
+                maxlength="500"
+                rows="3"
+                aria-invalid={formErrors.photo_description ? 'true' : undefined}
+                aria-describedby={formErrors.photo_description ? 'photo_description-error' : undefined}
+              >{formValues.photo_description}</textarea>
+              {formErrors.photo_description && (
+                <div id="photo_description-error" class="field-error" role="alert">
+                  {formErrors.photo_description}
+                </div>
+              )}
+            </div>
+
+            <!-- Photo Tags -->
+            <div class="form-field form-field--full">
+              <label for="photo_tags" class="field-label">
+                Tags
+              </label>
+              <input
+                type="text"
+                id="photo_tags"
+                name="photo_tags"
+                value={formValues.photo_tags}
+                class={`field-input ${formErrors.photo_tags ? 'field-input--error' : ''}`}
+                placeholder="classroom, children, outdoor, art, montessori (separate with commas)"
+                maxlength="200"
+                aria-invalid={formErrors.photo_tags ? 'true' : undefined}
+                aria-describedby={formErrors.photo_tags ? 'photo_tags-error photo_tags-help' : 'photo_tags-help'}
+              />
+              <div id="photo_tags-help" class="field-help">
+                Separate multiple tags with commas to help organize and find photos
+              </div>
+              {formErrors.photo_tags && (
+                <div id="photo_tags-error" class="field-error" role="alert">
+                  {formErrors.photo_tags}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary btn--large">
+            <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Upload Photo
+          </button>
+          <a href="/admin/photos" class="btn btn--secondary">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</AdminLayout>
+
+<style>
+  .photo-upload {
+    @apply space-y-8;
+  }
+  
+  /* Page Header */
+  .page-header {
+    @apply flex items-start justify-between;
+  }
+  
+  .page-header__content {
+    @apply flex-1;
+  }
+  
+  .breadcrumb {
+    @apply flex items-center text-sm text-gray-600 mb-4;
+  }
+  
+  .breadcrumb-link {
+    @apply hover:text-gray-900 transition-colors;
+  }
+  
+  .breadcrumb-separator {
+    @apply mx-2;
+  }
+  
+  .breadcrumb-current {
+    @apply text-gray-900 font-medium;
+  }
+  
+  .page-title {
+    @apply text-3xl font-bold text-gray-900 mb-2;
+  }
+  
+  .page-description {
+    @apply text-gray-600 max-w-2xl;
+  }
+  
+  .page-header__actions {
+    @apply flex-shrink-0 ml-6;
+  }
+  
+  /* Status Messages */
+  .status-message {
+    @apply px-4 py-3 rounded-lg border;
+  }
+  
+  .status-message--success {
+    @apply bg-green-50 border-green-200 text-green-800;
+  }
+  
+  .status-message--error {
+    @apply bg-red-50 border-red-200 text-red-800;
+  }
+  
+  /* Upload Form */
+  .upload-form-container {
+    @apply bg-white rounded-lg shadow;
+  }
+  
+  .upload-form {
+    @apply p-8 space-y-8;
+  }
+  
+  /* Form Sections */
+  .form-section {
+    @apply space-y-6;
+  }
+  
+  .form-section__header {
+    @apply pb-4 border-b border-gray-200;
+  }
+  
+  .section-title {
+    @apply flex items-center text-xl font-semibold text-gray-900 mb-2;
+  }
+  
+  .section-icon {
+    @apply w-6 h-6 mr-3 text-blue-600;
+  }
+  
+  .section-description {
+    @apply text-gray-600;
+  }
+  
+  /* Form Grid */
+  .form-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+  }
+  
+  .form-field--full {
+    @apply md:col-span-2;
+  }
+  
+  /* Form Fields */
+  .form-field {
+    @apply space-y-2;
+  }
+  
+  .field-label {
+    @apply block text-sm font-medium text-gray-700;
+  }
+  
+  .field-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+    @apply transition-colors duration-150;
+  }
+  
+  .field-textarea {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+    @apply transition-colors duration-150;
+    resize: vertical;
+  }
+  
+  .field-input--error {
+    @apply border-red-300 focus:ring-red-500 focus:border-red-500;
+  }
+  
+  .field-error {
+    @apply text-sm text-red-600;
+  }
+  
+  .field-help {
+    @apply text-sm text-gray-500;
+  }
+  
+  /* Upload Main */
+  .upload-main {
+    @apply w-full;
+  }
+  
+  /* Form Actions */
+  .form-actions {
+    @apply flex items-center justify-end space-x-4 pt-6 border-t border-gray-200;
+  }
+  
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center px-4 py-2 border rounded-md font-medium;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply transition-colors duration-150;
+  }
+  
+  .btn--primary {
+    @apply border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+  }
+  
+  .btn--secondary {
+    @apply border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500;
+  }
+  
+  .btn--large {
+    @apply px-6 py-3 text-base;
+  }
+  
+  .btn-icon {
+    @apply w-4 h-4 mr-2;
+  }
+</style>

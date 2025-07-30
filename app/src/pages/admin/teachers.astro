@@ -18,9 +18,9 @@ import { ArrowLeft, Users, Plus, Edit, Trash2, Save, X, Eye, User } from 'lucide
   <main id="main-content">
     <!-- Admin Auth Check -->
     <script>
-      import { auth } from '../../lib/supabase.ts';
+      import { auth } from '@lib/supabase.ts';
       
-      document.addEventListener('DOMContentLoaded', async function() {
+      document.addEventListener('DOMContentLoaded', async () => {
         try {
           const user = await auth.getCurrentUser();
           if (!user) {
@@ -252,9 +252,9 @@ import { ArrowLeft, Users, Plus, Edit, Trash2, Save, X, Eye, User } from 'lucide
 </Layout>
 
 <script>
-  import { supabase } from '../../lib/supabase.ts';
+  import { supabase } from '@lib/supabase.ts';
 
-  document.addEventListener('DOMContentLoaded', async function() {
+  document.addEventListener('DOMContentLoaded', async () => {
     const teachersGrid = document.getElementById('teachers-grid');
     const loadingState = document.getElementById('loading-state');
     const emptyState = document.getElementById('empty-state');
@@ -304,11 +304,11 @@ import { ArrowLeft, Users, Plus, Edit, Trash2, Save, X, Eye, User } from 'lucide
           <div class="flex items-center mb-4">
             <div class="w-16 h-16 bg-purple-100 rounded-full overflow-hidden flex-shrink-0">
               ${teacher.profile_photo_url ? 
-                `<img src="${teacher.profile_photo_url}" alt="${teacher.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.classList.add('bg-purple-500'); this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center\\'>\\n  <span class=\\'text-white text-lg font-bold\\'>${teacher.name.split(' ').map(n => n[0]).join('')}</span>\\n</div>';" />` :
-                `<div class="w-full h-full flex items-center justify-center">
+      `<img src="${teacher.profile_photo_url}" alt="${teacher.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.classList.add('bg-purple-500'); this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center\\'>\\n  <span class=\\'text-white text-lg font-bold\\'>${teacher.name.split(' ').map(n => n[0]).join('')}</span>\\n</div>';" />` :
+      `<div class="w-full h-full flex items-center justify-center">
                   <User class="w-8 h-8 text-purple-500" />
                 </div>`
-              }
+  }
             </div>
             <div class="ml-4 flex-1">
               <h3 class="font-semibold text-earth-brown text-lg">${teacher.name}</h3>
@@ -396,7 +396,7 @@ import { ArrowLeft, Users, Plus, Edit, Trash2, Save, X, Eye, User } from 'lucide
     });
 
     // Add teacher button
-    addTeacherBtn.addEventListener('click', function() {
+    addTeacherBtn.addEventListener('click', () => {
       showModal('Add New Teacher');
     });
 
@@ -405,7 +405,7 @@ import { ArrowLeft, Users, Plus, Edit, Trash2, Save, X, Eye, User } from 'lucide
     cancelTeacherBtn.addEventListener('click', hideModal);
 
     // Form submission
-    teacherForm.addEventListener('submit', async function(e) {
+    teacherForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const teacherId = document.getElementById('teacher-id').value;
@@ -445,7 +445,7 @@ import { ArrowLeft, Users, Plus, Edit, Trash2, Save, X, Eye, User } from 'lucide
         loadTeachers();
       } catch (error) {
         console.error('Error saving teacher:', error);
-        showError('Error saving teacher: ' + error.message);
+        showError(`Error saving teacher: ${  error.message}`);
       }
     });
 
@@ -486,7 +486,7 @@ import { ArrowLeft, Users, Plus, Edit, Trash2, Save, X, Eye, User } from 'lucide
         loadTeachers();
       } catch (error) {
         console.error('Error deleting teacher:', error);
-        showError('Error deleting teacher: ' + error.message);
+        showError(`Error deleting teacher: ${  error.message}`);
       }
     };
 

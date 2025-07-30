@@ -1,6 +1,6 @@
 ---
 import { Star } from 'lucide-astro';
-import { getCollection } from '../lib/content-db';
+import { getCollection } from '@lib/content-db';
 
 // Get featured testimonials from Supabase
 const allTestimonials = await getCollection('testimonials');
@@ -47,6 +47,7 @@ const displayTestimonials = featuredTestimonials.length > 0 ? featuredTestimonia
                 src={testimonial.data.authorPhoto}
                 alt={`Portrait of ${testimonial.data.author}`}
                 class="w-10 h-10 rounded-full object-cover"
+                loading="lazy"
               />
             ) : (
               <div class="w-10 h-10 rounded-full bg-forest-canopy text-white flex items-center justify-center text-sm font-semibold">

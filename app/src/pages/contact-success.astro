@@ -1,0 +1,77 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { CheckCircle, ArrowLeft, Phone } from 'lucide-astro';
+---
+
+<Layout 
+  title="Thank You - Spicebush Montessori School"
+  description="Thank you for contacting Spicebush Montessori School. We'll get back to you soon."
+>
+  <Header />
+  
+  <main id="main-content">
+    <section class="min-h-[60vh] bg-gradient-to-br from-forest-canopy to-moss-green py-16 lg:py-20 flex items-center">
+      <div class="container mx-auto px-4">
+        <div class="max-w-2xl mx-auto text-center">
+          <div class="flex justify-center mb-6">
+            <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/30">
+              <CheckCircle className="w-10 h-10 text-white" />
+            </div>
+          </div>
+          
+          <h1 class="text-4xl lg:text-5xl font-heading font-bold text-white mb-6 tracking-tight">
+            Thank You!
+          </h1>
+          
+          <p class="text-lg lg:text-xl text-green-100 mb-8 leading-relaxed-plus">
+            Your message has been sent successfully. We'll get back to you within 24 hours during business days.
+          </p>
+          
+          <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-8 text-left">
+            <h2 class="text-xl font-semibold text-white mb-3">What happens next?</h2>
+            <ul class="space-y-2 text-green-100">
+              <li class="flex items-start">
+                <span class="text-sunlight-gold mr-2">•</span>
+                <span>Our admissions team will review your message</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-sunlight-gold mr-2">•</span>
+                <span>We'll respond within 24 hours during business days</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-sunlight-gold mr-2">•</span>
+                <span>If you requested a tour, we'll suggest available dates</span>
+              </li>
+            </ul>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a 
+              href="/" 
+              class="inline-flex items-center justify-center bg-white text-forest-canopy px-6 py-3 rounded-lg font-semibold hover:bg-stone-beige transition-all duration-300"
+            >
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              Back to Home
+            </a>
+            
+            <a 
+              href="tel:484-202-0712" 
+              class="inline-flex items-center justify-center bg-transparent text-white border-2 border-white px-6 py-3 rounded-lg font-semibold hover:bg-white/10 transition-all duration-300"
+            >
+              <Phone className="w-5 h-5 mr-2" />
+              Call Us: (484) 202-0712
+            </a>
+          </div>
+          
+          <p class="mt-8 text-sm text-green-100">
+            Need immediate assistance? Feel free to call us during business hours.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <Footer />
+</Layout>

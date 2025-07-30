@@ -13,7 +13,7 @@ const defaultConfig: AdminConfig = {
   adminEmails: [
     'admin@spicebushmontessori.org',
     'director@spicebushmontessori.org',
-    'evey@eveywinters.com',
+    'evey@eveywinters.com'
   ],
   // Domains that automatically grant admin access
   adminDomains: [

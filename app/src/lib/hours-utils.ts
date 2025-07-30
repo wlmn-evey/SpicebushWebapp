@@ -84,15 +84,15 @@ function getFallbackHolidays(today: Date, sevenDaysFromNow: Date): Holiday[] {
   
   const commonHolidays = [
     { date: `${currentYear}-01-01`, name: "New Year's Day" },
-    { date: `${currentYear}-01-15`, name: "Martin Luther King Jr. Day" },
-    { date: `${currentYear}-02-19`, name: "Presidents Day" },
-    { date: `${currentYear}-05-27`, name: "Memorial Day" },
-    { date: `${currentYear}-07-04`, name: "Independence Day" },
-    { date: `${currentYear}-09-02`, name: "Labor Day" },
-    { date: `${currentYear}-10-14`, name: "Columbus Day" },
-    { date: `${currentYear}-11-11`, name: "Veterans Day" },
-    { date: `${currentYear}-11-28`, name: "Thanksgiving Day" },
-    { date: `${currentYear}-12-25`, name: "Christmas Day" }
+    { date: `${currentYear}-01-15`, name: 'Martin Luther King Jr. Day' },
+    { date: `${currentYear}-02-19`, name: 'Presidents Day' },
+    { date: `${currentYear}-05-27`, name: 'Memorial Day' },
+    { date: `${currentYear}-07-04`, name: 'Independence Day' },
+    { date: `${currentYear}-09-02`, name: 'Labor Day' },
+    { date: `${currentYear}-10-14`, name: 'Columbus Day' },
+    { date: `${currentYear}-11-11`, name: 'Veterans Day' },
+    { date: `${currentYear}-11-28`, name: 'Thanksgiving Day' },
+    { date: `${currentYear}-12-25`, name: 'Christmas Day' }
   ];
   
   return commonHolidays.filter(holiday => {

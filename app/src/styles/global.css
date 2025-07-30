@@ -421,3 +421,74 @@ html {
 .program-card:focus-within {
   @apply ring-2 ring-forest-canopy ring-opacity-50;
 }
+
+/* =========================================
+   MOBILE NAVIGATION STYLES
+   ========================================= */
+
+/* Mobile menu transitions */
+#mobile-menu {
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+/* Mobile menu states */
+@media (max-width: 1023px) {
+  #mobile-menu.hidden {
+    display: none;
+  }
+  
+  #mobile-menu:not(.hidden) {
+    display: block;
+    animation: slideDown 0.3s ease-out;
+  }
+}
+
+/* Slide down animation for mobile menu */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hamburger menu animation */
+#mobile-menu-toggle {
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+#mobile-menu-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Prevent body scroll when menu is open */
+body.menu-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* Backdrop for mobile menu */
+#mobile-menu::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+#mobile-menu:not(.hidden)::before {
+  opacity: 1;
+  pointer-events: auto;
+}

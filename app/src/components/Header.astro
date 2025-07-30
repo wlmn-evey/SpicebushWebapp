@@ -2,19 +2,42 @@
 import { Menu, Phone, Mail } from 'lucide-astro';
 import AuthNav from './AuthNav.astro';
 import OptimizedImage from './OptimizedImage.astro';
-import { getEntry, getCollection } from '../lib/content-db';
+import { getEntry, getCollection } from '@lib/content-db';
 
-// Get school info from Supabase
-const schoolInfo = await getEntry('school-info', 'general');
-const { phone, agesServed, extendedCareUntil } = schoolInfo?.data || {
+// Default values to prevent crashes
+const defaultSchoolInfo = {
   phone: '(484) 356-6728',
   agesServed: '3-6',
   extendedCareUntil: '5:30 PM'
 };
 
-// Get hours to display standard schedule from Supabase
-const hours = await getCollection('hours');
-const weekdayHours = hours.find(h => h.data.day === 'Monday');
+let schoolInfo;
+let phone = defaultSchoolInfo.phone;
+let agesServed = defaultSchoolInfo.agesServed;
+let extendedCareUntil = defaultSchoolInfo.extendedCareUntil;
+
+// Get school info from Supabase with error handling
+try {
+  schoolInfo = await getEntry('school-info', 'general');
+  if (schoolInfo?.data) {
+    phone = schoolInfo.data.phone || defaultSchoolInfo.phone;
+    agesServed = schoolInfo.data.agesServed || defaultSchoolInfo.agesServed;
+    extendedCareUntil = schoolInfo.data.extendedCareUntil || defaultSchoolInfo.extendedCareUntil;
+  }
+} catch (error) {
+  console.error('Error loading school info in Header:', error);
+  // Use default values
+}
+
+// Get hours to display standard schedule from Supabase with error handling
+let weekdayHours;
+try {
+  const hours = await getCollection('hours');
+  weekdayHours = hours.find(h => h.data.day === 'Monday');
+} catch (error) {
+  console.error('Error loading hours in Header:', error);
+  // weekdayHours will remain undefined, handled in template
+}
 ---
 
 <header class="bg-white shadow-sm sticky top-0 z-50">
@@ -24,7 +47,7 @@ const weekdayHours = hours.find(h => h.data.day === 'Monday');
       <div class="flex justify-between items-center">
         <!-- Left side: Quick Info -->
         <div class="flex items-center space-x-4 text-sm">
-          <span class="text-earth-brown hidden md:inline">Ages {agesServed} • Mon-Fri {weekdayHours?.data.open_time} - {weekdayHours?.data.close_time}</span>
+          <span class="text-earth-brown hidden md:inline">Ages {agesServed} • Mon-Fri {weekdayHours?.data.open_time || '8:30 AM'} - {weekdayHours?.data.close_time || '3:30 PM'}</span>
           <a href="tel:{phone.replace(/[^0-9]/g, '')}" class="flex items-center space-x-2 text-forest-canopy hover:text-moss-green transition-colors font-semibold">
             <Phone className="w-4 h-4" />
             <span>{phone}</span>
@@ -125,7 +148,7 @@ const weekdayHours = hours.find(h => h.data.day === 'Monday');
         <div class="pt-4 border-t border-gray-200">
           <div class="px-3 py-2 text-sm text-earth-brown space-y-2">
             <p class="font-semibold">School Hours</p>
-            <p>Monday - Friday: {weekdayHours?.data.open_time} - {weekdayHours?.data.close_time}</p>
+            <p>Monday - Friday: {weekdayHours?.data.open_time || '8:30 AM'} - {weekdayHours?.data.close_time || '3:30 PM'}</p>
             <p>Extended care until {extendedCareUntil}</p>
           </div>
         </div>
@@ -143,13 +166,31 @@ const weekdayHours = hours.find(h => h.data.day === 'Monday');
 </header>
 
 <script>
-  // Mobile menu toggle functionality
-  document.addEventListener('DOMContentLoaded', function() {
-    const toggleButton = document.getElementById('mobile-menu-toggle');
-    const mobileMenu = document.getElementById('mobile-menu');
+  // Mobile menu toggle functionality with improved error handling
+  (function() {
+    'use strict';
     
-    if (toggleButton && mobileMenu) {
-      toggleButton.addEventListener('click', function() {
+    // Function to initialize mobile menu
+    function initMobileMenu() {
+      const toggleButton = document.getElementById('mobile-menu-toggle');
+      const mobileMenu = document.getElementById('mobile-menu');
+      
+      // Debug logging
+      console.log('[Mobile Nav] Initializing...', {
+        toggleButton: !!toggleButton,
+        mobileMenu: !!mobileMenu
+      });
+      
+      if (!toggleButton || !mobileMenu) {
+        console.error('[Mobile Nav] Required elements not found');
+        return;
+      }
+      
+      // Toggle menu function
+      function toggleMenu() {
+        const isHidden = mobileMenu.classList.contains('hidden');
+        console.log('[Mobile Nav] Toggling menu, currently hidden:', isHidden);
+        
         mobileMenu.classList.toggle('hidden');
         
         // Update aria-expanded attribute for accessibility
@@ -158,21 +199,59 @@ const weekdayHours = hours.find(h => h.data.day === 'Monday');
         
         // Focus management for keyboard users
         if (isExpanded) {
-          const firstMenuItem = mobileMenu.querySelector('a[role="menuitem"]');
-          if (firstMenuItem) {
-            firstMenuItem.focus();
-          }
+          // Small delay to ensure menu is visible before focusing
+          setTimeout(() => {
+            const firstMenuItem = mobileMenu.querySelector('a[role="menuitem"]');
+            if (firstMenuItem) {
+              firstMenuItem.focus();
+            }
+          }, 100);
         }
-      });
+      }
+      
+      // Add click listener with error handling
+      try {
+        toggleButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleMenu();
+        });
+        
+        console.log('[Mobile Nav] Click listener attached');
+      } catch (error) {
+        console.error('[Mobile Nav] Error attaching click listener:', error);
+      }
       
       // Close mobile menu when pressing Escape
-      document.addEventListener('keydown', function(event) {
+      document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
+          console.log('[Mobile Nav] Closing menu on Escape key');
           mobileMenu.classList.add('hidden');
           toggleButton.setAttribute('aria-expanded', 'false');
           toggleButton.focus();
         }
       });
+      
+      // Close menu when clicking outside
+      document.addEventListener('click', (event) => {
+        if (!mobileMenu.classList.contains('hidden') && 
+            !mobileMenu.contains(event.target) && 
+            !toggleButton.contains(event.target)) {
+          console.log('[Mobile Nav] Closing menu on outside click');
+          mobileMenu.classList.add('hidden');
+          toggleButton.setAttribute('aria-expanded', 'false');
+        }
+      });
+      
+      console.log('[Mobile Nav] Initialization complete');
     }
-  });
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initMobileMenu);
+    } else {
+      // DOM is already loaded
+      initMobileMenu();
+    }
+  })();
 </script>

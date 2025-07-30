@@ -1,10 +1,10 @@
 services:
   # Astro development server
   app:
+    platform: linux/amd64
     build:
       context: .
-      dockerfile: Dockerfile
-      target: development
+      dockerfile: Dockerfile.dev
     ports:
       - "4321:4321"
     volumes:
@@ -15,6 +15,11 @@ services:
       - NODE_ENV=development
       - PUBLIC_SUPABASE_URL=http://localhost:54321
       - PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjIwNjkwODE2OTYsImlhdCI6MTc1MzcyMTY5Nn0.uL8kczyPGK0ku_GIaIOjXlI75rbaZ-8W81-wx5SEEdw}
+      - DB_READONLY_HOST=supabase-db
+      - DB_READONLY_PORT=5432
+      - DB_READONLY_DATABASE=postgres
+      - DB_READONLY_USER=postgres
+      - DB_READONLY_PASSWORD=${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
     depends_on:
       supabase-db:
         condition: service_healthy

@@ -6,13 +6,13 @@
  * to edit, add new programs, and manage pricing structures.
  */
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { checkAdminAuth } from '../../../lib/admin-auth-check';
-import { getCollection } from '../../../lib/content-db';
+import { checkAdminAuth } from '@lib/admin-auth-check';
+import { getCollection } from '@lib/content-db';
 
 // Check authentication
 const { isAuthenticated } = await checkAdminAuth(Astro);
 if (!isAuthenticated) {
-  return Astro.redirect('/auth/login?redirect=' + Astro.url.pathname);
+  return Astro.redirect(`/auth/login?redirect=${  Astro.url.pathname}`);
 }
 
 // Load tuition entries
@@ -37,7 +37,7 @@ function formatPrice(price: number | undefined): string {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(price);
 }
 
@@ -344,11 +344,11 @@ function getRateTypeText(isConstant: boolean | undefined): string {
           const response = await fetch('/api/cms/entry', {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify({
               type: 'tuition',
-              slug: slug
+              slug
             })
           });
           

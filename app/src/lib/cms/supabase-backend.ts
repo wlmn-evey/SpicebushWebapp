@@ -222,16 +222,16 @@ export class SupabaseBackend {
     // Insert or update
     const { data: saved, error } = existing
       ? await this.supabase
-          .from(tableName)
-          .update(entry)
-          .eq('id', existing.id)
-          .select()
-          .single()
+        .from(tableName)
+        .update(entry)
+        .eq('id', existing.id)
+        .select()
+        .single()
       : await this.supabase
-          .from(tableName)
-          .insert({ ...entry, created_at: new Date().toISOString() })
-          .select()
-          .single();
+        .from(tableName)
+        .insert({ ...entry, created_at: new Date().toISOString() })
+        .select()
+        .single();
 
     if (error) throw error;
 

@@ -20,7 +20,7 @@ beforeEach(() => {
         </div>
       </body>
     </html>`, {
-    url: 'http://localhost:3000',
+    url: 'http://localhost:3000'
   });
   
   global.window = dom.window as any;
@@ -43,7 +43,7 @@ describe('Magic Link Error Handling', () => {
           try {
             const response = await fetch('/auth/otp', {
               method: 'POST',
-              body: JSON.stringify({ email }),
+              body: JSON.stringify({ email })
             });
             
             if (!response.ok) {
@@ -54,7 +54,7 @@ describe('Magic Link Error Handling', () => {
           } catch (error) {
             return { error: { message: 'Failed to send magic link. Please check your connection and try again.' } };
           }
-        },
+        }
       };
       
       const result = await mockAuth.signInWithMagicLink('admin@spicebushmontessori.org');
@@ -80,7 +80,7 @@ describe('Magic Link Error Handling', () => {
             const response = await fetch('/auth/otp', {
               method: 'POST',
               body: JSON.stringify({ email }),
-              signal: controller.signal,
+              signal: controller.signal
             });
             
             clearTimeout(timeoutId);
@@ -91,7 +91,7 @@ describe('Magic Link Error Handling', () => {
             }
             return { error: { message: error.message } };
           }
-        },
+        }
       };
       
       const result = await mockAuth.signInWithMagicLink('admin@spicebushmontessori.org');
@@ -105,14 +105,14 @@ describe('Magic Link Error Handling', () => {
         { status: 400, message: 'Invalid email format' },
         { status: 429, message: 'Rate limit exceeded' },
         { status: 500, message: 'Internal server error' },
-        { status: 503, message: 'Service temporarily unavailable' },
+        { status: 503, message: 'Service temporarily unavailable' }
       ];
       
       for (const serverError of serverErrors) {
         global.fetch = vi.fn().mockResolvedValue({
           ok: false,
           status: serverError.status,
-          json: () => Promise.resolve({ error: serverError.message }),
+          json: () => Promise.resolve({ error: serverError.message })
         });
         
         const mockAuth = {
@@ -120,7 +120,7 @@ describe('Magic Link Error Handling', () => {
             try {
               const response = await fetch('/auth/otp', {
                 method: 'POST',
-                body: JSON.stringify({ email }),
+                body: JSON.stringify({ email })
               });
               
               if (!response.ok) {
@@ -132,7 +132,7 @@ describe('Magic Link Error Handling', () => {
             } catch (error) {
               return { error: { message: 'Network error occurred' } };
             }
-          },
+          }
         };
         
         const result = await mockAuth.signInWithMagicLink('admin@spicebushmontessori.org');
@@ -161,7 +161,7 @@ describe('Magic Link Error Handling', () => {
         'user@-example.com',
         'user@example-.com',
         'user@example.c',
-        'a'.repeat(320) + '@example.com', // Too long
+        `${'a'.repeat(320)  }@example.com` // Too long
       ];
       
       const validateEmail = (email: string): boolean => {
@@ -213,7 +213,7 @@ describe('Magic Link Error Handling', () => {
       expect(getValidationError('')).toBe('Email address is required');
       expect(getValidationError('not-an-email')).toBe('Please enter a valid email address');
       expect(getValidationError('user space@example.com')).toBe('Email address cannot contain spaces');
-      expect(getValidationError('a'.repeat(320) + '@example.com')).toBe('Email address is too long');
+      expect(getValidationError(`${'a'.repeat(320)  }@example.com`)).toBe('Email address is too long');
       expect(getValidationError('valid@example.com')).toBeNull();
     });
   });
@@ -233,33 +233,33 @@ describe('Magic Link Error Handling', () => {
           if (error || errorDescription) {
             return {
               success: false,
-              error: errorDescription || error || 'Authentication failed',
+              error: errorDescription || error || 'Authentication failed'
             };
           }
           
           if (!type || !token) {
             return {
               success: false,
-              error: 'Missing required authentication parameters',
+              error: 'Missing required authentication parameters'
             };
           }
           
           if (type !== 'magiclink') {
             return {
               success: false,
-              error: 'Invalid authentication type',
+              error: 'Invalid authentication type'
             };
           }
           
           return {
             success: true,
             type,
-            token,
+            token
           };
         } catch {
           return {
             success: false,
-            error: 'Invalid callback URL',
+            error: 'Invalid callback URL'
           };
         }
       };
@@ -267,28 +267,28 @@ describe('Magic Link Error Handling', () => {
       const testCases = [
         {
           url: 'http://localhost:3000/auth/callback',
-          expectedError: 'Missing required authentication parameters',
+          expectedError: 'Missing required authentication parameters'
         },
         {
           url: 'http://localhost:3000/auth/callback?type=magiclink',
-          expectedError: 'Missing required authentication parameters',
+          expectedError: 'Missing required authentication parameters'
         },
         {
           url: 'http://localhost:3000/auth/callback?token=abc123',
-          expectedError: 'Missing required authentication parameters',
+          expectedError: 'Missing required authentication parameters'
         },
         {
           url: 'http://localhost:3000/auth/callback?type=invalid&token=abc123',
-          expectedError: 'Invalid authentication type',
+          expectedError: 'Invalid authentication type'
         },
         {
           url: 'http://localhost:3000/auth/callback?error=access_denied',
-          expectedError: 'access_denied',
+          expectedError: 'access_denied'
         },
         {
           url: 'http://localhost:3000/auth/callback?error_description=Token+expired',
-          expectedError: 'Token expired',
-        },
+          expectedError: 'Token expired'
+        }
       ];
       
       testCases.forEach(({ url, expectedError }) => {
@@ -303,9 +303,9 @@ describe('Magic Link Error Handling', () => {
         auth: {
           exchangeCodeForSession: vi.fn().mockResolvedValue({
             data: { session: null },
-            error: { message: 'Token has expired' },
-          }),
-        },
+            error: { message: 'Token has expired' }
+          })
+        }
       };
       
       const handleCallback = async (token: string) => {
@@ -317,26 +317,26 @@ describe('Magic Link Error Handling', () => {
               return {
                 success: false,
                 error: 'Your magic link has expired. Please request a new one.',
-                recoverable: true,
+                recoverable: true
               };
             }
             
             return {
               success: false,
               error: error.message,
-              recoverable: false,
+              recoverable: false
             };
           }
           
           return {
             success: true,
-            session: data.session,
+            session: data.session
           };
         } catch (error) {
           return {
             success: false,
             error: 'An unexpected error occurred',
-            recoverable: true,
+            recoverable: true
           };
         }
       };
@@ -353,9 +353,9 @@ describe('Magic Link Error Handling', () => {
         auth: {
           exchangeCodeForSession: vi.fn().mockResolvedValue({
             data: { session: null },
-            error: { message: 'Invalid token' },
-          }),
-        },
+            error: { message: 'Invalid token' }
+          })
+        }
       };
       
       const handleCallback = async (token: string) => {
@@ -364,7 +364,7 @@ describe('Magic Link Error Handling', () => {
         if (error) {
           return {
             success: false,
-            error: 'Invalid or corrupted magic link. Please request a new one.',
+            error: 'Invalid or corrupted magic link. Please request a new one.'
           };
         }
         
@@ -384,17 +384,17 @@ describe('Magic Link Error Handling', () => {
         auth: {
           getUser: vi.fn().mockResolvedValue({
             data: { user: { email: 'parent@example.com' } },
-            error: null,
+            error: null
           }),
-          signOut: vi.fn().mockResolvedValue({ error: null }),
-        },
+          signOut: vi.fn().mockResolvedValue({ error: null })
+        }
       };
       
       const isAdminEmail = (email: string) => {
         const adminEmails = [
           'admin@spicebushmontessori.org',
           'director@spicebushmontessori.org',
-          'evey@eveywinters.com',
+          'evey@eveywinters.com'
         ];
         return adminEmails.includes(email.toLowerCase());
       };
@@ -406,7 +406,7 @@ describe('Magic Link Error Handling', () => {
         if (!user) {
           return {
             success: false,
-            error: 'Authentication failed',
+            error: 'Authentication failed'
           };
         }
         
@@ -417,13 +417,13 @@ describe('Magic Link Error Handling', () => {
           return {
             success: false,
             error: 'Access denied. Only school administrators can access this area.',
-            unauthorized: true,
+            unauthorized: true
           };
         }
         
         return {
           success: true,
-          user,
+          user
         };
       };
       
@@ -440,9 +440,9 @@ describe('Magic Link Error Handling', () => {
         auth: {
           getUser: vi.fn().mockResolvedValue({
             data: { user: null },
-            error: null,
-          }),
-        },
+            error: null
+          })
+        }
       };
       
       const handleAuthentication = async () => {
@@ -451,7 +451,7 @@ describe('Magic Link Error Handling', () => {
         if (!data?.user) {
           return {
             success: false,
-            error: 'Unable to verify your identity. Please try signing in again.',
+            error: 'Unable to verify your identity. Please try signing in again.'
           };
         }
         
@@ -550,14 +550,14 @@ describe('Magic Link Error Handling', () => {
             ok: false,
             status: 429,
             json: () => Promise.resolve({
-              error: 'Too many requests. Please wait before trying again.',
-            }),
+              error: 'Too many requests. Please wait before trying again.'
+            })
           });
         }
         
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ success: true }),
+          json: () => Promise.resolve({ success: true })
         });
       });
       
@@ -566,7 +566,7 @@ describe('Magic Link Error Handling', () => {
           try {
             const response = await fetch('/auth/otp', {
               method: 'POST',
-              body: JSON.stringify({ email }),
+              body: JSON.stringify({ email })
             });
             
             if (!response.ok) {
@@ -574,8 +574,8 @@ describe('Magic Link Error Handling', () => {
               return {
                 error: {
                   message: errorData.error,
-                  rateLimited: response.status === 429,
-                },
+                  rateLimited: response.status === 429
+                }
               };
             }
             
@@ -583,7 +583,7 @@ describe('Magic Link Error Handling', () => {
           } catch (error) {
             return { error: { message: 'Network error' } };
           }
-        },
+        }
       };
       
       // First 5 requests should succeed
@@ -626,7 +626,7 @@ describe('Magic Link Error Handling', () => {
           missingFeatures,
           message: missingFeatures.length > 0 
             ? `Your browser is missing required features: ${missingFeatures.join(', ')}. Please update your browser.`
-            : null,
+            : null
         };
       };
       
@@ -648,9 +648,9 @@ describe('Magic Link Error Handling', () => {
         value: {
           getItem: () => { throw new Error('localStorage not available'); },
           setItem: () => { throw new Error('localStorage not available'); },
-          removeItem: () => { throw new Error('localStorage not available'); },
+          removeItem: () => { throw new Error('localStorage not available'); }
         },
-        writable: true,
+        writable: true
       });
       
       const safeStorage = {
@@ -678,7 +678,7 @@ describe('Magic Link Error Handling', () => {
           } catch {
             return false;
           }
-        },
+        }
       };
       
       expect(safeStorage.getItem('test')).toBeNull();

@@ -1,0 +1,60 @@
+---
+import Layout from '@layouts/Layout.astro';
+import { Home, Search, ArrowLeft } from 'lucide-astro';
+---
+
+<Layout title="Page Not Found - Spicebush Montessori">
+  <main class="min-h-[80vh] flex items-center justify-center px-4 py-16">
+    <div class="max-w-lg w-full text-center">
+      <!-- Error Code -->
+      <h1 class="text-9xl font-bold text-forest-canopy mb-4">404</h1>
+      
+      <!-- Message -->
+      <h2 class="text-3xl font-semibold text-earth-brown mb-4">
+        Oops! Page Not Found
+      </h2>
+      
+      <p class="text-lg text-gray-600 mb-8">
+        It seems like you've wandered off the path. The page you're looking for doesn't exist or has been moved.
+      </p>
+      
+      <!-- Illustration -->
+      <div class="mb-8">
+        <svg class="w-64 h-64 mx-auto text-moss-green opacity-20" viewBox="0 0 200 200" fill="currentColor">
+          <path d="M100 20 L130 80 L190 80 L145 120 L165 180 L100 140 L35 180 L55 120 L10 80 L70 80 Z"/>
+        </svg>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a 
+          href="/" 
+          class="inline-flex items-center justify-center gap-2 bg-forest-canopy hover:bg-moss-green text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+        >
+          <Home className="w-5 h-5" />
+          Go Home
+        </a>
+        
+        <button
+          onclick="history.back()"
+          class="inline-flex items-center justify-center gap-2 bg-white hover:bg-stone-beige text-forest-canopy border-2 border-forest-canopy px-6 py-3 rounded-lg font-semibold transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Go Back
+        </button>
+      </div>
+      
+      <!-- Helpful Links -->
+      <div class="mt-12 pt-8 border-t border-gray-200">
+        <p class="text-sm text-gray-600 mb-4">Here are some helpful links:</p>
+        <div class="flex flex-wrap justify-center gap-4 text-sm">
+          <a href="/about" class="text-forest-canopy hover:underline">About Us</a>
+          <a href="/programs" class="text-forest-canopy hover:underline">Programs</a>
+          <a href="/admissions" class="text-forest-canopy hover:underline">Admissions</a>
+          <a href="/contact" class="text-forest-canopy hover:underline">Contact</a>
+          <a href="/resources/faq" class="text-forest-canopy hover:underline">FAQ</a>
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>

@@ -1,24 +1,24 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@lib/supabase';
 import { 
   formatTime, 
   getDefaultHoursData, 
   processHoursData 
-} from '../../lib/hours-utils';
+} from '@lib/hours-utils';
 
 // Mock Supabase
-vi.mock('../../lib/supabase', () => ({
+vi.mock('@lib/supabase', () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         order: vi.fn(() => Promise.resolve({ 
           data: [], 
           error: null 
-        })),
-      })),
-    })),
-  },
+        }))
+      }))
+    }))
+  }
 }));
 
 describe('Hours Widget - Friday Closing Time', () => {
@@ -144,7 +144,7 @@ describe('Hours Widget - Friday Closing Time', () => {
           before_care_minutes: 60,
           after_care_minutes: 0,
           is_closed: false,
-          aftercare_available: false,
+          aftercare_available: false
         },
         {
           day_of_week: 1, // Monday
@@ -153,8 +153,8 @@ describe('Hours Widget - Friday Closing Time', () => {
           before_care_minutes: 60,
           after_care_minutes: 150,
           is_closed: false,
-          aftercare_available: true,
-        },
+          aftercare_available: true
+        }
       ];
 
       const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -182,8 +182,8 @@ describe('Hours Widget - Friday Closing Time', () => {
           before_care_minutes: 60,
           after_care_minutes: 0,
           is_closed: false,
-          aftercare_available: false,
-        },
+          aftercare_available: false
+        }
       ];
 
       const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -245,7 +245,7 @@ describe('Hours Widget - Friday Closing Time', () => {
       const messages = {
         friday: '⏰ Closes at 3:00 PM',
         noAftercare: '🚫 No aftercare available',
-        closed: 'Closed',
+        closed: 'Closed'
       };
       
       // Verify messages are descriptive

@@ -1,0 +1,129 @@
+/**
+ * Consistent form styling across the application
+ * Uses native HTML5 validation with enhanced visual feedback
+ */
+
+/* Base form field styling */
+.form-field {
+  @apply mb-6;
+}
+
+.form-field__label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.form-field__required {
+  @apply text-red-500 ml-1;
+}
+
+.form-field__help {
+  @apply mt-2 text-sm text-gray-500;
+}
+
+.form-field__error {
+  @apply mt-2 text-sm text-red-600;
+}
+
+/* Input styling with validation states */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  @apply w-full px-4 py-2 border border-gray-300 rounded-md;
+  @apply focus:ring-2 focus:ring-forest-canopy focus:border-transparent;
+  @apply transition-colors duration-200;
+}
+
+/* Valid state (HTML5 validation) */
+input:valid:not(:placeholder-shown),
+textarea:valid:not(:placeholder-shown),
+select:valid:not([value=""]) {
+  @apply border-green-300;
+}
+
+/* Invalid state (HTML5 validation) */
+input:invalid:not(:focus):not(:placeholder-shown),
+textarea:invalid:not(:focus):not(:placeholder-shown),
+select:invalid:not(:focus):not([value=""]) {
+  @apply border-red-300 bg-red-50;
+}
+
+/* Error state from server validation */
+.form-field--error input,
+.form-field--error textarea,
+.form-field--error select {
+  @apply border-red-300 bg-red-50;
+}
+
+.form-field--error .form-field__label {
+  @apply text-red-600;
+}
+
+/* Focus states */
+input:focus,
+textarea:focus,
+select:focus {
+  @apply outline-none ring-2 ring-forest-canopy ring-offset-2;
+}
+
+/* Disabled state */
+input:disabled,
+textarea:disabled,
+select:disabled {
+  @apply bg-gray-100 cursor-not-allowed opacity-60;
+}
+
+/* Loading state */
+.form-loading {
+  @apply opacity-60 pointer-events-none;
+}
+
+.form-loading::after {
+  content: '';
+  @apply absolute inset-0 bg-white bg-opacity-50;
+}
+
+/* Submit button states */
+button[type="submit"] {
+  @apply relative;
+}
+
+button[type="submit"]:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Success message */
+.form-success {
+  @apply bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6;
+}
+
+/* Error summary */
+.form-error-summary {
+  @apply bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6;
+}
+
+.form-error-summary h3 {
+  @apply font-semibold mb-2;
+}
+
+.form-error-summary ul {
+  @apply list-disc list-inside space-y-1;
+}
+
+/* Accessible error announcements */
+[role="alert"] {
+  @apply font-medium;
+}
+
+/* Phone number formatting helper */
+input[type="tel"] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Progressive enhancement - hide validation styles if JS is disabled */
+@media (scripting: none) {
+  input:invalid:not(:focus):not(:placeholder-shown),
+  textarea:invalid:not(:focus):not(:placeholder-shown),
+  select:invalid:not(:focus):not([value=""]) {
+    @apply border-gray-300 bg-white;
+  }
+}

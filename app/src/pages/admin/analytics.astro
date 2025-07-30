@@ -2,7 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import { checkAdminAuth } from '../../lib/admin-auth-check';
+import { checkAdminAuth } from '@lib/admin-auth-check';
 import { 
   ArrowLeft,
   BarChart3, 
@@ -38,9 +38,9 @@ if (!isAuthenticated) {
   <main id="main-content">
     <!-- Admin Auth Check -->
     <script>
-      import { auth } from '../../lib/supabase.ts';
+      import { auth } from '@lib/supabase.ts';
       
-      document.addEventListener('DOMContentLoaded', async function() {
+      document.addEventListener('DOMContentLoaded', async () => {
         try {
           const user = await auth.getCurrentUser();
           if (!user) {

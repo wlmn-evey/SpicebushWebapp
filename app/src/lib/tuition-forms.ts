@@ -198,15 +198,15 @@ export function renderRates(rates: any[], programs: any[]): void {
       <td class="px-6 py-4 whitespace-nowrap text-sm text-earth-brown">$${rate.tuition_price?.toLocaleString()}</td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-earth-brown">
         ${rate.income_threshold_family_4 ? 
-          `${rate.income_threshold_type === 'Less Than' ? '<' : '≥'} $${rate.income_threshold_family_4.toLocaleString()}` : 
-          'N/A'
-        }
+    `${rate.income_threshold_type === 'Less Than' ? '<' : '≥'} $${rate.income_threshold_family_4.toLocaleString()}` : 
+    'N/A'
+}
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-earth-brown">
         ${rate.extended_care_available ? 
-          `$${rate.extended_care_price || 0}` : 
-          'No'
-        }
+    `$${rate.extended_care_price || 0}` : 
+    'No'
+}
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-earth-brown">
         <div class="flex space-x-2">

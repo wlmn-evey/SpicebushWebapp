@@ -18,6 +18,7 @@ services:
       - ./tailwind.config.mjs:/app/tailwind.config.mjs:delegated
       - ./tsconfig.json:/app/tsconfig.json:delegated
       - ./package.json:/app/package.json:delegated
+      - ./.env.local:/app/.env.local:delegated
       # Persist node_modules in a volume to avoid conflicts
       - node_modules:/app/node_modules
       # Use local directory for .astro cache to avoid permission issues
@@ -27,6 +28,12 @@ services:
       - PUBLIC_SUPABASE_URL=http://localhost:54321
       - PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOuoJeHxjNa-NEHl7qWa00fNKZdJ9rHxs9eA
       - PUBLIC_STRAPI_URL=http://localhost:1337
+      # Database read-only user configuration
+      - DB_READONLY_USER=spicebush_readonly
+      - DB_READONLY_PASSWORD=6afRf15M187YKF88UpWYJsn4zijsNiQMZmQVOK9Rdyw=
+      - DB_READONLY_HOST=supabase-db
+      - DB_READONLY_PORT=5432
+      - DB_READONLY_DATABASE=postgres
       # Astro specific configs for better hot reload
       - FORCE_COLOR=1
       - ASTRO_TELEMETRY_DISABLED=1
@@ -74,10 +81,12 @@ services:
       - postgres_data:/var/lib/postgresql/data
       # IMPORTANT: Files are executed in alphabetical order
       - ./docker/volumes/db/00-supabase-users.sql:/docker-entrypoint-initdb.d/00-supabase-users.sql:Z
-      - ./docker/volumes/db/jwt.sql:/docker-entrypoint-initdb.d/01-jwt.sql:Z
-      - ./docker/volumes/db/realtime.sql:/docker-entrypoint-initdb.d/02-realtime.sql:Z
-      - ./docker/volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/03-webhooks.sql:Z
-      - ./docker/volumes/db/roles.sql:/docker-entrypoint-initdb.d/04-roles.sql:Z
+      - ./docker/volumes/db/01-auth-schema.sql:/docker-entrypoint-initdb.d/01-auth-schema.sql:Z
+      # Note: jwt.sql, realtime.sql, webhooks.sql, roles.sql are empty directories, not files
+      # - ./docker/volumes/db/jwt.sql:/docker-entrypoint-initdb.d/01-jwt.sql:Z
+      # - ./docker/volumes/db/realtime.sql:/docker-entrypoint-initdb.d/02-realtime.sql:Z
+      # - ./docker/volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/03-webhooks.sql:Z
+      # - ./docker/volumes/db/roles.sql:/docker-entrypoint-initdb.d/04-roles.sql:Z
       - ./supabase/migrations:/docker-entrypoint-initdb.d/migrations:Z
     networks:
       - spicebush-network
