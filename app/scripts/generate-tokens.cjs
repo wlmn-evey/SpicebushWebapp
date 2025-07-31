@@ -1,7 +1,14 @@
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
-// JWT secret from your environment
-const JWT_SECRET = 'your-super-secret-jwt-token-with-at-least-32-characters-long';
+// JWT secret from environment variables
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error('❌ Error: JWT_SECRET environment variable is not set');
+  console.error('Please ensure your .env file contains JWT_SECRET');
+  process.exit(1);
+}
 
 // Common claims for both tokens
 const commonClaims = {

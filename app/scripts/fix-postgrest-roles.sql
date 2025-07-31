@@ -1,11 +1,12 @@
 -- Fix PostgREST role permissions
 -- This resolves "permission denied to set role" errors
+-- Note: The password placeholder will be replaced by the script that runs this SQL
 
 -- Create authenticator role if it doesn't exist
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN
-    CREATE ROLE authenticator NOINHERIT LOGIN PASSWORD 'your-super-secret-and-long-postgres-password';
+    CREATE ROLE authenticator NOINHERIT LOGIN PASSWORD '${POSTGRES_PASSWORD}';
   END IF;
 END
 $$;
