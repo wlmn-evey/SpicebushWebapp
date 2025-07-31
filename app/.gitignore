@@ -10,10 +10,17 @@ dist/
 
 # Environment files
 .env
+.env.*
+!.env.example
+!.env.test.example
 .env.local
 .env.production
 .env.staging
 .env.docker.development
+.env.hosted
+*.key
+*.pem
+*-credentials.json
 
 # Docker volumes (contains database data and uploaded files)
 docker/volumes/
