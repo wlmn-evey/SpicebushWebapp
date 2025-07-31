@@ -1,0 +1,35 @@
+title = "Gitleaks Configuration for SpicebushWebapp"
+
+# Allowlist for test files
+[allowlist]
+paths = [
+  '''.env.test''',
+  '''.env.example''',
+  '''*.template'''
+]
+
+# Custom rules for Supabase
+[[rules]]
+description = "Supabase URL"
+regex = '''https://[a-z]{20}\.supabase\.co'''
+tags = ["supabase", "url"]
+
+[[rules]]
+description = "Supabase Anon Key"
+regex = '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+'''
+tags = ["supabase", "key"]
+
+[[rules]]
+description = "Supabase Service Role Key"
+regex = '''SUPABASE_SERVICE_ROLE_KEY\s*=\s*["']?[^"'\s]+["']?'''
+tags = ["supabase", "service-key"]
+
+[[rules]]
+description = "Database Password"
+regex = '''(DB_PASSWORD|DATABASE_PASSWORD|DB_PASS)\s*=\s*["']?[^"'\s]+["']?'''
+tags = ["database", "password"]
+
+[[rules]]
+description = "Generic Secret"
+regex = '''(SECRET|TOKEN|PASSWORD|KEY)\s*=\s*["']?[^"'\s]+["']?'''
+tags = ["generic", "secret"]

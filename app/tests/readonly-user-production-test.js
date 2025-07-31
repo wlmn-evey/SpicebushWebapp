@@ -18,8 +18,8 @@ const ADMIN_USER = {
 };
 
 const READONLY_USER = {
-  user: 'spicebush_readonly',
-  password: '6afRf15M187YKF88UpWYJsn4zijsNiQMZmQVOK9Rdyw='
+  user: process.env.DB_READONLY_USER || 'spicebush_readonly',
+  password: process.env.DB_READONLY_PASSWORD || 'test_readonly_password'
 };
 
 // Helper function to execute psql commands

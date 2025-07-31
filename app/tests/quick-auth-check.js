@@ -6,7 +6,12 @@
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'http://localhost:54321';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOuoJeHxjNa-NEHl7qWa00fNKZdJ9rHxs9eA';
+const SUPABASE_ANON_KEY = process.env.PUBLIC_SUPABASE_ANON_KEY || process.env.TEST_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_ANON_KEY) {
+  console.error('Missing PUBLIC_SUPABASE_ANON_KEY or TEST_SUPABASE_ANON_KEY environment variable');
+  process.exit(1);
+}
 
 const TEST_ADMIN_EMAIL = 'evey@eveywinters.com';
 const TEST_ADMIN_PASSWORD = 'gcb4uvd*pvz*ZGD_hta';
