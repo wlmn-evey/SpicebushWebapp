@@ -54,7 +54,7 @@ async function insertCriticalData() {
     title: 'School Information',
     data: {
       name: 'Spicebush Montessori School',
-      phone: '(484) 356-6728',
+      phone: '(484) 202-0712',
       email: 'info@spicebushmontessori.org',
       address: {
         street: '2300 Old West Chester Pike',

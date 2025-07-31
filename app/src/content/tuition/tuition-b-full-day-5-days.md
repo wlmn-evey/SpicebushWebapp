@@ -3,7 +3,7 @@ type: "rate"
 rate_label: "Tuition B"
 program_id: "full-day-5-days"
 tuition_price: 14348.75
-extended_care_price: 3800
+extended_care_price: 3600
 extended_care_available: true
 is_constant_rate: false
 school_year: "2025-2026"
@@ -25,7 +25,7 @@ Reduced tuition rate for middle-income families seeking full-day Montessori educ
 
 ## Tuition Rate
 - **Annual Tuition:** $14,348.75
-- **Extended Care:** $3,800 annually (available Monday-Thursday)
+- **Extended Care:** $3,600 annually (available Monday-Thursday)
 - **Program:** Full Day - 5 Days (Monday-Friday, 8:30 AM - 3:00 PM)
 - **School Year:** 2025-2026
 
@@ -47,6 +47,6 @@ This rate applies to families with household income at or above:
 - Progress assessments and conferences
 
 ## Extended Care Option
-Extended care is available Monday through Thursday from 3:00 PM to 5:30 PM for an additional $3,800 annually. Friday pickup is at 3:00 PM sharp.
+Extended care is available Monday through Thursday from 3:00 PM to 5:30 PM for an additional $3,600 annually. Friday pickup is at 3:00 PM sharp.
 
 This rate provides significant tuition assistance while maintaining the full educational program quality.

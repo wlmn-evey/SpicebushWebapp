@@ -18,57 +18,181 @@ export interface ContentEntry<T = any> {
 
 // Get environment variables - support both Astro and Node.js environments
 const getEnvVar = (key: string): string | undefined => {
-  // In Astro environment (build/dev/prod)
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return import.meta.env[key];
-  }
-  // In Node.js environment (tests, scripts)
-  if (typeof process !== 'undefined' && process.env) {
+  // Try multiple sources for environment variables
+  
+  // 1. Direct process.env access (Node.js, including Astro SSR)
+  if (typeof process !== 'undefined' && process.env && process.env[key]) {
     return process.env[key];
   }
+  
+  // 2. Astro's import.meta.env (for PUBLIC_ prefixed vars and build-time vars)
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+    return import.meta.env[key];
+  }
+  
+  // 3. Try globalThis as a fallback (some environments expose env vars here)
+  if (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.[key]) {
+    return (globalThis as any).process.env[key];
+  }
+  
+  // 4. Check Vite's special env object (for dev server)
+  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE) {
+    // In Vite, env vars might be under a different structure
+    const viteEnv = (import.meta as any).env;
+    if (viteEnv[key]) {
+      return viteEnv[key];
+    }
+  }
+  
   return undefined;
 };
 
-// Load configuration from environment variables
-const config = {
-  host: getEnvVar('DB_READONLY_HOST') || 'localhost',
-  port: parseInt(getEnvVar('DB_READONLY_PORT') || '54322'),
-  database: getEnvVar('DB_READONLY_DATABASE') || 'postgres',
-  user: getEnvVar('DB_READONLY_USER'),
-  password: getEnvVar('DB_READONLY_PASSWORD'),
-  // Add timeouts for production safety
-  connectionTimeoutMillis: 5000,
-  query_timeout: 30000
+// Lazy load configuration to avoid immediate errors during module initialization
+let configCache: any = null;
+
+const getConfig = () => {
+  if (configCache) return configCache;
+  
+  // Log environment detection for debugging
+  const debugInfo = {
+    hasProcess: typeof process !== 'undefined',
+    hasImportMeta: typeof import.meta !== 'undefined',
+    hasGlobalThis: typeof globalThis !== 'undefined',
+    nodeEnv: getEnvVar('NODE_ENV'),
+    astroMode: typeof import.meta !== 'undefined' ? (import.meta as any).env?.MODE : undefined
+  };
+  
+  console.log('Environment detection:', debugInfo);
+  
+  configCache = {
+    host: getEnvVar('DB_READONLY_HOST') || 'localhost',
+    port: parseInt(getEnvVar('DB_READONLY_PORT') || '54322'),
+    database: getEnvVar('DB_READONLY_DATABASE') || 'postgres',
+    user: getEnvVar('DB_READONLY_USER'),
+    password: getEnvVar('DB_READONLY_PASSWORD'),
+    // Add timeouts for production safety
+    connectionTimeoutMillis: 5000,
+    query_timeout: 30000
+  };
+  
+  // Validate required environment variables with improved error messages
+  if (!configCache.user) {
+    const errorMsg = `DB_READONLY_USER environment variable is required.
+
+To fix this:
+1. If using Docker: Ensure DB_READONLY_USER is set in your docker-compose.yml or .env file
+2. If local development: Create a .env file in your project root with:
+   DB_READONLY_USER=your_username
+3. Check that your environment variables are being loaded correctly.
+
+Current environment: ${debugInfo.nodeEnv || debugInfo.astroMode || 'unknown'}`;
+    throw new Error(errorMsg);
+  }
+  if (!configCache.password) {
+    const errorMsg = `DB_READONLY_PASSWORD environment variable is required.
+
+To fix this:
+1. If using Docker: Ensure DB_READONLY_PASSWORD is set in your docker-compose.yml or .env file
+2. If local development: Create a .env file in your project root with:
+   DB_READONLY_PASSWORD=your_password
+3. Check that your environment variables are being loaded correctly.
+
+Current environment: ${debugInfo.nodeEnv || debugInfo.astroMode || 'unknown'}`;
+    throw new Error(errorMsg);
+  }
+  
+  return configCache;
 };
 
-// Validate required environment variables
-if (!config.user) {
-  throw new Error('DB_READONLY_USER environment variable is required');
-}
-if (!config.password) {
-  throw new Error('DB_READONLY_PASSWORD environment variable is required');
-}
-
-// Single reusable connection
-const client = new Client(config);
-
-let connected = false;
+// Single reusable connection (lazy initialized)
+let client: pg.Client | null = null;
+let isConnected = false;
+let connectionPromise: Promise<void> | null = null;
 
 async function ensureConnected() {
-  if (!connected) {
+  // If a connection is already in progress, wait for it
+  if (connectionPromise) {
+    await connectionPromise;
+    return;
+  }
+  
+  // If already connected, return immediately
+  if (client && isConnected) {
+    return;
+  }
+  
+  // Start a new connection
+  connectionPromise = (async () => {
     try {
-      await client.connect();
-      connected = true;
+      // Create a new client if needed
+      if (!client || !isConnected) {
+        const config = getConfig();
+        client = new Client(config);
+        isConnected = false;
+      }
+      
+      // Connect if not already connected
+      if (!isConnected) {
+        await client.connect();
+        isConnected = true;
+        console.log('Successfully connected to content database');
+      }
     } catch (error) {
       logError('content-db-direct', error, { action: 'connect' });
-      console.error('Database connection error - check environment variables');
-      throw new Error('Unable to connect to content database');
+      
+      // Provide more detailed error information
+      if (error instanceof Error) {
+        if (error.message.includes('ECONNREFUSED')) {
+          console.error('Database connection refused. Check that the database is running and accessible.');
+        } else if (error.message.includes('authentication')) {
+          console.error('Database authentication failed. Check your DB_READONLY_USER and DB_READONLY_PASSWORD.');
+        } else if (error.message.includes('already been connected')) {
+          // This shouldn't happen with the new logic, but handle it gracefully
+          console.log('Client was already connected, continuing...');
+          isConnected = true;
+          return;
+        } else {
+          console.error('Database connection error:', error.message);
+        }
+      }
+      
+      // Reset state on connection failure
+      client = null;
+      isConnected = false;
+      connectionPromise = null;
+      
+      throw new Error('Unable to connect to content database. Check your environment variables and database status.');
     }
+  })();
+  
+  try {
+    await connectionPromise;
+  } finally {
+    // Clear the promise after completion
+    connectionPromise = null;
   }
 }
 
+// Define which collections are stored in the database vs markdown files
+const DATABASE_COLLECTIONS = [
+  'blog',
+  'staff', 
+  'announcements',
+  'events',
+  'tuition',
+  'settings',
+  'testimonials',
+  'school-info'
+];
+
 // Get all entries from a collection
 export async function getCollection(collection: string): Promise<ContentEntry[]> {
+  // For markdown-only collections, return empty array to avoid database errors
+  if (!DATABASE_COLLECTIONS.includes(collection)) {
+    console.log(`Collection '${collection}' is not database-backed, returning empty array`);
+    return [];
+  }
+
   await ensureConnected();
   
   try {
@@ -93,6 +217,12 @@ export async function getCollection(collection: string): Promise<ContentEntry[]>
 
 // Get a single entry by collection and slug
 export async function getEntry(collection: string, slug: string): Promise<ContentEntry | null> {
+  // For markdown-only collections, return null to avoid database errors
+  if (!DATABASE_COLLECTIONS.includes(collection)) {
+    console.log(`Collection '${collection}' is not database-backed, returning null for entry '${slug}'`);
+    return null;
+  }
+
   await ensureConnected();
   
   try {
@@ -419,11 +549,26 @@ export async function getNewsletterStats(): Promise<{
 // Forms are now handled by Netlify Forms with a simple webhook for database logging
 // See /api/webhooks/netlify-form.ts for the webhook implementation
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  if (connected) {
-    await client.end();
-    connected = false;
+// Graceful shutdown (only in Node.js environments with proper process support)
+if (typeof process !== 'undefined' && 
+    typeof process.on === 'function' && 
+    typeof process.exit === 'function') {
+  try {
+    process.on('SIGINT', async () => {
+      console.log('\nGracefully shutting down database connection...');
+      if (client && isConnected) {
+        try {
+          await client.end();
+          isConnected = false;
+          console.log('Database connection closed.');
+        } catch (error) {
+          console.error('Error closing database connection:', error);
+        }
+      }
+      process.exit(0);
+    });
+  } catch (error) {
+    // Silently ignore if process.on fails in certain environments
+    console.log('Note: Process shutdown handler not available in this environment');
   }
-  process.exit();
-});
+}

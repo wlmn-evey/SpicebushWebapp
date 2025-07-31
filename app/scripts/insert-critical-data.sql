@@ -9,8 +9,8 @@ VALUES (
   'School Information',
   '{
     "name": "Spicebush Montessori School",
-    "phone": "(484) 356-6728",
-    "email": "info@spicebushmontessori.org",
+    "phone": "(484) 202-0712",
+    "email": "information@spicebushmontessori.org",
     "address": {
       "street": "2300 Old West Chester Pike",
       "city": "Havertown",
@@ -54,7 +54,7 @@ VALUES (
     "name": "Full Day Program",
     "type": "program",
     "description": "Our full-day Montessori program runs from 8:30 AM to 3:00 PM, with optional before and after care available.",
-    "schedule": "Monday - Friday, 8:30 AM - 3:00 PM",
+    "schedule": "Monday - Friday, 8:30 AM - 3:00 PM (pickup 2:45-3:00)",
     "ages": "3-6 years",
     "features": [
       "Authentic Montessori curriculum",

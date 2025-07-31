@@ -4,17 +4,19 @@ import HoursWidget from './HoursWidget.astro';
 import OptimizedImage from './OptimizedImage.astro';
 import ContactInfo from './ContactInfo.astro';
 import NewsletterSignup from './NewsletterSignup.astro';
-import { getEntry } from '@lib/content-db';
+import { getSetting } from '@lib/content-db';
 
-// Get school info for social media links from Supabase with error handling
+// Get social media links from database settings with error handling
 let socialMedia = { facebook: null, instagram: null };
 try {
-  const schoolInfo = await getEntry('school-info', 'general');
-  if (schoolInfo?.data?.socialMedia) {
-    socialMedia = schoolInfo.data.socialMedia;
-  }
+  const facebook = await getSetting('school_facebook');
+  const instagram = await getSetting('school_instagram');
+  socialMedia = { 
+    facebook: facebook || null, 
+    instagram: instagram || null 
+  };
 } catch (error) {
-  console.error('Error loading school info in Footer:', error);
+  console.error('Error loading social media links in Footer:', error);
   // Use default empty social media links
 }
 ---

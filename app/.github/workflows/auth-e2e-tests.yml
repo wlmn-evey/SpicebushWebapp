@@ -1,0 +1,313 @@
+name: Authentication E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**/*.ts'
+      - 'src/**/*.tsx'
+      - 'e2e/**/*.spec.ts'
+      - 'package.json'
+      - '.github/workflows/auth-e2e-tests.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**/*.ts'
+      - 'src/**/*.tsx'
+      - 'e2e/**/*.spec.ts'
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Test suite to run'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - smoke
+          - full
+          - security
+          - performance
+
+env:
+  NODE_VERSION: '18'
+  E2E_BASE_URL: http://localhost:4321
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      test-matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Determine test matrix
+        id: set-matrix
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.test_suite }}" == "full" ]]; then
+            echo "matrix={\"browser\":[\"chromium\",\"firefox\",\"webkit\"],\"include\":[{\"browser\":\"chromium\",\"device\":\"Pixel 5\"},{\"browser\":\"webkit\",\"device\":\"iPhone 12\"}]}" >> $GITHUB_OUTPUT
+          else
+            echo "matrix={\"browser\":[\"chromium\"]}" >> $GITHUB_OUTPUT
+          fi
+
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.test-matrix) }}
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: spicebush_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      mailhog:
+        image: mailhog/mailhog:latest
+        ports:
+          - 1025:1025
+          - 8025:8025
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase
+        run: |
+          supabase start
+          # Wait for Supabase to be ready
+          sleep 10
+          supabase status
+
+      - name: Setup test database
+        run: |
+          # Run migrations
+          supabase db push
+          
+          # Seed test data
+          psql "$DATABASE_URL" < ./scripts/seed-test-data.sql
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/spicebush_test
+
+      - name: Install Playwright
+        run: |
+          npx playwright install --with-deps ${{ matrix.browser }}
+          if [[ -n "${{ matrix.device }}" ]]; then
+            npx playwright install-deps "${{ matrix.device }}"
+          fi
+
+      - name: Build application
+        run: npm run build
+        env:
+          PUBLIC_SUPABASE_URL: http://localhost:54321
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+
+      - name: Start application
+        run: |
+          npm run preview &
+          # Wait for app to be ready
+          npx wait-on ${{ env.E2E_BASE_URL }} -t 30000
+
+      - name: Run E2E tests
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            case "${{ inputs.test_suite }}" in
+              smoke)
+                npx playwright test e2e/magic-link-auth.spec.ts --grep="@smoke" --project="${{ matrix.browser }}"
+                ;;
+              security)
+                npx playwright test e2e/magic-link-security.spec.ts --project="${{ matrix.browser }}"
+                ;;
+              performance)
+                npx playwright test e2e/magic-link-performance.spec.ts --project="${{ matrix.browser }}"
+                ;;
+              *)
+                npx playwright test e2e/magic-link-*.spec.ts --project="${{ matrix.browser }}"
+                ;;
+            esac
+          else
+            npx playwright test e2e/magic-link-*.spec.ts --project="${{ matrix.browser }}"
+          fi
+        env:
+          MAILHOG_URL: http://localhost:8025
+          EMAIL_TEST_STRATEGY: mailhog
+          TEST_ADMIN_EMAIL: evey@eveywinters.com
+          CI: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report-${{ matrix.browser }}-${{ matrix.device || 'desktop' }}
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload test videos
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-videos-${{ matrix.browser }}-${{ matrix.device || 'desktop' }}
+          path: test-results/*/video.webm
+          retention-days: 3
+
+      - name: Send failure notification
+        if: failure() && github.event_name == 'schedule'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Nightly auth E2E tests failed on ${{ matrix.browser }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  security-scan:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run security audit
+        run: |
+          npm audit --production
+          
+      - name: OWASP ZAP Scan
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          target: ${{ env.E2E_BASE_URL }}
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-report
+          path: report_html.html
+
+  performance-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.test_suite == 'performance')
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g lighthouse
+
+      - name: Start services
+        run: |
+          docker-compose up -d
+          npm run build
+          npm run preview &
+          npx wait-on ${{ env.E2E_BASE_URL }}
+
+      - name: Run Lighthouse
+        run: |
+          lighthouse ${{ env.E2E_BASE_URL }}/auth/magic-login \
+            --output=json,html \
+            --output-path=./lighthouse-report \
+            --chrome-flags="--headless" \
+            --only-categories=performance,accessibility,best-practices,seo
+
+      - name: Upload Lighthouse report
+        uses: actions/upload-artifact@v3
+        with:
+          name: lighthouse-report
+          path: |
+            lighthouse-report.json
+            lighthouse-report.html
+
+      - name: Check performance budget
+        run: |
+          node scripts/check-performance-budget.js lighthouse-report.json
+
+  report:
+    needs: [test, security-scan, performance-test]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate summary report
+        run: |
+          echo "# E2E Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Browser | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Parse test results and add to summary
+          for report in playwright-report-*/; do
+            if [[ -f "$report/index.html" ]]; then
+              browser=$(echo $report | sed 's/playwright-report-//;s/\///')
+              echo "| $browser | ✅ |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| $browser | ❌ |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Security Scan" >> $GITHUB_STEP_SUMMARY
+          if [[ -f "zap-report/report_html.html" ]]; then
+            echo "✅ Security scan completed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ Security scan skipped" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Performance" >> $GITHUB_STEP_SUMMARY
+          if [[ -f "lighthouse-report/lighthouse-report.json" ]]; then
+            # Extract performance score
+            score=$(jq '.categories.performance.score * 100' lighthouse-report/lighthouse-report.json)
+            echo "Performance score: ${score}%" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ Performance test skipped" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync(process.env.GITHUB_STEP_SUMMARY, 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });

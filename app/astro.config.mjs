@@ -20,7 +20,13 @@ export default defineConfig({
   }),
   vite: {
     define: {
-      'process.env': {}
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      // Make specific DB_READONLY vars available during build
+      'process.env.DB_READONLY_HOST': JSON.stringify(process.env.DB_READONLY_HOST),
+      'process.env.DB_READONLY_PORT': JSON.stringify(process.env.DB_READONLY_PORT),
+      'process.env.DB_READONLY_DATABASE': JSON.stringify(process.env.DB_READONLY_DATABASE),
+      'process.env.DB_READONLY_USER': JSON.stringify(process.env.DB_READONLY_USER),
+      'process.env.DB_READONLY_PASSWORD': JSON.stringify(process.env.DB_READONLY_PASSWORD)
     },
     resolve: {
       alias: {

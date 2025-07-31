@@ -1,8 +1,8 @@
 # Bug Tracker Master Index - Spicebush Montessori
 
-**Last Updated**: 2025-07-29  
-**Total Bugs**: 39  
-**Critical**: 8 | **High**: 17 | **Medium**: 10 | **Low**: 3
+**Last Updated**: 2025-07-30  
+**Total Bugs**: 41  
+**Critical**: 9 | **High**: 17 | **Medium**: 10 | **Low**: 3
 
 ## Bug Status Overview
 
@@ -15,6 +15,8 @@
 - [027-supabase-storage-migration-failure.md](027-supabase-storage-migration-failure.md) - Supabase Storage Migration Failure
 - [032-docker-missing-dependencies.md](032-docker-missing-dependencies.md) - Docker Container Missing Multiple Dependencies ✅ FIXED
 - [034-arm64-rollup-dev-server.md](034-arm64-rollup-dev-server.md) - ARM64 Rollup Dev Server Failure
+- [047-db-readonly-env-vars.md](047-db-readonly-env-vars.md) - DB_READONLY Environment Variables Not Accessible ✅ FIXED
+- [048-docker-http-request-hang.md](048-docker-http-request-hang.md) - Application Hangs on HTTP Requests in Docker
 
 ### 🟠 High Priority Bugs
 - [005-slow-page-performance.md](005-slow-page-performance.md) - Poor Page Load Performance

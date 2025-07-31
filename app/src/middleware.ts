@@ -7,7 +7,7 @@ const SESSION_COOKIE_NAME = 'sbms-session';
 export const onRequest = defineMiddleware(async (context, next) => {
   // Initialize Supabase client
   const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || 'http://localhost:54321';
-  const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOuoJeHxjNa-NEHl7qWa00fNKZdJ9rHxs9eA';
+  const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.PUBLIC_SUPABASE_PUBLIC_KEY || '';
   const supabase = createClient(supabaseUrl, supabaseKey);
   
   // Get the coming soon configuration from settings table

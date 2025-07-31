@@ -1,5 +1,5 @@
 ---
-import { getEntry } from '@lib/content-db';
+import { getSetting } from '@lib/content-db';
 import { Phone, Mail, MapPin } from 'lucide-astro';
 
 interface Props {
@@ -11,9 +11,20 @@ interface Props {
 
 const { showIcons = true, showLabels = false, inline = false, className = '' } = Astro.props;
 
-// Get school info from Supabase
-const schoolInfo = await getEntry('school-info', 'general');
-const { phone, email, address } = schoolInfo.data;
+// Get school info from database settings
+const phone = await getSetting('school_phone') || '(484) 202-0712';
+const email = await getSetting('school_email') || 'information@spicebushmontessori.org';
+const addressStreet = await getSetting('school_address_street') || '827 Concord Road';
+const addressCity = await getSetting('school_address_city') || 'Glen Mills';
+const addressState = await getSetting('school_address_state') || 'PA';
+const addressZip = await getSetting('school_address_zip') || '19342';
+
+const address = {
+  street: addressStreet,
+  city: addressCity,
+  state: addressState,
+  zip: addressZip
+};
 
 const containerClass = inline ? 'flex flex-wrap gap-4' : 'space-y-2';
 ---

@@ -13,8 +13,6 @@ socialMedia:
   facebook: "https://www.facebook.com/SpicebushMontessori"
   instagram: "https://www.instagram.com/spicebushmontessori"
 founded: 2021
-ein: "88-0565930"
-accreditation: ["AMI Certified Teachers", "PA Licensed Child Care Center"]
 ---
 
 # Spicebush Montessori School

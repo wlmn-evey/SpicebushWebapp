@@ -1,7 +1,7 @@
 ---
 export const prerender = false;
 
-import { getEntry, getCollection, getEntries, getSchoolInfo } from '@lib/content-db';
+import { getEntry, getCollection, getEntries, getSchoolInfo, getSetting } from '@lib/content-db';
 import { Fragment } from 'astro/jsx-runtime';
 
 // Get all the data we need
@@ -11,8 +11,75 @@ const tuitionPrograms = await getEntries('tuition', (entry) => entry.data.type =
 const tuitionRates = await getEntries('tuition', (entry) => entry.data.type === 'rate');
 const testimonials = await getEntries('testimonials', (entry) => entry.data.featured);
 
+// Get coming soon settings
+const launchDateSetting = await getSetting('coming_soon_launch_date');
+const messageSetting = await getSetting('coming_soon_message');
+const newsletterSetting = await getSetting('coming_soon_newsletter');
+
+// Extract values with fallbacks
+const launchDate = launchDateSetting || 'Fall 2025';
+const updateMessage = messageSetting || "We're updating our website to enhance your experience. Thank you for your patience!";
+const showNewsletter = newsletterSetting !== false; // Default to true if not set
+
+
 // Sort hours by order
 const sortedHours = hoursCollection.sort((a, b) => a.data.order - b.data.order);
+
+// Generate hours display functions
+function generateHoursDisplay() {
+  // Get weekdays (Monday-Friday)
+  const weekdays = sortedHours.filter(hour => 
+    !hour.data.is_closed && 
+    !['Saturday', 'Sunday'].includes(hour.data.day)
+  );
+  
+  if (weekdays.length === 0) {
+    return 'Monday - Friday: 8:30 AM - 3:00 PM (pickup 2:45-3:00)';
+  }
+  
+  // Check if all weekdays have the same schedule
+  const regularHours = '8:30 AM - 3:00 PM';
+  const hasConsistentRegularHours = weekdays.every(day => 
+    day.data.open_time === '8:30 AM'
+  );
+  
+  if (hasConsistentRegularHours) {
+    return `Monday - Friday: ${regularHours} (pickup 2:45-3:00)`;
+  }
+  
+  // If hours vary, show individual days
+  return weekdays.map(day => 
+    `${day.data.day}: ${day.data.open_time} - ${day.data.close_time}`
+  ).join(', ');
+}
+
+function generateExtendedCareInfo() {
+  // Get days with extended care (close after 3:00 PM)
+  const extendedCareDays = sortedHours.filter(hour => 
+    !hour.data.is_closed && 
+    hour.data.close_time !== '3:00 PM' &&
+    !['Saturday', 'Sunday'].includes(hour.data.day)
+  );
+  
+  if (extendedCareDays.length === 0) {
+    return 'Extended care not available';
+  }
+  
+  // Check if it's Mon-Thu
+  const isMonThu = extendedCareDays.length === 4 && 
+    extendedCareDays.every(day => ['Monday', 'Tuesday', 'Wednesday', 'Thursday'].includes(day.data.day));
+  
+  if (isMonThu && extendedCareDays.every(day => day.data.close_time === '5:30 PM')) {
+    return 'Until 5:30 PM • Additional cost varies by income';
+  }
+  
+  // Show specific days and times
+  const dayRange = extendedCareDays.length === 4 ? 'Mon-Thu' : 
+    extendedCareDays.map(day => day.data.day.substring(0, 3)).join(', ');
+  const latestTime = extendedCareDays[0]?.data.close_time || '5:30 PM';
+  
+  return `${dayRange} until ${latestTime} • Additional cost varies by income`;
+}
 
 // Calculate tuition ranges for each program type
 function getTuitionRange(programId: string) {
@@ -284,6 +351,24 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
       margin-bottom: 0.5rem;
       word-break: break-word;
       overflow-wrap: break-word;
+    }
+
+    .hours-info {
+      margin-top: 0.5rem;
+    }
+
+    .hours-section {
+      margin-bottom: 1rem !important;
+      line-height: 1.5;
+    }
+
+    .hours-section:last-child {
+      margin-bottom: 0 !important;
+    }
+
+    .hours-section strong {
+      color: var(--dark-green);
+      font-size: 0.95rem;
     }
 
     .info-card a {
@@ -865,12 +950,12 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
     <img src="/images/optimized/homepage/homepage-spicebush-logo-brand-identity-800x800.webp" alt="Spicebush Montessori School" class="logo">
     <h1>Spicebush Montessori School</h1>
     <p class="tagline">Nurturing Young Minds in Glen Mills, PA</p>
-    <div class="enrollment-notice" role="alert">🌟 Now Enrolling for Fall 2025 - Limited Spots Available!</div>
+    <div class="enrollment-notice" role="alert">🌟 Now Enrolling for {launchDate} - Limited Spots Available!</div>
   </header>
 
   <!-- Update Notice -->
   <div class="update-notice" role="status" aria-live="polite">
-    <p>🔧 We're updating our website to enhance your experience. Thank you for your patience!</p>
+    <p>🔧 {updateMessage}</p>
   </div>
 
   <!-- Quick Info Cards -->
@@ -894,8 +979,17 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
           </svg>
         </div>
         <h3>School Hours</h3>
-        <p><strong>Monday - Thursday</strong><br>8:30 AM - 5:30 PM</p>
-        <p><strong>Friday</strong><br>8:30 AM - 3:00 PM</p>
+        <div class="hours-info">
+          <p class="hours-section">
+            <strong>Regular Program Hours</strong><br/>
+            {generateHoursDisplay()}
+          </p>
+          
+          <p class="hours-section">
+            <strong>Extended Care Option (Mon-Thu only)</strong><br/>
+            {generateExtendedCareInfo()}
+          </p>
+        </div>
       </div>
 
       <div class="info-card">
@@ -1050,7 +1144,7 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
             <div class="program-details">
               <p><strong>Ages:</strong> 3-6 years</p>
               <p><strong>Schedule:</strong> 5 days/week (M-F)</p>
-              <p><strong>Hours:</strong> 8:30 AM - 3:00 PM</p>
+              <p><strong>Hours:</strong> {generateHoursDisplay()}</p>
               <p>Comprehensive Montessori program with afternoon enrichment.</p>
             </div>
             <div class="tuition-range">
@@ -1072,22 +1166,12 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
             <div class="program-details">
               <p><strong>Available:</strong> Mon-Thu until 5:30 PM</p>
               <p><strong>For:</strong> Full Day Students</p>
-              <p><strong>Additional:</strong> $333/month</p>
+              <p><strong>Additional:</strong> Cost varies by income tier</p>
               <p>Extended morning and afternoon care for working families.</p>
             </div>
             <div class="tuition-range">
               <h4>Total with Extended Care</h4>
-              {(() => {
-                const range = getTuitionRange('full-day-5-days');
-                const extendedMin = range.min + 333;
-                const extendedMax = range.max + 333;
-                return range.min > 0 ? (
-                  <p class="price">${extendedMin} - ${extendedMax}/month</p>
-                ) : (
-                  <p class="price">$783 - $1,836/month</p>
-                );
-              })()}
-              <p>Full day + extended care</p>
+              <p class="price">Extended care costs vary by income tier. Contact us at information@spicebushmontessori.org to learn your family's specific rate.</p>
             </div>
           </div>
         </div>
@@ -1168,9 +1252,10 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
             </div>
           </div>
           
-          <div class="contact-form">
-            <h3>Schedule a Tour or Ask a Question</h3>
-            <form name="coming-soon-contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="contact-form">
+          {showNewsletter && (
+            <div class="contact-form">
+              <h3>Schedule a Tour or Ask a Question</h3>
+              <form name="coming-soon-contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="contact-form">
               <input type="hidden" name="form-name" value="coming-soon-contact">
               <p style="display: none;">
                 <label>Don't fill this out: <input name="bot-field"></label>
@@ -1251,6 +1336,7 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
               </div>
             </form>
           </div>
+          )}
         </div>
       </div>
     </section>
@@ -1259,7 +1345,6 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
   <!-- Footer -->
   <footer class="footer">
     <p>© 2025 Spicebush Montessori School</p>
-    <p>A 501(c)(3) Non-Profit Organization | EIN: {schoolInfo?.data.ein || '88-0565930'}</p>
     <div class="footer-links">
       <a href="/non-discrimination-policy">Non-Discrimination Policy</a>
       <a href="/privacy-policy">Privacy Policy</a>
@@ -1280,12 +1365,13 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
   <script>
     // Form submission handling
     const form = document.getElementById('contact-form');
-    const successMessage = document.getElementById('success-message');
-    const submitButton = form.querySelector('.submit-button');
-    const buttonText = submitButton.querySelector('.button-text');
-    const loadingSpinner = submitButton.querySelector('.loading');
+    if (form) {
+      const successMessage = document.getElementById('success-message');
+      const submitButton = form.querySelector('.submit-button');
+      const buttonText = submitButton.querySelector('.button-text');
+      const loadingSpinner = submitButton.querySelector('.loading');
 
-    form.addEventListener('submit', async (e) => {
+      form.addEventListener('submit', async (e) => {
       // Show loading state
       buttonText.style.display = 'none';
       loadingSpinner.style.display = 'inline-block';
@@ -1311,6 +1397,7 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
         }, 10000);
       }, 1000);
     });
+    }
 
     // Smooth scrolling for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {

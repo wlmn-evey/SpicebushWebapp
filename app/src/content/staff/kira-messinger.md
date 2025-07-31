@@ -1,9 +1,7 @@
 ---
-name: "Kira Messinger"
+name: "Kira"
 role: "Montessori Teacher & Nature Guide"
 photo: "/images/optimized/teachers/teachers-kira-messinger-assistant-teacher-640w.webp"
-email: "kira@spicebushmontessori.org"
-credentials: ["AMI Montessori Certification", "Environmental Education Certificate"]
 languages: ["English"]
 startYear: 2023
 order: 3

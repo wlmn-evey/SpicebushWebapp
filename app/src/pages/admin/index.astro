@@ -8,6 +8,7 @@
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
 import { getCollection, getAllSettings } from '@lib/content-db';
+import { getCollection as getAstroCollection } from 'astro:content';
 
 // Check authentication
 const { isAuthenticated } = await checkAdminAuth(Astro);
@@ -24,7 +25,7 @@ const [
 ] = await Promise.all([
   getCollection('blog'),
   getCollection('staff'),
-  getCollection('photos'),
+  getAstroCollection('photos'), // Use Astro's content collection for photos
   getAllSettings()
 ]);
 
@@ -41,7 +42,7 @@ const stats = {
   },
   photos: {
     total: photos.length,
-    featured: photos.filter(photo => photo.data.featured).length
+    featured: photos.filter(photo => photo.data.priority === true).length // priority is used for featured photos
   }
 };
 

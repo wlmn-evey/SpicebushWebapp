@@ -3,7 +3,7 @@ type: "rate"
 rate_label: "Tuition B"
 program_id: "full-day-3-days-twr"
 tuition_price: 8609.50
-extended_care_price: 3800
+extended_care_price: 3600
 extended_care_available: true
 is_constant_rate: false
 school_year: "2025-2026"
@@ -25,7 +25,7 @@ Reduced tuition rate for middle-income families seeking our flexible three-day f
 
 ## Tuition Rate
 - **Annual Tuition:** $8,609.50
-- **Extended Care:** $3,800 annually (available Tuesday-Thursday)
+- **Extended Care:** $3,600 annually (available Tuesday-Thursday)
 - **Program:** Full Day - 3 Days (Tuesday-Thursday, 8:30 AM - 3:00 PM)
 - **School Year:** 2025-2026
 
@@ -47,6 +47,6 @@ This rate applies to families with household income at or above:
 - Progress assessments and conferences
 
 ## Extended Care Option
-Extended care is available Tuesday through Thursday from 3:00 PM to 5:30 PM for an additional $3,800 annually.
+Extended care is available Tuesday through Thursday from 3:00 PM to 5:30 PM for an additional $3,600 annually.
 
 This three-day option combines affordability with flexibility while maintaining high educational standards.

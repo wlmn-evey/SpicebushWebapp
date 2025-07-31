@@ -13,8 +13,10 @@ dist/
 .env.*
 !.env.example
 !.env.test.example
+!.env.production.example
 .env.local
 .env.production
+.env.production.local
 .env.staging
 .env.docker.development
 .env.hosted
@@ -69,3 +71,30 @@ yarn.lock
 
 # Test page backups
 backups/
+
+# Test files and scripts
+test-*.js
+test-*.sh
+test-results/
+e2e/
+
+# Security and credentials
+SECURITY_CREDENTIALS.md
+*.key
+*.pem
+*-credentials.json
+scripts/setup-credentials.sh
+
+# Temporary and backup files
+*.backup
+docker-compose.*.backup
+docker-compose.simple.yml
+
+# Migration and test reports
+*_REPORT.md
+*_GUIDE.md
+test-report-*.md
+
+# Journal files (these can be kept in a separate repo or ignored)
+# Uncomment if you want to exclude journal files:
+# journal/

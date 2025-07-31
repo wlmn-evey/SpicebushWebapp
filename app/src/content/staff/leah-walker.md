@@ -2,8 +2,6 @@
 name: "Leah Walker"
 role: "Montessori Teacher"
 photo: "/images/optimized/teachers/teachers-leah-walker-lead-teacher-640w.webp"
-email: "leah@spicebushmontessori.org"
-credentials: ["AMI Montessori Certification", "B.S. in Child Development"]
 languages: ["English"]
 startYear: 2022
 order: 2

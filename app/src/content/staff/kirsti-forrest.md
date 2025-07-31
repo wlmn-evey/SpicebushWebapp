@@ -1,9 +1,7 @@
 ---
-name: "Kirsti Forrest"
+name: "Kirsti"
 role: "Lead Montessori Teacher"
 photo: "/images/optimized/teachers/teachers-kirsti-forrest-head-teacher-640w.webp"
-email: "kirsti@spicebushmontessori.org"
-credentials: ["AMI Montessori Certification", "B.A. in Education"]
 languages: ["English"]
 startYear: 2021
 order: 1

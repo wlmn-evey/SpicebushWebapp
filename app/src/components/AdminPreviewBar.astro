@@ -2,9 +2,22 @@
 // Check if user is admin and coming soon mode is enabled
 const isAdmin = Astro.cookies.get('sbms-admin-auth')?.value === 'true';
 import { getEntry } from 'astro:content';
+import { getSetting } from '@lib/content-db';
 
-const comingSoonConfig = await getEntry('coming-soon', 'config');
-const isComingSoonEnabled = comingSoonConfig?.data?.enabled || false;
+// Try to get coming soon status from settings first (database)
+let isComingSoonEnabled = false;
+try {
+  const comingSoonMode = await getSetting('coming_soon_enabled');
+  isComingSoonEnabled = comingSoonMode === 'true';
+} catch (error) {
+  // If database fails, try markdown config as fallback
+  try {
+    const comingSoonConfig = await getEntry('coming-soon', 'config');
+    isComingSoonEnabled = comingSoonConfig?.data?.enabled || false;
+  } catch (err) {
+    console.log('Coming soon config not found');
+  }
+}
 
 // Only show bar if admin and coming soon mode is enabled
 const showBar = isAdmin && isComingSoonEnabled;

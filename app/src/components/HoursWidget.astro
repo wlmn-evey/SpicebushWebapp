@@ -1,9 +1,9 @@
 ---
 // Hours Widget Component
 // Styled specifically for footer integration
-import { getCollection } from '@lib/content-db';
+import { getCollection } from 'astro:content';
 
-// Fetch hours data from Supabase with error handling
+// Fetch hours data from markdown files with error handling
 let hoursData = [];
 try {
   const hoursEntries = await getCollection('hours');
