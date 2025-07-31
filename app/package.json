@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "build:production": "npm run typecheck && astro build",
     "preview": "astro preview",
     "astro": "astro",
     "lint": "eslint src/ --ext .ts,.astro,.js",

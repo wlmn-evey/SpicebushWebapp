@@ -1,4 +1,22 @@
 # Netlify Configuration for Spicebush Montessori
+#
+# IMPORTANT: Environment Variables
+# Set these in Netlify Dashboard > Site Settings > Environment Variables:
+#
+# Required for Production:
+# - PUBLIC_SUPABASE_URL
+# - PUBLIC_SUPABASE_ANON_KEY
+# - SUPABASE_SERVICE_ROLE_KEY
+# - DATABASE_URL
+# - DIRECT_URL
+# - ADMIN_EMAIL
+# - SITE_URL (usually auto-set by Netlify)
+#
+# Optional but Recommended:
+# - SENDGRID_API_KEY (for email notifications)
+# - STRIPE_SECRET_KEY (for payments)
+# - STRIPE_WEBHOOK_SECRET (for payment webhooks)
+# - SENTRY_DSN (for error tracking)
 
 [build]
   # Build command
@@ -17,6 +35,9 @@
 # Production context
 [context.production]
   environment = { NODE_ENV = "production" }
+  
+  # Production build command with type checking
+  command = "npm run build"
 
 # Branch deploy context
 [context.branch-deploy]
@@ -37,8 +58,11 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     
-    # HSTS (only enable after confirming HTTPS works)
-    # Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    # Content Security Policy (adjust domains as needed)
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src https://challenges.cloudflare.com"
+    
+    # HSTS (enable for production with HTTPS)
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
 
 # Cache control for static assets
 [[headers]]
@@ -56,12 +80,27 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Redirects (example - adjust as needed)
+# Redirects
+# Force HTTPS
 [[redirects]]
-  from = "/admin"
-  to = "/admin/login"
-  status = 302
+  from = "http://:domain/*"
+  to = "https://:domain/:splat"
+  status = 301
+  force = true
+
+# Remove trailing slashes
+[[redirects]]
+  from = "/*/"
+  to = "/:splat"
+  status = 301
+
+# Admin area protection (handled by middleware, but good to have)
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/:splat"
+  status = 200
   conditions = {Role = ["admin"]}
+  force = false
 
 # 404 page
 [[redirects]]
