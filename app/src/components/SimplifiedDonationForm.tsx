@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
-// Initialize Stripe
-const stripeKey = import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY;
-const isDemoMode = !stripeKey || stripeKey === 'pk_test_dummy_key_configure_stripe';
-const stripePromise = loadStripe(stripeKey || 'pk_test_dummy_key_configure_stripe');
+// Initialize Stripe with production key
+const stripeKey = import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_live_51L7M83HrcKFotQYJjLdnjrlvUNQllhv6UcRSNxXtVAlKS4j7SDzzwaNTedSoFBGefwssgxFqMOVz9Qz6Tt4gyCv500mchbb6Dn';
+const isDemoMode = false; // We have a real key now
+const stripePromise = loadStripe(stripeKey);
 
 // Form type to support both donations and enrollment
 export type FormType = 'donation' | 'enrollment';
