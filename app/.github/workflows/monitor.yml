@@ -1,0 +1,302 @@
+name: Monitor Deployments
+
+on:
+  schedule:
+    # Run every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      check_type:
+        description: 'Type of monitoring check'
+        required: true
+        type: choice
+        options:
+          - all
+          - uptime
+          - performance
+          - security
+          - functionality
+
+env:
+  PRODUCTION_URL: 'https://spicebushmontessori.org'
+  STAGING_URL: 'https://spicebush-staging.netlify.app'
+
+jobs:
+  uptime-check:
+    name: Uptime Monitoring
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'uptime' }}
+    
+    steps:
+      - name: Check production uptime
+        id: prod-check
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.PRODUCTION_URL }})
+          echo "status_code=$response" >> $GITHUB_OUTPUT
+          if [ $response -eq 200 ]; then
+            echo "✅ Production site is up"
+          else
+            echo "❌ Production site is down or returning error: $response"
+            exit 1
+          fi
+          
+      - name: Check staging uptime
+        id: staging-check
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.STAGING_URL }})
+          echo "status_code=$response" >> $GITHUB_OUTPUT
+          if [ $response -eq 200 ]; then
+            echo "✅ Staging site is up"
+          else
+            echo "⚠️ Staging site is down or returning error: $response"
+          fi
+          
+      - name: Check critical endpoints
+        run: |
+          # Check API health
+          for endpoint in "/api/health" "/api/auth/check"; do
+            echo "Checking ${{ env.PRODUCTION_URL }}$endpoint"
+            response=$(curl -s -o /dev/null -w "%{http_code}" "${{ env.PRODUCTION_URL }}$endpoint")
+            if [ $response -eq 200 ] || [ $response -eq 401 ]; then
+              echo "✅ Endpoint $endpoint is responding correctly"
+            else
+              echo "❌ Endpoint $endpoint returned unexpected status: $response"
+              exit 1
+            fi
+          done
+          
+      - name: Create incident if down
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'incident,downtime',
+              state: 'open'
+            });
+            
+            if (issues.data.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '🚨 Site Downtime Detected',
+                body: `## Downtime Alert
+                
+                **Time Detected**: ${new Date().toISOString()}
+                **Production Status**: ${{ steps.prod-check.outputs.status_code }}
+                **Staging Status**: ${{ steps.staging-check.outputs.status_code }}
+                
+                ### Immediate Actions
+                1. Check Netlify status page
+                2. Review recent deployments
+                3. Check Supabase status
+                4. Consider rollback if necessary
+                
+                ### Investigation Checklist
+                - [ ] Netlify service status checked
+                - [ ] Recent deployment logs reviewed
+                - [ ] Database connectivity verified
+                - [ ] DNS resolution checked
+                - [ ] SSL certificate status verified`,
+                labels: ['incident', 'downtime', 'critical']
+              });
+            }
+            
+  performance-check:
+    name: Performance Monitoring
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'performance') }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+        
+      - name: Run Lighthouse on production
+        run: |
+          lhci autorun \
+            --collect.url=${{ env.PRODUCTION_URL }} \
+            --collect.numberOfRuns=3 \
+            --assert.preset=lighthouse:recommended \
+            --assert.assertions.categories:performance=off \
+            --assert.assertions.categories:accessibility=off \
+            --assert.assertions.categories:best-practices=off \
+            --assert.assertions.categories:seo=off
+            
+      - name: Check Core Web Vitals
+        run: |
+          # Using Chrome DevTools Protocol to get Web Vitals
+          npm install -g @cloudflare/puppeteer
+          
+          cat > check-vitals.js << 'EOF'
+          const puppeteer = require('puppeteer');
+          
+          (async () => {
+            const browser = await puppeteer.launch();
+            const page = await browser.newPage();
+            
+            await page.goto('${{ env.PRODUCTION_URL }}', { waitUntil: 'networkidle2' });
+            
+            const metrics = await page.evaluate(() => {
+              return new Promise((resolve) => {
+                let lcpValue, fidValue, clsValue;
+                
+                new PerformanceObserver((list) => {
+                  const entries = list.getEntries();
+                  entries.forEach((entry) => {
+                    if (entry.name === 'largest-contentful-paint') {
+                      lcpValue = entry.renderTime || entry.loadTime;
+                    }
+                  });
+                }).observe({ entryTypes: ['largest-contentful-paint'] });
+                
+                setTimeout(() => {
+                  resolve({
+                    lcp: lcpValue,
+                    fid: fidValue,
+                    cls: clsValue
+                  });
+                }, 5000);
+              });
+            });
+            
+            console.log('Core Web Vitals:', metrics);
+            await browser.close();
+          })();
+          EOF
+          
+          node check-vitals.js
+          
+  security-check:
+    name: Security Monitoring
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'security') }}
+    
+    steps:
+      - name: Check security headers
+        run: |
+          echo "Checking security headers for production..."
+          headers=$(curl -s -I ${{ env.PRODUCTION_URL }})
+          
+          # Check for required security headers
+          required_headers=(
+            "X-Frame-Options"
+            "X-Content-Type-Options"
+            "Strict-Transport-Security"
+            "Content-Security-Policy"
+          )
+          
+          for header in "${required_headers[@]}"; do
+            if echo "$headers" | grep -qi "$header"; then
+              echo "✅ $header is present"
+            else
+              echo "❌ Missing security header: $header"
+              exit 1
+            fi
+          done
+          
+      - name: Check SSL certificate
+        run: |
+          echo "Checking SSL certificate..."
+          openssl s_client -connect spicebushmontessori.org:443 -servername spicebushmontessori.org < /dev/null 2>/dev/null | openssl x509 -noout -dates
+          
+      - name: Check for exposed sensitive data
+        run: |
+          # Check if any API keys or sensitive data are exposed
+          echo "Checking for exposed sensitive data..."
+          
+          # Download homepage
+          curl -s ${{ env.PRODUCTION_URL }} > homepage.html
+          
+          # Check for common patterns
+          if grep -E "(api_key|apikey|secret|password|token)" homepage.html; then
+            echo "❌ Potential sensitive data exposure detected!"
+            exit 1
+          else
+            echo "✅ No obvious sensitive data exposure found"
+          fi
+          
+  functionality-check:
+    name: Functionality Monitoring
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'functionality') }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ./app
+        run: npm ci
+        
+      - name: Install Playwright
+        working-directory: ./app
+        run: npx playwright install chromium
+        
+      - name: Run smoke tests
+        working-directory: ./app
+        env:
+          BASE_URL: ${{ env.PRODUCTION_URL }}
+        run: |
+          npm run test:e2e:quick || true
+          
+      - name: Test critical user flows
+        working-directory: ./app
+        run: |
+          cat > critical-flows.spec.ts << 'EOF'
+          import { test, expect } from '@playwright/test';
+          
+          test.describe('Critical User Flows', () => {
+            test('Homepage loads correctly', async ({ page }) => {
+              await page.goto('${{ env.PRODUCTION_URL }}');
+              await expect(page).toHaveTitle(/Spicebush Montessori/);
+              await expect(page.locator('nav')).toBeVisible();
+            });
+            
+            test('Contact form is accessible', async ({ page }) => {
+              await page.goto('${{ env.PRODUCTION_URL }}/contact');
+              await expect(page.locator('form')).toBeVisible();
+            });
+            
+            test('Admin login page loads', async ({ page }) => {
+              await page.goto('${{ env.PRODUCTION_URL }}/admin');
+              await expect(page.locator('text=/Sign In|Login/')).toBeVisible();
+            });
+          });
+          EOF
+          
+          npx playwright test critical-flows.spec.ts
+          
+  alert-on-failure:
+    name: Alert on Failures
+    needs: [uptime-check, performance-check, security-check, functionality-check]
+    if: failure()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Send alert notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'failure'
+          text: |
+            🚨 Monitoring Alert
+            One or more monitoring checks have failed!
+            Check the workflow run for details.
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

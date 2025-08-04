@@ -73,5 +73,5 @@ CREATE POLICY "Public can view media" ON media
 -- Insert default settings
 INSERT INTO settings (key, value) VALUES 
   ('coming_soon_enabled', 'false'),
-  ('site_message', '')
+  ('site_message', '""')
 ON CONFLICT (key) DO NOTHING;

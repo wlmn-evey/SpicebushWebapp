@@ -188,8 +188,8 @@ const { type, title, subtitle } = Astro.props;
 </div>
 
 <script>
-  import { auth } from '@lib/supabase.ts';
-  import { isTestEmail, getAuthErrorMessage, isDevEnvironment } from '@lib/development-helpers.ts';
+  import { auth } from '@lib/supabase';
+  import { isTestEmail, getAuthErrorMessage, isDevEnvironment } from '@lib/development-helpers';
   
   // Get the form type from the data attribute
   const formElement = document.querySelector('#auth-form');

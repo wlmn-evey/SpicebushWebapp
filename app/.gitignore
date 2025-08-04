@@ -98,3 +98,5 @@ test-report-*.md
 # Journal files (these can be kept in a separate repo or ignored)
 # Uncomment if you want to exclude journal files:
 # journal/
+# Local Netlify folder
+.netlify

@@ -1,0 +1,19 @@
+{
+  "name": "spicebush-migration-scripts",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test:syntax": "node test-migration-syntax.js",
+    "verify": "node verify-hours-migration.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "migrate:hours": "node migrate-hours-to-cms.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0"
+  }
+}

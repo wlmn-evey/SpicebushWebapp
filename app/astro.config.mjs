@@ -4,7 +4,7 @@ import { fileURLToPath, URL } from 'node:url';
 import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 import react from '@astrojs/react';
-import node from '@astrojs/node';
+import netlify from '@astrojs/netlify';
 
 // https://astro.build/config
 export default defineConfig({
@@ -15,18 +15,10 @@ export default defineConfig({
     react()
   ],
   output: 'server',
-  adapter: node({
-    mode: 'standalone'
-  }),
+  adapter: netlify(),
   vite: {
     define: {
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      // Make specific DB_READONLY vars available during build
-      'process.env.DB_READONLY_HOST': JSON.stringify(process.env.DB_READONLY_HOST),
-      'process.env.DB_READONLY_PORT': JSON.stringify(process.env.DB_READONLY_PORT),
-      'process.env.DB_READONLY_DATABASE': JSON.stringify(process.env.DB_READONLY_DATABASE),
-      'process.env.DB_READONLY_USER': JSON.stringify(process.env.DB_READONLY_USER),
-      'process.env.DB_READONLY_PASSWORD': JSON.stringify(process.env.DB_READONLY_PASSWORD)
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
     },
     resolve: {
       alias: {

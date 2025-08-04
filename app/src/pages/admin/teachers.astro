@@ -18,7 +18,7 @@ import { ArrowLeft, Users, Plus, Edit, Trash2, Save, X, Eye, User } from 'lucide
   <main id="main-content">
     <!-- Admin Auth Check -->
     <script>
-      import { auth } from '@lib/supabase.ts';
+      import { auth } from '@lib/supabase';
       
       document.addEventListener('DOMContentLoaded', async () => {
         try {
@@ -252,7 +252,7 @@ import { ArrowLeft, Users, Plus, Edit, Trash2, Save, X, Eye, User } from 'lucide
 </Layout>
 
 <script>
-  import { supabase } from '@lib/supabase.ts';
+  import { supabase } from '@lib/supabase';
 
   document.addEventListener('DOMContentLoaded', async () => {
     const teachersGrid = document.getElementById('teachers-grid');

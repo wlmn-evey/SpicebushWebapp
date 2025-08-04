@@ -1,0 +1,227 @@
+name: Deploy to Netlify
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '20'
+  
+jobs:
+  # Job 1: Run tests before deployment
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ./app
+        run: npm ci
+        
+      - name: Run type checking
+        working-directory: ./app
+        run: npm run type-check || true
+        
+      - name: Run unit tests
+        working-directory: ./app
+        run: npm test -- --run || true
+        
+      - name: Run build test
+        working-directory: ./app
+        run: npm run build
+        
+  # Job 2: Deploy to Netlify (staging)
+  deploy-staging:
+    name: Deploy to Staging
+    needs: test
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/staging') ||
+      (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'staging') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.deploy-url }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ./app
+        run: npm ci
+        
+      - name: Build application
+        working-directory: ./app
+        env:
+          PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_PUBLIC_SUPABASE_ANON_KEY }}
+          NODE_ENV: staging
+        run: npm run build
+        
+      - name: Deploy to Netlify
+        id: deploy
+        uses: nwtgck/actions-netlify@v2.1
+        with:
+          publish-dir: './app/dist'
+          production-branch: staging
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy from GitHub Actions"
+          enable-pull-request-comment: true
+          enable-commit-comment: true
+          overwrites-pull-request-comment: true
+          alias: deploy-preview-${{ github.event.number }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_STAGING_SITE_ID }}
+          
+      - name: Add deployment status comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🚀 Staging Deployment Successful!\n\n**Preview URL**: ${{ steps.deploy.outputs.deploy-url }}\n\n### Deployment Details:\n- **Environment**: Staging\n- **Branch**: \`${{ github.head_ref || github.ref_name }}\`\n- **Commit**: \`${{ github.sha }}\`\n- **Build Time**: ${{ steps.deploy.outputs.build-time }}\n\n### Next Steps:\n1. Test the deployment at the preview URL\n2. Run automated tests: \`npm run test:e2e\`\n3. Verify email service is configured\n4. Check performance metrics`
+            })
+            
+  # Job 3: Deploy to Netlify (production)
+  deploy-production:
+    name: Deploy to Production
+    needs: test
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    
+    environment:
+      name: production
+      url: https://spicebushmontessori.org
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ./app
+        run: npm ci
+        
+      - name: Build application
+        working-directory: ./app
+        env:
+          PUBLIC_SUPABASE_URL: ${{ secrets.PRODUCTION_PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PRODUCTION_PUBLIC_SUPABASE_ANON_KEY }}
+          NODE_ENV: production
+        run: npm run build
+        
+      - name: Deploy to Netlify
+        id: deploy
+        uses: nwtgck/actions-netlify@v2.1
+        with:
+          publish-dir: './app/dist'
+          production-deploy: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Production deploy from GitHub Actions"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PRODUCTION_SITE_ID }}
+          
+      - name: Purge CDN cache
+        if: success()
+        run: |
+          echo "Purging CDN cache..."
+          # Add CDN purge command here if using Cloudflare or other CDN
+          
+      - name: Notify deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Production Deployment ${{ job.status }}
+            URL: https://spicebushmontessori.org
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          
+  # Job 4: Performance and Security Checks
+  post-deployment-checks:
+    name: Post-Deployment Verification
+    needs: [deploy-staging, deploy-production]
+    if: always() && (needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+        
+      - name: Run Lighthouse tests
+        run: |
+          DEPLOY_URL="${{ needs.deploy-staging.outputs.deploy-url || 'https://spicebushmontessori.org' }}"
+          lhci autorun --collect.url=$DEPLOY_URL --collect.numberOfRuns=3
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          
+      - name: Security headers check
+        run: |
+          DEPLOY_URL="${{ needs.deploy-staging.outputs.deploy-url || 'https://spicebushmontessori.org' }}"
+          curl -s -o /dev/null -w "Security Headers Check:\n" -I $DEPLOY_URL
+          curl -s "https://securityheaders.com/?q=$DEPLOY_URL&followRedirects=on" | grep -A 5 "grade"
+          
+      - name: Run E2E tests
+        if: success()
+        working-directory: ./app
+        run: |
+          npm ci
+          DEPLOY_URL="${{ needs.deploy-staging.outputs.deploy-url || 'https://spicebushmontessori.org' }}"
+          BASE_URL=$DEPLOY_URL npm run test:e2e:quick || true

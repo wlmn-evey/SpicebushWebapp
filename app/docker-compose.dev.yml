@@ -14,7 +14,7 @@ services:
       # Mount source code for hot reload
       - ./src:/app/src:delegated
       - ./public:/app/public:delegated
-      - ./astro.config.mjs:/app/astro.config.mjs:delegated
+      - ./astro.config.dev.mjs:/app/astro.config.mjs:delegated
       - ./tailwind.config.mjs:/app/tailwind.config.mjs:delegated
       - ./tsconfig.json:/app/tsconfig.json:delegated
       - ./package.json:/app/package.json:delegated

@@ -33,7 +33,7 @@ import {
   <main id="main-content">
     <!-- Admin Auth Check -->
     <script>
-      import { auth } from '@lib/supabase.ts';
+      import { auth } from '@lib/supabase';
       
       document.addEventListener('DOMContentLoaded', async () => {
         try {
@@ -463,7 +463,7 @@ import {
 </Layout>
 
 <script>
-  import { supabase } from '@lib/supabase.ts';
+  import { supabase } from '@lib/supabase';
 
   document.addEventListener('DOMContentLoaded', async () => {
     // Load dashboard stats

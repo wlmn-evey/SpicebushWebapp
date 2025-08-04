@@ -1,0 +1,142 @@
+name: Rollback Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      deployment_id:
+        description: 'Netlify deployment ID to rollback to (leave empty for previous deployment)'
+        required: false
+        type: string
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+
+jobs:
+  rollback:
+    name: Rollback ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    
+    environment:
+      name: ${{ github.event.inputs.environment }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install Netlify CLI
+        run: npm install -g netlify-cli
+        
+      - name: Get deployment info
+        id: get-deployment
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ github.event.inputs.environment == 'production' && secrets.NETLIFY_PRODUCTION_SITE_ID || secrets.NETLIFY_STAGING_SITE_ID }}
+        run: |
+          if [ -z "${{ github.event.inputs.deployment_id }}" ]; then
+            echo "Getting previous deployment ID..."
+            DEPLOYMENT_ID=$(netlify api listSiteDeploys --data '{"site_id":"'$NETLIFY_SITE_ID'"}' | jq -r '.[1].id')
+          else
+            DEPLOYMENT_ID="${{ github.event.inputs.deployment_id }}"
+          fi
+          echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+          
+          # Get deployment details
+          DEPLOYMENT_INFO=$(netlify api getSiteDeploy --data '{"site_id":"'$NETLIFY_SITE_ID'","deploy_id":"'$DEPLOYMENT_ID'"}')
+          echo "Deployment to rollback to:"
+          echo "$DEPLOYMENT_INFO" | jq '{id, created_at, deploy_url, branch, commit_ref}'
+          
+      - name: Confirm rollback
+        run: |
+          echo "=========================================="
+          echo "ROLLBACK CONFIRMATION"
+          echo "=========================================="
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Deployment ID: ${{ steps.get-deployment.outputs.deployment_id }}"
+          echo "Reason: ${{ github.event.inputs.reason }}"
+          echo "Initiated by: ${{ github.actor }}"
+          echo "=========================================="
+          
+      - name: Perform rollback
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ github.event.inputs.environment == 'production' && secrets.NETLIFY_PRODUCTION_SITE_ID || secrets.NETLIFY_STAGING_SITE_ID }}
+        run: |
+          echo "Rolling back to deployment ${{ steps.get-deployment.outputs.deployment_id }}..."
+          netlify api restoreSiteDeploy --data '{
+            "site_id": "'$NETLIFY_SITE_ID'",
+            "deploy_id": "${{ steps.get-deployment.outputs.deployment_id }}"
+          }'
+          
+      - name: Verify rollback
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ github.event.inputs.environment == 'production' && secrets.NETLIFY_PRODUCTION_SITE_ID || secrets.NETLIFY_STAGING_SITE_ID }}
+        run: |
+          sleep 10  # Wait for rollback to process
+          CURRENT_DEPLOY=$(netlify api getSite --data '{"site_id":"'$NETLIFY_SITE_ID'"}' | jq -r '.published_deploy.id')
+          if [ "$CURRENT_DEPLOY" == "${{ steps.get-deployment.outputs.deployment_id }}" ]; then
+            echo "✅ Rollback successful!"
+          else
+            echo "❌ Rollback may have failed. Please check Netlify dashboard."
+            exit 1
+          fi
+          
+      - name: Create rollback issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🔄 Rollback: ${{ github.event.inputs.environment }} - ${{ github.event.inputs.reason }}`,
+              body: `## Rollback Details
+              
+              **Environment**: ${{ github.event.inputs.environment }}
+              **Deployment ID**: ${{ steps.get-deployment.outputs.deployment_id }}
+              **Reason**: ${{ github.event.inputs.reason }}
+              **Initiated by**: @${{ github.actor }}
+              **Time**: ${new Date().toISOString()}
+              
+              ### Next Steps
+              1. Investigate the issue that caused the rollback
+              2. Create a fix in a new branch
+              3. Test thoroughly before re-deploying
+              4. Update this issue with findings
+              
+              ### Rollback Checklist
+              - [ ] Rollback completed successfully
+              - [ ] Users notified (if necessary)
+              - [ ] Root cause identified
+              - [ ] Fix implemented
+              - [ ] Tests added to prevent recurrence
+              - [ ] Re-deployment successful`,
+              labels: ['rollback', 'incident', '${{ github.event.inputs.environment }}']
+            });
+            
+            console.log(`Created issue #${issue.data.number}`);
+            
+      - name: Notify team
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            🔄 Rollback ${{ job.status }}
+            Environment: ${{ github.event.inputs.environment }}
+            Reason: ${{ github.event.inputs.reason }}
+            Initiated by: ${{ github.actor }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

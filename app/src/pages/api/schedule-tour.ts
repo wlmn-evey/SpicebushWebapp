@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import nodemailer from 'nodemailer';
+import { emailService } from '@lib/email-service';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -56,26 +56,21 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Production email configuration
-    // You'll need to set up environment variables for your email service
-    const transporter = nodemailer.createTransport({
-      host: import.meta.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(import.meta.env.SMTP_PORT || '587'),
-      secure: false,
-      auth: {
-        user: import.meta.env.SMTP_USER,
-        pass: import.meta.env.SMTP_PASS
-      }
-    });
-
-    // Send email
-    await transporter.sendMail({
-      from: import.meta.env.SMTP_FROM || '"Spicebush Website" <noreply@spicebushmontessori.org>',
+    // Send email using the configured email service
+    const result = await emailService.send({
       to: schoolEmail,
       subject: `New Tour Request from ${parentName}`,
       html: emailContent,
       replyTo: email
     });
+
+    if (!result.success) {
+      console.error('Failed to send tour request email:', result.error);
+      return new Response(
+        JSON.stringify({ error: 'Failed to send tour request. Please try again later.' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Send confirmation email to parent
     const confirmationEmail = `
@@ -90,12 +85,17 @@ export const POST: APIRoute = async ({ request }) => {
       ${questions ? `<p>Questions: ${questions}</p>` : ''}
     `;
 
-    await transporter.sendMail({
-      from: import.meta.env.SMTP_FROM || '"Spicebush Montessori School" <noreply@spicebushmontessori.org>',
+    // Send confirmation email to parent
+    const confirmationResult = await emailService.send({
       to: email,
       subject: 'Tour Request Confirmation - Spicebush Montessori School',
       html: confirmationEmail
     });
+
+    if (!confirmationResult.success) {
+      console.error('Failed to send confirmation email:', confirmationResult.error);
+      // Don't fail the request if confirmation email fails
+    }
 
     return new Response(
       JSON.stringify({ success: true, message: 'Tour request submitted successfully' }),

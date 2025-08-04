@@ -10,8 +10,28 @@ services:
       - ./src:/app/src
       - ./public:/app/public
       - ./.env.local:/app/.env.local:ro
+      - ./astro.config.dev.mjs:/app/astro.config.mjs:ro
     environment:
       - NODE_ENV=development
+      # Supabase hosted instance configuration
+      - PUBLIC_SUPABASE_URL=${PUBLIC_SUPABASE_URL}
+      - PUBLIC_SUPABASE_ANON_KEY=${PUBLIC_SUPABASE_ANON_KEY}
+      - PUBLIC_SUPABASE_PUBLIC_KEY=${PUBLIC_SUPABASE_PUBLIC_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      # Database connection
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      # Read-only database connection
+      - DB_READONLY_HOST=${DB_READONLY_HOST}
+      - DB_READONLY_PORT=${DB_READONLY_PORT}
+      - DB_READONLY_DATABASE=${DB_READONLY_DATABASE}
+      - DB_READONLY_USER=${DB_READONLY_USER}
+      - DB_READONLY_PASSWORD=${DB_READONLY_PASSWORD}
+      # Strapi CMS
+      - PUBLIC_STRAPI_URL=${PUBLIC_STRAPI_URL}
     command: npm run dev -- --host 0.0.0.0
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4321/api/health"]

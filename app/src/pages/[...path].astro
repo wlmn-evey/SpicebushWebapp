@@ -2,6 +2,24 @@
 // This catch-all route ensures all pages work with middleware
 export const prerender = false;
 
-// Redirect to home page for now
+// Get the request path
+const { path } = Astro.params;
+const url = Astro.request.url;
+
+// Check if this is a module import or static asset request
+if (path?.includes('/lib/') || 
+    path?.includes('/assets/') || 
+    path?.includes('/images/') ||
+    path?.includes('/@') ||
+    path?.includes('/node_modules/') ||
+    path?.includes('.js') ||
+    path?.includes('.ts') ||
+    path?.includes('.css') ||
+    path?.includes('.json')) {
+  // Return 404 for non-existent assets/modules instead of redirecting
+  return new Response('Not Found', { status: 404 });
+}
+
+// For actual page routes that don't exist, redirect to home
 return Astro.redirect('/');
 ---

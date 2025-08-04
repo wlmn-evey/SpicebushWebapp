@@ -1,0 +1,268 @@
+name: Environment Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to configure'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      action:
+        description: 'Action to perform'
+        required: true
+        type: choice
+        options:
+          - validate
+          - update-secrets
+          - rotate-keys
+          - backup-config
+
+jobs:
+  validate-environment:
+    name: Validate Environment Configuration
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.action == 'validate' }}
+    
+    environment:
+      name: ${{ github.event.inputs.environment }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Validate required secrets
+        run: |
+          echo "Validating secrets for ${{ github.event.inputs.environment }}..."
+          
+          # Define required secrets
+          if [ "${{ github.event.inputs.environment }}" == "production" ]; then
+            REQUIRED_SECRETS=(
+              "NETLIFY_AUTH_TOKEN"
+              "NETLIFY_PRODUCTION_SITE_ID"
+              "PRODUCTION_PUBLIC_SUPABASE_URL"
+              "PRODUCTION_PUBLIC_SUPABASE_ANON_KEY"
+              "PRODUCTION_SUPABASE_SERVICE_ROLE_KEY"
+            )
+          else
+            REQUIRED_SECRETS=(
+              "NETLIFY_AUTH_TOKEN"
+              "NETLIFY_STAGING_SITE_ID"
+              "STAGING_PUBLIC_SUPABASE_URL"
+              "STAGING_PUBLIC_SUPABASE_ANON_KEY"
+              "STAGING_SUPABASE_SERVICE_ROLE_KEY"
+            )
+          fi
+          
+          # Check each secret (we can't access values, just check if set)
+          missing_secrets=()
+          for secret in "${REQUIRED_SECRETS[@]}"; do
+            if [ -z "${!secret}" ]; then
+              missing_secrets+=("$secret")
+            fi
+          done
+          
+          if [ ${#missing_secrets[@]} -gt 0 ]; then
+            echo "❌ Missing secrets: ${missing_secrets[*]}"
+            exit 1
+          else
+            echo "✅ All required secrets are configured"
+          fi
+          
+      - name: Test Netlify connection
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          SITE_ID: ${{ github.event.inputs.environment == 'production' && secrets.NETLIFY_PRODUCTION_SITE_ID || secrets.NETLIFY_STAGING_SITE_ID }}
+        run: |
+          npm install -g netlify-cli
+          
+          echo "Testing Netlify connection..."
+          netlify api getSite --data '{"site_id":"'$SITE_ID'"}' > site-info.json
+          
+          echo "Site details:"
+          cat site-info.json | jq '{name, url, admin_url, build_settings}'
+          
+      - name: Test Supabase connection
+        env:
+          SUPABASE_URL: ${{ github.event.inputs.environment == 'production' && secrets.PRODUCTION_PUBLIC_SUPABASE_URL || secrets.STAGING_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ github.event.inputs.environment == 'production' && secrets.PRODUCTION_PUBLIC_SUPABASE_ANON_KEY || secrets.STAGING_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          echo "Testing Supabase connection..."
+          
+          # Test API endpoint
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/")
+            
+          if [ $response -eq 200 ] || [ $response -eq 404 ]; then
+            echo "✅ Supabase connection successful"
+          else
+            echo "❌ Supabase connection failed with status: $response"
+            exit 1
+          fi
+          
+      - name: Generate validation report
+        run: |
+          cat > validation-report.md << EOF
+          # Environment Validation Report
+          
+          **Environment**: ${{ github.event.inputs.environment }}
+          **Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Validated by**: ${{ github.actor }}
+          
+          ## Validation Results
+          
+          ### ✅ Secrets Configuration
+          All required secrets are properly configured.
+          
+          ### ✅ Netlify Connection
+          Successfully connected to Netlify site.
+          
+          ### ✅ Supabase Connection
+          Successfully connected to Supabase instance.
+          
+          ## Recommendations
+          
+          1. Ensure email service is configured (SendGrid/Resend)
+          2. Verify backup procedures are in place
+          3. Set up monitoring alerts
+          4. Review security headers configuration
+          EOF
+          
+          cat validation-report.md
+          
+  rotate-keys:
+    name: Rotate API Keys
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.action == 'rotate-keys' }}
+    
+    environment:
+      name: ${{ github.event.inputs.environment }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Generate rotation plan
+        run: |
+          cat > rotation-plan.md << EOF
+          # API Key Rotation Plan
+          
+          **Environment**: ${{ github.event.inputs.environment }}
+          **Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Initiated by**: ${{ github.actor }}
+          
+          ## Keys to Rotate
+          
+          1. **Supabase Service Role Key**
+             - [ ] Generate new key in Supabase dashboard
+             - [ ] Update GitHub secret
+             - [ ] Update Netlify environment variable
+             - [ ] Test deployment with new key
+             - [ ] Revoke old key
+          
+          2. **Email Service API Key** (if configured)
+             - [ ] Generate new API key
+             - [ ] Update GitHub secret
+             - [ ] Update Netlify environment variable
+             - [ ] Test email sending
+             - [ ] Revoke old key
+          
+          3. **Stripe Keys** (if configured)
+             - [ ] Roll webhook signing secret
+             - [ ] Update webhook endpoint
+             - [ ] Test payment flow
+          
+          ## Rotation Procedure
+          
+          1. Create new keys in respective services
+          2. Update secrets in GitHub (Settings > Secrets)
+          3. Update environment variables in Netlify
+          4. Deploy to staging and test
+          5. Deploy to production
+          6. Revoke old keys
+          
+          ## Verification Steps
+          
+          - [ ] All services connecting successfully
+          - [ ] Authentication working
+          - [ ] Email sending functional
+          - [ ] No errors in logs
+          EOF
+          
+          cat rotation-plan.md
+          
+      - name: Create rotation issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🔐 API Key Rotation - ${{ github.event.inputs.environment }}`,
+              body: `Follow the rotation plan generated by the workflow.
+              
+              **Important**: Do not close this issue until all old keys are revoked.`,
+              labels: ['security', 'maintenance', '${{ github.event.inputs.environment }}']
+            });
+            
+  backup-config:
+    name: Backup Configuration
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.action == 'backup-config' }}
+    
+    environment:
+      name: ${{ github.event.inputs.environment }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Create configuration backup
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          SITE_ID: ${{ github.event.inputs.environment == 'production' && secrets.NETLIFY_PRODUCTION_SITE_ID || secrets.NETLIFY_STAGING_SITE_ID }}
+        run: |
+          npm install -g netlify-cli
+          
+          # Create backup directory
+          BACKUP_DIR="config-backup-$(date +%Y%m%d-%H%M%S)"
+          mkdir -p $BACKUP_DIR
+          
+          # Backup Netlify configuration
+          echo "Backing up Netlify configuration..."
+          netlify api getSite --data '{"site_id":"'$SITE_ID'"}' > $BACKUP_DIR/netlify-site-config.json
+          netlify api listSiteEnvironmentVariables --data '{"site_id":"'$SITE_ID'"}' > $BACKUP_DIR/netlify-env-vars.json
+          
+          # Backup current deployment info
+          netlify api listSiteDeploys --data '{"site_id":"'$SITE_ID'"}' | jq '.[0:5]' > $BACKUP_DIR/recent-deploys.json
+          
+          # Create backup manifest
+          cat > $BACKUP_DIR/manifest.json << EOF
+          {
+            "environment": "${{ github.event.inputs.environment }}",
+            "backup_date": "$(date -u +"%Y-%m-%d %H:%M:%S UTC")",
+            "backed_up_by": "${{ github.actor }}",
+            "site_id": "$SITE_ID",
+            "files": [
+              "netlify-site-config.json",
+              "netlify-env-vars.json",
+              "recent-deploys.json"
+            ]
+          }
+          EOF
+          
+          # Create archive
+          tar -czf $BACKUP_DIR.tar.gz $BACKUP_DIR/
+          
+          echo "✅ Configuration backup created: $BACKUP_DIR.tar.gz"
+          
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: config-backup-${{ github.event.inputs.environment }}-${{ github.run_id }}
+          path: config-backup-*.tar.gz
+          retention-days: 90

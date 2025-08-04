@@ -25,12 +25,8 @@
   # Directory to deploy (Astro outputs to dist/)
   publish = "dist"
   
-  # Node version
-  environment = { NODE_VERSION = "20" }
-
-[build.environment]
-  # Ensure npm doesn't look for a workspace root
-  NPM_FLAGS = "--prefix=/dev/null"
+  # Node version and other environment settings
+  environment = { NODE_VERSION = "20", NPM_FLAGS = "--prefix=/dev/null" }
 
 # Production context
 [context.production]
@@ -81,18 +77,18 @@
     Cache-Control = "public, max-age=31536000, immutable"
 
 # Redirects
-# Force HTTPS
-[[redirects]]
-  from = "http://:domain/*"
-  to = "https://:domain/:splat"
-  status = 301
-  force = true
+# Force HTTPS (commented out for development to avoid redirect loops)
+# [[redirects]]
+#   from = "http://:domain/*"
+#   to = "https://:domain/:splat"
+#   status = 301
+#   force = true
 
-# Remove trailing slashes
-[[redirects]]
-  from = "/*/"
-  to = "/:splat"
-  status = 301
+# Remove trailing slashes (commented out for development to avoid redirect loops)
+# [[redirects]]
+#   from = "/*/"
+#   to = "/:splat"
+#   status = 301
 
 # Admin area protection (handled by middleware, but good to have)
 [[redirects]]
