@@ -33,6 +33,7 @@ export default defineConfig({
     },
     build: {
       rollupOptions: {
+        external: ['resend', '@sendgrid/mail', 'postmark'],
         output: {
           // Manual chunk strategy for better code splitting
           manualChunks: (id) => {
