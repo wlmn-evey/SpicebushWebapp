@@ -1,0 +1,9 @@
+{
+  "id": "27a429f4-9a58-4421-bc1f-126d70d81aa1",
+  "name": "spicebush-testing",
+  "url": "http://spicebush-testing.netlify.app",
+  "admin_url": "https://app.netlify.com/projects/spicebush-testing",
+  "branch": "testing",
+  "purpose": "Testing and staging environment",
+  "created_at": "2025-08-04T16:53:31.757Z"
+}
