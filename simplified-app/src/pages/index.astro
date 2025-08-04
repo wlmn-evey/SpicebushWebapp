@@ -1,0 +1,113 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+// Get recent blog posts
+const recentPosts = (await getCollection('blog'))
+  .filter(post => !post.data.draft)
+  .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
+  .slice(0, 3);
+
+// Get programs
+const programs = (await getCollection('programs'))
+  .filter(program => program.data.active)
+  .sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout title="Home">
+  <main>
+    <!-- Hero Section -->
+    <section class="bg-blue-50 py-16">
+      <div class="container mx-auto px-4">
+        <h1 class="text-5xl font-bold text-center mb-4">
+          Welcome to Spicebush Montessori
+        </h1>
+        <p class="text-xl text-center text-gray-700 max-w-3xl mx-auto">
+          Nurturing young minds through authentic Montessori education in a warm, 
+          supportive environment where every child can thrive.
+        </p>
+      </div>
+    </section>
+
+    <!-- Programs Overview -->
+    <section class="py-16">
+      <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center mb-12">Our Programs</h2>
+        <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {programs.map((program) => (
+            <div class="bg-white rounded-lg shadow-md p-6">
+              <h3 class="text-2xl font-semibold mb-2">{program.data.title}</h3>
+              <p class="text-gray-600 mb-4">{program.data.ageRange}</p>
+              <p class="mb-4">{program.data.shortDescription}</p>
+              <a 
+                href={`/programs/${program.slug}`}
+                class="text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Learn more →
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Blog Posts -->
+    <section class="py-16 bg-gray-50">
+      <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center mb-12">From Our Blog</h2>
+        <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {recentPosts.map((post) => (
+            <article class="bg-white rounded-lg shadow-md overflow-hidden">
+              {post.data.image && (
+                <img 
+                  src={post.data.image} 
+                  alt={post.data.title}
+                  class="w-full h-48 object-cover"
+                />
+              )}
+              <div class="p-6">
+                <h3 class="text-xl font-semibold mb-2">
+                  <a href={`/blog/${post.slug}`} class="hover:text-blue-600">
+                    {post.data.title}
+                  </a>
+                </h3>
+                <p class="text-gray-600 text-sm">
+                  {post.data.publishDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div class="text-center mt-8">
+          <a 
+            href="/blog" 
+            class="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
+          >
+            View All Posts
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="py-16">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-3xl font-bold mb-4">Ready to Learn More?</h2>
+        <p class="text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
+          Schedule a tour to see our classrooms, meet our teachers, 
+          and learn how Montessori education can benefit your child.
+        </p>
+        <a 
+          href="/contact" 
+          class="inline-block bg-green-600 text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-green-700 transition-colors"
+        >
+          Schedule a Tour
+        </a>
+      </div>
+    </section>
+  </main>
+</BaseLayout>

@@ -119,8 +119,20 @@ export const POST: APIRoute = async ({ request }) => {
       clientSecret = paymentIntent.client_secret;
     }
     
-    // TODO: Log donation to database
-    // TODO: Send email receipt after successful payment
+    // Log successful payment intent creation
+    console.log('[Stripe Payment Intent Created]', JSON.stringify({
+      timestamp: new Date().toISOString(),
+      donationId,
+      amount: amount / 100, // Convert cents to dollars for logging
+      currency: 'USD',
+      type: donationType,
+      designation,
+      donorEmail: donor.email,
+      environment: import.meta.env.MODE
+    }, null, 2));
+    
+    // TODO: Log donation to database after webhook confirmation
+    // TODO: Send email receipt after webhook confirms successful payment
     
     return new Response(
       JSON.stringify({ 
@@ -134,7 +146,19 @@ export const POST: APIRoute = async ({ request }) => {
     );
     
   } catch (error) {
-    console.error('Error creating payment intent:', error);
+    // Enhanced error logging with timestamp and context
+    const errorDetails = {
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      } : error,
+      context: 'create-payment-intent',
+      environment: import.meta.env.MODE
+    };
+    
+    console.error('[Stripe Payment Error]', JSON.stringify(errorDetails, null, 2));
     
     return new Response(
       JSON.stringify({ 

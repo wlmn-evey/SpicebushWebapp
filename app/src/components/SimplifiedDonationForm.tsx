@@ -7,8 +7,11 @@ const stripeKey = import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const isDemoMode = !stripeKey || stripeKey === 'pk_test_dummy_key_configure_stripe';
 const stripePromise = loadStripe(stripeKey || 'pk_test_dummy_key_configure_stripe');
 
-// Simplified donation data interface
-interface DonationData {
+// Form type to support both donations and enrollment
+export type FormType = 'donation' | 'enrollment';
+
+// Extended data interface to support both donation and enrollment
+interface FormData {
   amount: number;
   frequency: 'one-time' | 'monthly';
   designation: string;
@@ -18,7 +21,19 @@ interface DonationData {
     email: string;
     anonymous?: boolean;
   };
+  // Enrollment-specific fields
+  childName?: string;
+  childBirthdate?: string;
+  // Optional fields
   message?: string;
+}
+
+// Props for the form component
+interface SimplifiedDonationFormProps {
+  formType?: FormType;
+  fixedAmount?: number;
+  hideAmountSelection?: boolean;
+  successRedirectUrl?: string;
 }
 
 // Giving levels with impact messaging (valuable feature to keep)
@@ -51,23 +66,30 @@ const givingLevels = [
   }
 ];
 
-function SimplifiedDonationFormContent() {
+function SimplifiedDonationFormContent({ 
+  formType = 'donation',
+  fixedAmount,
+  hideAmountSelection = false,
+  successRedirectUrl
+}: SimplifiedDonationFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   
-  const [formData, setFormData] = useState<DonationData>({
-    amount: 100,
+  const [formData, setFormData] = useState<FormData>({
+    amount: fixedAmount || (formType === 'enrollment' ? 50 : 100),
     frequency: 'one-time',
-    designation: 'general',
+    designation: formType === 'enrollment' ? 'enrollment' : 'general',
     donor: {
       firstName: '',
       lastName: '',
       email: '',
-      anonymous: false
+      anonymous: formType === 'enrollment' ? false : false
     },
+    childName: '',
+    childBirthdate: '',
     message: ''
   });
 
@@ -119,7 +141,11 @@ function SimplifiedDonationFormContent() {
 
     try {
       // Create payment intent on the server
-      const response = await fetch('/api/donations/create-payment-intent', {
+      const apiEndpoint = formType === 'enrollment' 
+        ? '/api/enrollments/create-payment-intent'
+        : '/api/donations/create-payment-intent';
+      
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -129,7 +155,13 @@ function SimplifiedDonationFormContent() {
           donationType: formData.frequency,
           designation: formData.designation,
           donor: formData.donor,
-          message: formData.message
+          message: formData.message,
+          // Include enrollment-specific fields if applicable
+          ...(formType === 'enrollment' && {
+            childName: formData.childName,
+            childBirthdate: formData.childBirthdate,
+            formType: 'enrollment'
+          })
         })
       });
 
@@ -156,8 +188,12 @@ function SimplifiedDonationFormContent() {
         setError(result.error.message || 'Payment failed');
       } else {
         setSuccess(true);
-        // Redirect to thank you page
-        window.location.href = `/donate/thank-you?id=${donationId}`;
+        // Redirect to appropriate thank you page
+        const redirectUrl = successRedirectUrl || 
+          (formType === 'enrollment' 
+            ? `/enrollment/thank-you?id=${donationId}`
+            : `/donate/thank-you?id=${donationId}`);
+        window.location.href = redirectUrl;
       }
     } catch (err) {
       setError('Something went wrong. Please try again.');
@@ -167,16 +203,28 @@ function SimplifiedDonationFormContent() {
   };
 
   const isValid = () => {
-    if (formData.donor.anonymous) {
-      return formData.amount >= 1 && formData.donor.email && isValidEmail(formData.donor.email);
-    }
-    return (
-      formData.amount >= 1 &&
-      formData.donor.firstName.trim().length >= 2 &&
-      formData.donor.lastName.trim().length >= 2 &&
+    // Basic validation for all forms
+    const baseValid = formData.amount >= 1 &&
       formData.donor.email &&
-      isValidEmail(formData.donor.email)
-    );
+      isValidEmail(formData.donor.email);
+    
+    // Skip name validation if anonymous donation
+    if (formData.donor.anonymous && formType === 'donation') {
+      return baseValid;
+    }
+    
+    // Name validation
+    const nameValid = formData.donor.firstName.trim().length >= 2 &&
+      formData.donor.lastName.trim().length >= 2;
+    
+    // Enrollment-specific validation
+    if (formType === 'enrollment') {
+      return baseValid && nameValid && 
+        formData.childName!.trim().length >= 2 &&
+        formData.childBirthdate!.length > 0;
+    }
+    
+    return baseValid && nameValid;
   };
 
   const isValidEmail = (email: string): boolean => {
@@ -194,7 +242,9 @@ function SimplifiedDonationFormContent() {
         </div>
         <h3 className="text-2xl font-bold text-earth-brown mb-2">Thank You!</h3>
         <p className="text-gray-700">
-          Your donation has been processed successfully. You will receive a receipt via email shortly.
+          {formType === 'enrollment' 
+            ? 'Your enrollment fee has been processed successfully. We\'ll contact you soon with next steps.'
+            : 'Your donation has been processed successfully. You will receive a receipt via email shortly.'}
         </p>
       </div>
     );
@@ -211,7 +261,8 @@ function SimplifiedDonationFormContent() {
         </div>
       )}
 
-      {/* Amount Selection */}
+      {/* Amount Selection - Hide for enrollment or when hideAmountSelection is true */}
+      {!hideAmountSelection && formType === 'donation' && (
       <div>
         <h3 className="text-lg font-semibold text-earth-brown mb-4">Choose Your Gift Amount</h3>
         
@@ -287,8 +338,21 @@ function SimplifiedDonationFormContent() {
           </div>
         </div>
       </div>
+      )}
+      
+      {/* Fixed Amount Display for Enrollment */}
+      {formType === 'enrollment' && (
+        <div className="bg-forest-canopy/5 border-2 border-forest-canopy rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-earth-brown mb-2">Enrollment Fee</h3>
+          <p className="text-3xl font-bold text-forest-canopy">${fixedAmount || 50}</p>
+          <p className="text-sm text-gray-600 mt-2">
+            This one-time fee secures your child's spot in our program.
+          </p>
+        </div>
+      )}
 
-      {/* Fund Designation */}
+      {/* Fund Designation - Only show for donations */}
+      {formType === 'donation' && (
       <div>
         <label htmlFor="designation" className="block text-sm font-medium text-gray-700 mb-1">
           How would you like your gift to be used?
@@ -307,12 +371,16 @@ function SimplifiedDonationFormContent() {
           <option value="teacher-development">Teacher Professional Development</option>
         </select>
       </div>
+      )}
 
-      {/* Donor Information */}
+      {/* Donor/Parent Information */}
       <div>
-        <h3 className="text-lg font-semibold text-earth-brown mb-4">Your Information</h3>
+        <h3 className="text-lg font-semibold text-earth-brown mb-4">
+          {formType === 'enrollment' ? 'Parent Information' : 'Your Information'}
+        </h3>
         
-        {/* Anonymous Checkbox */}
+        {/* Anonymous Checkbox - Only for donations */}
+        {formType === 'donation' && (
         <div className="flex items-center mb-4">
           <input
             type="checkbox"
@@ -326,6 +394,7 @@ function SimplifiedDonationFormContent() {
             Make this donation anonymous
           </label>
         </div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-4">
           <div>
@@ -380,15 +449,63 @@ function SimplifiedDonationFormContent() {
             aria-invalid={formData.donor.email.length > 0 && !isValidEmail(formData.donor.email) ? 'true' : undefined}
           />
           <p className="mt-1 text-sm text-gray-500">
-            We'll send your tax-deductible receipt to this email address.
+            {formType === 'enrollment' 
+              ? "We'll send enrollment confirmation to this email address."
+              : "We'll send your tax-deductible receipt to this email address."}
           </p>
         </div>
       </div>
+      
+      {/* Child Information - Only for enrollment */}
+      {formType === 'enrollment' && (
+      <div>
+        <h3 className="text-lg font-semibold text-earth-brown mb-4">Child Information</h3>
+        
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="childName" className="block text-sm font-medium text-gray-700 mb-1">
+              Child's Full Name *
+            </label>
+            <input
+              type="text"
+              id="childName"
+              name="childName"
+              required
+              value={formData.childName}
+              onChange={handleInputChange}
+              minLength={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-canopy focus:border-forest-canopy"
+              placeholder="First and Last Name"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="childBirthdate" className="block text-sm font-medium text-gray-700 mb-1">
+              Child's Birthdate *
+            </label>
+            <input
+              type="date"
+              id="childBirthdate"
+              name="childBirthdate"
+              required
+              value={formData.childBirthdate}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-canopy focus:border-forest-canopy"
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </div>
+        </div>
+        
+        <p className="mt-2 text-sm text-gray-500">
+          Children must be between 2.5 and 6 years old to enroll in our program.
+        </p>
+      </div>
+      )}
 
       {/* Optional Message */}
       <div>
         <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-          Message (Optional)
+          {formType === 'enrollment' ? 'Additional Information (Optional)' : 'Message (Optional)'}
         </label>
         <textarea
           id="message"
@@ -397,7 +514,9 @@ function SimplifiedDonationFormContent() {
           value={formData.message}
           onChange={handleInputChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-canopy focus:border-forest-canopy"
-          placeholder="Leave a message with your donation..."
+          placeholder={formType === 'enrollment' 
+            ? 'Any special needs or questions about enrollment...'
+            : 'Leave a message with your donation...'}
         />
       </div>
 
@@ -425,13 +544,15 @@ function SimplifiedDonationFormContent() {
         </div>
       </div>
 
-      {/* Corporate Matching Note */}
+      {/* Corporate Matching Note - Only for donations */}
+      {formType === 'donation' && (
       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-sm text-blue-800">
           <strong>Double Your Impact:</strong> Many employers will match your donation. 
           Check with your HR department about corporate matching gift programs.
         </p>
       </div>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -455,7 +576,9 @@ function SimplifiedDonationFormContent() {
             Processing...
           </span>
         ) : (
-          `Donate $${formData.amount}${formData.frequency === 'monthly' ? '/month' : ''}`
+          formType === 'enrollment' 
+            ? `Pay $${formData.amount} Enrollment Fee`
+            : `Donate $${formData.amount}${formData.frequency === 'monthly' ? '/month' : ''}`
         )}
       </button>
 
@@ -470,10 +593,10 @@ function SimplifiedDonationFormContent() {
   );
 }
 
-export default function SimplifiedDonationForm() {
+export default function SimplifiedDonationForm(props: SimplifiedDonationFormProps = {}) {
   return (
     <Elements stripe={stripePromise}>
-      <SimplifiedDonationFormContent />
+      <SimplifiedDonationFormContent {...props} />
     </Elements>
   );
 }

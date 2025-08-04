@@ -1,0 +1,35 @@
+---
+import { getCollection } from 'astro:content';
+import ContentLayout from '@layouts/ContentLayout.astro';
+
+export async function getStaticPaths() {
+  const programs = await getCollection('programs');
+  return programs.map((program) => ({
+    params: { slug: program.slug },
+    props: program,
+  }));
+}
+
+const program = Astro.props;
+const { Content } = await program.render();
+---
+
+<ContentLayout title={program.data.title} description={program.data.shortDescription}>
+  <header class="mb-8">
+    <h1 class="text-4xl font-bold mb-4">{program.data.title}</h1>
+    <div class="bg-gray-100 p-4 rounded-lg">
+      <p class="mb-2"><strong>Age Range:</strong> {program.data.ageRange}</p>
+      <p><strong>Schedule:</strong> {program.data.schedule}</p>
+    </div>
+  </header>
+  
+  {program.data.image && (
+    <img 
+      src={program.data.image} 
+      alt={program.data.title}
+      class="w-full h-64 md:h-96 object-cover rounded-lg mb-8"
+    />
+  )}
+  
+  <Content />
+</ContentLayout>

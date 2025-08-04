@@ -1,0 +1,200 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SimplifiedDonationForm from '../components/SimplifiedDonationForm';
+import { CheckCircle, Calendar, Users, BookOpen } from 'lucide-astro';
+
+/**
+ * Enrollment Page
+ * 
+ * Allows parents to pay the $50 enrollment fee to secure their child's spot
+ * in the Spicebush Montessori program.
+ */
+---
+
+<Layout 
+  title="Enrollment - Spicebush Montessori School"
+  description="Secure your child's spot at Spicebush Montessori School with our simple enrollment process."
+>
+  <Header />
+  
+  <main id="main-content">
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-forest-canopy to-moss-green py-16 lg:py-20">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto text-center">
+          <h1 class="text-4xl lg:text-5xl font-heading font-bold text-white mb-6 tracking-tight">
+            Begin Your Child's Journey
+          </h1>
+          <p class="text-lg lg:text-xl text-green-100 leading-relaxed-plus max-w-2xl mx-auto">
+            Complete your enrollment and secure your child's place in our nurturing Montessori community.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Enrollment Process Section -->
+    <section class="py-16 bg-stone-beige">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-3xl font-heading font-bold text-earth-brown mb-8 text-center">
+            Simple Enrollment Process
+          </h2>
+          
+          <div class="grid md:grid-cols-3 gap-6 mb-12">
+            <div class="bg-white rounded-xl p-6 shadow-soft">
+              <div class="w-12 h-12 bg-forest-canopy/10 rounded-full flex items-center justify-center mb-4">
+                <CheckCircle className="w-6 h-6 text-forest-canopy" />
+              </div>
+              <h3 class="font-semibold text-earth-brown mb-2">Step 1: Application</h3>
+              <p class="text-sm text-gray-600">
+                Complete your initial application and schedule a tour (if you haven't already).
+              </p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 shadow-soft border-2 border-forest-canopy">
+              <div class="w-12 h-12 bg-sunlight-gold/20 rounded-full flex items-center justify-center mb-4">
+                <Calendar className="w-6 h-6 text-forest-canopy" />
+              </div>
+              <h3 class="font-semibold text-earth-brown mb-2">Step 2: Enrollment Fee</h3>
+              <p class="text-sm text-gray-600">
+                Pay the $50 enrollment fee to secure your child's spot (you are here).
+              </p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 shadow-soft">
+              <div class="w-12 h-12 bg-forest-canopy/10 rounded-full flex items-center justify-center mb-4">
+                <BookOpen className="w-6 h-6 text-forest-canopy" />
+              </div>
+              <h3 class="font-semibold text-earth-brown mb-2">Step 3: Welcome</h3>
+              <p class="text-sm text-gray-600">
+                Receive your welcome packet and prepare for your child's first day.
+              </p>
+            </div>
+          </div>
+          
+          <!-- Important Information -->
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
+            <h3 class="font-semibold text-blue-900 mb-2">Important Information</h3>
+            <ul class="space-y-2 text-sm text-blue-800">
+              <li class="flex items-start">
+                <span class="text-blue-600 mr-2">•</span>
+                <span>The $50 enrollment fee is non-refundable and secures your child's place in our program</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-blue-600 mr-2">•</span>
+                <span>This fee is separate from monthly tuition payments</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-blue-600 mr-2">•</span>
+                <span>You'll receive enrollment confirmation within 24 hours</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-blue-600 mr-2">•</span>
+                <span>Our admissions team will contact you with next steps</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Enrollment Form Section -->
+    <section class="py-16 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="max-w-2xl mx-auto">
+          <div class="bg-forest-canopy/5 border border-forest-canopy/20 rounded-xl p-8">
+            <h2 class="text-2xl font-heading font-bold text-earth-brown mb-6">
+              Complete Your Enrollment
+            </h2>
+            
+            <!-- Enrollment Form Component -->
+            <SimplifiedDonationForm 
+              formType="enrollment"
+              fixedAmount={50}
+              hideAmountSelection={true}
+              successRedirectUrl="/enrollment/thank-you"
+              client:load
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- What's Included Section -->
+    <section class="py-16 bg-stone-beige">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-3xl font-heading font-bold text-earth-brown mb-8 text-center">
+            What's Included
+          </h2>
+          
+          <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-white rounded-xl p-6 shadow-soft">
+              <Users className="w-8 h-8 text-forest-canopy mb-4" />
+              <h3 class="font-semibold text-earth-brown mb-3">Small Class Sizes</h3>
+              <p class="text-gray-600">
+                Our 1:8 teacher-to-student ratio ensures personalized attention and care for every child.
+              </p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 shadow-soft">
+              <BookOpen className="w-8 h-8 text-forest-canopy mb-4" />
+              <h3 class="font-semibold text-earth-brown mb-3">Montessori Curriculum</h3>
+              <p class="text-gray-600">
+                Authentic Montessori materials and methods that foster independence and love of learning.
+              </p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 shadow-soft">
+              <Calendar className="w-8 h-8 text-forest-canopy mb-4" />
+              <h3 class="font-semibold text-earth-brown mb-3">Flexible Programs</h3>
+              <p class="text-gray-600">
+                Morning, full-day, and extended care options to fit your family's schedule.
+              </p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 shadow-soft">
+              <CheckCircle className="w-8 h-8 text-forest-canopy mb-4" />
+              <h3 class="font-semibold text-earth-brown mb-3">All-Inclusive</h3>
+              <p class="text-gray-600">
+                Healthy snacks, materials, and enrichment activities included in tuition.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="py-12 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="max-w-2xl mx-auto text-center">
+          <h3 class="text-xl font-semibold text-earth-brown mb-4">
+            Questions About Enrollment?
+          </h3>
+          <p class="text-gray-700 mb-6">
+            Our admissions team is here to help guide you through the process.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a 
+              href="tel:484-368-3745"
+              class="inline-flex items-center justify-center bg-forest-canopy text-white px-6 py-3 rounded-lg font-semibold hover:bg-forest-canopy/90 transition-colors"
+            >
+              Call: (484) 368-3745
+            </a>
+            <a 
+              href="mailto:hello@spicebushmontessori.org"
+              class="inline-flex items-center justify-center bg-white text-forest-canopy border-2 border-forest-canopy px-6 py-3 rounded-lg font-semibold hover:bg-forest-canopy/5 transition-colors"
+            >
+              Email Us
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <Footer />
+</Layout>
