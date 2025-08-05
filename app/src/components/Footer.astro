@@ -4,6 +4,7 @@ import HoursWidget from './HoursWidget.astro';
 import OptimizedImage from './OptimizedImage.astro';
 import ContactInfo from './ContactInfo.astro';
 import NewsletterSignup from './NewsletterSignup.astro';
+import AuthNav from './AuthNav.astro';
 import { getSetting } from '@lib/content-db';
 
 // Get social media links from database settings with error handling
@@ -35,7 +36,7 @@ try {
           <div class="space-y-4">
             <OptimizedImage
               photoSlug="homepage-spicebush-logo-brand-identity"
-              className="h-16 w-auto mb-4"
+              className="h-12 sm:h-14 md:h-16 w-auto mb-4"
               loading="lazy"
             />
             <p class="text-light-stone text-sm leading-relaxed-plus font-light tracking-wide">
@@ -63,6 +64,11 @@ try {
               <li><a href="/our-principles" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Our Principles</a></li>
               <li><a href="/admissions" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Admissions</a></li>
               <li><a href="/admissions/tuition-calculator" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Tuition Calculator</a></li>
+              <li class="pt-3 border-t border-white/20">
+                <div class="footer-auth-nav">
+                  <AuthNav />
+                </div>
+              </li>
             </ul>
           </div>
           
@@ -140,3 +146,22 @@ try {
     </div>
   </div>
 </footer>
+
+<style>
+  /* Footer-specific AuthNav styling */
+  .footer-auth-nav #auth-nav a {
+    @apply text-light-stone hover:text-sunlight-gold transition-colors font-medium block py-0.5;
+  }
+  
+  .footer-auth-nav #auth-nav button {
+    @apply text-light-stone hover:text-sunlight-gold transition-colors font-medium;
+  }
+  
+  .footer-auth-nav #auth-nav #user-menu {
+    @apply bg-forest-canopy border-white/20;
+  }
+  
+  .footer-auth-nav #auth-nav #user-menu button {
+    @apply text-light-stone hover:bg-white/10 hover:text-sunlight-gold;
+  }
+</style>

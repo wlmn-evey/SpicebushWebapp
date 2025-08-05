@@ -1,6 +1,5 @@
 ---
 import { Menu, Phone, Mail } from 'lucide-astro';
-import AuthNav from './AuthNav.astro';
 import OptimizedImage from './OptimizedImage.astro';
 import { getEntry, getCollection } from '@lib/content-db';
 
@@ -87,10 +86,6 @@ try {
           <a href="/contact" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Contact</a>
         </div>
         
-        <!-- Authentication Navigation -->
-        <div class="ml-4">
-          <AuthNav />
-        </div>
         
         <!-- CTA Buttons with responsive sizing -->
         <div class="ml-4 xl:ml-6 flex items-center space-x-3">
@@ -133,10 +128,6 @@ try {
         <a href="/resources/faq" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">FAQ</a>
         <a href="/donate" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Donate</a>
         
-        <!-- Mobile Authentication Navigation -->
-        <div class="pt-2">
-          <AuthNav />
-        </div>
         
         <!-- Mobile CTA Buttons -->
         <div class="pt-4 space-y-3">
