@@ -3,10 +3,10 @@ import { isAdminEmail } from './admin-config';
 
 // Get environment variables
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_PUBLIC_KEY || import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.PUBLIC_SUPABASE_PUBLIC_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase configuration missing: Check PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_PUBLIC_KEY environment variables');
+  throw new Error('Supabase configuration missing: Check PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY environment variables');
 }
 
 // Create Supabase client

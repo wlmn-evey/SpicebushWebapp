@@ -230,10 +230,10 @@ describe('Netlify Form Webhook', () => {
     it('should handle missing Supabase credentials', async () => {
       // Mock missing environment variables
       const originalUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-      const originalKey = import.meta.env.SUPABASE_SERVICE_KEY;
+      const originalKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
       
       import.meta.env.PUBLIC_SUPABASE_URL = undefined;
-      import.meta.env.SUPABASE_SERVICE_KEY = undefined;
+      import.meta.env.SUPABASE_SERVICE_ROLE_KEY = undefined;
 
       mockRequest = new Request('http://localhost:4321/api/webhooks/netlify-form', {
         method: 'POST',
@@ -258,7 +258,7 @@ describe('Netlify Form Webhook', () => {
 
       // Restore environment variables
       import.meta.env.PUBLIC_SUPABASE_URL = originalUrl;
-      import.meta.env.SUPABASE_SERVICE_KEY = originalKey;
+      import.meta.env.SUPABASE_SERVICE_ROLE_KEY = originalKey;
     });
 
     it('should handle malformed JSON gracefully', async () => {

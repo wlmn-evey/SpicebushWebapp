@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { isAdminEmail } from '@lib/admin-config';
 
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_KEY;
+const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // GET /api/cms/settings/:key - Get a setting value
 export const GET: APIRoute = async ({ params, cookies }) => {

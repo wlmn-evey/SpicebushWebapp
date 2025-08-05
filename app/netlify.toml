@@ -39,7 +39,12 @@
   # Production build command with type checking
   command = "npm run build"
 
-# Branch deploy context
+# Testing branch context
+[context.branch-deploy.testing]
+  environment = { NODE_ENV = "production", ENVIRONMENT = "testing" }
+  command = "npm run build"
+
+# Branch deploy context (all other branches)
 [context.branch-deploy]
   environment = { NODE_ENV = "development" }
 

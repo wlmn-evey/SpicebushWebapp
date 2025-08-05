@@ -95,8 +95,25 @@ In Netlify dashboard for production site, add:
 PUBLIC_SITE_URL=https://spicebushmontessori.org
 ```
 
+## Netlify Configuration Status
+
+### ✅ Environment Variables Successfully Set
+Using the Netlify API, PUBLIC_SITE_URL has been configured for both sites:
+- **Testing Site**: PUBLIC_SITE_URL = https://spicebush-testing.netlify.app
+- **Production Site**: PUBLIC_SITE_URL = https://spicebushmontessori.org
+
+### Script Created
+Created `scripts/set-netlify-site-urls.mjs` to automate environment variable configuration using Netlify API.
+
+## Deployment Status
+
+### Testing Branch
+- ✅ Changes committed and pushed to testing branch
+- ✅ Deployment triggered on Netlify
+- 🔄 Deployment in progress - check https://app.netlify.com/projects/spicebush-testing/deploys
+
 ## Next Steps
-1. Deploy to testing branch
-2. Configure PUBLIC_SITE_URL in Netlify dashboard for testing site
-3. Verify testing site uses correct domain
-4. Test that production site continues to work correctly
+1. ✅ Deploy to testing branch - DONE
+2. ✅ Configure PUBLIC_SITE_URL in Netlify - DONE via API
+3. 🔄 Verify testing site uses correct domain (wait for deployment to complete)
+4. 🔄 Test that production site continues to work correctly
