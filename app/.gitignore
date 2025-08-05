@@ -100,3 +100,4 @@ test-report-*.md
 # journal/
 # Local Netlify folder
 .netlify
+blog-backend/
