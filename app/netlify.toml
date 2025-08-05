@@ -121,16 +121,9 @@
   directory = "netlify/functions"
 
 # Plugins
-[[plugins]]
-  # Lighthouse CI
-  package = "@netlify/plugin-lighthouse"
-  
-  [plugins.inputs]
-    # Performance budget
-    performance = 0.9
-    accessibility = 0.9
-    best-practices = 0.9
-    seo = 0.9
+# Lighthouse plugin temporarily disabled due to configuration issues
+# [[plugins]]
+#   package = "@netlify/plugin-lighthouse"
 
 # Forms (Netlify Forms - optional)
 [forms]

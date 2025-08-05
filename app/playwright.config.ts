@@ -4,7 +4,7 @@ import { defineConfig, devices } from '@playwright/test';
  * Playwright configuration for E2E testing
  */
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './tests',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code */
@@ -24,7 +24,7 @@ export default defineConfig({
   /* Shared settings for all the projects below */
   use: {
     /* Base URL to use in actions like `await page.goto('/')` */
-    baseURL: process.env.E2E_BASE_URL || process.env.PUBLIC_SITE_URL || 'http://localhost:4321',
+    baseURL: process.env.E2E_BASE_URL || 'https://spicebush-testing.netlify.app',
     /* Collect trace when retrying the failed test */
     trace: 'on-first-retry',
     /* Screenshot on failure */
@@ -75,11 +75,6 @@ export default defineConfig({
     },
   ],
 
-  /* Run your local dev server before starting the tests */
-  webServer: process.env.CI ? undefined : {
-    command: 'npm run dev',
-    url: 'http://localhost:4321',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
-});
+  /* Don't run local dev server - test against live site */
+  webServer: undefined,
+})
