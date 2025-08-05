@@ -148,3 +148,6 @@ pip-delete-this-directory.txt
 
 # Blog backend (separate repo)
 blog-backend/
+
+# Local Netlify folder
+.netlify

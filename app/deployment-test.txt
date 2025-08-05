@@ -1,0 +1,3 @@
+Testing automatic deployment after SSH fix
+Timestamp: 2025-08-05 19:45:00
+This should trigger an automatic build on Netlify
