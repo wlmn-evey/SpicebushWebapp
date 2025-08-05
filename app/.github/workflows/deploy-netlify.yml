@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - staging
+      - testing
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
@@ -15,6 +16,7 @@ on:
         default: 'staging'
         type: choice
         options:
+          - testing
           - staging
           - production
 
@@ -119,6 +121,73 @@ jobs:
               body: `## 🚀 Staging Deployment Successful!\n\n**Preview URL**: ${{ steps.deploy.outputs.deploy-url }}\n\n### Deployment Details:\n- **Environment**: Staging\n- **Branch**: \`${{ github.head_ref || github.ref_name }}\`\n- **Commit**: \`${{ github.sha }}\`\n- **Build Time**: ${{ steps.deploy.outputs.build-time }}\n\n### Next Steps:\n1. Test the deployment at the preview URL\n2. Run automated tests: \`npm run test:e2e\`\n3. Verify email service is configured\n4. Check performance metrics`
             })
             
+  # Job 2b: Deploy to Netlify (testing)
+  deploy-testing:
+    name: Deploy to Testing
+    needs: test
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/testing') ||
+      (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'testing') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'testing')
+    
+    environment:
+      name: testing
+      url: ${{ steps.deploy.outputs.deploy-url }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ./app
+        run: npm ci --legacy-peer-deps
+        
+      - name: Build application
+        working-directory: ./app
+        env:
+          PUBLIC_SUPABASE_URL: ${{ secrets.TESTING_PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.TESTING_PUBLIC_SUPABASE_ANON_KEY }}
+          PUBLIC_SITE_URL: https://spicebush-testing.netlify.app
+          NODE_ENV: production
+          ENVIRONMENT: testing
+        run: npm run build
+        
+      - name: Deploy to Netlify
+        id: deploy
+        uses: nwtgck/actions-netlify@v2.1
+        with:
+          publish-dir: './app/dist'
+          production-branch: testing
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Testing deploy from GitHub Actions"
+          enable-pull-request-comment: true
+          enable-commit-comment: true
+          overwrites-pull-request-comment: true
+          alias: testing-deploy-${{ github.event.number }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_TESTING_SITE_ID }}
+          
+      - name: Add deployment status comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🧪 Testing Deployment Successful!\n\n**Testing URL**: ${{ steps.deploy.outputs.deploy-url }}\n\n### Deployment Details:\n- **Environment**: Testing\n- **Branch**: \`${{ github.head_ref || github.ref_name }}\`\n- **Commit**: \`${{ github.sha }}\`\n- **Build Time**: ${{ steps.deploy.outputs.build-time }}\n\n### Testing Features:\n1. ✅ React 19 dependency fixes applied\n2. ✅ Stripe integration (TEST mode only)\n3. ✅ Testing database configuration\n4. ✅ All environment variables configured\n\n### Next Steps:\n1. Verify donation form functionality\n2. Test enrollment process\n3. Check email notifications\n4. Run full E2E test suite: \`npm run test:e2e\``
+            })
+            
   # Job 3: Deploy to Netlify (production)
   deploy-production:
     name: Deploy to Production
@@ -189,8 +258,8 @@ jobs:
   # Job 4: Performance and Security Checks
   post-deployment-checks:
     name: Post-Deployment Verification
-    needs: [deploy-staging, deploy-production]
-    if: always() && (needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
+    needs: [deploy-testing, deploy-staging, deploy-production]
+    if: always() && (needs.deploy-testing.result == 'success' || needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
     runs-on: ubuntu-latest
     
     steps:
@@ -207,14 +276,14 @@ jobs:
         
       - name: Run Lighthouse tests
         run: |
-          DEPLOY_URL="${{ needs.deploy-staging.outputs.deploy-url || 'https://spicebushmontessori.org' }}"
+          DEPLOY_URL="${{ needs.deploy-testing.outputs.deploy-url || needs.deploy-staging.outputs.deploy-url || 'https://spicebushmontessori.org' }}"
           lhci autorun --collect.url=$DEPLOY_URL --collect.numberOfRuns=3
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
           
       - name: Security headers check
         run: |
-          DEPLOY_URL="${{ needs.deploy-staging.outputs.deploy-url || 'https://spicebushmontessori.org' }}"
+          DEPLOY_URL="${{ needs.deploy-testing.outputs.deploy-url || needs.deploy-staging.outputs.deploy-url || 'https://spicebushmontessori.org' }}"
           curl -s -o /dev/null -w "Security Headers Check:\n" -I $DEPLOY_URL
           curl -s "https://securityheaders.com/?q=$DEPLOY_URL&followRedirects=on" | grep -A 5 "grade"
           
@@ -223,5 +292,5 @@ jobs:
         working-directory: ./app
         run: |
           npm ci --legacy-peer-deps
-          DEPLOY_URL="${{ needs.deploy-staging.outputs.deploy-url || 'https://spicebushmontessori.org' }}"
+          DEPLOY_URL="${{ needs.deploy-testing.outputs.deploy-url || needs.deploy-staging.outputs.deploy-url || 'https://spicebushmontessori.org' }}"
           BASE_URL=$DEPLOY_URL npm run test:e2e:quick || true
