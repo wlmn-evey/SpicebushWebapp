@@ -4,13 +4,13 @@ import { User, LogOut } from 'lucide-astro';
 
 <!-- Authentication Navigation Component -->
 <div id="auth-nav" class="relative">
-  <!-- Not authenticated state -->
-  <div id="auth-nav-guest" class="hidden space-x-4">
+  <!-- Not authenticated state (shown by default as fallback) -->
+  <div id="auth-nav-guest" class="space-x-4">
     <a 
       href="/auth/login" 
       class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
     >
-      Sign In
+      Login
     </a>
   </div>
 
@@ -53,7 +53,7 @@ import { User, LogOut } from 'lucide-astro';
 </div>
 
 <script>
-  import { auth } from '@lib/supabase';
+  import { auth } from '../lib/supabase';
 
   document.addEventListener('DOMContentLoaded', async () => {
     const authNav = document.getElementById('auth-nav');
@@ -77,12 +77,13 @@ import { User, LogOut } from 'lucide-astro';
             userEmail.textContent = user.email;
           }
         } else {
-          // User is not authenticated
+          // User is not authenticated - ensure guest nav is visible
           guestNav.classList.remove('hidden');
           userNav.classList.add('hidden');
         }
       } catch (error) {
-        console.error('Error checking user:', error);
+        console.error('Error checking user authentication:', error);
+        // Always show login link on error
         guestNav.classList.remove('hidden');
         userNav.classList.add('hidden');
       }
