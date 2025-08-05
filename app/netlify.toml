@@ -33,7 +33,7 @@
   publish = "dist"
   
   # Node version and other environment settings
-  environment = { NODE_VERSION = "20", NPM_FLAGS = "--prefix=/dev/null" }
+  environment = { NODE_VERSION = "20" }
 
 # Production context
 [context.production]
