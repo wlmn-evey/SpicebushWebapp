@@ -1,0 +1,38 @@
+---
+// Test page to verify deployment is working
+const timestamp = new Date().toISOString();
+---
+
+<html>
+<head>
+    <title>Deployment Test</title>
+</head>
+<body>
+    <h1>Deployment Test Page</h1>
+    <p>If you can see this page, deployments are working.</p>
+    <p>Build timestamp: {timestamp}</p>
+    <p>This page was created to test if changes are being deployed.</p>
+    
+    <h2>Component Tests</h2>
+    <div id="auth-nav-test">
+        <p>Testing AuthNav import and rendering:</p>
+        <!-- Try to import and render AuthNav -->
+        <div>
+            <!-- Test if AuthNav renders -->
+            {/* <AuthNav /> */}
+            <p>AuthNav component test area</p>
+        </div>
+    </div>
+    
+    <div id="hours-widget-test">
+        <p>Testing HoursWidget import and rendering:</p>
+        <!-- Try to import and render HoursWidget -->
+        <div>
+            {/* <HoursWidget /> */}
+            <p>HoursWidget component test area</p>
+        </div>
+    </div>
+    
+    <p><a href="/">Back to Home</a></p>
+</body>
+</html>
