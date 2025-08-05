@@ -26,8 +26,8 @@
   # Base directory for the build (where package.json and source files are located)
   # base = "." # Base is current directory when netlify.toml is in app/
   
-  # Build command
-  command = "npm run build"
+  # Build command with legacy peer deps to handle React 19 conflicts
+  command = "npm install --legacy-peer-deps && npm run build"
   
   # Directory to deploy (Astro outputs to dist/)
   publish = "dist"
@@ -39,13 +39,13 @@
 [context.production]
   environment = { NODE_ENV = "production" }
   
-  # Production build command with type checking
-  command = "npm run build"
+  # Production build command with legacy peer deps and type checking
+  command = "npm install --legacy-peer-deps && npm run build"
 
 # Testing branch context
 [context.branch-deploy.testing]
   environment = { NODE_ENV = "production", ENVIRONMENT = "testing" }
-  command = "npm run build"
+  command = "npm install --legacy-peer-deps && npm run build"
 
 # Branch deploy context (all other branches)
 [context.branch-deploy]

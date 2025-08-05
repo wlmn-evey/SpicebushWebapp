@@ -243,7 +243,7 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./app
-        run: npm ci
+        run: npm ci --legacy-peer-deps
         
       - name: Install Playwright
         working-directory: ./app

@@ -32,7 +32,7 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./app
-        run: npm ci
+        run: npm ci --legacy-peer-deps
         
       - name: Run ESLint
         working-directory: ./app
@@ -64,7 +64,7 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./app
-        run: npm ci
+        run: npm ci --legacy-peer-deps
         
       - name: Run unit tests
         working-directory: ./app
@@ -110,7 +110,7 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./app
-        run: npm ci
+        run: npm ci --legacy-peer-deps
         
       - name: Install Playwright browsers
         working-directory: ./app
@@ -159,7 +159,7 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./app
-        run: npm ci
+        run: npm ci --legacy-peer-deps
         
       - name: Build application
         working-directory: ./app
@@ -190,7 +190,7 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./app
-        run: npm ci
+        run: npm ci --legacy-peer-deps
         
       - name: Build application
         working-directory: ./app

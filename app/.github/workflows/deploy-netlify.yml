@@ -40,7 +40,7 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./app
-        run: npm ci
+        run: npm ci --legacy-peer-deps
         
       - name: Run type checking
         working-directory: ./app
@@ -81,7 +81,7 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./app
-        run: npm ci
+        run: npm ci --legacy-peer-deps
         
       - name: Build application
         working-directory: ./app
@@ -145,7 +145,7 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./app
-        run: npm ci
+        run: npm ci --legacy-peer-deps
         
       - name: Build application
         working-directory: ./app
@@ -222,6 +222,6 @@ jobs:
         if: success()
         working-directory: ./app
         run: |
-          npm ci
+          npm ci --legacy-peer-deps
           DEPLOY_URL="${{ needs.deploy-staging.outputs.deploy-url || 'https://spicebushmontessori.org' }}"
           BASE_URL=$DEPLOY_URL npm run test:e2e:quick || true
