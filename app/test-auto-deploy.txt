@@ -1,3 +1,0 @@
-Testing automatic deployment trigger
-Timestamp: 2025-08-05 19:00:00
-This file tests if pushing to the testing branch triggers an automatic Netlify deployment.
