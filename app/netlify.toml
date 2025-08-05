@@ -23,6 +23,9 @@
 # - SENTRY_DSN (for error tracking)
 
 [build]
+  # Base directory for the build (where package.json and source files are located)
+  # base = "." # Base is current directory when netlify.toml is in app/
+  
   # Build command
   command = "npm run build"
   

@@ -36,14 +36,14 @@ All required environment variables have been set using the Netlify CLI:
 ## Current Issues
 
 ### Build Failures
-Recent deployments are failing with:
-- **Error**: "Build script returned non-zero exit code: 2"
-- **State**: Multiple deployments stuck in "new" state or failing during build
+Recent deployments are failing with different errors:
+- **Initial Error**: "No url found for submodule path 'blog-backend' in .gitmodules" ✅ FIXED
+- **Current Error**: Build failing during build stage (need logs to diagnose)
 
 ### Deployment History
-- `6892410ebf816882298fac2f` - State: new (stuck)
-- `6892410665cba50008507f74` - State: error (build failed)
-- `689240ad88df9e941479f200` - State: error (submodule issue - fixed)
+- `68924a34313a7f0008c93934` - State: error (latest - build failed)
+- `6892431d8a58a30008f900c8` - State: error (submodule issue persisted)
+- `689240ad88df9e941479f200` - State: error (initial submodule issue)
 
 ## Next Steps
 

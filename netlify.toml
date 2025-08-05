@@ -1,0 +1,55 @@
+# Netlify Configuration for Spicebush Testing Site
+# This is specifically for the testing site deployment from the root directory
+
+[build]
+  # Base directory for the build (where the actual app files are located)
+  base = "app"
+  
+  # Build command
+  command = "npm run build"
+  
+  # Directory to deploy (Astro outputs to dist/)
+  publish = "dist"
+  
+  # Node version and other environment settings
+  environment = { NODE_VERSION = "20", NPM_FLAGS = "--prefix=/dev/null" }
+
+# Testing branch context
+[context.branch-deploy.testing]
+  environment = { NODE_ENV = "production", ENVIRONMENT = "testing" }
+  command = "npm run build"
+
+# Branch deploy context (all other branches)
+[context.branch-deploy]
+  environment = { NODE_ENV = "development" }
+
+# Deploy preview context
+[context.deploy-preview]
+  environment = { NODE_ENV = "development" }
+
+# Headers for security and performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    
+    # Content Security Policy (includes Stripe domains)
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com; frame-src 'self' https://js.stripe.com https://challenges.cloudflare.com"
+    
+    # HSTS (enable for production with HTTPS)
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+# 404 page
+[[redirects]]
+  from = "/*"
+  to = "/404"
+  status = 404
+
+# Functions directory (if using Netlify Functions)
+[functions]
+  directory = "netlify/functions"
