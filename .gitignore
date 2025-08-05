@@ -144,4 +144,7 @@ pip-delete-this-directory.txt
 # Lock files (keep for reproducible builds)
 # package-lock.json
 # yarn.lock
-# pnpm-lock.yaml
+# pnpm-lock.yaml/blog-backend/
+
+# Blog backend (separate repo)
+blog-backend/
