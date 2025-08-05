@@ -3,8 +3,9 @@
 // Styled specifically for footer integration
 import { getCollection } from 'astro:content';
 
-// Fetch hours data from markdown files with error handling
+// Fetch hours data from markdown files with robust error handling
 let hoursData = [];
+let hasDataError = false;
 try {
   const hoursEntries = await getCollection('hours');
   if (hoursEntries && hoursEntries.length > 0) {
@@ -12,7 +13,8 @@ try {
   }
 } catch (error) {
   console.error('Error loading hours in HoursWidget:', error);
-  // Will show loading state if no data available
+  hasDataError = true;
+  // Component will still render with fallback data
 }
 ---
 
@@ -41,6 +43,14 @@ try {
       Holiday
     </span>
   </div>
+  
+  <!-- Error State (server-side) -->
+  {hasDataError && (
+    <div class="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg mb-4">
+      <p class="font-medium">Unable to load current hours</p>
+      <p class="text-xs mt-1">Please contact us at (484) 202-0712</p>
+    </div>
+  )}
   
   <!-- Loading State -->
   <div id="loading-state" class="text-center py-4 text-sm text-gray-500">
@@ -309,7 +319,7 @@ try {
         
       } catch (error) {
         console.error('Error processing hours data:', error);
-        // Fallback to default hours
+        // Fallback to default hours - will always provide something to display
         processedHoursData = {
           Sunday: { start: 0, end: 0, before_care_offset: 0, after_care_offset: 0, aftercare_available: false, closed: true },
           Monday: { start: 8.5, end: 15, before_care_offset: 0.5, after_care_offset: 2.5, aftercare_available: true, closed: false },
@@ -320,7 +330,7 @@ try {
           Saturday: { start: 0, end: 0, before_care_offset: 0, after_care_offset: 0, aftercare_available: false, closed: true }
         };
         upcomingHolidays = [];
-        dataSource = 'fallback';
+        dataSource = 'fallback-after-error';
       }
       
       updateDebugInfo();
