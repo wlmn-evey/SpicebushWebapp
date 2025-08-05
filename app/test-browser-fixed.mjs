@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 
-const BASE_URL = 'http://localhost:4321';
+const BASE_URL = process.env.TEST_BASE_URL || process.env.PUBLIC_SITE_URL || 'http://localhost:4321';
 
 // Pages to test
 const PAGES = [

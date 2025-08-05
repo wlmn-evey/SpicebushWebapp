@@ -8,7 +8,7 @@ import netlify from '@astrojs/netlify';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://spicebushmontessori.org',
+  site: process.env.PUBLIC_SITE_URL || 'https://spicebushmontessori.org',
   integrations: [
     tailwind(),
     sitemap(),

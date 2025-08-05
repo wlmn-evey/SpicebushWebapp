@@ -4,6 +4,7 @@
 # Set these in Netlify Dashboard > Site Settings > Environment Variables:
 #
 # Required for Production:
+# - PUBLIC_SITE_URL (site domain - e.g., https://spicebushmontessori.org)
 # - PUBLIC_SUPABASE_URL
 # - PUBLIC_SUPABASE_ANON_KEY
 # - SUPABASE_SERVICE_ROLE_KEY

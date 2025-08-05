@@ -8,7 +8,7 @@ const fs = require('fs').promises;
 const path = require('path');
 
 // Test configuration
-const BASE_URL = 'http://localhost:4321';
+const BASE_URL = process.env.TEST_BASE_URL || process.env.PUBLIC_SITE_URL || 'http://localhost:4321';
 const REPORT_DIR = path.join(__dirname, 'test-reports');
 
 // Pages to test

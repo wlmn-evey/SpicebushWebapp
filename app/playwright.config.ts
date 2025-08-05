@@ -24,7 +24,7 @@ export default defineConfig({
   /* Shared settings for all the projects below */
   use: {
     /* Base URL to use in actions like `await page.goto('/')` */
-    baseURL: process.env.E2E_BASE_URL || 'http://localhost:4321',
+    baseURL: process.env.E2E_BASE_URL || process.env.PUBLIC_SITE_URL || 'http://localhost:4321',
     /* Collect trace when retrying the failed test */
     trace: 'on-first-retry',
     /* Screenshot on failure */

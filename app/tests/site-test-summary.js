@@ -5,7 +5,7 @@ const https = require('https');
 const url = require('url');
 const fs = require('fs');
 
-const BASE_URL = 'http://localhost:4321';
+const BASE_URL = process.env.TEST_BASE_URL || process.env.PUBLIC_SITE_URL || 'http://localhost:4321';
 
 // Test configuration
 const TESTS = {
