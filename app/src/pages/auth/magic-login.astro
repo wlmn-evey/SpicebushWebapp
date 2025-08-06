@@ -162,6 +162,7 @@ import { Mail, ArrowRight, Sparkles } from 'lucide-astro';
       }
       
       try {
+        // Use Supabase auth (currently working)
         const { error } = await auth.signInWithMagicLink(email);
         
         if (error) throw error;
