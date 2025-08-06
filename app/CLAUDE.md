@@ -1,5 +1,23 @@
 # Claude Instructions for SpicebushWebapp
 
+## 🚨🚨🚨 ABSOLUTE HIGHEST PRIORITY: ALWAYS USE THE LOOP WITH SERENA MCP 🚨🚨🚨
+
+**FOR EVERY TASK, NO EXCEPTIONS:**
+
+1. **ARCHITECT** - Use `project-architect-qa` with Serena MCP to analyze and plan
+2. **GUARDIAN** - Use `complexity-guardian` to review the plan for simplicity
+3. **IMPLEMENT** - Use `elrond-code-architect` with Serena MCP to implement
+4. **DEBUG** - Use `systematic-debugger` to verify and fix any issues
+5. **TEST** - Use `test-automation-expert` to validate the implementation
+
+**MANDATORY SERENA MCP USAGE:**
+- ALL file operations MUST use Serena MCP tools
+- NEVER use basic Read/Write/Edit without going through an agent
+- ALWAYS specify "Use Serena MCP for all operations" in agent prompts
+- If an agent isn't using Serena MCP, STOP and restart with proper instructions
+
+**THE LOOP IS NOT OPTIONAL - IT IS MANDATORY FOR EVERY SINGLE TASK**
+
 ## 🚨 CRITICAL: Agent Usage Policy
 
 **ALWAYS prefer using specialized agents for tasks unless a suitable agent is not available.** Agents provide:
