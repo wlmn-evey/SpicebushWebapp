@@ -12,6 +12,13 @@ export PUBLIC_SITE_URL="https://spicebush-testing.netlify.app"
 # For backward compatibility
 export PUBLIC_SUPABASE_PUBLIC_KEY="$PUBLIC_SUPABASE_ANON_KEY"
 
+# Unione.io Email Configuration
+export UNIONE_API_KEY="6w7qcex9tztza1y9g4fmezdc7zc1t4xcnwr1ihme"
+export UNIONE_REGION="us"
+export EMAIL_SERVICE="unione"
+export EMAIL_FROM="noreply@spicebushmontessori.org"
+export EMAIL_FROM_NAME="Spicebush Montessori School"
+
 echo "✅ Environment variables set:"
 echo "  PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL:0:30}..."
 echo "  PUBLIC_SUPABASE_ANON_KEY: ${PUBLIC_SUPABASE_ANON_KEY:0:20}..."
