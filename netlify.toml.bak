@@ -6,7 +6,7 @@
   base = "app"
   
   # Build command with explicit error handling
-  command = "./scripts/netlify-build.sh"
+  command = "npm install --legacy-peer-deps && npm run build"
   
   # Directory to deploy (Astro outputs to dist/)
   publish = "dist"
