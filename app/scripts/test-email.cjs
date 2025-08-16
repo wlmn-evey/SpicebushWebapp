@@ -16,13 +16,14 @@ console.log('🔍 Testing Unione.io configuration...');
 console.log(`   Region: ${region}`);
 console.log(`   API URL: ${baseUrl}`);
 
-// Test API key validity
+// Test API key validity using header authentication
 fetch(`${baseUrl}/account/info.json`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
+    'X-API-KEY': apiKey
   },
-  body: JSON.stringify({ api_key: apiKey })
+  body: JSON.stringify({})
 })
 .then(res => res.json())
 .then(data => {
@@ -31,13 +32,14 @@ fetch(`${baseUrl}/account/info.json`, {
     console.log(`   Account email: ${data.account_email}`);
     console.log(`   Account status: ${data.account_status}`);
     
-    // Check domain verification
+    // Check domain verification using header authentication
     return fetch(`${baseUrl}/domain/list.json`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-API-KEY': apiKey
       },
-      body: JSON.stringify({ api_key: apiKey })
+      body: JSON.stringify({})
     });
   } else {
     throw new Error(`API key validation failed: ${data.message}`);

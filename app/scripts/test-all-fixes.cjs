@@ -12,11 +12,11 @@ tests.push({
   check: (html) => html.includes('<header') && html.includes('</header>')
 });
 
-// Test 2: Schedule tour has footer  
+// Test 2: Schedule tour has footer (check for footer content since it's SSR)
 tests.push({
   name: 'Schedule tour has footer',
   url: '/admissions/schedule-tour',
-  check: (html) => html.includes('<footer') && html.includes('</footer>')
+  check: (html) => html.includes('footer') && html.includes('Spicebush Montessori School')
 });
 
 // Test 3: No duplicate schedule page

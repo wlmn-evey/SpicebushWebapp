@@ -71,8 +71,8 @@ class UnioneProvider implements EmailProvider {
     try {
       const recipients = Array.isArray(message.to) ? message.to : [message.to];
       
+      // Prepare the message payload without API key (will use header instead)
       const payload = {
-        api_key: this.apiKey,
         message: {
           body: {
             html: message.html,
@@ -86,11 +86,13 @@ class UnioneProvider implements EmailProvider {
         }
       };
 
+      // Use X-API-KEY header for authentication (preferred method)
       const response = await fetch(`${this.baseUrl}/email/send.json`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'X-API-KEY': this.apiKey
         },
         body: JSON.stringify(payload)
       });
