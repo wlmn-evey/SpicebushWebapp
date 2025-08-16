@@ -36,8 +36,10 @@ try {
           <div class="space-y-4">
             <OptimizedImage
               photoSlug="homepage-spicebush-logo-brand-identity"
-              className="h-12 sm:h-14 md:h-16 w-auto mb-4"
+              className="h-10 sm:h-12 md:h-14 w-auto mb-4 object-contain"
+              style="max-width: 180px;"
               loading="lazy"
+              alt="Spicebush Montessori School"
             />
             <p class="text-light-stone text-sm leading-relaxed-plus font-light tracking-wide">
               A warm community where every child can be exactly who they are.
@@ -150,7 +152,12 @@ try {
 <style>
   /* Footer-specific AuthNav styling */
   .footer-auth-nav #auth-nav a {
-    @apply text-light-stone hover:text-sunlight-gold transition-colors font-medium block py-0.5;
+    @apply text-light-stone hover:text-sunlight-gold transition-colors font-medium block py-0.5 !important;
+  }
+  
+  /* Ensure login link specifically is correct color */
+  .footer-auth-nav a[href="/auth/login"] {
+    @apply text-light-stone hover:text-sunlight-gold !important;
   }
   
   .footer-auth-nav #auth-nav button {
