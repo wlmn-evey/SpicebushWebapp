@@ -402,5 +402,8 @@ class EmailService {
 // Export singleton instance
 export const emailService = new EmailService();
 
+// Export the class for direct instantiation when needed
+export { EmailService };
+
 // Export types
 export type { EmailMessage, EmailProvider, EmailResult };

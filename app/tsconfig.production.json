@@ -1,0 +1,34 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": false,
+    "skipLibCheck": true,
+    "noEmit": false,
+    "allowJs": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictBindCallApply": false,
+    "strictPropertyInitialization": false,
+    "noImplicitThis": false,
+    "alwaysStrict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "exclude": [
+    "dist",
+    "node_modules",
+    "test-*.js",
+    "test-*.ts",
+    "test-*.cjs",
+    "test-*.mjs",
+    "**/*.test.ts",
+    "**/*.test.js",
+    "**/*.spec.ts",
+    "**/*.spec.js",
+    "backups/**/*",
+    "scripts/**/*",
+    "playwright-report/**/*",
+    "coverage/**/*"
+  ]
+}
