@@ -575,8 +575,8 @@ if (typeof process !== 'undefined' &&
 
 // Fetch school hours from database
 export async function getSchoolHours() {
-  await ensureConnected();
   try {
+    await ensureConnected();
     const result = await client.query(`
       SELECT day_of_week, start_time, end_time, 
              before_care_offset, after_care_offset, closed
@@ -594,6 +594,15 @@ export async function getSchoolHours() {
     return result.rows;
   } catch (error) {
     console.error('Error fetching school hours:', error);
-    return [];
+    // Return default hours if database is unavailable
+    return [
+      { day_of_week: 'Monday', start_time: 8.5, end_time: 15, before_care_offset: 0.5, after_care_offset: 2.5, closed: false },
+      { day_of_week: 'Tuesday', start_time: 8.5, end_time: 15, before_care_offset: 0.5, after_care_offset: 2.5, closed: false },
+      { day_of_week: 'Wednesday', start_time: 8.5, end_time: 15, before_care_offset: 0.5, after_care_offset: 2.5, closed: false },
+      { day_of_week: 'Thursday', start_time: 8.5, end_time: 15, before_care_offset: 0.5, after_care_offset: 2.5, closed: false },
+      { day_of_week: 'Friday', start_time: 8.5, end_time: 15, before_care_offset: 0.5, after_care_offset: 0, closed: false },
+      { day_of_week: 'Saturday', start_time: 0, end_time: 0, before_care_offset: 0, after_care_offset: 0, closed: true },
+      { day_of_week: 'Sunday', start_time: 0, end_time: 0, before_care_offset: 0, after_care_offset: 0, closed: true }
+    ];
   }
 }

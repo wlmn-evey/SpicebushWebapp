@@ -3,13 +3,17 @@
 // Styled specifically for footer integration
 import { getSchoolHours } from '@lib/content-db-direct';
 
-// Fetch hours data from markdown files with robust error handling
+// Fetch hours data from database with robust error handling
 let hoursData = [];
 let hasDataError = false;
 try {
   const hoursEntries = await getSchoolHours();
+  console.log('HoursWidget: Fetched hours entries:', hoursEntries?.length || 0);
   if (hoursEntries && hoursEntries.length > 0) {
     hoursData = hoursEntries;
+  } else {
+    console.warn('HoursWidget: No hours data returned from database');
+    hasDataError = true;
   }
 } catch (error) {
   console.error('Error loading hours in HoursWidget:', error);
