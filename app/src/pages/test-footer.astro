@@ -1,0 +1,35 @@
+---
+import Layout from '../layouts/Layout.astro';
+import TestFooter from '../components/TestFooter.astro';
+
+// Test page to isolate footer component import issue
+console.log('[test-footer page] Starting render');
+---
+
+<Layout title="Footer Component Test">
+  <main class="min-h-screen">
+    <div class="container mx-auto p-8">
+      <h1 class="text-3xl font-bold mb-8">Footer Component Import Test</h1>
+      
+      <div class="mb-8 p-4 bg-yellow-100 border border-yellow-400 rounded">
+        <h2 class="text-xl font-semibold mb-2">Test Information:</h2>
+        <ul class="list-disc ml-6">
+          <li>Testing if HoursWidgetStatic component import works in SSR</li>
+          <li>Left column: Static HTML (should always work)</li>
+          <li>Right column: Component import (testing for failure)</li>
+          <li>Check browser console and page source for errors</li>
+        </ul>
+      </div>
+      
+      <div class="mb-8">
+        <h2 class="text-2xl font-semibold mb-4">Inline Test (Should Work):</h2>
+        <div class="bg-gray-100 p-4 rounded">
+          <p>This is inline HTML content - no component imports.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Test Footer Component -->
+  <TestFooter />
+</Layout>

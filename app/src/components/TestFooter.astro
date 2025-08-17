@@ -1,0 +1,26 @@
+---
+// Minimal test to reproduce component import issue
+import SimpleTest from './SimpleTest.astro';
+import HoursWidgetStatic from './HoursWidgetStatic.astro';
+
+console.log('[TestFooter] Components imported successfully');
+---
+
+<footer class="bg-gray-800 text-white p-4">
+  <div class="container mx-auto">
+    <h2 class="text-xl mb-4">Test Footer - Component Import</h2>
+    <div class="grid grid-cols-3 gap-4">
+      <div class="bg-blue-600 p-4">
+        <p>Column 1 - Static HTML</p>
+      </div>
+      <div class="bg-green-600 p-4">
+        <p>Column 2 - SimpleTest:</p>
+        <SimpleTest />
+      </div>
+      <div class="bg-red-600 p-4">
+        <p>Column 3 - HoursWidgetStatic:</p>
+        <HoursWidgetStatic />
+      </div>
+    </div>
+  </div>
+</footer>
