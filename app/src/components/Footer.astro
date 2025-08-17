@@ -10,17 +10,18 @@ import { getSetting } from '@lib/content-db';
 
 // Get social media links from database settings with error handling
 let socialMedia = { facebook: null, instagram: null };
-try {
-  const facebook = await getSetting('school_facebook');
-  const instagram = await getSetting('school_instagram');
-  socialMedia = { 
-    facebook: facebook || null, 
-    instagram: instagram || null 
-  };
-} catch (error) {
-  console.error('Error loading social media links in Footer:', error);
-  // Use default empty social media links
-}
+// Temporarily disable database call to debug
+// try {
+//   const facebook = await getSetting('school_facebook');
+//   const instagram = await getSetting('school_instagram');
+//   socialMedia = { 
+//     facebook: facebook || null, 
+//     instagram: instagram || null 
+//   };
+// } catch (error) {
+//   console.error('Error loading social media links in Footer:', error);
+//   // Use default empty social media links
+// }
 ---
 
 <footer class="bg-forest-canopy text-white">
