@@ -49,6 +49,7 @@ if (Astro.request.method === 'POST') {
       photo: formData.get('photo')?.toString() || '',
       bio: formData.get('bio')?.toString() || '',
       credentials: formData.get('credentials')?.toString().split(',').map(cred => cred.trim()).filter(Boolean) || [],
+      certificationBadge: formData.get('certificationBadge')?.toString() || '',
       languages: formData.get('languages')?.toString().split(',').map(lang => lang.trim()).filter(Boolean) || ['English'],
       startYear: parseInt(formData.get('startYear')?.toString()) || new Date().getFullYear(),
       order: parseInt(formData.get('order')?.toString()) || 99,
@@ -86,6 +87,7 @@ if (Astro.request.method === 'POST') {
           email: data.email || undefined,
           photo: data.photo || '/images/teachers/placeholder.jpg',
           credentials: data.credentials,
+          certificationBadge: data.certificationBadge || null,
           languages: data.languages,
           startYear: data.startYear,
           order: data.order,
@@ -128,6 +130,7 @@ const defaultData = staffMember ? {
   photo: staffMember.data.photo || '',
   bio: staffMember.body || '',
   credentials: staffMember.data.credentials?.join(', ') || '',
+  certificationBadge: staffMember.data.certificationBadge || '',
   languages: staffMember.data.languages?.join(', ') || 'English',
   startYear: staffMember.data.startYear || new Date().getFullYear(),
   order: staffMember.data.order || 99,
@@ -140,6 +143,7 @@ const defaultData = staffMember ? {
   photo: '',
   bio: '',
   credentials: '',
+  certificationBadge: '',
   languages: 'English',
   startYear: new Date().getFullYear(),
   order: 99,
@@ -281,6 +285,22 @@ const pageTitle = isEdit ? `Edit: ${staffMember?.data.name}` : 'New Staff Member
                 name="credentials"
                 value={defaultData.credentials}
                 placeholder="B.A. Education, Montessori Certificate, etc."
+              />
+            </FormField>
+            
+            <FormField
+              label="Certification Badge"
+              name="certificationBadge"
+              help="Professional certification to display"
+            >
+              <SelectField
+                name="certificationBadge"
+                value={defaultData.certificationBadge}
+                options={[
+                  { value: '', label: 'None' },
+                  { value: 'AMS', label: 'AMS (American Montessori Society)' },
+                  { value: 'AMI', label: 'AMI (Association Montessori Internationale)' }
+                ]}
               />
             </FormField>
             

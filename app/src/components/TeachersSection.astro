@@ -67,15 +67,22 @@ const sortedStaff = staff.sort((a, b) => (a.data.order || 999) - (b.data.order |
                         {teacher.data.role}
                       </div>
                     )}
-                    {teacher.data.credentials && teacher.data.credentials.length > 0 && (
-                      <div class="flex flex-wrap gap-2 mb-4">
-                        {teacher.data.credentials.map(credential => (
-                          <span class="inline-block px-3 py-1 bg-forest-canopy/10 text-forest-canopy rounded-full text-sm font-medium">
-                            {credential}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    <div class="flex items-center gap-3 mb-4">
+                      {teacher.data.certificationBadge && (
+                        <span class="inline-block px-3 py-1 bg-sunlight-gold text-white rounded-full text-sm font-bold">
+                          {teacher.data.certificationBadge} Certified
+                        </span>
+                      )}
+                      {teacher.data.credentials && teacher.data.credentials.length > 0 && (
+                        <div class="flex flex-wrap gap-2">
+                          {teacher.data.credentials.map(credential => (
+                            <span class="inline-block px-3 py-1 bg-forest-canopy/10 text-forest-canopy rounded-full text-sm font-medium">
+                              {credential}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   
                   <div class="text-earth-brown leading-relaxed text-base lg:text-lg mb-8 max-w-none">
