@@ -4,20 +4,19 @@ import OptimizedImage from '@components/OptimizedImage.astro';
 import ContactInfo from '@components/ContactInfo.astro';
 import NewsletterSignup from '@components/NewsletterSignup.astro';
 import AuthNav from '@components/AuthNav.astro';
+import HoursWidget from '@components/HoursWidget.astro';
 import { getSetting } from '@lib/content-db';
 
 // Get social media links from database settings with error handling
 let socialMedia = { facebook: null, instagram: null };
 try {
-  const facebook = await getSetting('school_facebook');
-  const instagram = await getSetting('school_instagram');
-  socialMedia = { 
-    facebook: facebook || null, 
-    instagram: instagram || null 
-  };
+  const [facebook, instagram] = await Promise.all([
+    getSetting('school_facebook').catch(() => null),
+    getSetting('school_instagram').catch(() => null)
+  ]);
+  socialMedia = { facebook, instagram };
 } catch (error) {
   console.error('Error loading social media links in Footer:', error);
-  // Use default empty social media links
 }
 ---
 
@@ -127,28 +126,7 @@ try {
       <!-- Right Column: Hours Widget (50%) -->
       <div class="w-full">
         <div class="bg-white/5 backdrop-blur-sm rounded-xl p-2 border border-white/10 h-full">
-          <!-- Inline hours widget to avoid component import issues -->
-          <div id="sbms-hours-widget" class="bg-white rounded-lg p-4 text-earth-brown shadow-sm h-full">
-            <h3 class="text-xl font-bold text-center text-forest-canopy mb-4">School Hours</h3>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between">
-                <span class="font-medium">Monday-Thursday:</span>
-                <span>8:00 AM - 5:30 PM</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="font-medium">Friday:</span>
-                <span>8:00 AM - 3:30 PM</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="font-medium">Saturday-Sunday:</span>
-                <span>Closed</span>
-              </div>
-              <div class="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-600">
-                <p>Before care starts at 8:00 AM</p>
-                <p>After care available until 5:30 PM (Mon-Thu)</p>
-              </div>
-            </div>
-          </div>
+          <HoursWidget />
         </div>
       </div>
     </div>
