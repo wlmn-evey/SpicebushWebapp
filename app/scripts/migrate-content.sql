@@ -106,7 +106,7 @@ VALUES (
   'staff',
   'kira-messinger',
   'Kira Messinger',
-  '{"name":"Kira Messinger","role":"Montessori Teacher & Nature Guide","photo":"/images/optimized/teachers/teachers-kira-messinger-assistant-teacher-640w.webp","email":"kira@spicebushmontessori.org","credentials":["AMI Montessori Certification","Environmental Education Certificate"],"languages":["English"],"startYear":2023,"order":3,"body":"Kira brings a special passion for connecting children with the natural world. Her expertise in environmental education perfectly complements our gardening and outdoor programs. She has remarkable patience and skill in guiding children through their natural curiosity about the world around them. Kira''s approach helps children develop both independence and a deep respect for their environment, embodying our SPICES values of environmental stewardship and simplicity."}'::jsonb,
+  '{"name":"Kira Messinger","role":"Montessori Teacher & Nature Guide","photo":"/images/optimized/teachers/teachers-kira-messinger-assistant-teacher-640w.webp","email":"kira@spicebushmontessori.org","credentials":["Environmental Education Certificate"],"languages":["English"],"startYear":2023,"order":3,"body":"Kira brings a special passion for connecting children with the natural world. Her expertise in environmental education perfectly complements our gardening and outdoor programs. She has remarkable patience and skill in guiding children through their natural curiosity about the world around them. Kira''s approach helps children develop both independence and a deep respect for their environment, embodying our SPICES values of environmental stewardship and simplicity."}'::jsonb,
   'published',
   'migration@spicebushmontessori.org'
 )
@@ -122,7 +122,7 @@ VALUES (
   'staff',
   'kirsti-forrest',
   'Kirsti Forrest',
-  '{"name":"Kirsti Forrest","role":"Lead Montessori Teacher","photo":"/images/optimized/teachers/teachers-kirsti-forrest-head-teacher-640w.webp","email":"kirsti@spicebushmontessori.org","credentials":["AMI Montessori Certification","B.A. in Education"],"languages":["English"],"startYear":2021,"order":1,"body":"Kirsti brings deep understanding of Montessori philosophy and practice to Spicebush. She has a gift for seeing each child''s unique potential and creating environments where they can flourish. Parents consistently praise her patience, insight, and ability to guide children toward independence and confidence. Kirsti has been with Spicebush since our founding and has been instrumental in creating our nurturing, child-centered community."}'::jsonb,
+  '{"name":"Kirsti Forrest","role":"Lead Montessori Teacher","photo":"/images/optimized/teachers/teachers-kirsti-forrest-head-teacher-640w.webp","email":"kirsti@spicebushmontessori.org","credentials":["AMS Montessori Certification","B.A. in Education"],"languages":["English"],"startYear":2021,"order":1,"body":"Kirsti brings deep understanding of Montessori philosophy and practice to Spicebush. She has a gift for seeing each child''s unique potential and creating environments where they can flourish. Parents consistently praise her patience, insight, and ability to guide children toward independence and confidence. Kirsti has been with Spicebush since our founding and has been instrumental in creating our nurturing, child-centered community."}'::jsonb,
   'published',
   'migration@spicebushmontessori.org'
 )
@@ -138,7 +138,7 @@ VALUES (
   'staff',
   'leah-walker',
   'Leah Walker',
-  '{"name":"Leah Walker","role":"Montessori Teacher","photo":"/images/optimized/teachers/teachers-leah-walker-lead-teacher-640w.webp","email":"leah@spicebushmontessori.org","credentials":["AMI Montessori Certification","B.S. in Child Development"],"languages":["English"],"startYear":2022,"order":2,"body":"Leah''s warm and gentle approach creates a safe space where children feel comfortable exploring and taking risks in their learning. She has exceptional skills in observing children and understanding their developmental needs. Leah''s collaborative work with Kirsti has created a beautiful classroom environment where children of all ages learn together harmoniously. Parents appreciate her thoughtful communication and deep care for each child''s growth."}'::jsonb,
+  '{"name":"Leah Walker","role":"Montessori Teacher","photo":"/images/optimized/teachers/teachers-leah-walker-lead-teacher-640w.webp","email":"leah@spicebushmontessori.org","credentials":["AMS Montessori Certification","B.S. in Child Development"],"languages":["English"],"startYear":2022,"order":2,"body":"Leah''s warm and gentle approach creates a safe space where children feel comfortable exploring and taking risks in their learning. She has exceptional skills in observing children and understanding their developmental needs. Leah''s collaborative work with Kirsti has created a beautiful classroom environment where children of all ages learn together harmoniously. Parents appreciate her thoughtful communication and deep care for each child''s growth."}'::jsonb,
   'published',
   'migration@spicebushmontessori.org'
 )
@@ -1944,7 +1944,7 @@ VALUES (
   'school-info',
   'general',
   'general',
-  '{"phone":"(484) 202-0712","email":"information@spicebushmontessori.org","address":{"street":"827 Concord Road","city":"Glen Mills","state":"PA","zip":"19342"},"agesServed":"3 to 6 years","schoolYear":"2025-2026","extendedCareUntil":"5:30 PM","socialMedia":{"facebook":"https://www.facebook.com/SpicebushMontessori","instagram":"https://www.instagram.com/spicebushmontessori"},"founded":2021,"ein":"88-0565930","accreditation":["AMI Certified Teachers","PA Licensed Child Care Center"],"body":"# Spicebush Montessori School\n\nCentral configuration for school-wide information. This data is used across the website to ensure consistency."}'::jsonb,
+  '{"phone":"(484) 202-0712","email":"information@spicebushmontessori.org","address":{"street":"827 Concord Road","city":"Glen Mills","state":"PA","zip":"19342"},"agesServed":"3 to 6 years","schoolYear":"2025-2026","extendedCareUntil":"5:30 PM","socialMedia":{"facebook":"https://www.facebook.com/SpicebushMontessori","instagram":"https://www.instagram.com/spicebushmontessori"},"founded":2021,"ein":"88-0565930","accreditation":["AMS Certified Teachers","PA Licensed Child Care Center"],"body":"# Spicebush Montessori School\n\nCentral configuration for school-wide information. This data is used across the website to ensure consistency."}'::jsonb,
   'published',
   'migration@spicebushmontessori.org'
 )
