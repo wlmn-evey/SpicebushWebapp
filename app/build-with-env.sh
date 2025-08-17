@@ -3,10 +3,14 @@
 # Build script that ensures environment variables are set
 echo "🔧 Building with environment variables..."
 
-# Export required environment variables
+# Supabase Configuration
+# Note: Supabase now uses sb_ prefixed keys instead of JWT tokens
 export PUBLIC_SUPABASE_URL="https://xnzweuepchbfffsegkml.supabase.co"
+
+# Production Supabase keys (new format)
 export PUBLIC_SUPABASE_ANON_KEY="sb_publishable_3Ja6qCU9VfJ-V68G63ZZNQ_Yc2wBvEN"
 export SUPABASE_SERVICE_ROLE_KEY="sb_secret_eNcOoXgv1AtzKfklcvjh7g_I5LUpOWd"
+
 export PUBLIC_SITE_URL="https://spicebush-testing.netlify.app"
 
 # For backward compatibility
