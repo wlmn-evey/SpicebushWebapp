@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Footer from '../components/Footer.astro';
-import FooterWithDynamicHours from '../components/FooterWithDynamicHours.astro';
+import FooterFixed from '../components/FooterFixed.astro';
 
 console.log('[test-footer-comparison] Page starting render');
 ---
@@ -30,12 +30,12 @@ console.log('[test-footer-comparison] Page starting render');
   <main class="min-h-screen">
     <div class="container mx-auto p-8">
       <div class="mb-8 p-4 bg-green-100 border border-green-400 rounded">
-        <h2 class="text-xl font-semibold mb-2">Test 2: Footer with Dynamic HoursWidget</h2>
-        <p>This imports the HoursWidget component</p>
+        <h2 class="text-xl font-semibold mb-2">Test 2: Fixed Footer</h2>
+        <p>This uses improved error handling and simplified newsletter</p>
       </div>
     </div>
   </main>
   
-  <!-- Footer with Dynamic Hours Widget -->
-  <FooterWithDynamicHours />
+  <!-- Fixed Footer with better error handling -->
+  <FooterFixed />
 </Layout>
