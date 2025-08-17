@@ -1,15 +1,15 @@
 ---
 // Hours Widget Component
 // Styled specifically for footer integration
-import { getCollection } from 'astro:content';
+import { getSchoolHours } from '@lib/content-db-direct';
 
 // Fetch hours data from markdown files with robust error handling
 let hoursData = [];
 let hasDataError = false;
 try {
-  const hoursEntries = await getCollection('hours');
+  const hoursEntries = await getSchoolHours();
   if (hoursEntries && hoursEntries.length > 0) {
-    hoursData = hoursEntries.sort((a, b) => a.data.order - b.data.order);
+    hoursData = hoursEntries;
   }
 } catch (error) {
   console.error('Error loading hours in HoursWidget:', error);
@@ -262,10 +262,10 @@ try {
         const transformedData = {};
         
         hoursData.forEach(entry => {
-          const data = entry.data;
-          const dayName = data.day;
+          const data = entry;
+          const dayName = data.day_of_week;
           
-          if (data.is_closed) {
+          if (data.closed) {
             transformedData[dayName] = {
               start: 0,
               end: 0,
@@ -275,29 +275,22 @@ try {
               closed: true
             };
           } else {
-            const openTime = parseTimeToDecimal(data.open_time);
-            const closeTime = parseTimeToDecimal(data.close_time);
+            // Database already provides decimal times
+            const openTime = typeof data.open_time === 'number' ? data.open_time : parseTimeToDecimal(data.open_time);
+            const closeTime = typeof data.close_time === 'number' ? data.close_time : parseTimeToDecimal(data.close_time);
             
-            // Determine before/after care based on standard hours
-            // Standard hours: 8:30 AM - 3:00 PM
-            const standardStart = 8.5; // 8:30 AM
-            const standardEnd = 15; // 3:00 PM
+            // Use database values for regular hours
+            const standardStart = data.start_time || 8.5;
+            const standardEnd = data.end_time || 15;
             
-            // Calculate offsets
-            const beforeCareOffset = standardStart - openTime;
+            // Use database offsets
+            const beforeCareOffset = data.before_care_offset || 0;
             let afterCareOffset = 0;
             let aftercareAvailable = false;
             
-            // Check if aftercare is available based on note or closing time
-            if (dayName === 'Friday') {
-              // Friday has no aftercare
-              afterCareOffset = 0;
-              aftercareAvailable = false;
-            } else if (closeTime > standardEnd) {
-              // Monday-Thursday have aftercare until 5:30 PM
-              afterCareOffset = closeTime - standardEnd;
-              aftercareAvailable = true;
-            }
+            // Use database values for after care
+            afterCareOffset = data.after_care_offset || 0;
+            aftercareAvailable = afterCareOffset > 0;
             
             transformedData[dayName] = {
               start: standardStart,

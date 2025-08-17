@@ -572,3 +572,28 @@ if (typeof process !== 'undefined' &&
     console.log('Note: Process shutdown handler not available in this environment');
   }
 }
+
+// Fetch school hours from database
+export async function getSchoolHours() {
+  await ensureConnected();
+  try {
+    const result = await client.query(`
+      SELECT day_of_week, start_time, end_time, 
+             before_care_offset, after_care_offset, closed
+      FROM school_hours 
+      ORDER BY CASE day_of_week
+        WHEN 'Monday' THEN 1
+        WHEN 'Tuesday' THEN 2
+        WHEN 'Wednesday' THEN 3
+        WHEN 'Thursday' THEN 4
+        WHEN 'Friday' THEN 5
+        WHEN 'Saturday' THEN 6
+        WHEN 'Sunday' THEN 7
+      END
+    `);
+    return result.rows;
+  } catch (error) {
+    console.error('Error fetching school hours:', error);
+    return [];
+  }
+}
