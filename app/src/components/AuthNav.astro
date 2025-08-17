@@ -8,7 +8,7 @@ import { User, LogOut } from 'lucide-astro';
   <div id="auth-nav-guest" class="space-x-4">
     <a 
       href="/auth/login" 
-      class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
+      class="auth-nav-link transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
     >
       Login
     </a>
@@ -129,3 +129,13 @@ import { User, LogOut } from 'lucide-astro';
     checkUser();
   });
 </script>
+
+<style>
+  /* Default colors for AuthNav link - can be overridden by parent context */
+  .auth-nav-link {
+    color: var(--auth-nav-color, #4A4A4A); /* Default: earth-brown */
+  }
+  .auth-nav-link:hover {
+    color: var(--auth-nav-hover-color, #2C5530); /* Default: forest-canopy */
+  }
+</style>

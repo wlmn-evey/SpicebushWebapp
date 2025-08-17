@@ -128,7 +128,40 @@ try {
       <!-- Right Column: Hours Widget (50%) -->
       <div class="w-full">
         <div class="bg-white/5 backdrop-blur-sm rounded-xl p-2 border border-white/10 h-full">
-          <HoursWidget />
+          {
+            (() => {
+              try {
+                // Try to render HoursWidget
+                return <HoursWidget />;
+              } catch (error) {
+                // Fallback if HoursWidget fails
+                console.error('HoursWidget failed to render:', error);
+                return (
+                  <div class="bg-white rounded-lg p-4 text-earth-brown">
+                    <h3 class="text-xl font-bold text-center text-forest-canopy mb-4">School Hours</h3>
+                    <div class="space-y-2 text-sm">
+                      <div class="flex justify-between">
+                        <span class="font-medium">Monday-Thursday:</span>
+                        <span>8:00 AM - 5:30 PM</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="font-medium">Friday:</span>
+                        <span>8:00 AM - 3:30 PM</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="font-medium">Saturday-Sunday:</span>
+                        <span>Closed</span>
+                      </div>
+                      <div class="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-600">
+                        <p>Before care starts at 8:00 AM</p>
+                        <p>After care available until 5:30 PM (Mon-Thu)</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+            })()
+          }
         </div>
       </div>
     </div>
@@ -150,16 +183,13 @@ try {
 </footer>
 
 <style>
-  /* Footer-specific AuthNav styling */
-  .footer-auth-nav #auth-nav a {
-    @apply text-light-stone hover:text-sunlight-gold transition-colors font-medium block py-0.5 !important;
+  /* Footer-specific AuthNav styling using CSS variables */
+  .footer-auth-nav {
+    --auth-nav-color: #F5F5DC; /* light-stone */
+    --auth-nav-hover-color: #FFD700; /* sunlight-gold */
   }
   
-  /* Ensure login link specifically is correct color */
-  .footer-auth-nav a[href="/auth/login"] {
-    @apply text-light-stone hover:text-sunlight-gold !important;
-  }
-  
+  /* Additional footer-specific styles for authenticated state */
   .footer-auth-nav #auth-nav button {
     @apply text-light-stone hover:text-sunlight-gold transition-colors font-medium;
   }

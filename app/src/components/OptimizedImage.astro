@@ -2,12 +2,14 @@
 interface Props {
   photoSlug: string;
   className?: string;
+  style?: string;
   priority?: boolean;
   sizes?: string;
   objectFit?: 'cover' | 'contain' | 'fill' | 'scale-down' | 'none';
   objectPosition?: string;
   loading?: 'lazy' | 'eager';
   showFocalPoints?: boolean; // Debug mode
+  alt?: string; // Add alt prop
 }
 
 import { getCollection, getEntry } from 'astro:content';
@@ -15,12 +17,14 @@ import { getCollection, getEntry } from 'astro:content';
 const { 
   photoSlug, 
   className = '', 
+  style = '',
   priority = false, 
   sizes = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw',
   objectFit = 'cover',
   objectPosition,
   loading,
-  showFocalPoints = false
+  showFocalPoints = false,
+  alt
 } = Astro.props;
 
 // Get photo metadata from CMS
@@ -98,7 +102,7 @@ const loadingStrategy = loading || (priority ? 'eager' : 'lazy');
 const imageId = `img-${Math.random().toString(36).substr(2, 9)}`;
 ---
 
-<div class={`optimized-image ${className}`} data-photo-slug={photoSlug}>
+<div class="optimized-image" data-photo-slug={photoSlug}>
   <picture>
     <!-- WebP source with responsive sizing -->
     <source
@@ -110,17 +114,17 @@ const imageId = `img-${Math.random().toString(36).substr(2, 9)}`;
     <!-- Fallback JPG -->
     <img
       src={jpgFallback}
-      alt={altText}
+      alt={alt || altText}
       width={originalWidth}
       height={originalHeight}
       loading={loadingStrategy}
       decoding={priority ? 'sync' : 'async'}
-      class="optimized-image-element"
+      class={`optimized-image-element ${className}`}
       data-image-id={imageId}
       data-position-mobile={objectPositionMobile}
       data-position-tablet={objectPositionTablet}
       data-position-desktop={objectPositionDesktop}
-      style={`object-fit: ${objectFit}; object-position: ${objectPosition || objectPositionDesktop};`}
+      style={`object-fit: ${objectFit}; object-position: ${objectPosition || objectPositionDesktop}; ${style}`}
     />
   </picture>
   
