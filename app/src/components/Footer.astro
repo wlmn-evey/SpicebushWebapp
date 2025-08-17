@@ -1,6 +1,6 @@
 ---
 import { Facebook, Instagram } from 'lucide-astro';
-import HoursWidget from './HoursWidget.astro';
+import HoursWidget from './HoursWidgetStatic.astro';
 import OptimizedImage from './OptimizedImage.astro';
 import ContactInfo from './ContactInfo.astro';
 import NewsletterSignup from './NewsletterSignup.astro';
@@ -128,6 +128,7 @@ try {
       <!-- Right Column: Hours Widget (50%) -->
       <div class="w-full">
         <div class="bg-white/5 backdrop-blur-sm rounded-xl p-2 border border-white/10 h-full">
+          <!-- Hours Widget Component -->
           <HoursWidget />
         </div>
       </div>
