@@ -1,6 +1,5 @@
 ---
 import { Facebook, Instagram } from 'lucide-astro';
-import HoursWidgetStatic from './HoursWidgetStatic.astro';
 import OptimizedImage from './OptimizedImage.astro';
 import ContactInfo from './ContactInfo.astro';
 import NewsletterSignup from './NewsletterSignup.astro';
@@ -9,18 +8,17 @@ import { getSetting } from '@lib/content-db';
 
 // Get social media links from database settings with error handling
 let socialMedia = { facebook: null, instagram: null };
-// Temporarily disable database call to debug
-// try {
-//   const facebook = await getSetting('school_facebook');
-//   const instagram = await getSetting('school_instagram');
-//   socialMedia = { 
-//     facebook: facebook || null, 
-//     instagram: instagram || null 
-//   };
-// } catch (error) {
-//   console.error('Error loading social media links in Footer:', error);
-//   // Use default empty social media links
-// }
+try {
+  const facebook = await getSetting('school_facebook');
+  const instagram = await getSetting('school_instagram');
+  socialMedia = { 
+    facebook: facebook || null, 
+    instagram: instagram || null 
+  };
+} catch (error) {
+  console.error('Error loading social media links in Footer:', error);
+  // Use default empty social media links
+}
 ---
 
 <footer class="bg-forest-canopy text-white">
@@ -29,35 +27,126 @@ let socialMedia = { facebook: null, instagram: null };
     <!-- Main Footer Layout: Exactly 2 Equal Columns -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-8">
       
-      <!-- Left Column: Simple Test (50%) -->
+      <!-- Left Column: 4x4 Grid (50%) -->
       <div class="w-full">
-        <div style="background: blue; color: white; padding: 20px;">
-          <h3>LEFT COLUMN TEST</h3>
-          <p>This is the left column.</p>
+        <div class="grid grid-cols-2 gap-8 h-full">
+          
+          <!-- Grid Cell 1: School Info -->
+          <div class="space-y-4">
+            <OptimizedImage
+              photoSlug="homepage-spicebush-logo-brand-identity"
+              className="h-10 sm:h-12 md:h-14 w-auto mb-4 object-contain"
+              style="max-width: 180px;"
+              loading="lazy"
+              alt="Spicebush Montessori School"
+            />
+            <p class="text-light-stone text-sm leading-relaxed-plus font-light tracking-wide">
+              A warm community where every child can be exactly who they are.
+            </p>
+            <div class="flex space-x-3">
+              {socialMedia?.facebook && (
+                <a href={socialMedia.facebook} class="text-light-stone hover:text-sunlight-gold transition-colors" aria-label="Facebook">
+                  <Facebook className="w-5 h-5" />
+                </a>
+              )}
+              {socialMedia?.instagram && (
+                <a href={socialMedia.instagram} class="text-light-stone hover:text-sunlight-gold transition-colors" aria-label="Instagram">
+                  <Instagram className="w-5 h-5" />
+                </a>
+              )}
+            </div>
+          </div>
+          
+          <!-- Grid Cell 2: Quick Links -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold text-sunlight-gold">Quick Links</h3>
+            <ul class="space-y-2 text-sm">
+              <li><a href="/about" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">About Us</a></li>
+              <li><a href="/our-principles" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Our Principles</a></li>
+              <li><a href="/admissions" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Admissions</a></li>
+              <li><a href="/admissions/tuition-calculator" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Tuition Calculator</a></li>
+              <li class="pt-3 border-t border-white/20">
+                <div class="footer-auth-nav">
+                  <AuthNav />
+                </div>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- Grid Cell 3: Resources & Newsletter -->
+          <div class="space-y-6">
+            <div class="space-y-4">
+              <h3 class="text-lg font-semibold text-sunlight-gold">Resources</h3>
+              <ul class="space-y-2 text-sm">
+                <li><a href="/resources/faq" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">FAQ</a></li>
+                <li><a href="/resources/parent-resources" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Caregiver Resources</a></li>
+                <li><a href="/blog" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Blog</a></li>
+                <li><a href="/resources/events" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Community Events</a></li>
+                <li><a href="/policies" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Policies</a></li>
+                <li><a href="/contact" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Contact</a></li>
+              </ul>
+            </div>
+            
+            <!-- Newsletter Signup -->
+            <NewsletterSignup 
+              variant="footer"
+              title="Newsletter"
+              description="Stay updated with school news and events"
+              buttonText="Subscribe"
+              subscriptionType="general"
+            />
+          </div>
+          
+          <!-- Grid Cell 4: Contact Info -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold text-sunlight-gold">Get in Touch</h3>
+            
+            <ContactInfo 
+              className="text-sm [&_a]:text-light-stone [&_a]:hover:text-sunlight-gold [&_address]:text-light-stone [&_svg]:text-moss-green"
+            />
+            
+            <!-- CTA Buttons -->
+            <div class="space-y-2 pt-2">
+              <a 
+                href="/admissions/schedule-tour" 
+                class="block text-center bg-sunlight-gold hover:bg-orange-600 text-white px-4 py-2.5 rounded-lg font-semibold transition-colors text-sm tracking-wide"
+              >
+                Come Visit
+              </a>
+              <a 
+                href="/contact" 
+                class="block text-center border border-gray-300 text-light-stone hover:border-sunlight-gold hover:text-sunlight-gold px-4 py-2 rounded-lg font-medium transition-colors text-sm tracking-wide"
+              >
+                Get in Touch
+              </a>
+            </div>
+          </div>
         </div>
       </div>
       
       <!-- Right Column: Hours Widget (50%) -->
       <div class="w-full">
-        <!-- Inline hours widget instead of component -->
-        <div id="sbms-hours-widget" class="bg-white rounded-lg p-4 text-earth-brown shadow-sm">
-          <h3 class="text-xl font-bold text-center text-forest-canopy mb-4">School Hours</h3>
-          <div class="space-y-2 text-sm">
-            <div class="flex justify-between">
-              <span class="font-medium">Monday-Thursday:</span>
-              <span>8:00 AM - 5:30 PM</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="font-medium">Friday:</span>
-              <span>8:00 AM - 3:30 PM</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="font-medium">Saturday-Sunday:</span>
-              <span>Closed</span>
-            </div>
-            <div class="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-600">
-              <p>Before care starts at 8:00 AM</p>
-              <p>After care available until 5:30 PM (Mon-Thu)</p>
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl p-2 border border-white/10 h-full">
+          <!-- Inline hours widget to avoid component import issues -->
+          <div id="sbms-hours-widget" class="bg-white rounded-lg p-4 text-earth-brown shadow-sm h-full">
+            <h3 class="text-xl font-bold text-center text-forest-canopy mb-4">School Hours</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="font-medium">Monday-Thursday:</span>
+                <span>8:00 AM - 5:30 PM</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="font-medium">Friday:</span>
+                <span>8:00 AM - 3:30 PM</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="font-medium">Saturday-Sunday:</span>
+                <span>Closed</span>
+              </div>
+              <div class="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-600">
+                <p>Before care starts at 8:00 AM</p>
+                <p>After care available until 5:30 PM (Mon-Thu)</p>
+              </div>
             </div>
           </div>
         </div>
@@ -66,7 +155,37 @@ let socialMedia = { facebook: null, instagram: null };
     
     <!-- Bottom Section -->
     <div class="border-t border-gray-600 pt-8">
-      <p>&copy; 2025 Spicebush Montessori School. All rights reserved.</p>
+      <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <div class="text-light-stone text-sm text-center md:text-left">
+          <p>&copy; 2025 Spicebush Montessori School. All rights reserved.</p>
+        </div>
+        <div class="flex flex-wrap justify-center md:justify-end space-x-6 text-sm">
+          <a href="/privacy-policy" class="text-light-stone hover:text-sunlight-gold transition-colors">Privacy Policy</a>
+          <a href="/non-discrimination-policy" class="text-light-stone hover:text-sunlight-gold transition-colors">Non-Discrimination</a>
+          <a href="/accessibility" class="text-light-stone hover:text-sunlight-gold transition-colors">Accessibility</a>
+        </div>
+      </div>
     </div>
   </div>
 </footer>
+
+<style>
+  /* Footer-specific AuthNav styling using CSS variables */
+  .footer-auth-nav {
+    --auth-nav-color: #F5F5DC; /* light-stone */
+    --auth-nav-hover-color: #FFD700; /* sunlight-gold */
+  }
+  
+  /* Additional footer-specific styles for authenticated state */
+  .footer-auth-nav #auth-nav button {
+    @apply text-light-stone hover:text-sunlight-gold transition-colors font-medium;
+  }
+  
+  .footer-auth-nav #auth-nav #user-menu {
+    @apply bg-forest-canopy border-white/20;
+  }
+  
+  .footer-auth-nav #auth-nav #user-menu button {
+    @apply text-light-stone hover:bg-white/10 hover:text-sunlight-gold;
+  }
+</style>
