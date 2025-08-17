@@ -1,0 +1,41 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Footer from '../components/Footer.astro';
+import FooterWithDynamicHours from '../components/FooterWithDynamicHours.astro';
+
+console.log('[test-footer-comparison] Page starting render');
+---
+
+<Layout title="Footer Comparison Test">
+  <main class="min-h-screen">
+    <div class="container mx-auto p-8">
+      <h1 class="text-3xl font-bold mb-8">Footer Comparison Test</h1>
+      
+      <div class="mb-8 p-4 bg-blue-100 border border-blue-400 rounded">
+        <h2 class="text-xl font-semibold mb-2">Test 1: Current Footer (Inline Hours)</h2>
+        <p>This uses inline HTML for the hours widget</p>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Current Footer with Inline Hours -->
+  <Footer />
+  
+  <div class="py-8 bg-gray-200">
+    <div class="container mx-auto px-8">
+      <h2 class="text-2xl font-bold text-center">--- Separator ---</h2>
+    </div>
+  </div>
+  
+  <main class="min-h-screen">
+    <div class="container mx-auto p-8">
+      <div class="mb-8 p-4 bg-green-100 border border-green-400 rounded">
+        <h2 class="text-xl font-semibold mb-2">Test 2: Footer with Dynamic HoursWidget</h2>
+        <p>This imports the HoursWidget component</p>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Footer with Dynamic Hours Widget -->
+  <FooterWithDynamicHours />
+</Layout>
