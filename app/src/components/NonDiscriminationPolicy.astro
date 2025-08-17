@@ -1,5 +1,5 @@
 ---
-import { Heart, Users } from 'lucide-astro';
+import { Heart } from 'lucide-astro';
 ---
 
 <section class="py-12 bg-stone-beige">
@@ -8,21 +8,21 @@ import { Heart, Users } from 'lucide-astro';
       <!-- Header with Icon -->
       <div class="flex items-center mb-8">
         <div class="w-16 h-16 bg-forest-canopy rounded-full flex items-center justify-center mr-6 flex-shrink-0">
-          <Users className="w-8 h-8 text-white" />
+          <Heart className="w-8 h-8 text-white" />
         </div>
         <h2 class="text-3xl lg:text-4xl font-bold text-earth-brown">
-          Our Promise: Everyone Belongs
+          Our Non-Discrimination Policy
         </h2>
       </div>
       
       <!-- Main Policy Text -->
-      <div class="mb-8">
-        <p class="text-lg text-earth-brown leading-relaxed-plus mb-6 font-medium">
-          At Spicebush Montessori, we welcome children and families of every race, color, gender, national and ethnic origin, and sexual orientation into our learning community. We believe that our differences make us stronger, and we do not discriminate in any of our programs, policies, or practices.
+      <div class="prose prose-lg max-w-none mb-8">
+        <p class="text-earth-brown leading-relaxed-plus mb-6">
+          Spicebush Montessori School admits students of any race, color, gender, national and ethnic origin, and sexual orientation to all the rights, privileges, programs, and activities generally accorded or made available to students at the school. It does not discriminate on the basis of gender, race, color, national and ethnic origin, or sexual orientation in administration of its educational policies, admissions policies, scholarship and loan programs, and athletic and other school-administered programs.
         </p>
         
-        <p class="text-lg text-earth-brown leading-relaxed-plus mb-8 font-medium">
-          If you ever experience discrimination or bias in our community, we want to know. Below are ways to reach external organizations or contact our school directly—we're committed to making this right.
+        <p class="text-earth-brown leading-relaxed-plus mb-6">
+          Below are ways to reach out to the U.S. Department of Health and Human Services' Office of Civil Rights, the Office of Civil Rights Compliance, the Pennsylvania Human Relations Commission, or our school directly if you have been subjected to implicit bias or discrimination.
         </p>
       </div>
       
@@ -32,10 +32,10 @@ import { Heart, Users } from 'lucide-astro';
           <a 
             href="https://www.hhs.gov/ocr/index.html"
             target="_blank"
-            rel="noopener noreferrer"
-            class="inline-block text-lg font-semibold text-sunlight-gold hover:text-yellow-600 transition-colors focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 rounded px-2 py-1 tracking-wide"
+            rel="noopener"
+            class="inline-block text-lg font-bold text-forest-canopy hover:text-moss-green transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
           >
-            U.S. Office for Civil Rights
+            Office for Civil Rights
           </a>
         </div>
         
@@ -43,10 +43,10 @@ import { Heart, Users } from 'lucide-astro';
           <a 
             href="https://www.dhs.pa.gov/contact/DHS-Offices/Pages/OA-Bureau%20of%20Equal%20Opportunity.aspx"
             target="_blank"
-            rel="noopener noreferrer"
-            class="inline-block text-lg font-semibold text-sunlight-gold hover:text-yellow-600 transition-colors focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 rounded px-2 py-1 tracking-wide"
+            rel="noopener"
+            class="inline-block text-lg font-bold text-forest-canopy hover:text-moss-green transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
           >
-            PA Bureau of Equal Opportunity
+            Bureau of Equal Opportunity
           </a>
         </div>
         
@@ -54,38 +54,39 @@ import { Heart, Users } from 'lucide-astro';
           <a 
             href="https://www.phrc.pa.gov/File-a-Complaint/Pages/default.aspx"
             target="_blank"
-            rel="noopener noreferrer"
-            class="inline-block text-lg font-semibold text-sunlight-gold hover:text-yellow-600 transition-colors focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 rounded px-2 py-1 tracking-wide"
+            rel="noopener"
+            class="inline-block text-lg font-bold text-forest-canopy hover:text-moss-green transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
           >
             Pennsylvania Human Rights Commission
           </a>
         </div>
       </div>
       
-      <!-- Additional Actions -->
-      <div class="space-y-4">
-        <p class="text-earth-brown text-center font-medium">
-          You can also share feedback anonymously with our teacher leaders using this 
+      <!-- Anonymous Feedback -->
+      <div class="mb-8">
+        <p class="text-earth-brown text-center">
+          If you would like to file an anonymous complaint or offer feedback to teachers leaders, please use this 
           <a 
             href="https://docs.google.com/forms/d/e/1FAIpQLSd9x0mdbCKXBjbWuVme2SeRX9enMfUAf7Y_80VqFUDFs4qfRg/viewform?usp=sf_link"
             target="_blank"
-            rel="noopener noreferrer"
-            class="text-sunlight-gold hover:text-yellow-600 font-semibold transition-colors focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 rounded px-1 tracking-wide"
+            rel="noopener"
+            class="text-forest-canopy hover:text-moss-green font-bold transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-1"
           >
-            form
+            Google Form
           </a>.
         </p>
-        
-        <div class="bg-sunlight-gold text-center py-4 px-6 rounded-lg">
-          <p class="text-white font-medium tracking-wide">
-            <a 
-              href="/contact"
-              class="text-white hover:text-gray-100 transition-colors focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-sunlight-gold rounded px-1"
-            >
-              You can always reach out to us directly if you've experienced bias or discrimination in our community.
-            </a>
+      </div>
+      
+      <!-- Direct Contact CTA -->
+      <div class="bg-gradient-to-r from-forest-canopy to-moss-green text-center py-6 px-8 rounded-xl shadow-md">
+        <a 
+          href="/contact"
+          class="text-white hover:text-light-stone transition-colors focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-forest-canopy rounded px-2 inline-block"
+        >
+          <p class="text-lg font-semibold mb-1">
+            Please contact us directly here if you or your family has been subjected to implicit bias or discrimination.
           </p>
-        </div>
+        </a>
       </div>
     </div>
   </div>
