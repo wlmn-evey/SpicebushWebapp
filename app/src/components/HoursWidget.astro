@@ -76,6 +76,8 @@ try {
 </div>
 
 <script type="module">
+  console.log('[HoursWidget] Script loading at', new Date().toISOString());
+  
   // Utility functions moved inline to avoid TypeScript import issues in production
   
   // Format time helper with improved formatting
@@ -208,8 +210,18 @@ try {
     }
   }
 
-  document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize widget function
+  async function initHoursWidget() {
+    console.log('[HoursWidget] Initializing widget');
     const widget = document.getElementById('sbms-hours-widget');
+    
+    // Prevent duplicate initialization
+    if (!widget || widget.dataset.initialized === 'true') {
+      console.log('[HoursWidget] Widget already initialized or not found');
+      return;
+    }
+    widget.dataset.initialized = 'true';
+    
     const list = document.getElementById('hours-list');
     const timeEl = document.getElementById('current-time');
     const holidayMessagesEl = document.getElementById('holiday-messages');
@@ -505,7 +517,17 @@ try {
       console.warn('⚠️ Hours Widget initialized with fallback data:', error.message);
       // Widget should still render with fallback data, so don't show error message
     }
-  });
+  }
+  
+  // Check if DOM is already loaded, otherwise wait for it
+  if (document.readyState === 'loading') {
+    console.log('[HoursWidget] Waiting for DOMContentLoaded');
+    document.addEventListener('DOMContentLoaded', initHoursWidget);
+  } else {
+    console.log('[HoursWidget] DOM already loaded, initializing immediately');
+    // DOM is already loaded, initialize immediately
+    initHoursWidget();
+  }
 </script>
 
 <style>
