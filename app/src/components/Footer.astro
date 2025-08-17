@@ -1,7 +1,6 @@
 ---
 import { Facebook, Instagram } from 'lucide-astro';
-// Temporarily comment out HoursWidget to isolate the issue
-// import HoursWidget from './HoursWidgetStatic.astro';
+import HoursWidgetStatic from './HoursWidgetStatic.astro';
 import OptimizedImage from './OptimizedImage.astro';
 import ContactInfo from './ContactInfo.astro';
 import NewsletterSignup from './NewsletterSignup.astro';
@@ -38,12 +37,9 @@ let socialMedia = { facebook: null, instagram: null };
         </div>
       </div>
       
-      <!-- Right Column: Simple Test (50%) -->
+      <!-- Right Column: Hours Widget (50%) -->
       <div class="w-full">
-        <div style="background: red; color: white; padding: 20px;">
-          <h3>RIGHT COLUMN TEST</h3>
-          <p>This is the right column - if you can see this, the grid is working.</p>
-        </div>
+        <HoursWidgetStatic />
       </div>
     </div>
     
