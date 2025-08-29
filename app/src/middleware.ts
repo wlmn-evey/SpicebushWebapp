@@ -10,6 +10,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.PUBLIC_SUPABASE_PUBLIC_KEY || '';
   const supabase = createClient(supabaseUrl, supabaseKey);
   
+  // Check environment variable first (for testing/staging environments)
+  // This allows testing site to have coming soon enabled without database changes
+  const envComingSoon = import.meta.env.COMING_SOON_MODE === 'true';
+  
   // Get the coming soon configuration from settings table
   const { data: settings, error } = await supabase
     .from('settings')
@@ -17,7 +21,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     .eq('key', 'coming_soon_enabled')
     .single();
   
-  const isComingSoonEnabled = settings?.value === true || settings?.value === 'true';
+  // Environment variable takes precedence over database setting
+  const isComingSoonEnabled = envComingSoon || settings?.value === true || settings?.value === 'true';
   
   // Get the current path
   const pathname = context.url.pathname;

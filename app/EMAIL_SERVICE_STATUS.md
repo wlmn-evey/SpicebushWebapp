@@ -58,18 +58,14 @@ EMAIL_FROM_NAME=Spicebush Montessori
 EMAIL_SERVICE=unione  # or sendgrid, postmark, resend
 ```
 
-### 2. Magic Link Authentication ⚠️
-**Current State**: Uses Supabase's built-in email service
-**To Use Custom Email Service**:
-1. Configure Supabase to use custom SMTP
-2. Add these environment variables:
-```env
-GOTRUE_SMTP_HOST=smtp.eu1.unione.io
-GOTRUE_SMTP_PORT=587
-GOTRUE_SMTP_USER=your-smtp-username
-GOTRUE_SMTP_PASS=your-smtp-password
-GOTRUE_SMTP_ADMIN_EMAIL=noreply@spicebushmontessori.org
-```
+### 2. Magic Link Authentication ✅
+**Current State**: Uses Supabase's built-in email service (FREE)
+**Status**: Fully configured and working
+**Configuration**: None required! 
+- Supabase provides 3 free emails/hour (sufficient for admin access)
+- No API keys or SMTP configuration needed
+- Emails sent from Supabase's trusted domain
+- Good deliverability out of the box
 
 ### 3. Contact Form ℹ️
 **Current Implementation**: Netlify Forms
