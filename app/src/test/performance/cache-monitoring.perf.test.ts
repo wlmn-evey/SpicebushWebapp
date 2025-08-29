@@ -11,13 +11,13 @@ vi.mock('../../lib/content-db-direct', () => ({
   getCollection: vi.fn(),
   getEntry: vi.fn(),
   getAllSettings: vi.fn(),
-  getSetting: vi.fn(),
+  getSetting: vi.fn()
 }));
 
 import {
   getCollection as getCollectionDirect,
   getEntry as getEntryDirect,
-  getAllSettings as getAllSettingsDirect,
+  getAllSettings as getAllSettingsDirect
 } from '../../lib/content-db-direct';
 
 import {
@@ -448,9 +448,9 @@ function generatePerformanceReport(metrics: any): string {
 
 ## Performance Status
 ${parseFloat(metrics.hitRate) > 80 ? '✅ Excellent cache performance' :
-  parseFloat(metrics.hitRate) > 60 ? '💛 Good cache performance' :
-  parseFloat(metrics.hitRate) > 40 ? '⚠️ Fair cache performance' :
-  '❌ Poor cache performance'}
+    parseFloat(metrics.hitRate) > 60 ? '💛 Good cache performance' :
+      parseFloat(metrics.hitRate) > 40 ? '⚠️ Fair cache performance' :
+        '❌ Poor cache performance'}
   `.trim();
 }
 

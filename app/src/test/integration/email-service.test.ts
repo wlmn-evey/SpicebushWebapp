@@ -556,7 +556,7 @@ describe('Email Service Performance', () => {
             ok: true,
             json: async () => ({ job_id: 'perf-test-123' })
           } as Response), 
-          100 // Simulate 100ms network latency
+        100 // Simulate 100ms network latency
         )
       )
     );

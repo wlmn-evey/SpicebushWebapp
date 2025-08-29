@@ -201,7 +201,7 @@ describe('Bundle Size Performance Tests', () => {
       const median = sizes[Math.floor(sizes.length / 2)];
       const smallest = sizes[sizes.length - 1];
 
-      console.log(`📈 Bundle size distribution:`);
+      console.log('📈 Bundle size distribution:');
       console.log(`  Largest: ${largest}KB`);
       console.log(`  Median: ${median}KB`);
       console.log(`  Smallest: ${smallest}KB`);

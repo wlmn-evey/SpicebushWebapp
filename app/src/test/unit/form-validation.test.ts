@@ -39,7 +39,7 @@ describe('Form Validation Utilities', () => {
         'invalid@.com',
         'invalid..email@test.com',
         'invalid email@test.com',
-        'invalid@test',
+        'invalid@test'
       ];
 
       invalidEmails.forEach(email => {
@@ -52,7 +52,7 @@ describe('Form Validation Utilities', () => {
         'test@example.com',
         'user.name@example.com',
         'user+tag@example.co.uk',
-        'test123@test-domain.com',
+        'test123@test-domain.com'
       ];
 
       validEmails.forEach(email => {
@@ -71,7 +71,7 @@ describe('Form Validation Utilities', () => {
         '123',
         '12345678901',
         'abc1234567',
-        '123-456-789',
+        '123-456-789'
       ];
 
       invalidPhones.forEach(phone => {
@@ -85,7 +85,7 @@ describe('Form Validation Utilities', () => {
         '(123) 456-7890',
         '123-456-7890',
         '123.456.7890',
-        '123 456 7890',
+        '123 456 7890'
       ];
 
       validPhones.forEach(phone => {

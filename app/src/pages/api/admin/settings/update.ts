@@ -104,7 +104,7 @@ export const PATCH: APIRoute = async ({ request, cookies }) => {
     // Validate all settings
     for (const setting of body.settings) {
       if (!setting.key || typeof setting.key !== 'string') {
-        return errorResponse(`Invalid setting: missing or invalid key`, 400);
+        return errorResponse('Invalid setting: missing or invalid key', 400);
       }
       if (!/^[a-zA-Z0-9_]+$/.test(setting.key)) {
         return errorResponse(`Invalid setting key format: ${setting.key}`, 400);

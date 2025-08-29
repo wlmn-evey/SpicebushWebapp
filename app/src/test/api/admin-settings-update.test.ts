@@ -447,7 +447,7 @@ describe('Settings Update API', () => {
 
       const bulkRequest = {
         settings: [
-          { value: 'value1' }, // Missing key
+          { value: 'value1' } // Missing key
         ]
       };
 

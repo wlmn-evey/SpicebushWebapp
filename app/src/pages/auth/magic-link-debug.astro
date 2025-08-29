@@ -127,7 +127,7 @@ import Layout from '../../layouts/Layout.astro';
     });
     
     // Also check Supabase configuration
-    addStatus('Supabase URL: ' + import.meta.env.PUBLIC_SUPABASE_URL);
-    addStatus('Anon key present: ' + (import.meta.env.PUBLIC_SUPABASE_ANON_KEY ? 'Yes' : 'No'));
+    addStatus(`Supabase URL: ${  import.meta.env.PUBLIC_SUPABASE_URL}`);
+    addStatus(`Anon key present: ${  import.meta.env.PUBLIC_SUPABASE_ANON_KEY ? 'Yes' : 'No'}`);
   </script>
 </Layout>

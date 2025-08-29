@@ -14,7 +14,7 @@ import { validateForm, validators } from '@lib/form-validation';
 // Check authentication
 const { isAuthenticated } = await checkAdminAuth(Astro);
 if (!isAuthenticated) {
-  return Astro.redirect(`/auth/login?redirect=${Astro.url.pathname}`);
+  return Astro.redirect(`/auth/netlify-login?redirect=${Astro.url.pathname}`);
 }
 
 // Handle form submission

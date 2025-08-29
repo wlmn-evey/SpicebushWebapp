@@ -13,7 +13,7 @@ skipInCI('Settings Update API Integration Tests', () => {
   beforeAll(async () => {
     // Start Astro preview server
     server = await preview({
-      root: process.cwd(),
+      root: process.cwd()
     });
     
     baseUrl = `http://localhost:${server.port}`;
@@ -41,7 +41,7 @@ skipInCI('Settings Update API Integration Tests', () => {
         },
         body: JSON.stringify({
           key: 'test_setting',
-          value: 'test_value_' + Date.now()
+          value: `test_value_${  Date.now()}`
         })
       });
 

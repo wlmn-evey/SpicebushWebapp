@@ -301,7 +301,7 @@ test.describe('Photo Management Accessibility', () => {
     await page.waitForSelector('.photo-card');
 
     // Navigate using only keyboard (simulating screen reader)
-    let currentElement = null;
+    const currentElement = null;
     const focusableElements = await page.locator('a, button, input, textarea, select, [tabindex]:not([tabindex="-1"])').all();
 
     for (const element of focusableElements.slice(0, 5)) { // Test first 5 elements

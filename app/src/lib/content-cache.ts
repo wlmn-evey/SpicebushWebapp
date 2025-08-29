@@ -193,19 +193,19 @@ export async function getAdminData() {
 // TTL optimization based on content type
 function getCollectionTTL(collection: string, defaultTTL: number): number {
   switch (collection) {
-    case 'settings':
-      return 30 * 60 * 1000; // 30 minutes - settings change infrequently
-    case 'staff':
-    case 'tuition':
-      return 15 * 60 * 1000; // 15 minutes - semi-static content  
-    case 'hours':
-      return 10 * 60 * 1000; // 10 minutes - can change occasionally
-    case 'blog':
-      return 5 * 60 * 1000;  // 5 minutes - more dynamic content
-    case 'photos':
-      return 20 * 60 * 1000; // 20 minutes - image metadata rarely changes
-    default:
-      return defaultTTL;
+  case 'settings':
+    return 30 * 60 * 1000; // 30 minutes - settings change infrequently
+  case 'staff':
+  case 'tuition':
+    return 15 * 60 * 1000; // 15 minutes - semi-static content  
+  case 'hours':
+    return 10 * 60 * 1000; // 10 minutes - can change occasionally
+  case 'blog':
+    return 5 * 60 * 1000;  // 5 minutes - more dynamic content
+  case 'photos':
+    return 20 * 60 * 1000; // 20 minutes - image metadata rarely changes
+  default:
+    return defaultTTL;
   }
 }
 

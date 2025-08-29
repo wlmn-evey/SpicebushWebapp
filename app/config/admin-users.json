@@ -1,0 +1,11 @@
+{
+  "allowedDomains": [
+    "@eveywinters.com",
+    "@spicebushmontessori.org"
+  ],
+  "adminEmails": [
+    "evey@eveywinters.com"
+  ],
+  "description": "List of allowed email domains and specific admin emails for Netlify Identity access",
+  "note": "Users must be invited through Netlify dashboard first, this file validates their domain on login"
+}

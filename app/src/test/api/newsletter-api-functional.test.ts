@@ -32,7 +32,7 @@ describe('Newsletter API Functional Tests', () => {
       const response = await fetch(`${baseUrl}/api/newsletter/subscribe`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           email: testEmail,
@@ -65,7 +65,7 @@ describe('Newsletter API Functional Tests', () => {
       const response = await fetch(`${baseUrl}/api/newsletter/subscribe`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           email: 'invalid-email-format'
@@ -84,7 +84,7 @@ describe('Newsletter API Functional Tests', () => {
       await fetch(`${baseUrl}/api/newsletter/subscribe`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           email: testEmail
@@ -95,7 +95,7 @@ describe('Newsletter API Functional Tests', () => {
       const response = await fetch(`${baseUrl}/api/newsletter/subscribe`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           email: testEmail
@@ -124,7 +124,7 @@ describe('Newsletter API Functional Tests', () => {
       const response = await fetch(`${baseUrl}/api/newsletter/subscribe`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           email: mixedCaseEmail
@@ -185,7 +185,7 @@ describe('Newsletter API Functional Tests', () => {
       const response = await fetch(`${baseUrl}/api/newsletter/subscribe`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           email: resubEmail
@@ -213,7 +213,7 @@ describe('Newsletter API Functional Tests', () => {
       const response = await fetch(`${baseUrl}/api/newsletter/subscribe`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({})
       });
@@ -226,7 +226,7 @@ describe('Newsletter API Functional Tests', () => {
       const response = await fetch(`${baseUrl}/api/newsletter/subscribe`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: 'not valid json'
       });

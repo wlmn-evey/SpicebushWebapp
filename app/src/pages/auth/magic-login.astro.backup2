@@ -1,10 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { Mail, ArrowRight, Sparkles } from 'lucide-astro';
-
-// Pass environment variables to the client safely
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
 <Layout 
@@ -119,47 +115,45 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     </div>
   </div>
 
-  <!-- Load Supabase from CDN to avoid vendor conflicts -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  
-  <script define:vars={{ supabaseUrl, supabaseAnonKey }}>
-    // Initialize Supabase client using CDN version
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-    console.log('Supabase client initialized:', typeof supabase);    
-    const form = document.getElementById('magic-link-form');
-    const alert = document.getElementById('auth-alert');
-    const alertMessage = document.getElementById('auth-alert-message');
-    const submitButton = document.getElementById('submit-button');
-    const buttonText = document.getElementById('button-text');
-    const loadingSpinner = document.getElementById('loading-spinner');
-    const successMessage = document.getElementById('success-message');
-    const sentEmail = document.getElementById('sent-email');
-    const resendButton = document.getElementById('resend-button');
-    const formContainer = form.parentElement;
+  <script>
+    import { auth } from '../../lib/supabase';
+    import { supabase } from "../../lib/supabase";
+    console.log("Auth module loaded:", typeof auth);
+    console.log("Supabase client loaded:", typeof supabase);    
+    const form = document.getElementById('magic-link-form') as HTMLFormElement;
+    const alert = document.getElementById('auth-alert') as HTMLDivElement;
+    const alertMessage = document.getElementById('auth-alert-message') as HTMLParagraphElement;
+    const submitButton = document.getElementById('submit-button') as HTMLButtonElement;
+    const buttonText = document.getElementById('button-text') as HTMLSpanElement;
+    const loadingSpinner = document.getElementById('loading-spinner') as HTMLSpanElement;
+    const successMessage = document.getElementById('success-message') as HTMLDivElement;
+    const sentEmail = document.getElementById('sent-email') as HTMLSpanElement;
+    const resendButton = document.getElementById('resend-button') as HTMLButtonElement;
+    const formContainer = form.parentElement as HTMLDivElement;
     
     let userEmail = '';
     
-    function showAlert(message, isError = false) {
+    function showAlert(message: string, isError: boolean = false) {
       alert.classList.remove('hidden', 'bg-green-50', 'bg-red-50', 'text-green-800', 'text-red-800');
       alert.classList.add(isError ? 'bg-red-50' : 'bg-green-50');
       alertMessage.classList.add(isError ? 'text-red-800' : 'text-green-800');
       alertMessage.textContent = message;
     }
     
-    function setLoading(loading) {
+    function setLoading(loading: boolean) {
       submitButton.disabled = loading;
       buttonText.classList.toggle('hidden', loading);
       loadingSpinner.classList.toggle('hidden', !loading);
     }
     
     // Check if email is from allowed domains
-    function isAllowedEmail(email) {
+    function isAllowedEmail(email: string): boolean {
       const normalizedEmail = email.toLowerCase().trim();
       const allowedDomains = ['@eveywinters.com', '@spicebushmontessori.org'];
       return allowedDomains.some(domain => normalizedEmail.endsWith(domain));
     }
     
-    async function sendMagicLink(email) {
+    async function sendMagicLink(email: string) {
       setLoading(true);
       console.log('sendMagicLink called with email:', email);
       
@@ -171,14 +165,22 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       }
       
       try {
-        // Use Supabase client from CDN
-        console.log('Using CDN Supabase client for magic link');
-        const { data, error } = await supabase.auth.signInWithOtp({
-          email,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`
-          }
-        });
+        // Try auth helper first, fallback to direct client if not available
+        let error;
+        if (typeof auth !== 'undefined' && auth.signInWithMagicLink) {
+          console.log('Using auth helper for magic link');
+          const result = await auth.signInWithMagicLink(email);
+          error = result.error;
+        } else {
+          console.warn('Auth helper not available, using direct Supabase client');
+          const result = await supabase.auth.signInWithOtp({
+            email: email,
+            options: {
+              emailRedirectTo: `${window.location.origin}/auth/callback`
+            }
+          });
+          error = result.error;
+        }
         
         if (error) throw error;
         
@@ -188,9 +190,9 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         formContainer.classList.add('hidden');
         successMessage.classList.remove('hidden');
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('Magic link error:', error);
-        const friendlyMessage = error.message && error.message.includes('not authorized') 
+        const friendlyMessage = error.message.includes('not authorized') 
           ? 'This email isn\'t authorized for admin access. Please contact the school director if you need access.'
           : 'Unable to send your access link. Please try again or contact the school if the problem continues.';
         showAlert(friendlyMessage, true);
@@ -201,7 +203,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = document.getElementById('email').value.trim();
+      const email = (document.getElementById('email') as HTMLInputElement).value.trim();
       await sendMagicLink(email);
     });
     

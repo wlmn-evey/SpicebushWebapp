@@ -7,7 +7,7 @@ const env = {
   MODE: import.meta.env.MODE,
   PROD: import.meta.env.PROD,
   hasUrl: !!import.meta.env.PUBLIC_SUPABASE_URL,
-  hasKey: !!import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+  hasKey: !!import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 };
 ---
 
@@ -24,11 +24,11 @@ const env = {
     <p>Key configured: {env.hasKey ? '✅ Yes' : '❌ No'}</p>
     
     <script>
-      // Client-side check
-      console.log('Client-side env check:', {
-        url: import.meta.env.PUBLIC_SUPABASE_URL,
-        key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
-      });
+// Client-side check
+console.log('Client-side env check:', {
+  url: import.meta.env.PUBLIC_SUPABASE_URL,
+  key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+});
     </script>
   </body>
 </html>

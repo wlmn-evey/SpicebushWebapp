@@ -190,14 +190,14 @@ export const formatTestReport = (results: ContentVerificationResult[]): string =
   const passedTests = results.filter(r => r.passed).length;
   const failedTests = totalTests - passedTests;
   
-  let report = `\n=== Content Verification Test Report ===\n`;
+  let report = '\n=== Content Verification Test Report ===\n';
   report += `Total Tests: ${totalTests}\n`;
   report += `Passed: ${passedTests}\n`;
   report += `Failed: ${failedTests}\n`;
   report += `Success Rate: ${((passedTests / totalTests) * 100).toFixed(1)}%\n\n`;
   
   if (failedTests > 0) {
-    report += `Failed Tests:\n`;
+    report += 'Failed Tests:\n';
     results.filter(r => !r.passed).forEach(result => {
       report += `  - ${result.testName}\n`;
       result.errors.forEach(error => {

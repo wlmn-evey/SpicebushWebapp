@@ -69,108 +69,108 @@ export const POST: APIRoute = async ({ request }) => {
   // Handle the event
   try {
     switch (event.type) {
-      case 'payment_intent.succeeded': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+    case 'payment_intent.succeeded': {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
         
-        // Extract metadata
-        const metadata = paymentIntent.metadata || {};
+      // Extract metadata
+      const metadata = paymentIntent.metadata || {};
         
-        // Log successful payment
-        console.log('[Stripe Payment Success]', JSON.stringify({
-          timestamp: new Date().toISOString(),
-          paymentIntentId: paymentIntent.id,
-          donationId: metadata.donationId,
-          amount: paymentIntent.amount / 100, // Convert cents to dollars
-          currency: paymentIntent.currency,
-          donationType: metadata.donationType,
-          designation: metadata.designation,
-          donorName: metadata.donorName,
-          donorEmail: metadata.donorEmail || paymentIntent.receipt_email,
-          status: paymentIntent.status,
-          message: metadata.message
-        }, null, 2));
+      // Log successful payment
+      console.log('[Stripe Payment Success]', JSON.stringify({
+        timestamp: new Date().toISOString(),
+        paymentIntentId: paymentIntent.id,
+        donationId: metadata.donationId,
+        amount: paymentIntent.amount / 100, // Convert cents to dollars
+        currency: paymentIntent.currency,
+        donationType: metadata.donationType,
+        designation: metadata.designation,
+        donorName: metadata.donorName,
+        donorEmail: metadata.donorEmail || paymentIntent.receipt_email,
+        status: paymentIntent.status,
+        message: metadata.message
+      }, null, 2));
         
-        // TODO: Store donation record in database
-        // Example structure:
-        // await db.donations.create({
-        //   donationId: metadata.donationId,
-        //   stripePaymentIntentId: paymentIntent.id,
-        //   amount: paymentIntent.amount,
-        //   currency: paymentIntent.currency,
-        //   donorEmail: metadata.donorEmail,
-        //   donorName: metadata.donorName,
-        //   designation: metadata.designation,
-        //   donationType: metadata.donationType,
-        //   status: 'completed',
-        //   completedAt: new Date()
-        // });
+      // TODO: Store donation record in database
+      // Example structure:
+      // await db.donations.create({
+      //   donationId: metadata.donationId,
+      //   stripePaymentIntentId: paymentIntent.id,
+      //   amount: paymentIntent.amount,
+      //   currency: paymentIntent.currency,
+      //   donorEmail: metadata.donorEmail,
+      //   donorName: metadata.donorName,
+      //   designation: metadata.designation,
+      //   donationType: metadata.donationType,
+      //   status: 'completed',
+      //   completedAt: new Date()
+      // });
         
-        // TODO: Send thank you email if email service is configured
-        // Example:
-        // if (metadata.donorEmail && import.meta.env.EMAIL_SERVICE) {
-        //   await sendThankYouEmail({
-        //     to: metadata.donorEmail,
-        //     donorName: metadata.donorName,
-        //     amount: paymentIntent.amount / 100,
-        //     donationId: metadata.donationId
-        //   });
-        // }
+      // TODO: Send thank you email if email service is configured
+      // Example:
+      // if (metadata.donorEmail && import.meta.env.EMAIL_SERVICE) {
+      //   await sendThankYouEmail({
+      //     to: metadata.donorEmail,
+      //     donorName: metadata.donorName,
+      //     amount: paymentIntent.amount / 100,
+      //     donationId: metadata.donationId
+      //   });
+      // }
         
-        break;
-      }
+      break;
+    }
       
-      case 'payment_intent.payment_failed': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+    case 'payment_intent.payment_failed': {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
         
-        // Log failed payment
-        console.error('[Stripe Payment Failed]', JSON.stringify({
-          timestamp: new Date().toISOString(),
-          paymentIntentId: paymentIntent.id,
-          donationId: paymentIntent.metadata?.donationId,
-          error: paymentIntent.last_payment_error?.message,
-          amount: paymentIntent.amount / 100,
-          donorEmail: paymentIntent.metadata?.donorEmail
-        }, null, 2));
+      // Log failed payment
+      console.error('[Stripe Payment Failed]', JSON.stringify({
+        timestamp: new Date().toISOString(),
+        paymentIntentId: paymentIntent.id,
+        donationId: paymentIntent.metadata?.donationId,
+        error: paymentIntent.last_payment_error?.message,
+        amount: paymentIntent.amount / 100,
+        donorEmail: paymentIntent.metadata?.donorEmail
+      }, null, 2));
         
-        break;
-      }
+      break;
+    }
       
-      case 'customer.subscription.created': {
-        const subscription = event.data.object as Stripe.Subscription;
+    case 'customer.subscription.created': {
+      const subscription = event.data.object as Stripe.Subscription;
         
-        // Log new recurring donation
-        console.log('[Stripe Subscription Created]', JSON.stringify({
-          timestamp: new Date().toISOString(),
-          subscriptionId: subscription.id,
-          customerId: subscription.customer,
-          status: subscription.status,
-          amount: subscription.items.data[0]?.price.unit_amount ? 
-            subscription.items.data[0].price.unit_amount / 100 : 0,
-          interval: subscription.items.data[0]?.price.recurring?.interval,
-          metadata: subscription.metadata
-        }, null, 2));
+      // Log new recurring donation
+      console.log('[Stripe Subscription Created]', JSON.stringify({
+        timestamp: new Date().toISOString(),
+        subscriptionId: subscription.id,
+        customerId: subscription.customer,
+        status: subscription.status,
+        amount: subscription.items.data[0]?.price.unit_amount ? 
+          subscription.items.data[0].price.unit_amount / 100 : 0,
+        interval: subscription.items.data[0]?.price.recurring?.interval,
+        metadata: subscription.metadata
+      }, null, 2));
         
-        break;
-      }
+      break;
+    }
       
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
+    case 'customer.subscription.deleted': {
+      const subscription = event.data.object as Stripe.Subscription;
         
-        // Log cancelled recurring donation
-        console.log('[Stripe Subscription Cancelled]', JSON.stringify({
-          timestamp: new Date().toISOString(),
-          subscriptionId: subscription.id,
-          customerId: subscription.customer,
-          canceledAt: subscription.canceled_at,
-          metadata: subscription.metadata
-        }, null, 2));
+      // Log cancelled recurring donation
+      console.log('[Stripe Subscription Cancelled]', JSON.stringify({
+        timestamp: new Date().toISOString(),
+        subscriptionId: subscription.id,
+        customerId: subscription.customer,
+        canceledAt: subscription.canceled_at,
+        metadata: subscription.metadata
+      }, null, 2));
         
-        break;
-      }
+      break;
+    }
       
-      default:
-        // Log unhandled event types for visibility
-        console.log(`[Stripe Webhook] Unhandled event type: ${event.type}`);
+    default:
+      // Log unhandled event types for visibility
+      console.log(`[Stripe Webhook] Unhandled event type: ${event.type}`);
     }
     
     // Return a 200 response to acknowledge receipt of the event

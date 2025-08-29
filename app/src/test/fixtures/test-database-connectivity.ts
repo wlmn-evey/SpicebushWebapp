@@ -47,7 +47,7 @@ describe('Database Connectivity Tests', () => {
       const response = await fetch(`${BASE_URL}/api/newsletter/subscribe`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           email: testEmail,
@@ -75,7 +75,7 @@ describe('Database Connectivity Tests', () => {
       const response = await fetch(`${BASE_URL}/api/schedule-tour`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           parentName: 'Test Parent',
@@ -115,7 +115,7 @@ describe('Database Connectivity Tests', () => {
       const response = await fetch(`${BASE_URL}/api/admin/settings`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         }
       });
 
@@ -126,7 +126,7 @@ describe('Database Connectivity Tests', () => {
       const response = await fetch(`${BASE_URL}/api/auth/check`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         }
       });
 

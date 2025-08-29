@@ -154,8 +154,8 @@ if (hasKeys) {
     function addLog(message, type = 'info') {
       const entry = document.createElement('div');
       entry.className = type === 'error' ? 'text-red-600' : 
-                       type === 'success' ? 'text-green-600' : 
-                       'text-gray-600';
+        type === 'success' ? 'text-green-600' : 
+          'text-gray-600';
       entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
       testLog.appendChild(entry);
       
@@ -189,7 +189,7 @@ if (hasKeys) {
           const supabase = createClient(supabaseUrl, supabaseAnonKey);
           
           const { data, error } = await supabase.auth.signInWithOtp({
-            email: email,
+            email,
             options: {
               emailRedirectTo: `${window.location.origin}/auth/callback`
             }

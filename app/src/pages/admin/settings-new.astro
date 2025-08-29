@@ -7,7 +7,7 @@ import { checkAdminAuth } from '@lib/admin-auth-check';
 const { isAuthenticated } = await checkAdminAuth(Astro);
 
 if (!isAuthenticated) {
-  return Astro.redirect('/auth/login?redirect=/admin/settings');
+  return Astro.redirect('/auth/netlify-login?redirect=/admin/settings');
 }
 ---
 

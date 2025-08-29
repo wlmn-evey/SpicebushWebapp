@@ -261,8 +261,8 @@ describe('Photo Management Performance Tests', () => {
         tagCount: photo.tags ? photo.tags.length : 0,
         truncatedDescription: photo.description 
           ? (photo.description.length > 100 
-              ? photo.description.substring(0, 100) + '...' 
-              : photo.description)
+            ? `${photo.description.substring(0, 100)  }...` 
+            : photo.description)
           : null
       }));
 
@@ -390,7 +390,7 @@ describe('Photo Management Performance Tests', () => {
       const { handleMediaUpload } = await import('@lib/media-storage');
       
       const fs = await import('fs/promises');
-      let fileHandles: any[] = [];
+      const fileHandles: any[] = [];
       
       (fs.writeFile as any).mockImplementation(async (path, data) => {
         const handle = { path, closed: false };

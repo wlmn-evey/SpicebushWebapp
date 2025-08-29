@@ -44,7 +44,7 @@ describe('Settings Update API - Unit Tests', () => {
         'setting@name',     // special chars not allowed
         '',                 // empty not allowed
         '123',             // numbers only (valid actually)
-        'setting/name',    // slashes not allowed
+        'setting/name'    // slashes not allowed
       ];
 
       invalidKeys.forEach(key => {

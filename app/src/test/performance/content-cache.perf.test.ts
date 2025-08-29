@@ -20,14 +20,14 @@ vi.mock('../../lib/content-db-direct', () => ({
   getCollection: vi.fn(),
   getEntry: vi.fn(),
   getAllSettings: vi.fn(),
-  getSetting: vi.fn(),
+  getSetting: vi.fn()
 }));
 
 import {
   getCollection as getCollectionDirect,
   getEntry as getEntryDirect,
   getAllSettings as getAllSettingsDirect,
-  getSetting as getSettingDirect,
+  getSetting as getSettingDirect
 } from '../../lib/content-db-direct';
 
 describe('Content Cache Performance Tests', () => {

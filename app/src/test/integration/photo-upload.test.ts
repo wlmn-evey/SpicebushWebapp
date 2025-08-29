@@ -399,7 +399,7 @@ describe('Photo Upload Integration', () => {
         .update({
           title: formData.get('photo_title')?.toString(),
           description: formData.get('photo_description')?.toString(),
-          tags: tags,
+          tags,
           updated_at: expect.any(String)
         })
         .eq('id', mediaRecord.id);

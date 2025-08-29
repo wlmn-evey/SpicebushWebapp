@@ -4,10 +4,10 @@ const timestamp = new Date().toISOString();
 ---
 
 <html>
-<head>
+  <head>
     <title>Deployment Test</title>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Deployment Test Page</h1>
     <p>If you can see this page, deployments are working.</p>
     <p>Build timestamp: {timestamp}</p>
@@ -15,7 +15,7 @@ const timestamp = new Date().toISOString();
     
     <h2>Component Tests</h2>
     <div id="auth-nav-test">
-        <p>Testing AuthNav import and rendering:</p>
+      <p>Testing AuthNav import and rendering:</p>
         <!-- Try to import and render AuthNav -->
         <div>
             <!-- Test if AuthNav renders -->
@@ -25,14 +25,14 @@ const timestamp = new Date().toISOString();
     </div>
     
     <div id="hours-widget-test">
-        <p>Testing HoursWidget import and rendering:</p>
+      <p>Testing HoursWidget import and rendering:</p>
         <!-- Try to import and render HoursWidget -->
         <div>
-            {/* <HoursWidget /> */}
-            <p>HoursWidget component test area</p>
+          {/* <HoursWidget /> */}
+          <p>HoursWidget component test area</p>
         </div>
     </div>
     
     <p><a href="/">Back to Home</a></p>
-</body>
+  </body>
 </html>
