@@ -116,8 +116,10 @@ import { Mail, ArrowRight, Sparkles } from 'lucide-astro';
   </div>
 
   <script>
-    import { auth } from '@lib/supabase';
-    
+    import { auth } from '../../lib/supabase';
+    import { supabase } from "../../lib/supabase";
+    console.log("Auth module loaded:", typeof auth);
+    console.log("Supabase client loaded:", typeof supabase);    
     const form = document.getElementById('magic-link-form') as HTMLFormElement;
     const alert = document.getElementById('auth-alert') as HTMLDivElement;
     const alertMessage = document.getElementById('auth-alert-message') as HTMLParagraphElement;
@@ -153,6 +155,7 @@ import { Mail, ArrowRight, Sparkles } from 'lucide-astro';
     
     async function sendMagicLink(email: string) {
       setLoading(true);
+      console.log('sendMagicLink called with email:', email);
       
       // Check if email is allowed before sending
       if (!isAllowedEmail(email)) {
@@ -162,8 +165,22 @@ import { Mail, ArrowRight, Sparkles } from 'lucide-astro';
       }
       
       try {
-        // Use Supabase auth (currently working)
-        const { error } = await auth.signInWithMagicLink(email);
+        // Try auth helper first, fallback to direct client if not available
+        let error;
+        if (typeof auth !== 'undefined' && auth.signInWithMagicLink) {
+          console.log('Using auth helper for magic link');
+          const result = await auth.signInWithMagicLink(email);
+          error = result.error;
+        } else {
+          console.warn('Auth helper not available, using direct Supabase client');
+          const result = await supabase.auth.signInWithOtp({
+            email: email,
+            options: {
+              emailRedirectTo: `${window.location.origin}/auth/callback`
+            }
+          });
+          error = result.error;
+        }
         
         if (error) throw error;
         
