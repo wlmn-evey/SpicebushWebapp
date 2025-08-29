@@ -12,7 +12,7 @@ import { getCollection } from '@lib/content-db';
 // Check authentication
 const { isAuthenticated } = await checkAdminAuth(Astro);
 if (!isAuthenticated) {
-  return Astro.redirect(`/auth/netlify-login?redirect=${  Astro.url.pathname}`);
+  return Astro.redirect(`/auth/sign-in?redirect=${  Astro.url.pathname}`);
 }
 
 // Load staff members

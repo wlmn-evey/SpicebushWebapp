@@ -19,7 +19,7 @@ import {
 const { isAuthenticated } = await checkAdminAuth(Astro);
 
 if (!isAuthenticated) {
-  return Astro.redirect('/auth/netlify-login?redirect=/admin/newsletter');
+  return Astro.redirect('/auth/sign-in?redirect=/admin/newsletter');
 }
 ---
 

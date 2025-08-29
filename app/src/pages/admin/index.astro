@@ -13,7 +13,7 @@ import { getCollection as getAstroCollection } from 'astro:content';
 // Check authentication
 const { isAuthenticated } = await checkAdminAuth(Astro);
 if (!isAuthenticated) {
-  return Astro.redirect(`/auth/netlify-login?redirect=${  Astro.url.pathname}`);
+  return Astro.redirect(`/auth/sign-in?redirect=${  Astro.url.pathname}`);
 }
 
 // Load dashboard data

@@ -24,7 +24,7 @@ import {
 const { isAuthenticated } = await checkAdminAuth(Astro);
 
 if (!isAuthenticated) {
-  return Astro.redirect('/auth/netlify-login?redirect=/admin/analytics');
+  return Astro.redirect('/auth/sign-in?redirect=/admin/analytics');
 }
 ---
 
@@ -44,12 +44,12 @@ if (!isAuthenticated) {
         try {
           const user = await auth.getCurrentUser();
           if (!user) {
-            window.location.href = '/auth/netlify-login';
+            window.location.href = '/auth/sign-in';
             return;
           }
         } catch (error) {
           console.error('Error checking authentication:', error);
-          window.location.href = '/auth/netlify-login';
+          window.location.href = '/auth/sign-in';
         }
       });
     </script>

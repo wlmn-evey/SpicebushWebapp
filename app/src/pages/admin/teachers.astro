@@ -24,12 +24,12 @@ import { ArrowLeft, Users, Plus, Edit, Trash2, Save, X, Eye, User } from 'lucide
         try {
           const user = await auth.getCurrentUser();
           if (!user) {
-            window.location.href = '/auth/netlify-login';
+            window.location.href = '/auth/sign-in';
             return;
           }
         } catch (error) {
           console.error('Error checking authentication:', error);
-          window.location.href = '/auth/netlify-login';
+          window.location.href = '/auth/sign-in';
         }
       });
     </script>

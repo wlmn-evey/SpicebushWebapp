@@ -1,6 +1,14 @@
 import { defineMiddleware } from 'astro:middleware';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/astro/server';
 
-export const onRequest = defineMiddleware(async (context, next) => {
+// Define protected routes
+const isProtectedRoute = createRouteMatcher([
+  '/admin(.*)',
+  '/api/admin(.*)'
+]);
+
+// Coming soon middleware
+const comingSoonMiddleware = defineMiddleware(async (context, next) => {
   // Check environment variable for coming soon mode (for testing/staging environments)
   // This allows testing site to have coming soon enabled without database changes
   const isComingSoonEnabled = import.meta.env.COMING_SOON_MODE === 'true';
@@ -37,4 +45,20 @@ export const onRequest = defineMiddleware(async (context, next) => {
   
   // Continue with the request
   return next();
+});
+
+// Combine Clerk and coming soon middleware
+export const onRequest = clerkMiddleware((auth, context, next) => {
+  // Check if route requires authentication
+  if (isProtectedRoute(context.request)) {
+    const authObj = auth();
+    
+    if (!authObj.userId) {
+      // Redirect to sign-in for protected routes
+      return context.redirect('/auth/sign-in');
+    }
+  }
+  
+  // Apply coming soon middleware
+  return comingSoonMiddleware(context, next);
 });

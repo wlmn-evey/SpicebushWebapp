@@ -5,6 +5,7 @@ import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 import react from '@astrojs/react';
 import netlify from '@astrojs/netlify';
+import clerk from '@clerk/astro';
 
 // https://astro.build/config
 export default defineConfig({
@@ -12,7 +13,8 @@ export default defineConfig({
   integrations: [
     tailwind(),
     sitemap(),
-    react()
+    react(),
+    clerk()
   ],
   output: 'server',
   adapter: netlify(),
