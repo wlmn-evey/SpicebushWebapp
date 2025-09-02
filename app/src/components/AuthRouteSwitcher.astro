@@ -1,0 +1,41 @@
+---
+/**
+ * Auth Route Switcher Component
+ * Redirects to appropriate auth pages based on feature flag
+ */
+import { shouldUseClerk } from '../lib/auth/clerk-helpers';
+
+interface Props {
+  route: 'sign-in' | 'sign-up' | 'callback' | 'sign-out';
+}
+
+const { route } = Astro.props;
+
+// Determine which auth system to use
+const useClerk = shouldUseClerk();
+
+// Map routes to their respective pages
+const routeMap = {
+  'sign-in': {
+    clerk: '/auth/clerk-sign-in',
+    supabase: '/auth/sign-in',
+  },
+  'sign-up': {
+    clerk: '/auth/clerk-sign-in', // Clerk uses same page for sign-in/sign-up
+    supabase: '/auth/sign-up',
+  },
+  'callback': {
+    clerk: '/auth/clerk-callback',
+    supabase: '/auth/callback',
+  },
+  'sign-out': {
+    clerk: '/auth/clerk-sign-out',
+    supabase: '/auth/sign-out',
+  },
+};
+
+const targetRoute = routeMap[route][useClerk ? 'clerk' : 'supabase'];
+
+// Perform redirect
+return Astro.redirect(targetRoute);
+---

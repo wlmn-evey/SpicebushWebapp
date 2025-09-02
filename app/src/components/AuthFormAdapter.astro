@@ -1,0 +1,339 @@
+---
+/**
+ * Authentication Form Component with Adapter Support
+ * Uses the auth adapter to work with either Clerk or Supabase
+ */
+import { Eye, EyeOff, User, Mail, Lock } from 'lucide-astro';
+
+export interface Props {
+  type: 'login' | 'register' | 'forgot-password' | 'update-password';
+  title: string;
+  subtitle?: string;
+}
+
+const { type, title, subtitle } = Astro.props;
+---
+
+<div class="min-h-screen bg-gradient-to-br from-stone-beige to-light-stone flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <!-- Header -->
+    <div class="text-center">
+      <a href="/" class="inline-block mb-6">
+        <img 
+          src="/SpicebushLogo-03.png" 
+          alt="Spicebush Montessori School" 
+          class="h-20 w-auto mx-auto"
+        />
+      </a>
+      <h2 class="text-3xl font-heading font-bold text-earth-brown tracking-tight">{title}</h2>
+      {subtitle && <p class="mt-2 text-sm text-earth-brown font-medium">{subtitle}</p>}
+    </div>
+
+    <!-- Form Container -->
+    <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-200" data-auth-type={type}>
+      <!-- Alert Messages -->
+      <div id="auth-alert" class="hidden mb-4 p-4 rounded-lg" role="alert" aria-live="polite">
+        <p id="auth-alert-message" class="text-sm font-medium"></p>
+      </div>
+
+      <!-- Form -->
+      <form id="auth-form" class="space-y-6">
+        {type === 'register' && (
+          <div>
+            <label for="name" class="block text-sm font-medium text-earth-brown mb-2">
+              Full Name
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <User className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent font-medium"
+                placeholder="Enter your full name"
+              />
+            </div>
+          </div>
+        )}
+
+        {(type === 'login' || type === 'register' || type === 'forgot-password') && (
+          <div>
+            <label for="email" class="block text-sm font-medium text-earth-brown mb-2">
+              Email Address
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Mail className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent font-medium"
+                placeholder="Enter your email"
+              />
+            </div>
+          </div>
+        )}
+
+        {(type === 'login' || type === 'register' || type === 'update-password') && (
+          <div>
+            <label for="password" class="block text-sm font-medium text-earth-brown mb-2">
+              {type === 'update-password' ? 'New Password' : 'Password'}
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Lock className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                class="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent font-medium"
+                placeholder={type === 'update-password' ? 'Enter new password' : 'Enter your password'}
+                minlength="6"
+              />
+              <button
+                type="button"
+                id="toggle-password"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                aria-label="Toggle password visibility"
+              >
+                <Eye id="eye-open" className="h-5 w-5 text-gray-400" />
+                <EyeOff id="eye-closed" className="h-5 w-5 text-gray-400 hidden" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {type === 'register' && (
+          <div>
+            <label for="confirm-password" class="block text-sm font-medium text-earth-brown mb-2">
+              Confirm Password
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Lock className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id="confirm-password"
+                name="confirm-password"
+                type="password"
+                required
+                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent font-medium"
+                placeholder="Confirm your password"
+                minlength="6"
+              />
+            </div>
+          </div>
+        )}
+
+        <!-- Submit Button -->
+        <div>
+          <button
+            type="submit"
+            id="submit-btn"
+            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-forest-canopy hover:bg-moss-green focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-canopy transition-colors disabled:opacity-50 disabled:cursor-not-allowed tracking-wide"
+          >
+            <span id="submit-text">
+              {type === 'login' && 'Sign In'}
+              {type === 'register' && 'Create Account'}
+              {type === 'forgot-password' && 'Send Reset Link'}
+              {type === 'update-password' && 'Update Password'}
+            </span>
+            <span id="submit-loading" class="hidden">Processing...</span>
+          </button>
+        </div>
+
+        <!-- Links -->
+        <div class="text-center space-y-2">
+          {type === 'login' && (
+            <div class="space-y-2">
+              <p class="text-sm">
+                <a href="/auth/forgot-password" class="text-forest-canopy hover:text-moss-green transition-colors font-medium">
+                  Forgot your password?
+                </a>
+              </p>
+              <p class="text-sm text-earth-brown">
+                Don't have an account? 
+                <a href="/auth/register" class="text-forest-canopy hover:text-moss-green font-semibold transition-colors">
+                  Sign up
+                </a>
+              </p>
+            </div>
+          )}
+          
+          {type === 'register' && (
+            <p class="text-sm text-earth-brown">
+              Already have an account? 
+              <a href="/auth/login" class="text-forest-canopy hover:text-moss-green font-semibold transition-colors">
+                Sign in
+              </a>
+            </p>
+          )}
+          
+          {type === 'forgot-password' && (
+            <p class="text-sm text-earth-brown">
+              Remember your password? 
+              <a href="/auth/login" class="text-forest-canopy hover:text-moss-green font-semibold transition-colors">
+                Sign in
+              </a>
+            </p>
+          )}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Import the auth adapter instead of Supabase directly
+  import auth from '@lib/auth';
+  import { isTestEmail, getAuthErrorMessage, isDevEnvironment } from '@lib/development-helpers';
+  
+  // Get the form type from the data attribute
+  const formElement = document.querySelector('#auth-form');
+  const type = formElement?.closest('[data-auth-type]')?.getAttribute('data-auth-type') || 'login';
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('auth-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const submitText = document.getElementById('submit-text');
+    const submitLoading = document.getElementById('submit-loading');
+    const alert = document.getElementById('auth-alert');
+    const alertMessage = document.getElementById('auth-alert-message');
+    const togglePassword = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('password');
+    const eyeOpen = document.getElementById('eye-open');
+    const eyeClosed = document.getElementById('eye-closed');
+
+    // Password visibility toggle
+    if (togglePassword && passwordInput) {
+      togglePassword.addEventListener('click', () => {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        eyeOpen.classList.toggle('hidden', isPassword);
+        eyeClosed.classList.toggle('hidden', !isPassword);
+      });
+    }
+
+    // Show alert message
+    function showAlert(message, isError = false) {
+      alertMessage.textContent = message;
+      alert.className = `mb-4 p-4 rounded-lg ${isError ? 'bg-red-50 text-red-800 border border-red-200' : 'bg-green-50 text-green-800 border border-green-200'}`;
+      alert.classList.remove('hidden');
+    }
+
+    // Hide alert message
+    function hideAlert() {
+      alert.classList.add('hidden');
+    }
+
+    // Set loading state
+    function setLoading(loading) {
+      submitBtn.disabled = loading;
+      submitText.classList.toggle('hidden', loading);
+      submitLoading.classList.toggle('hidden', !loading);
+    }
+
+    // Form submission using adapter
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+      setLoading(true);
+
+      const formData = new FormData(form);
+      const email = formData.get('email');
+      const password = formData.get('password');
+      const confirmPassword = formData.get('confirm-password');
+      const name = formData.get('name');
+
+      try {
+        if (type === 'login') {
+          // For Clerk, we'll use magic link
+          if (auth.getProvider() === 'clerk') {
+            const result = await auth.sendMagicLink(email);
+            if (!result.success) throw new Error(result.error);
+            
+            showAlert('Magic link sent! Check your email to sign in.');
+          } else {
+            // For Supabase, use password
+            const result = await auth.signIn(email, password);
+            if (!result.success) throw new Error(result.error);
+            
+            showAlert('Successfully signed in! Redirecting...');
+            const isAdmin = await auth.isAdmin();
+            
+            setTimeout(() => {
+              window.location.href = isAdmin ? '/admin' : '/';
+            }, 1000);
+          }
+
+        } else if (type === 'register') {
+          // Validate password confirmation
+          if (password !== confirmPassword) {
+            throw new Error('Passwords do not match');
+          }
+
+          const result = await auth.signUp(email, password);
+          if (!result.success) throw new Error(result.error);
+
+          // Check if this is a test account
+          const testDomains = ['@spicebushmontessori.org', '@spicebushmontessori.test', '@example.com'];
+          const isTest = testDomains.some(domain => email.includes(domain));
+          
+          if (isTest) {
+            showAlert('Test account created! You can now sign in.');
+            setTimeout(() => {
+              window.location.href = '/auth/login';
+            }, 1500);
+          } else {
+            showAlert('Account created successfully! Please check your email to verify your account.');
+            setTimeout(() => {
+              window.location.href = '/auth/login';
+            }, 2000);
+          }
+
+        } else if (type === 'forgot-password') {
+          const result = await auth.sendPasswordReset(email);
+          if (!result.success) throw new Error(result.error);
+
+          showAlert('Password reset link sent! Please check your email.');
+
+        } else if (type === 'update-password') {
+          const result = await auth.updatePassword(password);
+          if (!result.success) throw new Error(result.error);
+
+          showAlert('Password updated successfully! Redirecting...');
+          const isAdmin = await auth.isAdmin();
+          
+          setTimeout(() => {
+            window.location.href = isAdmin ? '/admin' : '/';
+          }, 1000);
+        }
+
+      } catch (error) {
+        console.error('Auth error:', error);
+        
+        // Use enhanced error handler
+        let errorMessage = getAuthErrorMessage(error, email);
+        
+        // Additional specific error handling
+        if (errorMessage.includes('signup_disabled')) {
+          errorMessage = 'Account registration is currently disabled. Please contact an administrator.';
+        } else if (errorMessage.includes('User not found')) {
+          errorMessage = 'No account found with this email address. Please register first.';
+        }
+        
+        showAlert(errorMessage, true);
+      } finally {
+        setLoading(false);
+      }
+    });
+  });
+</script>

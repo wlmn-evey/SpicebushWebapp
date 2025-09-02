@@ -1,0 +1,13 @@
+---
+import { authAdapter } from '../../lib/auth';
+
+// Sign out the user
+try {
+  await authAdapter.signOut();
+} catch (error) {
+  console.error('Sign out error:', error);
+}
+
+// Redirect to home page
+return Astro.redirect('/');
+---

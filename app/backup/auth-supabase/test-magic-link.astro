@@ -1,0 +1,219 @@
+---
+// Test page for magic link authentication
+import Layout from '../layouts/Layout.astro';
+import { supabase } from '../lib/supabase';
+
+// Supabase client is already initialized
+
+// Check if keys are configured
+const hasKeys = import.meta.env.PUBLIC_SUPABASE_ANON_KEY && 
+                import.meta.env.PUBLIC_SUPABASE_URL;
+
+// Try to get current session
+let sessionStatus = 'Not checked';
+let sessionError = null;
+let user = null;
+
+if (hasKeys) {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) {
+      sessionError = error.message;
+      sessionStatus = 'Error';
+    } else if (session) {
+      sessionStatus = 'Authenticated';
+      user = session.user;
+    } else {
+      sessionStatus = 'Not authenticated';
+    }
+  } catch (e) {
+    sessionError = e.message;
+    sessionStatus = 'Exception';
+  }
+}
+---
+
+<Layout title="Magic Link Test">
+  <div class="container mx-auto p-8 max-w-4xl" data-supabase-url={import.meta.env.PUBLIC_SUPABASE_URL} data-supabase-anon-key={import.meta.env.PUBLIC_SUPABASE_ANON_KEY}>
+    <h1 class="text-3xl font-bold mb-6">Magic Link Authentication Test</h1>
+    
+    <!-- Configuration Status -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4">Configuration Status</h2>
+      
+      <div class="space-y-2">
+        <div class="flex items-center">
+          <span class="font-medium w-48">Supabase URL:</span>
+          <code class="bg-gray-100 px-2 py-1 rounded text-sm">
+            {import.meta.env.PUBLIC_SUPABASE_URL || 'Not configured'}
+          </code>
+        </div>
+        
+        <div class="flex items-center">
+          <span class="font-medium w-48">Anon Key Format:</span>
+          <code class="bg-gray-100 px-2 py-1 rounded text-sm">
+            {import.meta.env.PUBLIC_SUPABASE_ANON_KEY ? 
+              (import.meta.env.PUBLIC_SUPABASE_ANON_KEY.startsWith('sb_publishable_') ? 
+                '✅ New format (sb_publishable_)' : 
+                import.meta.env.PUBLIC_SUPABASE_ANON_KEY.startsWith('eyJ') ?
+                  '⚠️ Legacy JWT format' : 
+                  '❓ Unknown format') : 
+              '❌ Not configured'}
+          </code>
+        </div>
+        
+        <div class="flex items-center">
+          <span class="font-medium w-48">Keys Configured:</span>
+          <span class={hasKeys ? 'text-green-600' : 'text-red-600'}>
+            {hasKeys ? '✅ Yes' : '❌ No'}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session Status -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4">Session Status</h2>
+      
+      <div class="space-y-2">
+        <div class="flex items-center">
+          <span class="font-medium w-48">Status:</span>
+          <span class={sessionStatus === 'Authenticated' ? 'text-green-600' : 'text-gray-600'}>
+            {sessionStatus}
+          </span>
+        </div>
+        
+        {sessionError && (
+          <div class="flex items-start">
+            <span class="font-medium w-48">Error:</span>
+            <span class="text-red-600 text-sm">{sessionError}</span>
+          </div>
+        )}
+        
+        {user && (
+          <div class="flex items-start">
+            <span class="font-medium w-48">User Email:</span>
+            <span class="text-green-600">{user.email}</span>
+          </div>
+        )}
+      </div>
+    </div>
+
+    <!-- Magic Link Test Form -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4">Send Magic Link</h2>
+      
+      {hasKeys ? (
+        <form id="magic-link-form" class="space-y-4">
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+              Email Address
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              placeholder="admin@spicebushmontessori.org"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          <button
+            type="submit"
+            class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Send Magic Link
+          </button>
+          
+          <div id="result" class="hidden mt-4 p-4 rounded-md"></div>
+        </form>
+      ) : (
+        <div class="text-red-600">
+          ⚠️ Supabase keys not configured. Cannot test magic links.
+        </div>
+      )}
+    </div>
+
+    <!-- Test Results Log -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Test Results</h2>
+      <div id="test-log" class="space-y-2 text-sm font-mono">
+        <div class="text-gray-600">Waiting for test...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    
+    const form = document.getElementById('magic-link-form');
+    const resultDiv = document.getElementById('result');
+    const testLog = document.getElementById('test-log');
+    
+    function addLog(message, type = 'info') {
+      const entry = document.createElement('div');
+      entry.className = type === 'error' ? 'text-red-600' : 
+        type === 'success' ? 'text-green-600' : 
+          'text-gray-600';
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      testLog.appendChild(entry);
+      
+      // Clear initial message
+      if (testLog.firstElementChild?.textContent?.includes('Waiting for test')) {
+        testLog.firstElementChild.remove();
+      }
+    }
+    
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = form.email.value;
+        addLog(`Testing magic link for: ${email}`);
+        
+        resultDiv.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'text-green-800', 'text-red-800');
+        resultDiv.textContent = 'Sending magic link...';
+        resultDiv.classList.add('bg-blue-100', 'text-blue-800');
+        
+        try {
+          // Get environment variables from data attributes
+          const container = document.querySelector('[data-supabase-url]');
+          const supabaseUrl = container?.dataset.supabaseUrl || '';
+          const supabaseAnonKey = container?.dataset.supabaseAnonKey || '';
+          
+          addLog('Creating Supabase client...');
+          addLog(`Using URL: ${supabaseUrl}`);
+          addLog(`Key format: ${supabaseAnonKey?.substring(0, 20)}...`);
+          
+          const supabase = createClient(supabaseUrl, supabaseAnonKey);
+          
+          const { data, error } = await supabase.auth.signInWithOtp({
+            email,
+            options: {
+              emailRedirectTo: `${window.location.origin}/auth/callback`
+            }
+          });
+          
+          if (error) {
+            addLog(`Error: ${error.message}`, 'error');
+            resultDiv.textContent = `Error: ${error.message}`;
+            resultDiv.classList.remove('bg-blue-100', 'text-blue-800');
+            resultDiv.classList.add('bg-red-100', 'text-red-800');
+          } else {
+            addLog('Magic link sent successfully!', 'success');
+            addLog(`Check email: ${email}`, 'success');
+            resultDiv.textContent = `✅ Magic link sent! Check your email: ${email}`;
+            resultDiv.classList.remove('bg-blue-100', 'text-blue-800');
+            resultDiv.classList.add('bg-green-100', 'text-green-800');
+          }
+        } catch (error) {
+          addLog(`Exception: ${error.message}`, 'error');
+          resultDiv.textContent = `Error: ${error.message}`;
+          resultDiv.classList.remove('bg-blue-100', 'text-blue-800');
+          resultDiv.classList.add('bg-red-100', 'text-red-800');
+        }
+      });
+    }
+  </script>
+</Layout>
