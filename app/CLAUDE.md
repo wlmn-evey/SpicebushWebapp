@@ -70,6 +70,267 @@ docker compose up -d
 # Done! That's it!
 ```
 
+## Remote Development & Deployment Workflow
+
+**IMPORTANT**: We are focused on remote development with the `testing` branch as our primary testing location.
+
+### Branch Strategy
+- **Production Branch**: `main` (reserved for future production use)
+- **Testing Branch**: `testing` - PRIMARY DEVELOPMENT AND TESTING LOCATION
+- **Feature Branches**: Create from `testing` for isolated work, merge back to `testing`
+- **Current Active Branch**: Always work on `testing` unless creating a feature branch
+
+### Deployment Pipeline
+- **Testing Site URL**: https://spicebush-testing.netlify.app
+- **Admin Dashboard**: https://app.netlify.com/projects/spicebush-testing
+- **Automatic Deployments**: Every push to `testing` triggers a Netlify build
+- **Build Status**: Monitor via Netlify dashboard or CLI (`npx netlify status`)
+- **Current Mode**: Coming Soon mode active (controlled by `COMING_SOON_MODE` env var)
+
+### Remote Development Process
+1. **Always work on `testing` branch** unless specifically creating a feature
+2. **Push changes to remote** to trigger automatic Netlify deployment
+3. **Monitor build progress** via Netlify dashboard or CLI
+4. **Test on live URL** after successful deployment
+5. **Check build logs** if deployment fails
+
+### Build Configuration
+- **Build Script**: `build-with-env.sh` handles environment setup
+- **Node Version**: 20 (specified in netlify.toml)
+- **Memory Allocation**: 4GB max old space size for large builds
+- **Authentication**: Netlify Identity enabled (migrating from Supabase Auth)
+- **Environment Variables**: Set in Netlify dashboard, not committed to repo
+
+### Netlify CLI Commands
+```bash
+# Check deployment status
+npx netlify status
+
+# View site info
+npx netlify sites:list
+
+# Deploy manually (if needed)
+npx netlify deploy --prod
+
+# Check environment variables
+npx netlify env:list
+
+# View build logs
+npx netlify logs:function
+```
+
+### Testing & Validation on Remote
+1. **After each deployment**:
+   - Visit https://spicebush-testing.netlify.app
+   - Check browser console for errors
+   - Test authentication flows
+   - Verify database connections
+   - Test responsive design on mobile
+
+2. **Monitor build health**:
+   - Build time should be under 5 minutes
+   - Check for build warnings in Netlify logs
+   - Verify all environment variables are set
+   - Ensure no sensitive data in build logs
+
+3. **Common deployment issues**:
+   - Missing environment variables → Set in Netlify dashboard
+   - Build memory errors → Already configured with NODE_OPTIONS
+   - Authentication failures → Check Clerk/Netlify Identity keys
+   - Database connection issues → Verify Supabase credentials
+
+### Environment Variable Management
+**NEVER commit sensitive keys to the repository!**
+
+Required environment variables (set in Netlify dashboard):
+- `PUBLIC_CLERK_PUBLISHABLE_KEY` - Clerk authentication
+- `CLERK_SECRET_KEY` - Clerk backend
+- `PUBLIC_SUPABASE_URL` - Supabase project URL
+- `PUBLIC_SUPABASE_ANON_KEY` - Supabase public key
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase admin key
+- `COMING_SOON_MODE` - Set to "false" to disable coming soon page
+- `UNIONE_API_KEY` - Email service credentials
+
+### Deployment Workflow Best Practices
+1. **Before pushing to `testing`**:
+   - Run `npm run lint && npm run typecheck`
+   - Test locally with `npm run dev`
+   - Check for console errors
+   - Verify no sensitive data in code
+
+2. **After pushing to `testing`**:
+   - Monitor Netlify build logs
+   - Wait for deployment to complete
+   - Test on live URL immediately
+   - Check for regression issues
+
+3. **If deployment fails**:
+   - Check Netlify build logs for errors
+   - Verify all dependencies are listed in package.json
+   - Ensure build script has proper permissions
+   - Test build locally with `npm run build`
+
+### Current Deployment Status
+- **Site Status**: Live and accessible
+- **Mode**: Coming Soon mode (redirects most pages)
+- **Known Issues**: See DEPLOYMENT_STATUS_NEW.md
+- **Next Steps**: 
+  1. Add real Clerk API keys
+  2. Disable Coming Soon mode
+  3. Complete authentication flow
+
+## Netlify CLI Reference & Troubleshooting
+
+### Essential Netlify CLI Commands
+```bash
+# Project status and configuration
+npx netlify status
+
+# Deploy commands
+npx netlify deploy              # Draft deploy
+npx netlify deploy --prod       # Production deploy
+npx netlify deploy --trigger    # Trigger remote build without uploading files
+npx netlify deploy --timeout 600000  # Deploy with 10-minute timeout
+
+# Build commands
+npx netlify build               # Run build locally with Netlify environment
+npx netlify build --context production  # Build with production context
+npx netlify build --dry         # Dry run to see what would be built
+
+# Logs and monitoring
+npx netlify logs:deploy         # Stream deploy logs in real-time
+npx netlify logs:function       # Stream function logs
+npx netlify logs:function my-function  # Specific function logs
+
+# Environment variables
+npx netlify env:list            # List all environment variables
+npx netlify env:set KEY value   # Set an environment variable
+npx netlify env:unset KEY       # Remove an environment variable
+
+# Site management
+npx netlify sites:list          # List all sites
+npx netlify link                # Link local project to Netlify site
+npx netlify unlink              # Unlink local project from Netlify site
+```
+
+### Viewing Build Logs
+
+1. **Web Interface**:
+   - Direct URL: `https://app.netlify.com/sites/spicebush-testing/deploys/[DEPLOY_ID]`
+   - Copy entire log: Use clipboard icon in web interface
+   - Share specific lines: Click line numbers, URL updates to `#L5-L10` format
+   - Logs retained for 7 days on free tier
+
+2. **CLI Access**:
+   ```bash
+   # Stream live deploy logs
+   npx netlify logs:deploy
+   
+   # Note: Historical logs must be viewed via web interface
+   ```
+
+3. **API Access** (for automation):
+   ```bash
+   # List recent deployments
+   npx netlify api listSiteDeploys --data '{"site_id": "27a429f4-9a58-4421-bc1f-126d70d81aa1"}'
+   
+   # Get specific deploy info
+   npx netlify api getSiteDeploy --data '{"site_id": "27a429f4-9a58-4421-bc1f-126d70d81aa1", "deploy_id": "DEPLOY_ID"}'
+   ```
+
+### Debugging Failed Builds
+
+#### Common Error Messages & Solutions
+
+1. **"Build script returned non-zero exit code: 2"**
+   - npm install failed → Check package-lock.json is committed
+   - Build script failed → Test locally with `./build-with-env.sh`
+   - Missing dependencies → Ensure all deps in package.json
+
+2. **"Could not resolve dependency" or "Conflicting peer dependency"**
+   - Set environment variable: `NPM_FLAGS=--legacy-peer-deps`
+   - Or use: `NPM_FLAGS=--force`
+   - Common with React 17+ and Node 16.5.1+
+
+3. **"Command failed with exit code 137" (Out of memory)**
+   - Already mitigated with `NODE_OPTIONS=--max_old_space_size=4096`
+   - If persists, optimize build process
+
+4. **"Deploy did not succeed: Deploy directory 'dist' does not exist"**
+   - Ensure build command creates dist/ directory
+   - Check build script runs `npm run build`
+
+#### Troubleshooting Steps
+
+1. **First, always verify local build works**:
+   ```bash
+   npm install
+   npm run build
+   ./build-with-env.sh  # Test exact Netlify command
+   ```
+
+2. **Clear cache and retry**:
+   - In Netlify dashboard: "Deploy settings" → "Clear cache and deploy site"
+   - Or trigger new build: `npx netlify deploy --trigger`
+
+3. **Check environment variables**:
+   ```bash
+   npx netlify env:list
+   ```
+   Compare with required variables in build script
+
+4. **Review recent changes**:
+   ```bash
+   git diff HEAD~1  # What changed since last successful deploy?
+   ```
+
+5. **Enable verbose logging**:
+   Add to build command: `npm run build --verbose`
+
+### Build Configuration Tips
+
+1. **Optimize npm install**:
+   ```toml
+   # In netlify.toml
+   [build.environment]
+     NPM_FLAGS = "--legacy-peer-deps"
+   ```
+
+2. **Cache dependencies**:
+   Netlify automatically caches node_modules between builds
+
+3. **Debug build locally**:
+   ```bash
+   # Simulate Netlify environment
+   export NODE_VERSION=20
+   export NODE_OPTIONS="--max_old_space_size=4096"
+   ./build-with-env.sh
+   ```
+
+4. **Monitor build time**:
+   - Target: Under 5 minutes
+   - If over 10 minutes, optimize or upgrade plan
+
+### Quick Fixes for Common Issues
+
+```bash
+# Build fails after dependency update
+npm install --legacy-peer-deps
+git add package-lock.json
+git commit -m "fix: Update package-lock with legacy peer deps"
+git push origin testing
+
+# Build succeeds locally but fails on Netlify
+npx netlify build  # Test with Netlify's build environment
+
+# Need to see what Netlify sees
+npx netlify build --dry  # Shows build plan without executing
+
+# Emergency: Site is down, need quick fix
+git revert HEAD  # Revert last commit
+git push origin testing  # Trigger rebuild with previous code
+```
+
 ## Development Standards & Policies
 
 ### Linting Policies
