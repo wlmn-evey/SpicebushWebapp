@@ -83,7 +83,8 @@
     "docker:logs": "docker-compose logs -f app",
     "setup:dev": "cp .env.example .env.local && echo 'Please update .env.local with your values'",
     "optimize:images": "node scripts/optimize-images.js",
-    "migrate:coming-soon": "tsx scripts/migrate-coming-soon-settings.ts"
+    "migrate:coming-soon": "tsx scripts/migrate-coming-soon-settings.ts",
+    "test:deploy": "node tests/puppeteer/health-check.js"
   },
   "dependencies": {
     "@astrojs/netlify": "^6.5.3",
@@ -140,6 +141,7 @@
     "node-fetch": "^2.7.0",
     "prettier": "^3.2.5",
     "prettier-plugin-astro": "^0.13.0",
+    "puppeteer": "^24.15.0",
     "tsx": "^4.7.1",
     "vitest": "^1.4.0"
   }
