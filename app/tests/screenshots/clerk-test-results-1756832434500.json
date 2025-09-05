@@ -1,0 +1,38 @@
+{
+  "passed": [
+    {
+      "name": "Auth Provider",
+      "message": "Using: unknown"
+    },
+    {
+      "name": "Admin Email",
+      "message": "evey@eveywinters.com is in admin whitelist"
+    }
+  ],
+  "failed": [
+    {
+      "name": "Page Load",
+      "message": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "name": "Clerk Component",
+      "message": "page.waitForTimeout is not a function"
+    },
+    {
+      "name": "Email Input",
+      "message": "Email input field not found"
+    },
+    {
+      "name": "Form Submit",
+      "message": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'button[type=\"submit\"], button:has-text(\"Continue\"), button:has-text(\"Sign in\")' is not a valid selector."
+    },
+    {
+      "name": "Clerk Config",
+      "message": "Clerk keys not found"
+    }
+  ],
+  "warnings": [
+    "Console error: Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+    "Magic link option check: SyntaxError: Failed to execute 'querySelector' on 'Document': '[data-localization-key*=\"emailLink\"], [data-testid*=\"magic\"], button:has-text(\"Email link\"), button:has-text(\"Magic link\")' is not a valid selector."
+  ]
+}

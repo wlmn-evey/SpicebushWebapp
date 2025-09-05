@@ -10,5 +10,8 @@
     "react-helmet": "^6.1.0",
     "react-markdown": "^10.1.0",
     "selenium-webdriver": "^4.34.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^23.5.0"
   }
 }

@@ -1,0 +1,72 @@
+# Root Netlify Configuration for Spicebush Testing Site
+
+[build]
+  # Base directory (relative to repository root)
+  base = "app"
+  
+  # Build command that includes environment variables
+  command = "chmod +x build-with-env.sh && ./build-with-env.sh"
+  
+  # Directory to deploy (Astro outputs to dist/)
+  publish = "dist"
+  
+  # Node version and other environment settings
+  [build.environment]
+    NODE_VERSION = "20"
+    NODE_OPTIONS = "--max_old_space_size=4096"
+    # Netlify Identity configuration
+    NETLIFY_IDENTITY_ENABLED = "true"
+
+# Testing branch context - ensures proper environment setup
+[context.testing]
+  [context.testing.environment]
+    NODE_ENV = "production"
+    ENVIRONMENT = "testing"
+
+# Branch deploy context (all other branches)
+[context.branch-deploy]
+  [context.branch-deploy.environment]
+    NODE_ENV = "development"
+
+# Deploy preview context
+[context.deploy-preview]
+  [context.deploy-preview.environment]
+    NODE_ENV = "development"
+
+# Headers for better performance and security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Redirects configuration 
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/:splat"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/auth/*"
+  to = "/auth/:splat"
+  status = 200
+  force = false
+
+# Functions configuration
+[functions]
+  directory = "netlify/functions"
+  included_files = ["**/*"]

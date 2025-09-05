@@ -18,6 +18,7 @@ export interface AuthResponse {
     id: string;
     email: string;
   };
+  debugUrl?: string; // For testing - remove in production
 }
 
 /**
@@ -33,6 +34,7 @@ export const authAdapter = {
       return {
         success: result.success,
         error: result.error,
+        debugUrl: result.debugUrl, // For testing - remove in production
       };
     } else {
       const { data, error } = await supabaseAuth.signInWithMagicLink(email);

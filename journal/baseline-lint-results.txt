@@ -1,0 +1,2114 @@
+
+> spicebush-montessori@0.0.1 lint
+> eslint src/ --ext .ts,.astro,.js
+
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/AdminImageOverlay.astro
+    2:10  error    'Edit3' is defined but never used                                        @typescript-eslint/no-unused-vars
+    3:10  error    'isAdminEmail' is defined but never used                                 @typescript-eslint/no-unused-vars
+   10:5   warning  Unused CSS selector `.admin-image-container`                             astro/no-unused-css-selector
+   20:5   warning  Unused CSS selector `.admin-image-container img`                         astro/no-unused-css-selector
+   31:5   warning  Unused CSS selector `.admin-image-overlay`                               astro/no-unused-css-selector
+   48:5   warning  Unused CSS selector `.admin-image-container:hover .admin-image-overlay`  astro/no-unused-css-selector
+   52:5   warning  Unused CSS selector `.admin-edit-btn`                                    astro/no-unused-css-selector
+   68:5   warning  Unused CSS selector `.admin-edit-btn:hover`                              astro/no-unused-css-selector
+  196:17  error    A form label must be associated with a control                           astro/jsx-a11y/label-has-associated-control
+  205:17  error    A form label must be associated with a control                           astro/jsx-a11y/label-has-associated-control
+  214:17  error    A form label must be associated with a control                           astro/jsx-a11y/label-has-associated-control
+  239:1   warning  This line has a length of 133. Maximum allowed is 100                    max-len
+  328:1   warning  This line has a length of 101. Maximum allowed is 100                    max-len
+  384:1   warning  This line has a length of 310. Maximum allowed is 100                    max-len
+  394:1   warning  This line has a length of 148. Maximum allowed is 100                    max-len
+  454:1   warning  This line has a length of 106. Maximum allowed is 100                    max-len
+  455:1   warning  This line has a length of 104. Maximum allowed is 100                    max-len
+  475:1   warning  This line has a length of 113. Maximum allowed is 100                    max-len
+  530:1   warning  This line has a length of 133. Maximum allowed is 100                    max-len
+  631:1   warning  This line has a length of 116. Maximum allowed is 100                    max-len
+  632:1   warning  This line has a length of 110. Maximum allowed is 100                    max-len
+  684:1   warning  This line has a length of 102. Maximum allowed is 100                    max-len
+  824:1   warning  This line has a length of 157. Maximum allowed is 100                    max-len
+  285:9   error    'AdminImageManager' is defined but never used                            @typescript-eslint/no-unused-vars
+  319:9   warning  Unexpected console statement                                             no-console
+  342:9   warning  Unexpected console statement                                             no-console
+  367:13  error    'originalWidth' is assigned a value but never used                       @typescript-eslint/no-unused-vars
+  368:13  error    'originalHeight' is assigned a value but never used                      @typescript-eslint/no-unused-vars
+  369:13  error    'originalMaxWidth' is assigned a value but never used                    @typescript-eslint/no-unused-vars
+  370:13  error    'originalDisplay' is assigned a value but never used                     @typescript-eslint/no-unused-vars
+  561:9   warning  Unexpected console statement                                             no-console
+  583:9   warning  Unexpected console statement                                             no-console
+  758:17  error    'data' is assigned a value but never used                                @typescript-eslint/no-unused-vars
+  774:9   warning  Unexpected console statement                                             no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/AdminNav.astro
+  107:3  warning  Unused CSS selector `.admin-nav-link[aria-current="page"]`  astro/no-unused-css-selector
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/AdminPreviewBar.astro
+  18:5  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/AuthForm.astro
+  223:1   warning  This line has a length of 161. Maximum allowed is 100  max-len
+  262:1   warning  This line has a length of 104. Maximum allowed is 100  max-len
+  280:1   warning  This line has a length of 142. Maximum allowed is 100  max-len
+  286:1   warning  This line has a length of 103. Maximum allowed is 100  max-len
+  342:1   warning  This line has a length of 104. Maximum allowed is 100  max-len
+  192:12  error    'isTestEmail' is defined but never used                @typescript-eslint/no-unused-vars
+  192:46  error    'isDevEnvironment' is defined but never used           @typescript-eslint/no-unused-vars
+  249:13  error    'name' is assigned a value but never used              @typescript-eslint/no-unused-vars
+  258:19  error    'data' is assigned a value but never used              @typescript-eslint/no-unused-vars
+  279:15  warning  Unexpected console statement                           no-console
+  293:19  error    'data' is assigned a value but never used              @typescript-eslint/no-unused-vars
+  311:19  error    'data' is assigned a value but never used              @typescript-eslint/no-unused-vars
+  317:19  error    'data' is assigned a value but never used              @typescript-eslint/no-unused-vars
+  335:9   warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/AuthFormAdapter.astro
+  228:1   warning  This line has a length of 161. Maximum allowed is 100  max-len
+  287:1   warning  This line has a length of 104. Maximum allowed is 100  max-len
+  296:1   warning  This line has a length of 103. Maximum allowed is 100  max-len
+  328:1   warning  This line has a length of 104. Maximum allowed is 100  max-len
+  197:12  error    'isTestEmail' is defined but never used                @typescript-eslint/no-unused-vars
+  197:46  error    'isDevEnvironment' is defined but never used           @typescript-eslint/no-unused-vars
+  254:13  error    'name' is assigned a value but never used              @typescript-eslint/no-unused-vars
+  321:9   warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/AuthNav.astro
+   85:9   warning  Unexpected console statement                                               no-console
+  118:11  warning  Unexpected console statement                                               no-console
+  124:29  error    'event' is defined but never used. Allowed unused args must match /^_/u    @typescript-eslint/no-unused-vars
+  124:36  error    'session' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/AuthRouteSwitcher.astro
+  21:30  error  Unexpected trailing comma  comma-dangle
+  25:30  error  Unexpected trailing comma  comma-dangle
+  29:31  error  Unexpected trailing comma  comma-dangle
+  33:31  error  Unexpected trailing comma  comma-dangle
+  34:4   error  Unexpected trailing comma  comma-dangle
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/CallToAction.astro
+  12:1  warning  This line has a length of 160. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/ContactInfo.astro
+  41:3  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/FeaturedTeachers.astro
+  16:3  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/Footer.astro
+   19:3  warning  Unexpected console statement                                        no-console
+  158:3  warning  Unused CSS selector `.footer-auth-nav #auth-nav button`             astro/no-unused-css-selector
+  162:3  warning  Unused CSS selector `.footer-auth-nav #auth-nav #user-menu`         astro/no-unused-css-selector
+  166:3  warning  Unused CSS selector `.footer-auth-nav #auth-nav #user-menu button`  astro/no-unused-css-selector
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/FooterFixed.astro
+   19:3  warning  Unexpected console statement                                        no-console
+  158:3  warning  Unused CSS selector `.footer-auth-nav #auth-nav button`             astro/no-unused-css-selector
+  162:3  warning  Unused CSS selector `.footer-auth-nav #auth-nav #user-menu`         astro/no-unused-css-selector
+  166:3  warning  Unused CSS selector `.footer-auth-nav #auth-nav #user-menu button`  astro/no-unused-css-selector
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/FooterWithDynamicHours.astro
+   20:3  warning  Unexpected console statement                                        no-console
+  161:3  warning  Unused CSS selector `.footer-auth-nav #auth-nav button`             astro/no-unused-css-selector
+  165:3  warning  Unused CSS selector `.footer-auth-nav #auth-nav #user-menu`         astro/no-unused-css-selector
+  169:3  warning  Unused CSS selector `.footer-auth-nav #auth-nav #user-menu button`  astro/no-unused-css-selector
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/Header.astro
+    2:23  error    'Mail' is defined but never used  @typescript-eslint/no-unused-vars
+   27:3   warning  Unexpected console statement      no-console
+   37:3   warning  Unexpected console statement      no-console
+  180:7   warning  Unexpected console statement      no-console
+  186:9   warning  Unexpected console statement      no-console
+  193:9   warning  Unexpected console statement      no-console
+  221:9   warning  Unexpected console statement      no-console
+  223:9   warning  Unexpected console statement      no-console
+  229:11  warning  Unexpected console statement      no-console
+  241:11  warning  Unexpected console statement      no-console
+  247:7   warning  Unexpected console statement      no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/HeroSection.astro
+   2:10  error    'ArrowRight' is defined but never used                 @typescript-eslint/no-unused-vars
+  38:1   warning  This line has a length of 168. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/HoursInfo.astro
+  63:1  warning  This line has a length of 101. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/HoursWidget.astro
+   11:3   warning  Unexpected console statement                           no-console
+   15:5   warning  Unexpected console statement                           no-console
+   19:3   warning  Unexpected console statement                           no-console
+  197:1   warning  This line has a length of 103. Maximum allowed is 100  max-len
+  295:1   warning  This line has a length of 118. Maximum allowed is 100  max-len
+  296:1   warning  This line has a length of 122. Maximum allowed is 100  max-len
+  333:1   warning  This line has a length of 126. Maximum allowed is 100  max-len
+  334:1   warning  This line has a length of 133. Maximum allowed is 100  max-len
+  335:1   warning  This line has a length of 134. Maximum allowed is 100  max-len
+  336:1   warning  This line has a length of 136. Maximum allowed is 100  max-len
+  337:1   warning  This line has a length of 135. Maximum allowed is 100  max-len
+  338:1   warning  This line has a length of 132. Maximum allowed is 100  max-len
+  339:1   warning  This line has a length of 127. Maximum allowed is 100  max-len
+  395:1   warning  This line has a length of 119. Maximum allowed is 100  max-len
+  400:1   warning  This line has a length of 157. Maximum allowed is 100  max-len
+  404:1   warning  This line has a length of 123. Maximum allowed is 100  max-len
+  409:1   warning  This line has a length of 124. Maximum allowed is 100  max-len
+  414:1   warning  This line has a length of 126. Maximum allowed is 100  max-len
+  428:1   warning  This line has a length of 104. Maximum allowed is 100  max-len
+  437:1   warning  This line has a length of 153. Maximum allowed is 100  max-len
+  473:1   warning  This line has a length of 156. Maximum allowed is 100  max-len
+  483:1   warning  This line has a length of 147. Maximum allowed is 100  max-len
+  539:3   warning  Unused CSS selector `#hours-list li`                   astro/no-unused-css-selector
+  544:3   warning  Unused CSS selector `.relative .absolute`              astro/no-unused-css-selector
+   79:3   warning  Unexpected console statement                           no-console
+  122:9   warning  Unexpected console statement                           no-console
+  134:7   warning  Unexpected console statement                           no-console
+  197:3   warning  This line has a length of 101. Maximum allowed is 100  max-len
+  215:5   warning  Unexpected console statement                           no-console
+  220:7   warning  Unexpected console statement                           no-console
+  239:7   warning  Unexpected console statement                           no-console
+  295:19  error    'openTime' is assigned a value but never used          @typescript-eslint/no-unused-vars
+  296:19  error    'closeTime' is assigned a value but never used         @typescript-eslint/no-unused-vars
+  330:9   warning  Unexpected console statement                           no-console
+  333:3   warning  This line has a length of 124. Maximum allowed is 100  max-len
+  334:3   warning  This line has a length of 131. Maximum allowed is 100  max-len
+  335:3   warning  This line has a length of 132. Maximum allowed is 100  max-len
+  336:3   warning  This line has a length of 134. Maximum allowed is 100  max-len
+  337:3   warning  This line has a length of 133. Maximum allowed is 100  max-len
+  338:3   warning  This line has a length of 130. Maximum allowed is 100  max-len
+  339:3   warning  This line has a length of 125. Maximum allowed is 100  max-len
+  395:3   warning  This line has a length of 117. Maximum allowed is 100  max-len
+  428:3   warning  This line has a length of 102. Maximum allowed is 100  max-len
+  517:7   warning  Unexpected console statement                           no-console
+  524:5   warning  Unexpected console statement                           no-console
+  527:5   warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/ImageGrid.astro
+  42:27  error  'index' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/InclusionCommitment.astro
+  15:1  warning  This line has a length of 229. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/MobileBottomNav.astro
+  40:5  warning  Unused CSS selector `body`  astro/no-unused-css-selector
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/NewsletterSignup.astro
+  460:9  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/NewsletterSignupSimple.astro
+  17:3  error    'showName' is assigned a value but never used          @typescript-eslint/no-unused-vars
+  88:1  warning  This line has a length of 196. Maximum allowed is 100  max-len
+  92:1  warning  This line has a length of 136. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/NonDiscriminationPolicy.astro
+  21:1  warning  This line has a length of 516. Maximum allowed is 100  max-len
+  25:1  warning  This line has a length of 284. Maximum allowed is 100  max-len
+  68:1  warning  This line has a length of 114. Maximum allowed is 100  max-len
+  87:1  warning  This line has a length of 120. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/OptimizedImage.astro
+   15:10  error    'getCollection' is defined but never used              @typescript-eslint/no-unused-vars
+   35:3   warning  Unexpected console statement                           no-console
+   77:1   warning  This line has a length of 103. Maximum allowed is 100  max-len
+  181:1   warning  This line has a length of 103. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/PageHero.astro
+  8:29  error  'image' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/ProgramsOverview.astro
+  14:1  warning  This line has a length of 179. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/RecentBlogPosts.astro
+  21:3  warning  Unexpected console statement                           no-console
+  34:1  warning  This line has a length of 109. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/TeachersSection.astro
+  18:1  warning  This line has a length of 119. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/TestFooter.astro
+  6:1  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/Testimonials.astro
+  13:1   warning  This line has a length of 113. Maximum allowed is 100                max-len
+  39:66  error    'i' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/TuitionCalculator.astro
+    2:68  error    'AlertCircle' is defined but never used                                        @typescript-eslint/no-unused-vars
+    5:13  warning  Unexpected any. Specify a different type                                       @typescript-eslint/no-explicit-any
+    6:10  warning  Unexpected any. Specify a different type                                       @typescript-eslint/no-explicit-any
+    7:28  warning  Unexpected any. Specify a different type                                       @typescript-eslint/no-explicit-any
+   33:1   warning  This line has a length of 123. Maximum allowed is 100                          max-len
+  130:1   warning  This line has a length of 152. Maximum allowed is 100                          max-len
+  152:1   warning  This line has a length of 141. Maximum allowed is 100                          max-len
+  288:3   warning  Unused CSS selector `.program-card`                                            astro/no-unused-css-selector
+  292:3   warning  Unused CSS selector `.program-card.tuition-d`                                  astro/no-unused-css-selector
+  296:3   warning  Unused CSS selector `.program-header`                                          astro/no-unused-css-selector
+  300:3   warning  Unused CSS selector `.program-title`                                           astro/no-unused-css-selector
+  304:3   warning  Unused CSS selector `.program-description`                                     astro/no-unused-css-selector
+  308:3   warning  Unused CSS selector `.program-rate-badge`                                      astro/no-unused-css-selector
+  312:3   warning  Unused CSS selector `.program-rate-badge.tuition-d`                            astro/no-unused-css-selector
+  316:3   warning  Unused CSS selector `.price-section`                                           astro/no-unused-css-selector
+  320:3   warning  Unused CSS selector `.program-price`                                           astro/no-unused-css-selector
+  324:3   warning  Unused CSS selector `.program-price.tuition-d`                                 astro/no-unused-css-selector
+  328:3   warning  Unused CSS selector `.program-monthly`                                         astro/no-unused-css-selector
+  332:3   warning  Unused CSS selector `.savings-badge`                                           astro/no-unused-css-selector
+  333:1   warning  This line has a length of 102. Maximum allowed is 100                          max-len
+  336:3   warning  Unused CSS selector `.option-buttons`                                          astro/no-unused-css-selector
+  340:3   warning  Unused CSS selector `.option-btn`                                              astro/no-unused-css-selector
+  341:1   warning  This line has a length of 179. Maximum allowed is 100                          max-len
+  344:3   warning  Unused CSS selector `.option-btn.active`                                       astro/no-unused-css-selector
+  348:3   warning  Unused CSS selector `.enroll-button`                                           astro/no-unused-css-selector
+  349:1   warning  This line has a length of 137. Maximum allowed is 100                          max-len
+  353:3   warning  Unused CSS selector `.table-row`                                               astro/no-unused-css-selector
+  357:3   warning  Unused CSS selector `.table-row:last-child`                                    astro/no-unused-css-selector
+  361:3   warning  Unused CSS selector `.rate-info`                                               astro/no-unused-css-selector
+  365:3   warning  Unused CSS selector `.rate-name`                                               astro/no-unused-css-selector
+  369:3   warning  Unused CSS selector `.rate-program`                                            astro/no-unused-css-selector
+  373:3   warning  Unused CSS selector `.rate-price`                                              astro/no-unused-css-selector
+  377:3   warning  Unused CSS selector `.income-cell`                                             astro/no-unused-css-selector
+  381:3   warning  Unused CSS selector `.income-amount`                                           astro/no-unused-css-selector
+  385:3   warning  Unused CSS selector `.threshold-symbol`                                        astro/no-unused-css-selector
+  390:3   warning  Unused CSS selector `.highlighted`                                             astro/no-unused-css-selector
+  394:3   warning  Unused CSS selector `.family-size-btn.active`                                  astro/no-unused-css-selector
+  478:1   warning  This line has a length of 101. Maximum allowed is 100                          max-len
+  481:1   warning  This line has a length of 143. Maximum allowed is 100                          max-len
+  497:1   warning  This line has a length of 108. Maximum allowed is 100                          max-len
+  500:1   warning  This line has a length of 142. Maximum allowed is 100                          max-len
+  511:1   warning  This line has a length of 204. Maximum allowed is 100                          max-len
+  515:1   warning  This line has a length of 103. Maximum allowed is 100                          max-len
+  517:1   warning  This line has a length of 122. Maximum allowed is 100                          max-len
+  518:1   warning  This line has a length of 103. Maximum allowed is 100                          max-len
+  599:1   warning  This line has a length of 106. Maximum allowed is 100                          max-len
+  604:1   warning  This line has a length of 109. Maximum allowed is 100                          max-len
+  655:1   warning  This line has a length of 156. Maximum allowed is 100                          max-len
+  676:1   warning  This line has a length of 108. Maximum allowed is 100                          max-len
+  693:1   warning  This line has a length of 211. Maximum allowed is 100                          max-len
+  792:1   warning  This line has a length of 126. Maximum allowed is 100                          max-len
+  803:1   warning  This line has a length of 112. Maximum allowed is 100                          max-len
+  548:56  error    'programName' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  548:69  error    'optionType' is defined but never used. Allowed unused args must match /^_/u   @typescript-eslint/no-unused-vars
+  650:37  error    'index' is defined but never used. Allowed unused args must match /^_/u        @typescript-eslint/no-unused-vars
+  861:14  error    'showErrorMessage' is defined but never used                                   @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/ValuePropositions.astro
+  13:1  warning  This line has a length of 146. Maximum allowed is 100  max-len
+  25:1  warning  This line has a length of 129. Maximum allowed is 100  max-len
+  36:1  warning  This line has a length of 134. Maximum allowed is 100  max-len
+  47:1  warning  This line has a length of 112. Maximum allowed is 100  max-len
+  58:1  warning  This line has a length of 121. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/admin/ImageManagementSettings.astro
+    2:20  error    'Key' is defined but never used                 @typescript-eslint/no-unused-vars
+    2:33  error    'Eye' is defined but never used                 @typescript-eslint/no-unused-vars
+    2:38  error    'EyeOff' is defined but never used              @typescript-eslint/no-unused-vars
+   13:7   error    A form label must be associated with a control  astro/jsx-a11y/label-has-associated-control
+   24:7   error    A form label must be associated with a control  astro/jsx-a11y/label-has-associated-control
+   35:7   error    A form label must be associated with a control  astro/jsx-a11y/label-has-associated-control
+  128:9   warning  Unexpected console statement                    no-console
+  161:17  error    'data' is assigned a value but never used       @typescript-eslint/no-unused-vars
+  184:9   warning  Unexpected console statement                    no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/admin/QuickActions.astro
+    4:10  error    'supabase' is defined but never used           @typescript-eslint/no-unused-vars
+  166:3   warning  Unused CSS selector `.status-display.success`  astro/no-unused-css-selector
+  171:3   warning  Unused CSS selector `.status-display.error`    astro/no-unused-css-selector
+  176:3   warning  Unused CSS selector `.status-display.loading`  astro/no-unused-css-selector
+  202:7   warning  Unexpected console statement                   no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/admin/SettingsManagement.astro
+   19:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  264:3   warning  Unused CSS selector `.status-success`     astro/no-unused-css-selector
+  268:3   warning  Unused CSS selector `.status-error`       astro/no-unused-css-selector
+  311:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  350:9   warning  Unexpected console statement              no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/admin/TuitionSettings.astro
+  14:7  error  A form label must be associated with a control  astro/jsx-a11y/label-has-associated-control
+  19:7  error  A form label must be associated with a control  astro/jsx-a11y/label-has-associated-control
+  24:7  error  A form label must be associated with a control  astro/jsx-a11y/label-has-associated-control
+  29:7  error  A form label must be associated with a control  astro/jsx-a11y/label-has-associated-control
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/forms/ImageUpload.astro
+   77:11  error    Redundant alt attribute. Screen-readers already announce `img` tags as an image. You don’t need to use the words `image`, `photo,` or `picture` (or any specified custom words) in the alt prop  astro/jsx-a11y/img-redundant-alt
+  342:1   warning  This line has a length of 249. Maximum allowed is 100                                                                                                                                            max-len
+  378:1   warning  This line has a length of 179. Maximum allowed is 100                                                                                                                                            max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/components/forms/TextArea.astro
+  99:1  warning  This line has a length of 106. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/layouts/Layout.astro
+  117:3  warning  Unused CSS selector `.sr-only`           astro/no-unused-css-selector
+  138:5  warning  Unused CSS selector `.bg-sunlight-gold`  astro/no-unused-css-selector
+  142:5  warning  Unused CSS selector `.bg-forest-canopy`  astro/no-unused-css-selector
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/admin-auth-check-adapter.ts
+  73:5  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/admin-auth-check.ts
+  16:35  error  'Astro' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/api-utils.ts
+  15:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:5   warning  Unexpected console statement              no-console
+  71:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/audit-logger.ts
+  16:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:64  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  62:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/auth/adapter.ts
+   37:34  error    Unexpected trailing comma                 comma-dangle
+   46:42  error    Unexpected trailing comma                 comma-dangle
+   47:22  error    Unexpected trailing comma                 comma-dangle
+   66:42  error    Unexpected trailing comma                 comma-dangle
+   67:22  error    Unexpected trailing comma                 comma-dangle
+   83:30  error    Unexpected trailing comma                 comma-dangle
+   91:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  116:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:28  error    Unexpected trailing comma                 comma-dangle
+  145:44  error    Unexpected trailing comma                 comma-dangle
+  146:24  error    Unexpected trailing comma                 comma-dangle
+  151:76  error    Unexpected trailing comma                 comma-dangle
+  162:4   error    Unexpected trailing comma                 comma-dangle
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/auth/clerk-admin.ts
+   43:52  error    Unexpected trailing comma                              comma-dangle
+   50:1   warning  This line has a length of 111. Maximum allowed is 100  max-len
+   57:11  error    'token' is assigned a value but never used             @typescript-eslint/no-unused-vars
+   68:54  error    Unexpected trailing comma                              comma-dangle
+   69:8   error    Unexpected trailing comma                              comma-dangle
+   72:5   warning  Unexpected console statement                           no-console
+   95:28  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   99:5   warning  Unexpected console statement                           no-console
+  104:5   warning  Unexpected console statement                           no-console
+  123:27  error    Unexpected trailing comma                              comma-dangle
+  150:14  error    Unexpected trailing comma                              comma-dangle
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/auth/clerk-client.ts
+    6:15  error    'SignInResource' is defined but never used                               @typescript-eslint/no-unused-vars
+    6:31  error    'SignUpResource' is defined but never used                               @typescript-eslint/no-unused-vars
+   16:77  error    Unexpected trailing comma                                                comma-dangle
+   35:24  error    Unexpected trailing comma                                                comma-dangle
+   41:1   warning  This line has a length of 118. Maximum allowed is 100                    max-len
+   51:38  error    Unexpected trailing comma                                                comma-dangle
+   65:5   warning  Unexpected console statement                                             no-console
+   76:1   warning  This line has a length of 101. Maximum allowed is 100                    max-len
+   76:39  error    'token' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+   82:5   warning  Unexpected console statement                                             no-console
+  103:5   warning  Unexpected console statement                                             no-console
+  116:5   warning  Unexpected console statement                                             no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/auth/clerk-helpers.ts
+    7:10  error    'getAdminConfig' is defined but never used  @typescript-eslint/no-unused-vars
+   34:65  error    Unexpected trailing comma                   comma-dangle
+  110:64  error    Unexpected trailing comma                   comma-dangle
+  113:5   warning  Unexpected console statement                no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/auth/errors.ts
+   14:13  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   16:78  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   93:1   error    Expected indentation of 4 spaces but found 6  indent
+   94:1   error    Expected indentation of 6 spaces but found 8  indent
+   96:1   error    Expected indentation of 4 spaces but found 6  indent
+   97:1   error    Expected indentation of 6 spaces but found 8  indent
+   99:1   error    Expected indentation of 4 spaces but found 6  indent
+  100:1   error    Expected indentation of 6 spaces but found 8  indent
+  102:1   error    Expected indentation of 4 spaces but found 6  indent
+  103:1   error    Expected indentation of 6 spaces but found 8  indent
+  105:1   error    Expected indentation of 4 spaces but found 6  indent
+  106:1   error    Expected indentation of 6 spaces but found 8  indent
+  108:1   error    Expected indentation of 4 spaces but found 6  indent
+  109:1   error    Expected indentation of 6 spaces but found 8  indent
+  111:1   error    Expected indentation of 4 spaces but found 6  indent
+  112:1   error    Expected indentation of 6 spaces but found 8  indent
+  114:1   error    Expected indentation of 4 spaces but found 6  indent
+  115:1   error    Expected indentation of 6 spaces but found 8  indent
+  117:1   error    Expected indentation of 4 spaces but found 6  indent
+  118:1   error    Expected indentation of 6 spaces but found 8  indent
+  120:1   error    Expected indentation of 4 spaces but found 6  indent
+  121:1   error    Expected indentation of 6 spaces but found 8  indent
+  131:33  error    Unexpected trailing comma                     comma-dangle
+  140:1   error    Expected indentation of 4 spaces but found 6  indent
+  141:1   error    Expected indentation of 6 spaces but found 8  indent
+  143:1   error    Expected indentation of 4 spaces but found 6  indent
+  144:1   error    Expected indentation of 6 spaces but found 8  indent
+  146:1   error    Expected indentation of 4 spaces but found 6  indent
+  147:1   error    Expected indentation of 6 spaces but found 8  indent
+  149:1   error    Expected indentation of 4 spaces but found 6  indent
+  150:1   error    Expected indentation of 4 spaces but found 6  indent
+  151:1   error    Expected indentation of 6 spaces but found 8  indent
+  153:1   error    Expected indentation of 4 spaces but found 6  indent
+  154:1   error    Expected indentation of 6 spaces but found 8  indent
+  156:1   error    Expected indentation of 4 spaces but found 6  indent
+  157:1   error    Expected indentation of 6 spaces but found 8  indent
+  159:1   error    Expected indentation of 4 spaces but found 6  indent
+  160:1   error    Expected indentation of 6 spaces but found 8  indent
+  178:5   warning  Unexpected console statement                  no-console
+  182:33  error    Unexpected trailing comma                     comma-dangle
+  210:41  error    Unexpected trailing comma                     comma-dangle
+  219:1   error    Expected indentation of 2 spaces but found 4  indent
+  220:1   error    Expected indentation of 2 spaces but found 4  indent
+  221:1   error    Expected indentation of 4 spaces but found 6  indent
+  223:1   error    Expected indentation of 2 spaces but found 4  indent
+  224:1   error    Expected indentation of 4 spaces but found 6  indent
+  226:1   error    Expected indentation of 2 spaces but found 4  indent
+  227:1   error    Expected indentation of 4 spaces but found 6  indent
+  229:1   error    Expected indentation of 2 spaces but found 4  indent
+  230:1   error    Expected indentation of 4 spaces but found 6  indent
+  232:1   error    Expected indentation of 2 spaces but found 4  indent
+  233:1   error    Expected indentation of 4 spaces but found 6  indent
+  235:1   error    Expected indentation of 2 spaces but found 4  indent
+  236:1   error    Expected indentation of 4 spaces but found 6  indent
+  238:1   error    Expected indentation of 2 spaces but found 4  indent
+  239:1   error    Expected indentation of 4 spaces but found 6  indent
+  241:1   error    Expected indentation of 2 spaces but found 4  indent
+  242:1   error    Expected indentation of 4 spaces but found 6  indent
+  244:1   error    Expected indentation of 2 spaces but found 4  indent
+  245:1   error    Expected indentation of 4 spaces but found 6  indent
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/auth/types.ts
+   42:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   66:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  125:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  160:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/clerk-auth.ts
+  39:29  error  'Astro' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/cms/supabase-backend.ts
+   10:1   error    '@supabase/supabase-js' import is duplicated  no-duplicate-imports
+  170:59  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  290:13  error    'data' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  346:71  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/content-cache.ts
+    7:1   error    './content-db-direct' import is duplicated             no-duplicate-imports
+   10:26  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   90:1   warning  This line has a length of 106. Maximum allowed is 100  max-len
+  113:1   warning  This line has a length of 120. Maximum allowed is 100  max-len
+  133:87  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  137:50  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  150:81  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  168:1   warning  This line has a length of 106. Maximum allowed is 100  max-len
+  255:7   warning  Unexpected console statement                           no-console
+  257:7   warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/content-db-direct.ts
+   11:35  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   34:59  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   35:27  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   39:61  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   41:37  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   51:18  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   62:69  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   65:3   warning  Unexpected console statement                           no-console
+  138:9   warning  Unexpected console statement                           no-console
+  146:11  warning  Unexpected console statement                           no-console
+  148:11  warning  Unexpected console statement                           no-console
+  151:11  warning  Unexpected console statement                           no-console
+  155:11  warning  Unexpected console statement                           no-console
+  192:5   warning  Unexpected console statement                           no-console
+  213:5   warning  Unexpected console statement                           no-console
+  222:5   warning  Unexpected console statement                           no-console
+  248:5   warning  Unexpected console statement                           no-console
+  254:1   warning  This line has a length of 121. Maximum allowed is 100  max-len
+  260:56  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  271:5   warning  Unexpected console statement                           no-console
+  276:64  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  282:36  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  289:5   warning  Unexpected console statement                           no-console
+  315:19  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  335:1   warning  This line has a length of 106. Maximum allowed is 100  max-len
+  351:5   warning  Unexpected console statement                           no-console
+  387:1   warning  This line has a length of 111. Maximum allowed is 100  max-len
+  391:5   warning  Unexpected console statement                           no-console
+  414:5   warning  Unexpected console statement                           no-console
+  419:1   warning  This line has a length of 107. Maximum allowed is 100  max-len
+  421:1   warning  This line has a length of 114. Maximum allowed is 100  max-len
+  439:1   warning  This line has a length of 116. Maximum allowed is 100  max-len
+  441:1   warning  This line has a length of 120. Maximum allowed is 100  max-len
+  454:19  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  486:5   warning  Unexpected console statement                           no-console
+  535:5   warning  Unexpected console statement                           no-console
+  546:1   warning  This line has a length of 114. Maximum allowed is 100  max-len
+  558:7   warning  Unexpected console statement                           no-console
+  563:11  warning  Unexpected console statement                           no-console
+  565:11  warning  Unexpected console statement                           no-console
+  572:5   warning  Unexpected console statement                           no-console
+  596:5   warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/date-utils.ts
+   16:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   52:9   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   82:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/development-helpers.ts
+  72:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/email-service.ts
+  228:1  warning  This line has a length of 157. Maximum allowed is 100  max-len
+  364:9  warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/error-logger.ts
+  11:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:7   warning  Unexpected console statement              no-console
+  31:9   warning  Unexpected console statement              no-console
+  60:94  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/form-enhance.ts
+  6:10  error  'validators' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/form-validation.ts
+  43:1  warning  This line has a length of 109. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/hours-utils.ts
+   58:7   warning  Unexpected console statement                           no-console
+   70:5   warning  Unexpected console statement                           no-console
+  108:1   warning  This line has a length of 120. Maximum allowed is 100  max-len
+  109:1   warning  This line has a length of 125. Maximum allowed is 100  max-len
+  110:1   warning  This line has a length of 126. Maximum allowed is 100  max-len
+  111:1   warning  This line has a length of 128. Maximum allowed is 100  max-len
+  112:1   warning  This line has a length of 127. Maximum allowed is 100  max-len
+  113:1   warning  This line has a length of 124. Maximum allowed is 100  max-len
+  114:1   warning  This line has a length of 121. Maximum allowed is 100  max-len
+  146:1   warning  This line has a length of 101. Maximum allowed is 100  max-len
+  163:43  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/image-preloader.ts
+  120:9  error  'primarySrc' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/media-storage.ts
+   72:7   warning  Unexpected console statement                                                no-console
+   84:16  error    'file' is defined but never used. Allowed unused args must match /^_/u      @typescript-eslint/no-unused-vars
+   84:30  error    'filename' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+   88:16  error    'path' is defined but never used. Allowed unused args must match /^_/u      @typescript-eslint/no-unused-vars
+   92:10  error    'path' is defined but never used. Allowed unused args must match /^_/u      @typescript-eslint/no-unused-vars
+   98:55  warning  Unexpected any. Specify a different type                                    @typescript-eslint/no-explicit-any
+  118:21  warning  Unexpected any. Specify a different type                                    @typescript-eslint/no-explicit-any
+  142:5   warning  Unexpected console statement                                                no-console
+  208:5   warning  Unexpected console statement                                                no-console
+  214:1   warning  This line has a length of 123. Maximum allowed is 100                       max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/session-manager.ts
+   25:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   65:9   warning  Unexpected console statement              no-console
+   83:7   warning  Unexpected console statement              no-console
+  131:7   warning  Unexpected console statement              no-console
+  150:7   warning  Unexpected console statement              no-console
+  168:7   warning  Unexpected console statement              no-console
+  184:7   warning  Unexpected console statement              no-console
+  205:7   warning  Unexpected console statement              no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/supabase.ts
+    6:1   warning  This line has a length of 111. Maximum allowed is 100  max-len
+  133:56  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/lib/tuition-forms.ts
+  159:42  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  186:36  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  186:53  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  225:59  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  232:1   warning  This line has a length of 101. Maximum allowed is 100  max-len
+  233:1   warning  This line has a length of 102. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/middleware-adapter.ts
+  73:1  error  Expected indentation of 4 spaces but found 6   indent
+  74:1  error  Expected indentation of 4 spaces but found 6   indent
+  75:1  error  Expected indentation of 6 spaces but found 8   indent
+  77:1  error  Expected indentation of 6 spaces but found 8   indent
+  78:1  error  Expected indentation of 8 spaces but found 10  indent
+  79:1  error  Expected indentation of 8 spaces but found 10  indent
+  80:1  error  Expected indentation of 6 spaces but found 8   indent
+  81:1  error  Expected indentation of 4 spaces but found 6   indent
+  83:1  error  Expected indentation of 4 spaces but found 6   indent
+  84:1  error  Expected indentation of 4 spaces but found 6   indent
+  85:1  error  Expected indentation of 2 spaces but found 4   indent
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/404.astro
+   3:16  error    'Search' is defined but never used                     @typescript-eslint/no-unused-vars
+  18:1   warning  This line has a length of 112. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/[...path].astro
+  7:7  error  'url' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/about.astro
+   6:8  error    'ImageGrid' is defined but never used                  @typescript-eslint/no-unused-vars
+  37:1  warning  This line has a length of 179. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/analytics.astro
+  11:3   error    'Users' is defined but never used                      @typescript-eslint/no-unused-vars
+  19:3   error    'Phone' is defined but never used                      @typescript-eslint/no-unused-vars
+  20:3   error    'MapPin' is defined but never used                     @typescript-eslint/no-unused-vars
+  74:1   warning  This line has a length of 104. Maximum allowed is 100  max-len
+  51:11  warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/blog/edit.astro
+   13:8  error    'ToggleSwitch' is defined but never used   @typescript-eslint/no-unused-vars
+  515:3  warning  Unused CSS selector `.auto-save-status`    astro/no-unused-css-selector
+  423:5  error    Move function declaration to program root  no-inner-declarations
+  440:9  warning  Unexpected console statement               no-console
+  444:5  error    Move function declaration to program root  no-inner-declarations
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/blog/index.astro
+  332:1   warning  This line has a length of 108. Maximum allowed is 100  max-len
+  424:1   warning  This line has a length of 126. Maximum allowed is 100  max-len
+  351:13  warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/communications.astro
+   12:3   error    'Calendar' is defined but never used                   @typescript-eslint/no-unused-vars
+   13:3   error    'Plus' is defined but never used                       @typescript-eslint/no-unused-vars
+   15:3   error    'Trash2' is defined but never used                     @typescript-eslint/no-unused-vars
+   53:1   warning  This line has a length of 103. Maximum allowed is 100  max-len
+  121:17  error    A form label must be associated with a control         astro/jsx-a11y/label-has-associated-control
+  132:17  error    A form label must be associated with a control         astro/jsx-a11y/label-has-associated-control
+  137:17  error    A form label must be associated with a control         astro/jsx-a11y/label-has-associated-control
+  309:1   warning  This line has a length of 123. Maximum allowed is 100  max-len
+  442:1   warning  This line has a length of 157. Maximum allowed is 100  max-len
+  465:1   warning  This line has a length of 132. Maximum allowed is 100  max-len
+  350:11  warning  Unexpected console statement                           no-console
+  389:7   warning  Unexpected console statement                           no-console
+  403:7   warning  Unexpected console statement                           no-console
+  417:7   warning  Unexpected console statement                           no-console
+  499:7   warning  Unexpected console statement                           no-console
+  502:7   warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/hours/edit.astro
+  588:3  warning  Unused CSS selector `.preview-pending`  astro/no-unused-css-selector
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/hours/index.astro
+  168:1   warning  This line has a length of 104. Maximum allowed is 100  max-len
+  247:1   warning  This line has a length of 117. Maximum allowed is 100  max-len
+  282:1   warning  This line has a length of 116. Maximum allowed is 100  max-len
+  291:1   warning  This line has a length of 101. Maximum allowed is 100  max-len
+  292:1   warning  This line has a length of 102. Maximum allowed is 100  max-len
+  293:1   warning  This line has a length of 104. Maximum allowed is 100  max-len
+  294:1   warning  This line has a length of 103. Maximum allowed is 100  max-len
+  295:1   warning  This line has a length of 101. Maximum allowed is 100  max-len
+  301:1   warning  This line has a length of 101. Maximum allowed is 100  max-len
+  302:1   warning  This line has a length of 102. Maximum allowed is 100  max-len
+  303:1   warning  This line has a length of 104. Maximum allowed is 100  max-len
+  304:1   warning  This line has a length of 103. Maximum allowed is 100  max-len
+  305:1   warning  This line has a length of 101. Maximum allowed is 100  max-len
+  331:1   warning  This line has a length of 114. Maximum allowed is 100  max-len
+  541:1   warning  This line has a length of 111. Maximum allowed is 100  max-len
+  269:11  warning  Unexpected console statement                           no-console
+  334:11  warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/index.astro
+  45:1  warning  This line has a length of 113. Maximum allowed is 100  max-len
+  51:1  warning  This line has a length of 138. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/newsletter.astro
+  275:1  warning  This line has a length of 105. Maximum allowed is 100  max-len
+  363:1  warning  This line has a length of 122. Maximum allowed is 100  max-len
+  370:1  warning  This line has a length of 107. Maximum allowed is 100  max-len
+  372:1  warning  This line has a length of 101. Maximum allowed is 100  max-len
+  378:1  warning  This line has a length of 105. Maximum allowed is 100  max-len
+  416:1  warning  This line has a length of 104. Maximum allowed is 100  max-len
+  466:1  warning  This line has a length of 108. Maximum allowed is 100  max-len
+  479:1  warning  This line has a length of 101. Maximum allowed is 100  max-len
+  310:9  warning  Unexpected console statement                           no-console
+  339:9  warning  Unexpected console statement                           no-console
+  423:9  warning  Unexpected console statement                           no-console
+  448:9  warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/photos/index.astro
+  105:1  warning  This line has a length of 113. Maximum allowed is 100    max-len
+  326:1  warning  This line has a length of 102. Maximum allowed is 100    max-len
+  470:3  warning  Unused CSS selector `.photos-list .photo-card`           astro/no-unused-css-selector
+  474:3  warning  Unused CSS selector `.photos-list .photo-card__preview`  astro/no-unused-css-selector
+  478:3  warning  Unused CSS selector `.photos-list .photo-card__info`     astro/no-unused-css-selector
+  484:1  warning  This line has a length of 104. Maximum allowed is 100    max-len
+  350:9  warning  Unexpected console statement                             no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/photos/upload.astro
+  129:1  warning  This line has a length of 119. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/settings.astro
+  1381:2  error  Parsing error: Unknown token at 70110, expected: "<Footer", actual: "</main>\n  "
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/staff/edit.astro
+  551:3  warning  Unused CSS selector `.auto-save-status`    astro/no-unused-css-selector
+  430:5  error    Move function declaration to program root  no-inner-declarations
+  446:9  warning  Unexpected console statement               no-console
+  450:5  error    Move function declaration to program root  no-inner-declarations
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/staff/index.astro
+  225:11  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/teachers.astro
+    5:1   error    Unreachable code                                       no-unreachable
+    8:34  error    'Edit' is defined but never used                       @typescript-eslint/no-unused-vars
+    8:40  error    'Trash2' is defined but never used                     @typescript-eslint/no-unused-vars
+    8:57  error    'Eye' is defined but never used                        @typescript-eslint/no-unused-vars
+  303:1   warning  This line has a length of 112. Maximum allowed is 100  max-len
+  307:1   warning  This line has a length of 412. Maximum allowed is 100  max-len
+  315:1   warning  This line has a length of 110. Maximum allowed is 100  max-len
+  323:1   warning  This line has a length of 127. Maximum allowed is 100  max-len
+  329:1   warning  This line has a length of 139. Maximum allowed is 100  max-len
+  475:1   warning  This line has a length of 109. Maximum allowed is 100  max-len
+   31:11  warning  Unexpected console statement                           no-console
+  284:9   warning  Unexpected console statement                           no-console
+  447:9   warning  Unexpected console statement                           no-console
+  488:9   warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/tuition/edit.astro
+  273:12  error  Parsing error: JSX expressions must have one parent element
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/tuition/index.astro
+   26:1   warning  This line has a length of 106. Maximum allowed is 100  max-len
+  335:1   warning  This line has a length of 108. Maximum allowed is 100  max-len
+  336:1   warning  This line has a length of 104. Maximum allowed is 100  max-len
+  356:1   warning  This line has a length of 129. Maximum allowed is 100  max-len
+  335:3   warning  This line has a length of 106. Maximum allowed is 100  max-len
+  336:3   warning  This line has a length of 102. Maximum allowed is 100  max-len
+  361:11  warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admin/users.astro
+  313:1  warning  This line has a length of 150. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admissions.astro
+   64:1  warning  This line has a length of 120. Maximum allowed is 100  max-len
+   92:1  warning  This line has a length of 103. Maximum allowed is 100  max-len
+  118:1  warning  This line has a length of 113. Maximum allowed is 100  max-len
+  138:1  warning  This line has a length of 115. Maximum allowed is 100  max-len
+  139:1  warning  This line has a length of 106. Maximum allowed is 100  max-len
+  243:1  warning  This line has a length of 111. Maximum allowed is 100  max-len
+  249:1  warning  This line has a length of 102. Maximum allowed is 100  max-len
+  255:1  warning  This line has a length of 105. Maximum allowed is 100  max-len
+  261:1  warning  This line has a length of 107. Maximum allowed is 100  max-len
+  275:1  warning  This line has a length of 115. Maximum allowed is 100  max-len
+  276:1  warning  This line has a length of 118. Maximum allowed is 100  max-len
+  281:1  warning  This line has a length of 105. Maximum allowed is 100  max-len
+  306:1  warning  This line has a length of 111. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admissions/schedule-tour.astro
+   29:1   warning  This line has a length of 139. Maximum allowed is 100  max-len
+  274:44  error    'schoolPhone' is defined but never used                @typescript-eslint/no-unused-vars
+  322:11  warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/admissions/tuition-calculator.astro
+    6:48  error    'Shield' is defined but never used                     @typescript-eslint/no-unused-vars
+    6:56  error    'Star' is defined but never used                       @typescript-eslint/no-unused-vars
+    6:62  error    'Percent' is defined but never used                    @typescript-eslint/no-unused-vars
+    6:71  error    'CreditCard' is defined but never used                 @typescript-eslint/no-unused-vars
+  139:1   warning  This line has a length of 143. Maximum allowed is 100  max-len
+  298:1   warning  This line has a length of 354. Maximum allowed is 100  max-len
+  327:1   warning  This line has a length of 123. Maximum allowed is 100  max-len
+  333:1   warning  This line has a length of 137. Maximum allowed is 100  max-len
+  339:1   warning  This line has a length of 125. Maximum allowed is 100  max-len
+  345:1   warning  This line has a length of 140. Maximum allowed is 100  max-len
+  361:1   warning  This line has a length of 161. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/admin-preview.ts
+   3:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/admin/communications.ts
+   14:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   43:5   warning  Unexpected console statement              no-console
+   51:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:7   warning  Unexpected console statement              no-console
+  126:5   warning  Unexpected console statement              no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/admin/communications/templates.ts
+   11:69  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   24:5   warning  Unexpected console statement                           no-console
+   32:87  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   60:9   warning  Unexpected console statement                           no-console
+   73:1   warning  This line has a length of 127. Maximum allowed is 100  max-len
+   98:7   warning  Unexpected console statement                           no-console
+  122:5   warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/admin/newsletter.ts
+   15:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   69:5   warning  Unexpected console statement              no-console
+   77:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  177:5   warning  Unexpected console statement              no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/admin/settings.ts
+   10:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   25:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   35:5   warning  Unexpected console statement              no-console
+   43:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   83:9   warning  Unexpected console statement              no-console
+  110:5   warning  Unexpected console statement              no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/admin/settings/update.ts
+    9:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   20:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   27:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   69:7   warning  Unexpected console statement              no-console
+   83:5   warning  Unexpected console statement              no-console
+   92:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  160:9   warning  Unexpected console statement              no-console
+  185:5   warning  Unexpected console statement              no-console
+  194:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  231:7   warning  Unexpected console statement              no-console
+  244:5   warning  Unexpected console statement              no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/auth/check.ts
+   2:10  error    'checkAdminAuth' is defined but never used  @typescript-eslint/no-unused-vars
+  43:5   warning  Unexpected console statement                no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/auth/send-magic-link-adapter.ts
+   24:7  warning  Unexpected console statement  no-console
+  104:9  warning  Unexpected console statement  no-console
+  120:5  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/auth/send-magic-link.ts
+   34:7  warning  Unexpected console statement  no-console
+  115:7  warning  Unexpected console statement  no-console
+  136:5  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/cms/entries.ts
+   2:10  error    'checkAdminAuth' is defined but never used  @typescript-eslint/no-unused-vars
+  52:5   warning  Unexpected console statement                no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/cms/entry.ts
+    9:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   55:5   warning  Unexpected console statement              no-console
+   66:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:5   warning  Unexpected console statement              no-console
+  121:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  166:5   warning  Unexpected console statement              no-console
+  177:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  229:5   warning  Unexpected console statement              no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/cms/media.ts
+   41:5  warning  Unexpected console statement  no-console
+  112:5  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/cms/settings/[key].ts
+    9:47  error    'cookies' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+   44:5   warning  Unexpected console statement                                               no-console
+  110:5   warning  Unexpected console statement                                               no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/communications.ts
+   6:11  error    'type' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  31:5   warning  Unexpected console statement               no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/donations/create-payment-intent.ts
+  105:1  warning  This line has a length of 116. Maximum allowed is 100  max-len
+  123:5  warning  Unexpected console statement                           no-console
+  161:5  warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/email/send.ts
+   3:1  error    '@lib/email-service' import is duplicated  no-duplicate-imports
+  60:5  warning  Unexpected console statement               no-console
+  89:5  warning  Unexpected console statement               no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/enrollments/create-payment-intent.ts
+   87:5  warning  Unexpected console statement  no-console
+  127:5  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/media/upload.ts
+  10:93  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  81:5   warning  Unexpected console statement              no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/newsletter/subscribe.ts
+  124:5  warning  Unexpected console statement  no-console
+  147:5  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/schedule-tour.ts
+   42:7  warning  Unexpected console statement  no-console
+   43:7  warning  Unexpected console statement  no-console
+   44:7  warning  Unexpected console statement  no-console
+   45:7  warning  Unexpected console statement  no-console
+   68:7  warning  Unexpected console statement  no-console
+   96:7  warning  Unexpected console statement  no-console
+  105:5  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/storage/stats.ts
+  40:7  warning  Unexpected console statement  no-console
+  59:5  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/webhooks/netlify-form.ts
+  20:1  warning  This line has a length of 106. Maximum allowed is 100  max-len
+  39:7  warning  Unexpected console statement                           no-console
+  60:7  warning  Unexpected console statement                           no-console
+  68:5  warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/api/webhooks/stripe.ts
+   22:5  warning  Unexpected console statement  no-console
+   30:5  warning  Unexpected console statement  no-console
+   51:7  warning  Unexpected console statement  no-console
+   57:5  warning  Unexpected console statement  no-console
+   62:3  warning  Unexpected console statement  no-console
+   79:7  warning  Unexpected console statement  no-console
+  126:7  warning  Unexpected console statement  no-console
+  142:7  warning  Unexpected console statement  no-console
+  160:7  warning  Unexpected console statement  no-console
+  173:7  warning  Unexpected console statement  no-console
+  184:5  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/auth/callback.astro
+   63:1   warning  This line has a length of 102. Maximum allowed is 100  max-len
+   76:1   warning  This line has a length of 114. Maximum allowed is 100  max-len
+  127:1   warning  This line has a length of 115. Maximum allowed is 100  max-len
+   70:43  error    'sessionError' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   75:11  warning  Unexpected console statement                           no-console
+   76:5   warning  This line has a length of 110. Maximum allowed is 100  max-len
+   76:19  error    'data' is assigned a value but never used              @typescript-eslint/no-unused-vars
+   78:13  warning  Unexpected console statement                           no-console
+  112:9   warning  Unexpected console statement                           no-console
+  113:9   warning  Unexpected console statement                           no-console
+  114:9   warning  Unexpected console statement                           no-console
+  118:11  warning  Unexpected console statement                           no-console
+  122:21  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  123:9   warning  Unexpected console statement                           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/auth/clerk-callback.astro
+  42:8  error  Parsing error: JSX expressions must have one parent element
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/auth/clerk-sign-in.astro
+  104:8  error  Parsing error: JSX expressions must have one parent element
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/auth/login.astro
+   6:2  error  'Layout' is not defined    no-undef
+  11:4  error  'AuthForm' is not defined  no-undef
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/auth/logout.astro
+  2:8  error  'Layout' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/auth/magic-link-debug.astro
+   51:1   warning  This line has a length of 107. Maximum allowed is 100  max-len
+  111:1   warning  This line has a length of 117. Maximum allowed is 100  max-len
+  112:1   warning  This line has a length of 119. Maximum allowed is 100  max-len
+   62:17  error    'data' is assigned a value but never used              @typescript-eslint/no-unused-vars
+   77:21  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   98:21  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/blog.astro
+   5:20  error    'Clock' is defined but never used                      @typescript-eslint/no-unused-vars
+  93:1   warning  This line has a length of 112. Maximum allowed is 100  max-len
+  93:92  error    'author' is assigned a value but never used            @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/blog/[slug].astro
+  186:1  warning  This line has a length of 119. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/coming-soon-comprehensive.astro
+  663:1  warning  This line has a length of 112. Maximum allowed is 100  max-len
+  743:1  warning  This line has a length of 106. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/coming-soon.astro
+     4:10  error    'getEntry' is defined but never used                                 @typescript-eslint/no-unused-vars
+    10:7   error    'tuitionPrograms' is assigned a value but never used                 @typescript-eslint/no-unused-vars
+   153:20  warning  Unused CSS selector `h5`                                             astro/no-unused-css-selector
+   153:24  warning  Unused CSS selector `h6`                                             astro/no-unused-css-selector
+   940:5   warning  Unused CSS selector `.success-message.show`                          astro/no-unused-css-selector
+  1030:1   warning  This line has a length of 102. Maximum allowed is 100                max-len
+  1034:1   warning  This line has a length of 111. Maximum allowed is 100                max-len
+  1184:1   warning  This line has a length of 102. Maximum allowed is 100                max-len
+  1220:1   warning  This line has a length of 114. Maximum allowed is 100                max-len
+  1335:1   warning  This line has a length of 101. Maximum allowed is 100                max-len
+  1360:1   warning  This line has a length of 116. Maximum allowed is 100                max-len
+  1361:1   warning  This line has a length of 106. Maximum allowed is 100                max-len
+  1374:46  error    'e' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  1399:5   error    Expected indentation of 2 spaces but found 0                         indent
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/contact-enhanced.astro
+  9:36  error  'formatPhoneNumber' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/contact-success.astro
+  29:1  warning  This line has a length of 112. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/contact.astro
+   44:1   warning  This line has a length of 108. Maximum allowed is 100                max-len
+  340:1   warning  This line has a length of 108. Maximum allowed is 100                max-len
+  375:1   warning  This line has a length of 138. Maximum allowed is 100                max-len
+  397:1   warning  This line has a length of 108. Maximum allowed is 100                max-len
+  437:1   warning  This line has a length of 112. Maximum allowed is 100                max-len
+  481:40  error    'e' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/deployment-test.astro
+  6:1  error  <html> elements must have the lang prop  astro/jsx-a11y/html-has-lang
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/donate.astro
+    8:7  error    'schoolInfo' is assigned a value but never used        @typescript-eslint/no-unused-vars
+   37:1  warning  This line has a length of 138. Maximum allowed is 100  max-len
+   55:1  warning  This line has a length of 283. Maximum allowed is 100  max-len
+   66:1  warning  This line has a length of 139. Maximum allowed is 100  max-len
+   72:1  warning  This line has a length of 113. Maximum allowed is 100  max-len
+   78:1  warning  This line has a length of 104. Maximum allowed is 100  max-len
+  103:1  warning  This line has a length of 145. Maximum allowed is 100  max-len
+  127:1  warning  This line has a length of 118. Maximum allowed is 100  max-len
+  139:1  warning  This line has a length of 109. Maximum allowed is 100  max-len
+  151:1  warning  This line has a length of 114. Maximum allowed is 100  max-len
+  167:1  warning  This line has a length of 106. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/donate/thank-you.astro
+    5:28  error    'Download' is defined but never used                   @typescript-eslint/no-unused-vars
+   33:1   warning  This line has a length of 126. Maximum allowed is 100  max-len
+   65:1   warning  This line has a length of 124. Maximum allowed is 100  max-len
+  105:1   warning  This line has a length of 161. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/enrollment.astro
+   31:1  warning  This line has a length of 105. Maximum allowed is 100  max-len
+   83:1  warning  This line has a length of 115. Maximum allowed is 100  max-len
+  138:1  warning  This line has a length of 105. Maximum allowed is 100  max-len
+  146:1  warning  This line has a length of 105. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/enrollment/thank-you.astro
+   33:1  warning  This line has a length of 134. Maximum allowed is 100  max-len
+   97:1  warning  This line has a length of 134. Maximum allowed is 100  max-len
+  138:1  warning  This line has a length of 130. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/index-original.astro
+  17:10  error    'CheckCircle' is defined but never used                @typescript-eslint/no-unused-vars
+  17:23  error    'ArrowRight' is defined but never used                 @typescript-eslint/no-unused-vars
+  42:1   warning  This line has a length of 232. Maximum allowed is 100  max-len
+  67:1   warning  This line has a length of 288. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/index.astro
+   67:1   warning  This line has a length of 232. Maximum allowed is 100                max-len
+  103:42  error    'i' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  240:1   warning  This line has a length of 113. Maximum allowed is 100                max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/non-discrimination-policy.astro
+  24:1  warning  This line has a length of 149. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/our-principles.astro
+    6:81  error    'Star' is defined but never used                       @typescript-eslint/no-unused-vars
+    6:87  error    'Shield' is defined but never used                     @typescript-eslint/no-unused-vars
+   34:1   warning  This line has a length of 112. Maximum allowed is 100  max-len
+   35:1   warning  This line has a length of 113. Maximum allowed is 100  max-len
+   47:1   warning  This line has a length of 110. Maximum allowed is 100  max-len
+   48:1   warning  This line has a length of 112. Maximum allowed is 100  max-len
+   61:1   warning  This line has a length of 108. Maximum allowed is 100  max-len
+  123:1   warning  This line has a length of 126. Maximum allowed is 100  max-len
+  124:1   warning  This line has a length of 129. Maximum allowed is 100  max-len
+  125:1   warning  This line has a length of 113. Maximum allowed is 100  max-len
+  146:1   warning  This line has a length of 146. Maximum allowed is 100  max-len
+  198:1   warning  This line has a length of 116. Maximum allowed is 100  max-len
+  230:1   warning  This line has a length of 115. Maximum allowed is 100  max-len
+  282:1   warning  This line has a length of 122. Maximum allowed is 100  max-len
+  314:1   warning  This line has a length of 111. Maximum allowed is 100  max-len
+  366:1   warning  This line has a length of 116. Maximum allowed is 100  max-len
+  398:1   warning  This line has a length of 105. Maximum allowed is 100  max-len
+  437:1   warning  This line has a length of 107. Maximum allowed is 100  max-len
+  438:1   warning  This line has a length of 110. Maximum allowed is 100  max-len
+  447:1   warning  This line has a length of 152. Maximum allowed is 100  max-len
+  448:1   warning  This line has a length of 102. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/programs.astro
+   24:1  warning  This line has a length of 141. Maximum allowed is 100  max-len
+   37:1  warning  This line has a length of 220. Maximum allowed is 100  max-len
+  246:1  warning  This line has a length of 138. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/resources/faq.astro
+    5:23  error    'ChevronUp' is defined but never used                  @typescript-eslint/no-unused-vars
+   24:1   warning  This line has a length of 153. Maximum allowed is 100  max-len
+   78:1   warning  This line has a length of 124. Maximum allowed is 100  max-len
+   79:1   warning  This line has a length of 127. Maximum allowed is 100  max-len
+   80:1   warning  This line has a length of 120. Maximum allowed is 100  max-len
+  159:1   warning  This line has a length of 116. Maximum allowed is 100  max-len
+  162:1   warning  This line has a length of 109. Maximum allowed is 100  max-len
+  389:3   warning  Unused CSS selector `.faq-toggle svg`                  astro/no-unused-css-selector
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/resources/parent-resources.astro
+  107:1  warning  This line has a length of 120. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/test-email.astro
+   79:5  warning  Unused CSS selector `#result.success`                  astro/no-unused-css-selector
+   85:5  warning  Unused CSS selector `#result.error`                    astro/no-unused-css-selector
+   91:5  warning  Unused CSS selector `#result.info`                     astro/no-unused-css-selector
+  114:5  warning  Unused CSS selector `.spinner`                         astro/no-unused-css-selector
+  157:1  warning  This line has a length of 125. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/test-env.astro
+  14:1  error    <html> elements must have the lang prop  astro/jsx-a11y/html-has-lang
+  28:1  warning  Unexpected console statement             no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/pages/test-magic-link.astro
+  175:1   warning  This line has a length of 109. Maximum allowed is 100  max-len
+  191:19  error    'data' is assigned a value but never used              @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/accessibility/contact-page-icons.test.ts
+    8:10  error    'screen' is defined but never used                    @typescript-eslint/no-unused-vars
+   15:7   error    'document' is assigned a value but never used         @typescript-eslint/no-unused-vars
+   19:11  error    'contactPagePath' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   22:11  error    'astroSource' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  121:79  error    Unnecessary escape character: \/                      no-useless-escape
+  149:79  error    Unnecessary escape character: \/                      no-useless-escape
+  270:7   warning  Unexpected console statement                          no-console
+  271:7   warning  Unexpected console statement                          no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/accessibility/contact-page-map.test.ts
+   10:10  error    'JSDOM' is defined but never used                      @typescript-eslint/no-unused-vars
+  165:1   warning  This line has a length of 107. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/accessibility/footer-contrast.test.ts
+  221:13  error  'focusableSelectors' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/accessibility/form-validation-accessibility.test.ts
+   6:32  error  'beforeEach' is defined but never used             @typescript-eslint/no-unused-vars
+  10:7   error  'mockDocument' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  28:7   error  'mockWindow' is assigned a value but never used    @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/accessibility/form-validation.a11y.test.ts
+   39:13  error  'newsletterForm' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  148:15  error  'input' is assigned a value but never used           @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/accessibility/photo-management.test.ts
+  304:11  error    'currentElement' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  315:23  warning  Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/api/admin-newsletter.test.ts
+    1:48  error    'afterEach' is defined but never used     @typescript-eslint/no-unused-vars
+    2:15  error    'APIRoute' is defined but never used      @typescript-eslint/no-unused-vars
+   46:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   49:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   52:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   83:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  108:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  145:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  171:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  194:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  214:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  236:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  263:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  291:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  328:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  353:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  381:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  402:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  433:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  450:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/api/admin-settings-update.test.ts
+    2:15   error    'APIRoute' is defined but never used                   @typescript-eslint/no-unused-vars
+   19:27   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   38:20   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   39:19   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   40:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   41:24   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   55:21   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   67:23   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   77:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   83:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  110:1    warning  This line has a length of 108. Maximum allowed is 100  max-len
+  110:104  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  130:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  140:1    warning  This line has a length of 108. Maximum allowed is 100  max-len
+  140:104  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  148:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  153:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  159:1    warning  This line has a length of 108. Maximum allowed is 100  max-len
+  159:104  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  167:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  172:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  181:1    warning  This line has a length of 108. Maximum allowed is 100  max-len
+  181:104  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  189:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  194:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  203:1    warning  This line has a length of 108. Maximum allowed is 100  max-len
+  203:104  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  211:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  216:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  232:1    warning  This line has a length of 108. Maximum allowed is 100  max-len
+  232:104  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  240:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  245:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  266:1    warning  This line has a length of 108. Maximum allowed is 100  max-len
+  266:104  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  283:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  295:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  327:86   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  344:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  356:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  380:86   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  396:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  401:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  408:86   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  416:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  428:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  435:86   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  443:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  454:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  461:86   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  471:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  496:1    warning  This line has a length of 103. Maximum allowed is 100  max-len
+  496:99   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  512:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  527:1    warning  This line has a length of 103. Maximum allowed is 100  max-len
+  527:99   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  535:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  544:1    warning  This line has a length of 103. Maximum allowed is 100  max-len
+  544:99   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  552:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  574:1    warning  This line has a length of 111. Maximum allowed is 100  max-len
+  574:107  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  583:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  603:1    warning  This line has a length of 103. Maximum allowed is 100  max-len
+  603:99   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  613:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  618:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  636:87   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  646:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  651:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  667:87   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  678:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  684:96   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  692:26   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  697:25   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  703:96   warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/api/cms-media.test.ts
+   33:7   error    'mockRequest' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   34:20  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+   77:60  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  102:60  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  121:60  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  138:60  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  148:20  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  192:85  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  219:85  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  240:85  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  264:85  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  300:85  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  318:85  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  327:20  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  346:60  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  376:60  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/api/newsletter-subscribe.test.ts
+    1:48  error    'afterEach' is defined but never used     @typescript-eslint/no-unused-vars
+    2:15  error    'APIRoute' is defined but never used      @typescript-eslint/no-unused-vars
+   44:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   55:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   78:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   81:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  108:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  142:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  167:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  195:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  224:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  247:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  267:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  287:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  301:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  326:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  342:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  353:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  362:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  372:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/api/settings-update-unit.test.ts
+  309:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  339:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/components/hours-widget.test.ts
+    3:10  error    'supabase' is defined but never used        @typescript-eslint/no-unused-vars
+   42:23  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   93:37  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  268:11  error    'hours' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  269:11  error    'time' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  288:7   warning  Unexpected console statement                no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/components/phone-formatting.test.ts
+   6:32  error    'beforeEach' is defined but never used    @typescript-eslint/no-unused-vars
+   6:44  error    'vi' is defined but never used            @typescript-eslint/no-unused-vars
+  67:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  68:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/content-verification/content-verification.config.ts
+  125:1   warning  This line has a length of 116. Maximum allowed is 100  max-len
+  130:51  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  158:1   warning  This line has a length of 153. Maximum allowed is 100  max-len
+  171:29  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  179:29  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/content-verification/cross-page-consistency.test.ts
+   17:15  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   18:17  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   19:17  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   20:20  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   21:17  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   22:28  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   30:1   warning  This line has a length of 102. Maximum allowed is 100  max-len
+   46:36  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  307:1   warning  This line has a length of 113. Maximum allowed is 100  max-len
+  308:1   warning  This line has a length of 113. Maximum allowed is 100  max-len
+  323:44  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  366:15  error    'isLead' is assigned a value but never used            @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/content-verification/database-display-alignment.test.ts
+    1:32  error    'beforeAll' is defined but never used                  @typescript-eslint/no-unused-vars
+  233:1   warning  This line has a length of 112. Maximum allowed is 100  max-len
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/deployment-fixes.test.ts
+    7:32  error    'beforeEach' is defined but never used  @typescript-eslint/no-unused-vars
+    7:44  error    'afterEach' is defined but never used   @typescript-eslint/no-unused-vars
+  184:13  warning  Unexpected console statement            no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/error-handling/magic-link-errors.test.ts
+   26:33  warning  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+   80:19  error    'response' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  607:25  warning  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/fixtures/test-browser-detailed.js
+    1:19  error    Require statement not part of import statement  @typescript-eslint/no-var-requires
+   30:3   warning  Unexpected console statement                    no-console
+  127:5   warning  Unexpected console statement                    no-console
+  128:5   warning  Unexpected console statement                    no-console
+  129:5   warning  Unexpected console statement                    no-console
+  130:5   warning  Unexpected console statement                    no-console
+  133:5   warning  Unexpected console statement                    no-console
+  144:3   warning  Unexpected console statement                    no-console
+  147:3   warning  Unexpected console statement                    no-console
+  168:7   warning  Unexpected console statement                    no-console
+  169:7   warning  Unexpected console statement                    no-console
+  181:3   warning  Unexpected console statement                    no-console
+  191:5   warning  Unexpected console statement                    no-console
+  192:5   warning  Unexpected console statement                    no-console
+  193:5   warning  Unexpected console statement                    no-console
+  212:3   warning  Unexpected console statement                    no-console
+  219:5   warning  Unexpected console statement                    no-console
+  232:11  warning  Unexpected console statement                    no-console
+  253:3   warning  Unexpected console statement                    no-console
+  265:5   warning  Unexpected console statement                    no-console
+  266:5   warning  Unexpected console statement                    no-console
+  280:5   warning  Unexpected console statement                    no-console
+  293:3   warning  Unexpected console statement                    no-console
+  294:3   warning  Unexpected console statement                    no-console
+  318:3   warning  Unexpected console statement                    no-console
+  319:3   warning  Unexpected console statement                    no-console
+  320:3   warning  Unexpected console statement                    no-console
+  326:5   warning  Unexpected console statement                    no-console
+  328:7   warning  Unexpected console statement                    no-console
+  335:5   warning  Unexpected console statement                    no-console
+  337:7   warning  Unexpected console statement                    no-console
+  344:5   warning  Unexpected console statement                    no-console
+  346:7   warning  Unexpected console statement                    no-console
+  347:7   warning  Unexpected console statement                    no-console
+  354:5   warning  Unexpected console statement                    no-console
+  356:7   warning  Unexpected console statement                    no-console
+  363:5   warning  Unexpected console statement                    no-console
+  365:7   warning  Unexpected console statement                    no-console
+  372:5   warning  Unexpected console statement                    no-console
+  374:7   warning  Unexpected console statement                    no-console
+  379:3   warning  Unexpected console statement                    no-console
+  381:5   warning  Unexpected console statement                    no-console
+  383:5   warning  Unexpected console statement                    no-console
+  384:5   warning  Unexpected console statement                    no-console
+  385:5   warning  Unexpected console statement                    no-console
+  386:5   warning  Unexpected console statement                    no-console
+  387:5   warning  Unexpected console statement                    no-console
+  388:5   warning  Unexpected console statement                    no-console
+  389:5   warning  Unexpected console statement                    no-console
+  391:3   warning  Unexpected console statement                    no-console
+  395:18  warning  Unexpected console statement                    no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/fixtures/test-bug-047.js
+  11:1  warning  Unexpected console statement  no-console
+  14:1  warning  Unexpected console statement  no-console
+  21:5  warning  Unexpected console statement  no-console
+  23:5  warning  Unexpected console statement  no-console
+  29:3  warning  Unexpected console statement  no-console
+  33:1  warning  Unexpected console statement  no-console
+  36:1  warning  Unexpected console statement  no-console
+  48:5  warning  Unexpected console statement  no-console
+  51:5  warning  Unexpected console statement  no-console
+  53:5  warning  Unexpected console statement  no-console
+  56:5  warning  Unexpected console statement  no-console
+  62:7  warning  Unexpected console statement  no-console
+  64:7  warning  Unexpected console statement  no-console
+  68:5  warning  Unexpected console statement  no-console
+  69:5  warning  Unexpected console statement  no-console
+  70:5  warning  Unexpected console statement  no-console
+  71:5  warning  Unexpected console statement  no-console
+  74:5  warning  Unexpected console statement  no-console
+  76:7  warning  Unexpected console statement  no-console
+  78:7  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/fixtures/test-bug-048.js
+    8:14  error    Require statement not part of import statement  @typescript-eslint/no-var-requires
+    9:18  error    Require statement not part of import statement  @typescript-eslint/no-var-requires
+   10:14  error    Require statement not part of import statement  @typescript-eslint/no-var-requires
+   13:1   warning  Unexpected console statement                    no-console
+   17:3   warning  Unexpected console statement                    no-console
+   20:3   warning  Unexpected console statement                    no-console
+   21:3   warning  Unexpected console statement                    no-console
+   22:3   warning  Unexpected console statement                    no-console
+   23:3   warning  Unexpected console statement                    no-console
+   28:3   warning  Unexpected console statement                    no-console
+   31:5   warning  Unexpected console statement                    no-console
+   33:5   warning  Unexpected console statement                    no-console
+   35:3   warning  Unexpected console statement                    no-console
+   40:3   warning  Unexpected console statement                    no-console
+   49:7   warning  Unexpected console statement                    no-console
+   53:9   warning  Unexpected console statement                    no-console
+   57:9   warning  Unexpected console statement                    no-console
+   64:7   warning  Unexpected console statement                    no-console
+   72:3   warning  Unexpected console statement                    no-console
+   80:7   warning  Unexpected console statement                    no-console
+   81:29  warning  Unexpected console statement                    no-console
+   83:7   warning  Unexpected console statement                    no-console
+   86:5   warning  Unexpected console statement                    no-console
+   88:3   warning  Unexpected console statement                    no-console
+   93:3   warning  Unexpected console statement                    no-console
+   97:7   warning  Unexpected console statement                    no-console
+   98:7   warning  Unexpected console statement                    no-console
+  100:7   warning  Unexpected console statement                    no-console
+  103:5   warning  Unexpected console statement                    no-console
+  105:3   warning  Unexpected console statement                    no-console
+  110:3   warning  Unexpected console statement                    no-console
+  113:3   warning  Unexpected console statement                    no-console
+  117:7   warning  Unexpected console statement                    no-console
+  124:7   warning  Unexpected console statement                    no-console
+  125:7   warning  Unexpected console statement                    no-console
+  132:7   warning  Unexpected console statement                    no-console
+  137:7   warning  Unexpected console statement                    no-console
+  139:9   warning  Unexpected console statement                    no-console
+  147:3   warning  Unexpected console statement                    no-console
+  154:7   warning  Unexpected console statement                    no-console
+  156:9   warning  Unexpected console statement                    no-console
+  160:5   warning  Unexpected console statement                    no-console
+  168:7   warning  Unexpected console statement                    no-console
+  174:3   warning  Unexpected console statement                    no-console
+  187:3   warning  Unexpected console statement                    no-console
+  188:3   warning  Unexpected console statement                    no-console
+  189:3   warning  Unexpected console statement                    no-console
+  190:3   warning  Unexpected console statement                    no-console
+  191:3   warning  Unexpected console statement                    no-console
+  192:3   warning  Unexpected console statement                    no-console
+  193:3   warning  Unexpected console statement                    no-console
+  194:3   warning  Unexpected console statement                    no-console
+  195:3   warning  Unexpected console statement                    no-console
+  196:3   warning  Unexpected console statement                    no-console
+  197:3   warning  Unexpected console statement                    no-console
+  198:3   warning  Unexpected console statement                    no-console
+  202:24  warning  Unexpected console statement                    no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/fixtures/test-database-connectivity.ts
+   8:1   warning  This line has a length of 105. Maximum allowed is 100  max-len
+  11:17  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/fixtures/test-deployment-verification.js
+   41:5  warning  Unexpected console statement  no-console
+   64:5  warning  Unexpected console statement  no-console
+   74:9  warning  Unexpected console statement  no-console
+   86:9  warning  Unexpected console statement  no-console
+   93:7  warning  Unexpected console statement  no-console
+   98:5  warning  Unexpected console statement  no-console
+  107:9  warning  Unexpected console statement  no-console
+  109:9  warning  Unexpected console statement  no-console
+  119:9  warning  Unexpected console statement  no-console
+  126:9  warning  Unexpected console statement  no-console
+  129:9  warning  Unexpected console statement  no-console
+  138:9  warning  Unexpected console statement  no-console
+  140:9  warning  Unexpected console statement  no-console
+  145:7  warning  Unexpected console statement  no-console
+  150:5  warning  Unexpected console statement  no-console
+  184:9  warning  Unexpected console statement  no-console
+  191:9  warning  Unexpected console statement  no-console
+  194:9  warning  Unexpected console statement  no-console
+  202:9  warning  Unexpected console statement  no-console
+  208:9  warning  Unexpected console statement  no-console
+  210:9  warning  Unexpected console statement  no-console
+  215:7  warning  Unexpected console statement  no-console
+  220:5  warning  Unexpected console statement  no-console
+  233:7  warning  Unexpected console statement  no-console
+  245:7  warning  Unexpected console statement  no-console
+  252:7  warning  Unexpected console statement  no-console
+  263:5  warning  Unexpected console statement  no-console
+  264:5  warning  Unexpected console statement  no-console
+  265:5  warning  Unexpected console statement  no-console
+  266:5  warning  Unexpected console statement  no-console
+  267:5  warning  Unexpected console statement  no-console
+  278:5  warning  Unexpected console statement  no-console
+  279:5  warning  Unexpected console statement  no-console
+  282:5  warning  Unexpected console statement  no-console
+  283:5  warning  Unexpected console statement  no-console
+  284:5  warning  Unexpected console statement  no-console
+  285:5  warning  Unexpected console statement  no-console
+  286:5  warning  Unexpected console statement  no-console
+  287:5  warning  Unexpected console statement  no-console
+  290:5  warning  Unexpected console statement  no-console
+  292:7  warning  Unexpected console statement  no-console
+  294:5  warning  Unexpected console statement  no-console
+  298:7  warning  Unexpected console statement  no-console
+  300:9  warning  Unexpected console statement  no-console
+  302:7  warning  Unexpected console statement  no-console
+  310:5  warning  Unexpected console statement  no-console
+  312:7  warning  Unexpected console statement  no-console
+  313:7  warning  Unexpected console statement  no-console
+  314:7  warning  Unexpected console statement  no-console
+  316:9  warning  Unexpected console statement  no-console
+  319:7  warning  Unexpected console statement  no-console
+  320:7  warning  Unexpected console statement  no-console
+  321:7  warning  Unexpected console statement  no-console
+  327:5  warning  Unexpected console statement  no-console
+  344:7  warning  Unexpected console statement  no-console
+  358:3  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/fixtures/test-newsletter-endpoint.js
+  10:3  warning  Unexpected console statement  no-console
+  14:5  warning  Unexpected console statement  no-console
+  30:5  warning  Unexpected console statement  no-console
+  31:5  warning  Unexpected console statement  no-console
+  34:7  warning  Unexpected console statement  no-console
+  36:7  warning  Unexpected console statement  no-console
+  40:5  warning  Unexpected console statement  no-console
+  53:5  warning  Unexpected console statement  no-console
+  54:5  warning  Unexpected console statement  no-console
+  57:7  warning  Unexpected console statement  no-console
+  59:7  warning  Unexpected console statement  no-console
+  63:5  warning  Unexpected console statement  no-console
+  76:5  warning  Unexpected console statement  no-console
+  77:5  warning  Unexpected console statement  no-console
+  80:7  warning  Unexpected console statement  no-console
+  82:7  warning  Unexpected console statement  no-console
+  86:5  warning  Unexpected console statement  no-console
+  87:5  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/fixtures/test-settings-manual.js
+   25:3   warning  Unexpected console statement  no-console
+  192:14  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/fixtures/test-settings-update-api.js
+   8:3   warning  Unexpected console statement  no-console
+  11:3   warning  Unexpected console statement  no-console
+  25:5   warning  Unexpected console statement  no-console
+  26:5   warning  Unexpected console statement  no-console
+  27:5   warning  Unexpected console statement  no-console
+  29:5   warning  Unexpected console statement  no-console
+  33:3   warning  Unexpected console statement  no-console
+  49:5   warning  Unexpected console statement  no-console
+  50:5   warning  Unexpected console statement  no-console
+  51:5   warning  Unexpected console statement  no-console
+  53:5   warning  Unexpected console statement  no-console
+  57:3   warning  Unexpected console statement  no-console
+  72:5   warning  Unexpected console statement  no-console
+  73:5   warning  Unexpected console statement  no-console
+  74:5   warning  Unexpected console statement  no-console
+  76:5   warning  Unexpected console statement  no-console
+  79:3   warning  Unexpected console statement  no-console
+  80:3   warning  Unexpected console statement  no-console
+  81:3   warning  Unexpected console statement  no-console
+  82:3   warning  Unexpected console statement  no-console
+  83:3   warning  Unexpected console statement  no-console
+  86:19  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/fixtures/test-settings-with-auth.js
+   35:3   warning  Unexpected console statement  no-console
+  348:14  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/fixtures/test-tuition-setup.js
+   9:1  warning  Unexpected console statement  no-console
+  10:1  warning  Unexpected console statement  no-console
+  17:5  warning  Unexpected console statement  no-console
+  25:7  warning  Unexpected console statement  no-console
+  27:7  warning  Unexpected console statement  no-console
+  29:9  warning  Unexpected console statement  no-console
+  34:5  warning  Unexpected console statement  no-console
+  42:7  warning  Unexpected console statement  no-console
+  44:7  warning  Unexpected console statement  no-console
+  48:5  warning  Unexpected console statement  no-console
+  54:7  warning  Unexpected console statement  no-console
+  56:7  warning  Unexpected console statement  no-console
+  60:5  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/admin-auth.test.ts
+  302:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/admin-settings-update.integration.test.ts
+    3:1   error    'astro' import is duplicated                   no-duplicate-imports
+   51:9   warning  Unexpected console statement                   no-console
+   89:9   warning  Unexpected console statement                   no-console
+  114:9   warning  Unexpected console statement                   no-console
+  136:9   warning  Unexpected console statement                   no-console
+  156:9   warning  Unexpected console statement                   no-console
+  173:9   warning  Unexpected console statement                   no-console
+  252:13  error    'response' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/api-utils-integration.test.ts
+    5:3   error    'successResponse' is defined but never used                                @typescript-eslint/no-unused-vars
+  220:14  warning  Unexpected console statement                                               no-console
+  295:46  error    'country' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/communications-api.integration.test.ts
+  7:10  error  'mockSupabase' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/communications-db.integration.test.ts
+   67:7   warning  Unexpected console statement              no-console
+  146:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  183:63  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  201:63  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  442:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  469:66  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  671:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/contact-form.integration.test.ts
+  7:10  error  'screen' is defined but never used     @typescript-eslint/no-unused-vars
+  7:18  error  'fireEvent' is defined but never used  @typescript-eslint/no-unused-vars
+  7:29  error  'waitFor' is defined but never used    @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/content-db-direct.integration.test.ts
+   54:7   warning  Unexpected console statement              no-console
+  141:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  152:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/content-db-write.test.ts
+   1:55  error    'vi' is defined but never used  @typescript-eslint/no-unused-vars
+  35:7   warning  Unexpected console statement    no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/email-service.test.ts
+   14:1   error    '@lib/email-service' import is duplicated  no-duplicate-imports
+   14:29  error    'EmailResult' is defined but never used    @typescript-eslint/no-unused-vars
+   34:21  warning  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   42:28  warning  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  515:12  warning  Unexpected console statement               no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/form-validation.integration.test.ts
+    6:32  error    'beforeEach' is defined but never used    @typescript-eslint/no-unused-vars
+  304:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/magic-link-flow.test.ts
+  434:11  error  'expectedEmailPattern' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/newsletter-api.integration.test.ts
+    5:1   error    'vitest' import is duplicated             no-duplicate-imports
+   67:86  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  101:86  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:73  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  170:63  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  185:63  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  198:63  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  228:68  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  255:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  269:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  283:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  297:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  298:81  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  318:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/photo-management-full-workflow.test.ts
+   55:19  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+   56:18  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+   57:22  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+   58:19  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  167:13  error    'mockAudit' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  167:47  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  267:60  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  268:49  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  272:50  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  362:58  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  408:53  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  424:53  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  485:24  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  504:24  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/photo-upload.test.ts
+   12:10  error    'render' is defined but never used                 @typescript-eslint/no-unused-vars
+   12:18  error    'screen' is defined but never used                 @typescript-eslint/no-unused-vars
+   12:26  error    'fireEvent' is defined but never used              @typescript-eslint/no-unused-vars
+   12:37  error    'waitFor' is defined but never used                @typescript-eslint/no-unused-vars
+   58:24  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+   82:24  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  105:24  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  298:15  error    'validateForm' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  337:24  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  414:24  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/integration/session-management.test.ts
+    2:31  error    'Session' is defined but never used                       @typescript-eslint/no-unused-vars
+   69:8   warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+   84:10  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  103:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  134:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  143:25  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  157:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  188:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  198:13  error    'expiredSessionData' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  217:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  225:13  error    'inactiveSessionData' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  244:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  275:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  277:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  309:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  311:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  329:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  345:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  362:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  378:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  408:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  440:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  470:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  506:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  549:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  576:25  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  590:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  617:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  635:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  647:25  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  661:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  681:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  697:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  724:12  warning  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/lib/api-utils.test.ts
+  256:14  warning  Unexpected console statement                                                                                         no-console
+  376:7   error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  390:7   error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  396:7   error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  421:7   error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/lib/content-db-direct.edge-cases.test.ts
+   27:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   31:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  289:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  291:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/lib/content-db-direct.test.ts
+  31:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:28  warning  Unexpected console statement              no-console
+  40:5   warning  Unexpected console statement              no-console
+  45:5   warning  Unexpected console statement              no-console
+  53:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/lib/development-helpers.test.ts
+  20:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/lib/form-validation.test.ts
+  30:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/lib/newsletter-logic.test.ts
+   52:39  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   53:44  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+   70:12  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  102:12  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  139:12  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  216:13  error    'existingEmail' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  217:13  error    'nonExistingEmail' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/lib/supabase-magic-link.test.ts
+  318:13  error  'testEmails' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  378:11  error  'result' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/performance/bundle-size.perf.test.ts
+   63:9   warning  Unexpected console statement  no-console
+   68:9   warning  Unexpected console statement  no-console
+   75:9   warning  Unexpected console statement  no-console
+   82:7   warning  Unexpected console statement  no-console
+   89:7   warning  Unexpected console statement  no-console
+  105:9   warning  Unexpected console statement  no-console
+  118:9   warning  Unexpected console statement  no-console
+  120:9   warning  Unexpected console statement  no-console
+  132:9   warning  Unexpected console statement  no-console
+  142:9   warning  Unexpected console statement  no-console
+  144:11  warning  Unexpected console statement  no-console
+  159:9   warning  Unexpected console statement  no-console
+  168:7   warning  Unexpected console statement  no-console
+  171:9   warning  Unexpected console statement  no-console
+  173:9   warning  Unexpected console statement  no-console
+  176:9   warning  Unexpected console statement  no-console
+  191:9   warning  Unexpected console statement  no-console
+  193:11  warning  Unexpected console statement  no-console
+  204:7   warning  Unexpected console statement  no-console
+  205:7   warning  Unexpected console statement  no-console
+  206:7   warning  Unexpected console statement  no-console
+  207:7   warning  Unexpected console statement  no-console
+  236:7   warning  Unexpected console statement  no-console
+  237:7   warning  Unexpected console statement  no-console
+  238:7   warning  Unexpected console statement  no-console
+  239:7   warning  Unexpected console statement  no-console
+  240:7   warning  Unexpected console statement  no-console
+  254:5   warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/performance/cache-monitoring.perf.test.ts
+   19:15  error    'getEntryDirect' is defined but never used        @typescript-eslint/no-unused-vars
+   20:21  error    'getAllSettingsDirect' is defined but never used  @typescript-eslint/no-unused-vars
+   23:1   error    '../../lib/content-cache' import is duplicated    no-duplicate-imports
+   25:3   error    'getEntry' is defined but never used              @typescript-eslint/no-unused-vars
+   26:3   error    'getAllSettings' is defined but never used        @typescript-eslint/no-unused-vars
+   45:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+   64:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+   83:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  100:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  132:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  144:7   warning  Unexpected console statement                      no-console
+  145:7   warning  Unexpected console statement                      no-console
+  146:7   warning  Unexpected console statement                      no-console
+  162:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  174:7   warning  Unexpected console statement                      no-console
+  177:7   warning  Unexpected console statement                      no-console
+  178:7   warning  Unexpected console statement                      no-console
+  195:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  214:9   warning  Unexpected console statement                      no-console
+  227:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  236:7   warning  Unexpected console statement                      no-console
+  237:7   warning  Unexpected console statement                      no-console
+  245:9   warning  Unexpected console statement                      no-console
+  253:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  280:7   warning  Unexpected console statement                      no-console
+  285:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  308:9   warning  Unexpected console statement                      no-console
+  309:9   warning  Unexpected console statement                      no-console
+  310:9   warning  Unexpected console statement                      no-console
+  321:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  324:29  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  348:7   warning  Unexpected console statement                      no-console
+  350:9   warning  Unexpected console statement                      no-console
+  356:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  365:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  374:7   warning  Unexpected console statement                      no-console
+  375:7   warning  Unexpected console statement                      no-console
+  381:9   warning  Unexpected console statement                      no-console
+  389:31  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  422:9   warning  Unexpected console statement                      no-console
+  423:9   warning  Unexpected console statement                      no-console
+  424:9   warning  Unexpected console statement                      no-console
+  433:45  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  457:47  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  479:55  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/performance/content-cache.perf.test.ts
+    6:61  error    'beforeAll' is defined but never used         @typescript-eslint/no-unused-vars
+   11:3   error    'getSetting' is defined but never used        @typescript-eslint/no-unused-vars
+   30:17  error    'getSettingDirect' is defined but never used  @typescript-eslint/no-unused-vars
+   53:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   87:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   96:13  error    'result2' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   97:13  error    'result3' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   98:13  error    'result4' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   99:13  error    'result5' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  124:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  154:32  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  155:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  190:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  212:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  213:26  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  239:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  263:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  283:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  315:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  321:32  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  339:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  340:32  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  357:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  376:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  400:31  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/performance/content-db-direct.perf.test.ts
+    1:32  error    'beforeAll' is defined but never used  @typescript-eslint/no-unused-vars
+    1:43  error    'afterAll' is defined but never used   @typescript-eslint/no-unused-vars
+   25:7   warning  Unexpected console statement           no-console
+   42:7   warning  Unexpected console statement           no-console
+   58:7   warning  Unexpected console statement           no-console
+   78:7   warning  Unexpected console statement           no-console
+  103:7   warning  Unexpected console statement           no-console
+  112:9   warning  Unexpected console statement           no-console
+  134:7   warning  Unexpected console statement           no-console
+  156:7   warning  Unexpected console statement           no-console
+  182:7   warning  Unexpected console statement           no-console
+  183:7   warning  Unexpected console statement           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/performance/content-db-write.perf.test.ts
+    1:32  error    'beforeAll' is defined but never used  @typescript-eslint/no-unused-vars
+   23:5   warning  Unexpected console statement           no-console
+   60:7   warning  Unexpected console statement           no-console
+   85:7   warning  Unexpected console statement           no-console
+   86:7   warning  Unexpected console statement           no-console
+  119:7   warning  Unexpected console statement           no-console
+  120:7   warning  Unexpected console statement           no-console
+  143:7   warning  Unexpected console statement           no-console
+  167:7   warning  Unexpected console statement           no-console
+  168:7   warning  Unexpected console statement           no-console
+  189:7   warning  Unexpected console statement           no-console
+  212:7   warning  Unexpected console statement           no-console
+  213:7   warning  Unexpected console statement           no-console
+  261:7   warning  Unexpected console statement           no-console
+  302:7   warning  Unexpected console statement           no-console
+  303:7   warning  Unexpected console statement           no-console
+  347:7   warning  Unexpected console statement           no-console
+  348:7   warning  Unexpected console statement           no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/performance/http-caching.perf.test.ts
+  10:46  error    'contentType' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  25:35  warning  Unexpected any. Specify a different type                                       @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/performance/image-preloader.perf.test.ts
+    6:46  error    'afterEach' is defined but never used     @typescript-eslint/no-unused-vars
+   31:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   32:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  107:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  144:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  263:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  342:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  352:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/performance/photo-management.perf.test.ts
+   51:24  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+   52:21  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+   81:24  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+   82:21  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+  124:24  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+  130:21  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+  206:13  error    'totalPhotos' is assigned a value but never used                        @typescript-eslint/no-unused-vars
+  258:46  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+  334:15  error    'data' is assigned a value but never used                               @typescript-eslint/no-unused-vars
+  351:24  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+  352:21  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+  393:26  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+  395:24  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+  395:61  error    'data' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  404:21  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+  441:24  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+  442:21  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+  492:49  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/performance/session-management.perf.test.ts
+   68:12  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   81:7   warning  Unexpected console statement                no-console
+   99:12  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  112:7   warning  Unexpected console statement                no-console
+  138:12  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  151:7   warning  Unexpected console statement                no-console
+  178:12  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  191:7   warning  Unexpected console statement                no-console
+  217:12  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  233:12  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  246:7   warning  Unexpected console statement                no-console
+  262:15  error    'token' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  263:15  error    'hash' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  270:7   warning  Unexpected console statement                no-console
+  286:12  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  299:7   warning  Unexpected console statement                no-console
+  315:12  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  337:7   warning  Unexpected console statement                no-console
+  338:7   warning  Unexpected console statement                no-console
+  364:12  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  386:7   warning  Unexpected console statement                no-console
+  415:12  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  429:7   warning  Unexpected console statement                no-console
+  430:7   warning  Unexpected console statement                no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/run-write-tests.ts
+  15:1  warning  Unexpected console statement  no-console
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/security/magic-link-security.test.ts
+    6:71  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+    6:83  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   50:9   error    Script URL is a form of eval                no-script-url
+  315:15  error    'email' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  335:9   error    Script URL is a form of eval                no-script-url
+  573:33  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/security/session-management-security.test.ts
+   80:31  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+   95:12  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  109:13  error    'attackerIP' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  138:12  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  152:13  error    'suspiciousUA' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  154:31  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  169:12  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  192:12  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  209:12  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  236:12  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  275:14  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  301:14  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  316:7   warning  Unexpected console statement                       no-console
+  337:12  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  363:12  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  398:12  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  439:12  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  484:14  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  498:29  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  508:16  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  528:14  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  553:12  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  578:31  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  593:12  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/unit/form-validation.test.ts
+  24:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/unit/image-upload-component.test.ts
+   19:10  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+   32:10  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+   40:10  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+   45:8   warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+  106:44  error    'file' is defined but never used. Allowed unused args must match /^_/u          @typescript-eslint/no-unused-vars
+  129:21  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+  130:21  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+  131:32  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+  143:44  error    'file' is defined but never used. Allowed unused args must match /^_/u          @typescript-eslint/no-unused-vars
+  160:21  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+  161:21  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+  162:32  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+  213:54  error    'responseText' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/test/unit/media-storage.test.ts
+   13:8   error    'path' is defined but never used          @typescript-eslint/no-unused-vars
+  172:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  173:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  174:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  260:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  323:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  324:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  325:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  343:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  344:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/types/imports.d.ts
+   6:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   6:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/eveywinters/CascadeProjects/SpicebushWebapp/app/src/types/modules.d.ts
+   2:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   7:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   8:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   9:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  22:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  26:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  27:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  30:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  32:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  35:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  39:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  43:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 1692 problems (316 errors, 1376 warnings)
+  95 errors and 0 warnings potentially fixable with the `--fix` option.
+

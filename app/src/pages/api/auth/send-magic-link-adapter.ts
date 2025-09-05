@@ -109,7 +109,8 @@ This is an automated email. Please do not reply.`
     return new Response(JSON.stringify({
       success: true,
       message: 'Magic link sent successfully',
-      provider: auth.getProvider()
+      provider: auth.getProvider(),
+      debugUrl: result.debugUrl // For testing - remove in production
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
