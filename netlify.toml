@@ -1,12 +1,9 @@
 # Root Netlify Configuration for Spicebush Testing Site
 
 [build]
-  # Base directory (relative to repository root)
-  base = "app"
-  
-  # Build command that includes environment variables
-  # Since base directory isn't being respected, use full path
-  command = "npm run build"
+  # Build from the app subdirectory
+  # Build command (executed within base directory)
+  command = "cd app && npm run build"
   
   # Build optimization settings
   [build.processing]
@@ -18,8 +15,8 @@
     bundle = true
     minify = true
   
-  # Directory to deploy (Astro outputs to dist/)
-  publish = "dist"
+  # Directory to deploy (relative to root)
+  publish = "app/dist"
   
   # Node version and other environment settings
   [build.environment]
@@ -28,8 +25,8 @@
     # Netlify Identity configuration
     NETLIFY_IDENTITY_ENABLED = "true"
     # Authentication feature flags with safe defaults
-    USE_CLERK_AUTH = "false"
-    USE_REAL_CLERK_VALIDATION = "false"
+    USE_CLERK_AUTH = "clerk"
+    USE_REAL_CLERK_VALIDATION = "true"
     COMING_SOON_MODE = "false"
 
 # Testing branch context - ensures proper environment setup
