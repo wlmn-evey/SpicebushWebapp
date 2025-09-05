@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import auth from '@lib/auth';
+import { auth } from '@lib/auth';
 import { EmailService } from '@lib/email-service';
 import { checkAdminAccess } from '@lib/auth/clerk-helpers';
 

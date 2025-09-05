@@ -193,7 +193,7 @@ const { type, title, subtitle } = Astro.props;
 
 <script>
   // Import the auth adapter instead of Supabase directly
-  import auth from '@lib/auth';
+  import { auth } from '@lib/auth';
   import { isTestEmail, getAuthErrorMessage, isDevEnvironment } from '@lib/development-helpers';
   
   // Get the form type from the data attribute

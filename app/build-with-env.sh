@@ -1,69 +1,52 @@
 #!/bin/bash
 
-# Exit on any error
-set -e
+# Build script for Netlify deployment
+# This script checks for required environment variables and builds the project
 
-# Build script that ensures environment variables are set
-echo "🔧 Building with environment variables..."
-echo "Node version: $(node --version)"
-echo "NPM version: $(npm --version)"
+echo "Starting build process..."
 
-# Supabase Configuration
-# Note: Supabase now uses sb_ prefixed keys instead of JWT tokens
-export PUBLIC_SUPABASE_URL="https://xnzweuepchbfffsegkml.supabase.co"
+# Check for required environment variables (without exposing values)
+check_env_var() {
+  if [ -z "${!1}" ]; then
+    echo "Warning: $1 is not set. Build may fail if this variable is required."
+  else
+    echo "✓ $1 is set"
+  fi
+}
 
-# Production Supabase keys (new format)
-export PUBLIC_SUPABASE_ANON_KEY="sb_publishable_3Ja6qCU9VfJ-V68G63ZZNQ_Yc2wBvEN"
-export SUPABASE_SERVICE_ROLE_KEY="sb_secret_eNcOoXgv1AtzKfklcvjh7g_I5LUpOWd"
+echo "Checking environment variables..."
 
-export PUBLIC_SITE_URL="https://spicebush-testing.netlify.app"
+# Supabase variables
+check_env_var "PUBLIC_SUPABASE_URL"
+check_env_var "PUBLIC_SUPABASE_ANON_KEY"
+check_env_var "SUPABASE_SERVICE_ROLE_KEY"
 
-# For backward compatibility
-export PUBLIC_SUPABASE_PUBLIC_KEY="$PUBLIC_SUPABASE_ANON_KEY"
+# Clerk authentication variables
+check_env_var "PUBLIC_CLERK_PUBLISHABLE_KEY"
+check_env_var "CLERK_SECRET_KEY"
+check_env_var "PUBLIC_CLERK_SIGN_IN_URL"
+check_env_var "PUBLIC_CLERK_SIGN_UP_URL"
+check_env_var "PUBLIC_CLERK_AFTER_SIGN_IN_URL"
+check_env_var "PUBLIC_CLERK_AFTER_SIGN_UP_URL"
 
-# Unione.io Email Configuration
-export UNIONE_API_KEY="6w7qcex9tztza1y9g4fmezdc7zc1t4xcnwr1ihme"
-export UNIONE_REGION="us"
-export EMAIL_SERVICE="unione"
-export EMAIL_FROM="noreply@spicebushmontessori.org"
-export EMAIL_FROM_NAME="Spicebush Montessori School"
+# Feature flags
+check_env_var "USE_CLERK_AUTH"
+check_env_var "USE_REAL_CLERK_VALIDATION"
+check_env_var "COMING_SOON_MODE"
 
-echo "✅ Environment variables set:"
-echo "  PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL:0:30}..."
-echo "  PUBLIC_SUPABASE_ANON_KEY: ${PUBLIC_SUPABASE_ANON_KEY:0:20}..."
-echo "  PUBLIC_SITE_URL: $PUBLIC_SITE_URL"
-echo ""
+# Site configuration
+check_env_var "PUBLIC_SITE_URL"
 
-# Run the build
-echo "📦 Installing dependencies..."
-echo "Using npm flags: --legacy-peer-deps"
+echo "Environment check complete."
+echo "Running build command..."
 
-# Use npm ci for faster, more reliable installs on CI
-if [ -f "package-lock.json" ]; then
-    echo "Using npm ci for clean install..."
-    npm ci --legacy-peer-deps || {
-        echo "⚠️ npm ci failed, falling back to npm install..."
-        npm install --legacy-peer-deps
-    }
-else
-    echo "No package-lock.json found, using npm install..."
-    npm install --legacy-peer-deps
-fi
-
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to install dependencies"
-    exit 1
-fi
-
-echo "✅ Dependencies installed successfully"
-echo ""
-
-echo "🔨 Building application..."
+# Run the actual build
 npm run build
 
-if [ $? -ne 0 ]; then
-    echo "❌ Build failed"
-    exit 1
+# Check if build was successful
+if [ $? -eq 0 ]; then
+  echo "Build completed successfully!"
+else
+  echo "Build failed. Please check the logs above for errors."
+  exit 1
 fi
-
-echo "✅ Build complete!"
