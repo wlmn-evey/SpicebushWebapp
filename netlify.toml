@@ -1,9 +1,8 @@
 # Root Netlify Configuration for Spicebush Testing Site
 
 [build]
-  # Build from the app subdirectory
-  # Build command (executed within base directory)
-  command = "cd app && npm run build"
+  # Build command - Netlify already starts in app directory
+  command = "npm run build"
   
   # Build optimization settings
   [build.processing]
@@ -15,8 +14,8 @@
     bundle = true
     minify = true
   
-  # Directory to deploy (relative to root)
-  publish = "app/dist"
+  # Directory to deploy (relative to app directory where build runs)
+  publish = "dist"
   
   # Node version and other environment settings
   [build.environment]
@@ -80,5 +79,5 @@
 
 # Functions configuration
 [functions]
-  directory = "app/netlify/functions"
+  directory = "netlify/functions"
   included_files = ["**/*"]
