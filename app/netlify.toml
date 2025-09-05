@@ -1,0 +1,43 @@
+[build]
+  # Base directory (override parent config when running from app directory)
+  base = "."
+  
+  # Build command that includes environment variables
+  command = "chmod +x build-with-env.sh && ./build-with-env.sh"
+  
+  # Directory to deploy (Astro outputs to dist/)
+  publish = "dist"
+  
+  # Node version and other environment settings
+  [build.environment]
+    NODE_VERSION = "20"
+    NODE_OPTIONS = "--max_old_space_size=4096"
+    # Authentication feature flags with safe defaults
+    USE_CLERK_AUTH = "false"
+    USE_REAL_CLERK_VALIDATION = "false"
+    COMING_SOON_MODE = "false"
+
+# Functions configuration
+[functions]
+  directory = "netlify/functions"
+  included_files = ["**/*"]
+
+# Headers for better performance and security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

@@ -3,7 +3,8 @@
  * Centralized error handling for auth system
  */
 
-import { AuthError, AuthErrorType } from './types';
+import { AuthErrorType } from './types';
+import type { AuthError } from './types';
 
 /**
  * Custom auth error class

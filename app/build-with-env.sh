@@ -14,6 +14,22 @@ check_env_var() {
   fi
 }
 
+# Set default environment variables for Netlify deployment
+set_defaults() {
+  # Authentication feature flags with safe defaults
+  export USE_CLERK_AUTH="${USE_CLERK_AUTH:-false}"
+  export USE_REAL_CLERK_VALIDATION="${USE_REAL_CLERK_VALIDATION:-false}"
+  export COMING_SOON_MODE="${COMING_SOON_MODE:-false}"
+  
+  echo "✓ Set default values for authentication feature flags"
+  echo "  - USE_CLERK_AUTH: $USE_CLERK_AUTH"
+  echo "  - USE_REAL_CLERK_VALIDATION: $USE_REAL_CLERK_VALIDATION"
+  echo "  - COMING_SOON_MODE: $COMING_SOON_MODE"
+}
+
+echo "Setting default environment variables..."
+set_defaults
+
 echo "Checking environment variables..."
 
 # Supabase variables
@@ -29,7 +45,11 @@ check_env_var "PUBLIC_CLERK_SIGN_UP_URL"
 check_env_var "PUBLIC_CLERK_AFTER_SIGN_IN_URL"
 check_env_var "PUBLIC_CLERK_AFTER_SIGN_UP_URL"
 
-# Feature flags
+# Feature flags (with defaults if not set)
+export USE_CLERK_AUTH="${USE_CLERK_AUTH:-clerk}"
+export USE_REAL_CLERK_VALIDATION="${USE_REAL_CLERK_VALIDATION:-false}"
+export COMING_SOON_MODE="${COMING_SOON_MODE:-false}"
+
 check_env_var "USE_CLERK_AUTH"
 check_env_var "USE_REAL_CLERK_VALIDATION"
 check_env_var "COMING_SOON_MODE"
