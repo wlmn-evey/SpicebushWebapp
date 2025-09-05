@@ -1,5 +1,16 @@
 # Claude Instructions for SpicebushWebapp
 
+## 🎯 AGENT-FIRST POLICY
+
+**CRITICAL**: Before ANY action, ask: "Is there an agent who would be optimal for this task?"
+
+**ALWAYS** prefer using a specialized agent over direct action unless:
+- The task is trivial (single file read, simple command)
+- No suitable agent exists for the specific task
+- The user explicitly requests direct action
+
+Even in a chain of actions, **pause before each step** to consider agent delegation.
+
 ## 🚨 CRITICAL: Testing Strategy
 
 **DO NOT TEST LOCALLY** - All testing is done on the `testing` branch via Netlify auto-deploys from GitHub. Never run tests on the local development environment.
@@ -86,17 +97,38 @@ Per `DEPENDENCY_MAP.md`:
 - `src/layouts/Layout.astro` - Affects every page
 - `src/components/Header.astro` - Site navigation
 
-## Specialized Agents
+## Specialized Agents (USE THESE FIRST!)
 
-Use these agents when their expertise matches your task:
+### 🔴 Critical - Use Immediately When Applicable
+- `systematic-debugger` - ANY error, build failure, or debugging need
+- `project-architect-qa` - Planning features, reviewing architecture  
+- `security-expert` - Security vulnerabilities, auth issues
+- `test-automation-expert` - Testing, verification, browser tests
 
-- `systematic-debugger` - Debugging errors
-- `project-architect-qa` - Planning new features
-- `complexity-guardian` - Code review for simplicity
-- `test-automation-expert` - Testing on deployed site
-- `cloud-deployment-architect` - Netlify configuration
-- `spicebush-content-verifier` - Content accuracy
-- `spicebush-ux-advocate` - School-specific UX
+### 🟡 Development & Code Quality
+- `elrond-code-architect` - Writing/refactoring with documentation
+- `complexity-guardian` - Review for over-engineering
+- `serena-scoped-engineer` - Scoped engineering within boundaries
+- `project-janitor` - File organization after development
+
+### 🟢 Specialized Tasks
+- `cloud-deployment-architect` - Docker, Netlify, deployment issues
+- `ui-design-specialist` - UI/UX, accessibility, design review
+- `seo-redirect-copywriter` - SEO, redirects, content optimization
+- `montessori-copywriter` - School-specific content creation
+- `spicebush-content-verifier` - Content accuracy verification
+- `spicebush-ux-advocate` - School owner perspective
+- `project-organization-specialist` - Project structure, gitignore
+- `project-delivery-manager` - Production readiness assessment
+
+### Agent Selection Decision Tree
+1. Error/Bug? → `systematic-debugger`
+2. New Feature? → `project-architect-qa` 
+3. Writing Code? → `elrond-code-architect`
+4. Deployment Issue? → `cloud-deployment-architect`
+5. UI/Design? → `ui-design-specialist`
+6. Content? → Domain-specific copywriter
+7. Cleanup? → `project-janitor` or `project-organization-specialist`
 
 ## Minimum Viable Change Philosophy
 
@@ -108,11 +140,36 @@ Use these agents when their expertise matches your task:
 - ✅ Avoid scope creep
 
 **Before starting any task:**
+0. **STOP: Is there an agent for this?** Check agent list above
 1. Understand the exact requirement
 2. Check `DEPENDENCY_MAP.md` for impact
 3. Choose the minimal solution
 4. Implement and push to testing
 5. Verify on deployed site
+
+## Agent Usage Examples
+
+### ❌ WRONG (Direct Action):
+```
+User: "Fix the authentication error"
+Claude: [Immediately starts debugging without agent]
+```
+
+### ✅ CORRECT (Agent-First):
+```
+User: "Fix the authentication error"
+Claude: "I'll use the systematic-debugger agent to investigate this error"
+[Invokes systematic-debugger]
+```
+
+### Chain of Actions Example:
+```
+User: "Add a new contact form feature"
+Claude: 
+1. "First, I'll use project-architect-qa to plan this feature"
+2. "Then elrond-code-architect to implement it"
+3. "Finally test-automation-expert to verify it works"
+```
 
 ## Quick Command Reference
 
