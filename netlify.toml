@@ -5,7 +5,8 @@
   base = "app"
   
   # Build command that includes environment variables
-  command = "chmod +x build-with-env.sh && ./build-with-env.sh"
+  # Since base directory isn't being respected, use full path
+  command = "npm run build"
   
   # Build optimization settings
   [build.processing]
@@ -82,5 +83,5 @@
 
 # Functions configuration
 [functions]
-  directory = "netlify/functions"
+  directory = "app/netlify/functions"
   included_files = ["**/*"]
