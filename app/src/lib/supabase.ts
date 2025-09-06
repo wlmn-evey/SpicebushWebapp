@@ -1,35 +1,54 @@
 import { createClient } from '@supabase/supabase-js';
 import { isAdminEmail } from './admin-config';
 
-// Get environment variables
+// Environment variables - don't validate immediately
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.PUBLIC_SUPABASE_PUBLIC_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase configuration missing: Check PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY environment variables');
-}
+// Lazy client initialization - only create when actually needed
+let _supabaseClient: any = null;
 
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true
-  },
-  db: {
-    schema: 'public'
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'spicebush-montessori-web'
+// Function to get or create Supabase client
+const getSupabaseClient = () => {
+  if (!_supabaseClient) {
+    // Validate environment variables only when client is needed
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Supabase configuration missing: Check PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY environment variables');
     }
+
+    _supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true
+      },
+      db: {
+        schema: 'public'
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'spicebush-montessori-web'
+        }
+      }
+    });
+  }
+  
+  return _supabaseClient;
+};
+
+// Export lazy client getter instead of direct client
+export const supabase = new Proxy({}, {
+  get(target, prop) {
+    const client = getSupabaseClient();
+    const value = client[prop];
+    return typeof value === 'function' ? value.bind(client) : value;
   }
 });
 
-// Auth helper functions
+// Auth helper functions - now use lazy client
 export const auth = {
   // Sign up new user
   async signUp(email: string, password: string) {
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await getSupabaseClient().auth.signUp({
       email,
       password
     });
@@ -38,7 +57,7 @@ export const auth = {
 
   // Sign in user
   async signIn(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await getSupabaseClient().auth.signInWithPassword({
       email,
       password
     });
@@ -47,13 +66,13 @@ export const auth = {
 
   // Sign out user
   async signOut() {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await getSupabaseClient().auth.signOut();
     return { error };
   },
 
   // Sign in with magic link
   async signInWithMagicLink(email: string) {
-    const { data, error } = await supabase.auth.signInWithOtp({
+    const { data, error } = await getSupabaseClient().auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`
@@ -64,7 +83,7 @@ export const auth = {
 
   // Reset password
   async resetPassword(email: string) {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { data, error } = await getSupabaseClient().auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/update-password`
     });
     return { data, error };
@@ -72,7 +91,7 @@ export const auth = {
 
   // Update password
   async updatePassword(password: string) {
-    const { data, error } = await supabase.auth.updateUser({
+    const { data, error } = await getSupabaseClient().auth.updateUser({
       password
     });
     return { data, error };
@@ -80,13 +99,13 @@ export const auth = {
 
   // Get current user
   async getCurrentUser() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getSupabaseClient().auth.getUser();
     return user;
   },
 
   // Get current session
   async getCurrentSession() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await getSupabaseClient().auth.getSession();
     return session;
   },
 
@@ -112,7 +131,7 @@ export const auth = {
     try {
       // Use Supabase admin functions to confirm the email
       // This requires admin privileges but works for development
-      const { data, error } = await supabase.auth.admin.updateUserById(
+      const { data, error } = await getSupabaseClient().auth.admin.updateUserById(
         email, // This would normally be a user ID, but we'll handle it differently
         { email_confirm: true }
       );
@@ -131,7 +150,7 @@ export const auth = {
 
   // Listen to auth changes
   onAuthStateChange(callback: (event: string, session: any) => void) {
-    return supabase.auth.onAuthStateChange(callback);
+    return getSupabaseClient().auth.onAuthStateChange(callback);
   }
 };
 
