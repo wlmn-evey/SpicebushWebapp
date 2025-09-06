@@ -80,4 +80,3 @@
 # Functions configuration
 [functions]
   directory = "netlify/functions"
-  included_files = ["**/*"]
