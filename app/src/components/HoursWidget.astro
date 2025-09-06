@@ -125,7 +125,7 @@ try {
       
       const allHolidays = await response.json();
       return allHolidays.filter((holiday) => {
-        const [year, month, day] = holiday.date.split('-').map(Number);
+        const [year, month, day] = (holiday.date || '').split('-').map(Number);
         const holidayDate = new Date(year, month - 1, day);
         return holidayDate >= today && holidayDate <= sevenDaysFromNow;
       });
@@ -160,7 +160,7 @@ try {
     ];
     
     return commonHolidays.filter(holiday => {
-      const [year, month, day] = holiday.date.split('-').map(Number);
+      const [year, month, day] = (holiday.date || '').split('-').map(Number);
       const holidayDate = new Date(year, month - 1, day);
       return holidayDate >= today && holidayDate <= sevenDaysFromNow;
     });
@@ -186,7 +186,7 @@ try {
 
   // Helper function to format holiday date
   function formatHolidayDate(dateString) {
-    const [year, month, day] = dateString.split('-').map(Number);
+    const [year, month, day] = (dateString || '').split('-').map(Number);
     const date = new Date(year, month - 1, day);
     
     const today = new Date();
@@ -262,8 +262,9 @@ try {
     
     // Convert time string to decimal hours
     function parseTimeToDecimal(timeStr) {
+      if (!timeStr || typeof timeStr !== 'string') return 0;
       const [time, period] = timeStr.split(' ');
-      let [hours, minutes = 0] = time.split(':').map(Number);
+      let [hours, minutes = 0] = (time || '').split(':').map(Number);
       
       if (period === 'PM' && hours !== 12) hours += 12;
       if (period === 'AM' && hours === 12) hours = 0;

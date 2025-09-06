@@ -469,8 +469,8 @@ import ErrorMessage from '../components/ErrorMessage.astro';
 
 <script>
   document.addEventListener('DOMContentLoaded', async () => {
-    const { enhanceForm } = await import('/src/lib/form-enhance');
-    const { validators } = await import('/src/lib/form-validation');
+    const { enhanceForm } = await import('../lib/form-enhance');
+    const { validators } = await import('../lib/form-validation');
     const form = document.getElementById('contact-form');
     const submitBtn = document.getElementById('submit-btn');
     const submitText = document.getElementById('submit-text');

@@ -389,8 +389,8 @@ const formId = `newsletter-form-${Math.random().toString(36).substr(2, 9)}`;
 
 <script define:vars={{ formId }}>
   document.addEventListener('DOMContentLoaded', async () => {
-    const { enhanceForm } = await import('/src/lib/form-enhance');
-    const { validators } = await import('/src/lib/form-validation');
+    const { enhanceForm } = await import('../lib/form-enhance');
+    const { validators } = await import('../lib/form-validation');
     const form = document.getElementById(formId);
     const messageEl = document.getElementById(`${formId}-message`);
     
