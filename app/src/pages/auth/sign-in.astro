@@ -20,7 +20,7 @@ import { SignIn } from '@clerk/astro/components';
       
       <div class="bg-white rounded-xl shadow-lg p-8">
         <SignIn 
-          client:load
+          client:only="react"
           routing="path" 
           path="/auth/sign-in"
           appearance={{
