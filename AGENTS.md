@@ -3,7 +3,7 @@
 ## Project Structure & Module Organization
 - app/: Astro app (core site). Key paths: `app/src/pages/`, `app/src/components/`, `app/src/lib/`, `app/tests/`.
 - scripts/: Strapi and deployment helpers (e.g., `scripts/netlify-build.sh`).
-- src/: Legacy/shared services (e.g., `src/services/strapi.js`).
+- src/: Legacy/shared services. Note: Strapi code moved under `deprecated/strapi/`.
 - docs/, journal/, debug/: Operational notes and reports.
 
 ## Build, Test, and Development Commands
@@ -35,5 +35,4 @@
 ## Security & Configuration Tips
 - Do not commit secrets. Use `app/.env.local` (copy from `app/.env.example`) and Netlify environment variables.
 - Validate env before running: `cd app && npm run setup:dev` then update values.
-- External CMS: Strapi helpers live in `src/services/strapi.js` and `scripts/*` — keep API URLs configurable via env.
-
+- External CMS: Historical Strapi helpers now in `deprecated/strapi/`; keep any future API URLs configurable via env.

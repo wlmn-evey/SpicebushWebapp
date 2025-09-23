@@ -8,21 +8,21 @@ A modern, accessible website for Spicebush Montessori School featuring:
 - Responsive Tailwind CSS styling
 - SEO optimization
 
-## Authentication Setup
+## Authentication Setup (Clerk)
 
-This project uses Supabase for authentication. To set up:
+This project uses Clerk for authentication.
 
-1. Create a Supabase project at https://supabase.com
-2. Copy `.env.example` to `.env.local`
-3. Add your Supabase URL and anon key to the environment variables
-4. The authentication system will be ready to use
+1. Copy `.env.example` to `.env.local`
+2. In Clerk Dashboard, create a project and obtain keys
+3. Set in `.env.local` (or Netlify env):
+   - `PUBLIC_CLERK_PUBLISHABLE_KEY`
+   - `CLERK_SECRET_KEY`
+   - `PUBLIC_CLERK_SIGN_IN_URL`, `PUBLIC_CLERK_SIGN_UP_URL`
+4. Run `npm run dev`
 
-### Authentication Features
-- User registration and login
-- Password reset functionality
-- Protected dashboard area
-- Session management
-- Secure JWT token handling
+### Notes
+- Netlify Identity is disabled; Clerk is the source of truth.
+- Supabase remains for content/data; no login via Supabase UI.
 
 ```sh
 npm create astro@latest -- --template basics
