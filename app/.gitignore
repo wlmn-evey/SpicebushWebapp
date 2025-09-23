@@ -76,6 +76,7 @@ backups/
 test-*.js
 test-*.sh
 test-results/
+playwright-report/
 
 # Security and credentials
 SECURITY_CREDENTIALS.md
