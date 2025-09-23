@@ -98,7 +98,7 @@ export const POST: APIRoute = async ({ request }) => {
         const serviceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
         if (supabaseUrl && serviceKey) {
           const supabase = createClient(supabaseUrl, serviceKey);
-          const { error } = await supabase.from('donations').insert({
+          const { error } = await supabase.from('donations').upsert({
             donation_id: metadata.donationId || null,
             stripe_payment_intent_id: paymentIntent.id,
             amount_cents: paymentIntent.amount,
@@ -109,7 +109,7 @@ export const POST: APIRoute = async ({ request }) => {
             donation_type: metadata.donationType || null,
             status: 'completed',
             completed_at: new Date().toISOString()
-          });
+          }, { onConflict: 'stripe_payment_intent_id' });
           if (error) {
             console.warn('[Stripe Webhook] DB insert failed:', error.message);
           }
