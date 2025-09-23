@@ -316,7 +316,7 @@ function getDayIcon(day: string): string {
               title: schedule.day,
               data: schedule,
               status: 'published',
-              author_email: 'admin@spicebushmontessori.org'
+              author_email: (Astro.locals as any)?.userEmail || 'admin@spicebushmontessori.org'
             };
             
             await fetch('/api/cms/entry', {

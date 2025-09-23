@@ -1,5 +1,6 @@
 import { defineMiddleware } from 'astro:middleware';
 import { clerkMiddleware, createRouteMatcher } from '@clerk/astro/server';
+import { Clerk } from '@clerk/backend';
 
 // Define protected routes
 const isProtectedRoute = createRouteMatcher([
@@ -48,14 +49,31 @@ const comingSoonMiddleware = defineMiddleware(async (context, next) => {
 });
 
 // Combine Clerk and coming soon middleware
-export const onRequest = clerkMiddleware((auth, context, next) => {
+export const onRequest = clerkMiddleware(async (auth, context, next) => {
   // Check if route requires authentication
   if (isProtectedRoute(context.request)) {
     const authObj = auth();
-    
     if (!authObj.userId) {
       // Redirect to sign-in for protected routes
       return context.redirect('/auth/sign-in');
+    }
+
+    // Attach minimal user context for downstream handlers/pages
+    try {
+      // Always set userId
+      // @ts-ignore - locals is dynamic
+      context.locals.userId = authObj.userId;
+      // Optionally enrich with email using Clerk backend if available
+      const secret = process.env.CLERK_SECRET_KEY || '';
+      if (secret) {
+        const clerk = new Clerk({ secretKey: secret });
+        const user = await clerk.users.getUser(authObj.userId);
+        const email = user?.emailAddresses?.[0]?.emailAddress;
+        // @ts-ignore - locals is dynamic
+        if (email) context.locals.userEmail = email;
+      }
+    } catch (e) {
+      console.warn('[Middleware] Failed to populate userEmail:', e instanceof Error ? e.message : e);
     }
   }
   

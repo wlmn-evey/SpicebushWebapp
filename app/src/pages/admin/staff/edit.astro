@@ -95,7 +95,7 @@ if (Astro.request.method === 'POST') {
           body: data.bio
         },
         status: 'published',
-        author_email: 'admin@spicebushmontessori.org' // TODO: Get from session
+        author_email: (Astro.locals as any)?.userEmail || 'admin@spicebushmontessori.org'
       };
       
       // Save to database via API
