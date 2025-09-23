@@ -1,5 +1,7 @@
 import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
+import { emailService } from '@lib/email-service';
 
 /**
  * Stripe Webhook Handler
@@ -90,31 +92,50 @@ export const POST: APIRoute = async ({ request }) => {
         message: metadata.message
       }, null, 2));
         
-      // TODO: Store donation record in database
-      // Example structure:
-      // await db.donations.create({
-      //   donationId: metadata.donationId,
-      //   stripePaymentIntentId: paymentIntent.id,
-      //   amount: paymentIntent.amount,
-      //   currency: paymentIntent.currency,
-      //   donorEmail: metadata.donorEmail,
-      //   donorName: metadata.donorName,
-      //   designation: metadata.designation,
-      //   donationType: metadata.donationType,
-      //   status: 'completed',
-      //   completedAt: new Date()
-      // });
+      // Best-effort: Store donation record in database if configured
+      try {
+        const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL;
+        const serviceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (supabaseUrl && serviceKey) {
+          const supabase = createClient(supabaseUrl, serviceKey);
+          const { error } = await supabase.from('donations').insert({
+            donation_id: metadata.donationId || null,
+            stripe_payment_intent_id: paymentIntent.id,
+            amount_cents: paymentIntent.amount,
+            currency: paymentIntent.currency,
+            donor_email: metadata.donorEmail || paymentIntent.receipt_email || null,
+            donor_name: metadata.donorName || null,
+            designation: metadata.designation || null,
+            donation_type: metadata.donationType || null,
+            status: 'completed',
+            completed_at: new Date().toISOString()
+          });
+          if (error) {
+            console.warn('[Stripe Webhook] DB insert failed:', error.message);
+          }
+        } else {
+          console.warn('[Stripe Webhook] Skipping DB insert: missing SUPABASE config');
+        }
+      } catch (dbError) {
+        console.warn('[Stripe Webhook] DB logging error:', dbError);
+      }
         
-      // TODO: Send thank you email if email service is configured
-      // Example:
-      // if (metadata.donorEmail && import.meta.env.EMAIL_SERVICE) {
-      //   await sendThankYouEmail({
-      //     to: metadata.donorEmail,
-      //     donorName: metadata.donorName,
-      //     amount: paymentIntent.amount / 100,
-      //     donationId: metadata.donationId
-      //   });
-      // }
+      // Best-effort: Send thank-you email if provider configured
+      try {
+        const providers = emailService.getStatus?.();
+        const anyConfigured = providers && Object.values(providers).some(Boolean);
+        const donorEmail = metadata.donorEmail || paymentIntent.receipt_email;
+        if (donorEmail && anyConfigured) {
+          await emailService.send({
+            to: donorEmail,
+            subject: 'Thank you for your donation',
+            text: `Thank you for your donation of $${(paymentIntent.amount / 100).toFixed(2)}. Donation ID: ${metadata.donationId || paymentIntent.id}`,
+            html: `<p>Thank you for your donation of <strong>$${(paymentIntent.amount / 100).toFixed(2)}</strong>.</p><p>Donation ID: ${metadata.donationId || paymentIntent.id}</p>`
+          });
+        }
+      } catch (emailErr) {
+        console.warn('[Stripe Webhook] Email send failed:', emailErr instanceof Error ? emailErr.message : emailErr);
+      }
         
       break;
     }
