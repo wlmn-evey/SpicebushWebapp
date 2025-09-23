@@ -23,7 +23,7 @@
     "test:a11y": "playwright test e2e/accessibility-compliance-test.spec.ts",
     "test:performance": "playwright test e2e/performance-metrics.spec.ts",
     "validate:config": "node scripts/validate-deployment-config.js",
-    "db:migrate": "node scripts/apply-migrations.sh",
+    "db:migrate": "bash scripts/apply-migrations.sh",
     "db:seed": "node scripts/seed-test-data.js",
     "type-check": "tsc --noEmit",
     "test:unit": "vitest run src/test/lib src/test/components",

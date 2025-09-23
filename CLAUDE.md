@@ -11,6 +11,40 @@
 
 Even in a chain of actions, **pause before each step** to consider agent delegation.
 
+## 🚀 Serena MCP Integration
+
+**IMPORTANT**: Serena MCP is ALWAYS RUNNING and provides semantic code understanding. Use it as your primary tool for code navigation and analysis.
+
+### Primary Uses:
+- **Code Search**: Use `mcp__serena__search_for_pattern` instead of grep for semantic search
+- **Symbol Location**: Use `mcp__serena__find_symbol` for functions/classes/variables
+- **File Finding**: Use `mcp__serena__find_file` instead of glob for intelligent file location
+- **Dependency Tracking**: Use `mcp__serena__find_referencing_symbols` to understand code relationships
+
+### Memory Management:
+- **Read Context**: Start sessions with `mcp__serena__list_memories` to understand project state
+- **Store Decisions**: Use `mcp__serena__write_memory` for important context and decisions
+- **Project Onboarding**: Run `mcp__serena__check_onboarding_performed` for new projects
+- **Continue Work**: Use memories to maintain context across sessions
+
+### Code Modification (Advanced):
+- **Replace Functions**: Use `mcp__serena__replace_symbol_body` for complete function rewrites
+- **Insert Code**: Use `mcp__serena__insert_before_symbol` or `mcp__serena__insert_after_symbol`
+- **Pattern Replace**: Use `mcp__serena__replace_regex` for pattern-based modifications
+- **Get Overview**: Use `mcp__serena__get_symbols_overview` to understand file structure
+
+### Thinking Tools (For Complex Tasks):
+- **Completeness Check**: `mcp__serena__think_about_collected_information`
+- **Task Adherence**: `mcp__serena__think_about_task_adherence`
+- **Completion Verification**: `mcp__serena__think_about_whether_you_are_done`
+
+### Best Practices:
+1. **Always check memories** at session start with `list_memories`
+2. **Use Serena for ALL code searches** - it understands context better than grep
+3. **Store important decisions** as memories for future reference
+4. **Use thinking tools** for complex multi-step tasks
+5. **Prefer symbol-based operations** over text-based when modifying code
+
 ## 🚨 CRITICAL: Testing Strategy
 
 **DO NOT TEST LOCALLY** - All testing is done on the `testing` branch via Netlify auto-deploys from GitHub. Never run tests on the local development environment.
@@ -100,25 +134,25 @@ Per `DEPENDENCY_MAP.md`:
 ## Specialized Agents (USE THESE FIRST!)
 
 ### 🔴 Critical - Use Immediately When Applicable
-- `systematic-debugger` - ANY error, build failure, or debugging need
-- `project-architect-qa` - Planning features, reviewing architecture  
-- `security-expert` - Security vulnerabilities, auth issues
+- `systematic-debugger` - ANY error, build failure, or debugging need (Uses Serena MCP for error pattern analysis)
+- `project-architect-qa` - Planning features, reviewing architecture (Uses Serena MCP for codebase understanding)
+- `security-expert` - Security vulnerabilities, auth issues (Uses Serena MCP for vulnerability scanning)
 - `test-automation-expert` - Testing, verification, browser tests
 
 ### 🟡 Development & Code Quality
-- `elrond-code-architect` - Writing/refactoring with documentation
-- `complexity-guardian` - Review for over-engineering
-- `serena-scoped-engineer` - Scoped engineering within boundaries
-- `project-janitor` - File organization after development
+- `elrond-code-architect` - Writing/refactoring with documentation (Uses Serena MCP for symbol manipulation)
+- `complexity-guardian` - Review for over-engineering (Uses Serena MCP for complexity analysis)
+- `serena-scoped-engineer` - Scoped engineering within boundaries (Primary Serena MCP user for all operations)
+- `project-janitor` - File organization after development (Uses Serena MCP for dependency checking)
 
 ### 🟢 Specialized Tasks
 - `cloud-deployment-architect` - Docker, Netlify, deployment issues
-- `ui-design-specialist` - UI/UX, accessibility, design review
+- `ui-design-specialist` - UI/UX, accessibility, design review (Uses Serena MCP for component analysis)
 - `seo-redirect-copywriter` - SEO, redirects, content optimization
 - `montessori-copywriter` - School-specific content creation
 - `spicebush-content-verifier` - Content accuracy verification
-- `spicebush-ux-advocate` - School owner perspective
-- `project-organization-specialist` - Project structure, gitignore
+- `spicebush-ux-advocate` - School owner perspective (Uses Serena MCP for UI component review)
+- `project-organization-specialist` - Project structure, gitignore (Uses Serena MCP for file analysis)
 - `project-delivery-manager` - Production readiness assessment
 
 ### Agent Selection Decision Tree

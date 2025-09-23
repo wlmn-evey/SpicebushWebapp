@@ -76,7 +76,6 @@ backups/
 test-*.js
 test-*.sh
 test-results/
-e2e/
 
 # Security and credentials
 SECURITY_CREDENTIALS.md
