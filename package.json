@@ -1,6 +1,7 @@
 {
   "scripts": {
     "dev": "netlify dev",
+    "build": "astro build",
     "deploy": "netlify deploy"
   },
   "dependencies": {

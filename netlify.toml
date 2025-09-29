@@ -1,9 +1,7 @@
 # Root Netlify Configuration for Spicebush Testing Site
 
 [build]
-  # Ensure Netlify runs from the Astro app directory
-  base = "app"
-  # Build command - Netlify already starts in app directory
+  # Build command for Astro app in root directory
   command = "npm run build"
   
   # Build optimization settings
