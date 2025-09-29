@@ -4,17 +4,40 @@ export const prerender = false;
 import { getEntry, getCollection, getEntries, getSchoolInfo, getSetting } from '@lib/content-db';
 import { Fragment } from 'astro/jsx-runtime';
 
-// Get all the data we need
-const schoolInfo = await getSchoolInfo();
-const hoursCollection = await getCollection('hours');
-const tuitionPrograms = await getEntries('tuition', (entry) => entry.data.type === 'program');
-const tuitionRates = await getEntries('tuition', (entry) => entry.data.type === 'rate');
-const testimonials = await getEntries('testimonials', (entry) => entry.data.featured);
+// Safely attempt to load all data; fall back on failure (e.g., when DB env is missing)
+let dbAvailable = true;
+let schoolInfo: any = null;
+let hoursCollection: any[] = [];
+let tuitionPrograms: any[] = [];
+let tuitionRates: any[] = [];
+let testimonials: any[] = [];
 
-// Get coming soon settings
-const launchDateSetting = await getSetting('coming_soon_launch_date');
-const messageSetting = await getSetting('coming_soon_message');
-const newsletterSetting = await getSetting('coming_soon_newsletter');
+let launchDateSetting: any = null;
+let messageSetting: any = null;
+let newsletterSetting: any = null;
+
+try {
+  schoolInfo = await getSchoolInfo();
+  hoursCollection = await getCollection('hours');
+  tuitionPrograms = await getEntries('tuition', (entry) => entry.data.type === 'program');
+  tuitionRates = await getEntries('tuition', (entry) => entry.data.type === 'rate');
+  testimonials = await getEntries('testimonials', (entry) => entry.data.featured);
+
+  // Coming soon settings
+  launchDateSetting = await getSetting('coming_soon_launch_date');
+  messageSetting = await getSetting('coming_soon_message');
+  newsletterSetting = await getSetting('coming_soon_newsletter');
+} catch (e) {
+  dbAvailable = false;
+  schoolInfo = null;
+  hoursCollection = [];
+  tuitionPrograms = [];
+  tuitionRates = [];
+  testimonials = [];
+  launchDateSetting = null;
+  messageSetting = null;
+  newsletterSetting = null;
+}
 
 // Extract values with fallbacks
 const launchDate = launchDateSetting || 'Fall 2025';
@@ -22,8 +45,9 @@ const updateMessage = messageSetting || "We're updating our website to enhance y
 const showNewsletter = newsletterSetting !== false; // Default to true if not set
 
 
-// Sort hours by order
-const sortedHours = hoursCollection.sort((a, b) => a.data.order - b.data.order);
+// Sort hours by order (safely)
+const sortedHours = (Array.isArray(hoursCollection) ? [...hoursCollection] : [])
+  .sort((a, b) => (a?.data?.order || 0) - (b?.data?.order || 0));
 
 // Generate hours display functions
 function generateHoursDisplay() {
@@ -1215,10 +1239,12 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
               </div>
               <div class="contact-item-content">
                 <h4>Our Location</h4>
-                <p>
-                  {schoolInfo?.data.address.street}<br>
-                  {schoolInfo?.data.address.city}, {schoolInfo?.data.address.state} {schoolInfo?.data.address.zip}
-                </p>
+        {schoolInfo?.data?.address ? (
+          <p>
+            {schoolInfo?.data?.address?.street}<br>
+            {schoolInfo?.data?.address?.city}, {schoolInfo?.data?.address?.state} {schoolInfo?.data?.address?.zip}
+          </p>
+        ) : null}
               </div>
             </div>
             
@@ -1230,7 +1256,9 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
               </div>
               <div class="contact-item-content">
                 <h4>Call Us</h4>
-                <p><a href={`tel:${schoolInfo?.data.phone}`}>{schoolInfo?.data.phone}</a></p>
+        {schoolInfo?.data?.phone ? (
+          <p><a href={`tel:${schoolInfo?.data?.phone}`}>{schoolInfo?.data?.phone}</a></p>
+        ) : null}
                 <p>Monday-Friday: 8:30 AM - 5:00 PM</p>
               </div>
             </div>
@@ -1243,7 +1271,9 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
               </div>
               <div class="contact-item-content">
                 <h4>Email Us</h4>
-                <p><a href={`mailto:${schoolInfo?.data.email}`}>{schoolInfo?.data.email}</a></p>
+        {schoolInfo?.data?.email ? (
+          <p><a href={`mailto:${schoolInfo?.data?.email}`}>{schoolInfo?.data?.email}</a></p>
+        ) : null}
               </div>
             </div>
             
