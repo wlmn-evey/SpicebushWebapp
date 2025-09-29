@@ -4,10 +4,10 @@
  */
 
 import type { Handler } from '@netlify/functions';
-import { Clerk } from '@clerk/backend';
+import { createClerkClient } from '@clerk/backend';
 
 // Initialize Clerk with secret key
-const clerk = new Clerk({ secretKey: process.env.CLERK_SECRET_KEY });
+const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '' });
 
 // Allowed email domains for admin access
 const ALLOWED_DOMAINS = ['@spicebushmontessori.org', '@eveywinters.com'];
