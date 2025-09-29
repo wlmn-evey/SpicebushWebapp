@@ -4,6 +4,7 @@
  * Updated to use environment variables for security
  */
 import pg from 'pg';
+import { createClient } from '@supabase/supabase-js';
 import { logError } from './error-logger';
 const { Client } = pg;
 
@@ -49,6 +50,20 @@ const getEnvVar = (key: string): string | undefined => {
 
 // Lazy load configuration to avoid immediate errors during module initialization
 let configCache: any = null;
+let useSupabaseFallback = false;
+
+// Supabase server client (service role) for fallback mode
+let _supabase: any = null;
+function getSupabaseServerClient() {
+  if (_supabase) return _supabase;
+  const url = getEnvVar('PUBLIC_SUPABASE_URL') || getEnvVar('SUPABASE_URL');
+  const serviceKey = getEnvVar('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !serviceKey) {
+    throw new Error('Supabase server credentials missing. Set PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.');
+  }
+  _supabase = createClient(url, serviceKey);
+  return _supabase;
+}
 
 const getConfig = () => {
   if (configCache) return configCache;
@@ -64,42 +79,35 @@ const getConfig = () => {
   
   // Environment detected
   
+  const host = getEnvVar('DB_READONLY_HOST') || getEnvVar('DB_HOST') || 'localhost';
+  const port = parseInt(getEnvVar('DB_READONLY_PORT') || getEnvVar('DB_PORT') || '54322');
+  const database = getEnvVar('DB_READONLY_DATABASE') || getEnvVar('DB_DATABASE') || 'postgres';
+  const user = getEnvVar('DB_READONLY_USER') || getEnvVar('DB_USER');
+  const password = getEnvVar('DB_READONLY_PASSWORD') || getEnvVar('DB_PASSWORD');
+
+  // Decide whether to use Supabase API fallback (no direct DB creds present)
+  if (!user || !password) {
+    useSupabaseFallback = true;
+  }
+
+  // SSL for Supabase Postgres
+  const needsSSL = /supabase\.co$/i.test(host) || (getEnvVar('DB_SSL') || '').toLowerCase() === 'true';
+
   configCache = {
-    host: getEnvVar('DB_READONLY_HOST') || 'localhost',
-    port: parseInt(getEnvVar('DB_READONLY_PORT') || '54322'),
-    database: getEnvVar('DB_READONLY_DATABASE') || 'postgres',
-    user: getEnvVar('DB_READONLY_USER'),
-    password: getEnvVar('DB_READONLY_PASSWORD'),
+    host,
+    port,
+    database,
+    user,
+    password,
+    ssl: needsSSL ? { require: true, rejectUnauthorized: false } : undefined,
     // Add timeouts for production safety
     connectionTimeoutMillis: 5000,
     query_timeout: 30000
   };
   
   // Validate required environment variables with improved error messages
-  if (!configCache.user) {
-    const errorMsg = `DB_READONLY_USER environment variable is required.
-
-To fix this:
-1. If using Docker: Ensure DB_READONLY_USER is set in your docker-compose.yml or .env file
-2. If local development: Create a .env file in your project root with:
-   DB_READONLY_USER=your_username
-3. Check that your environment variables are being loaded correctly.
-
-Current environment: ${debugInfo.nodeEnv || debugInfo.astroMode || 'unknown'}`;
-    throw new Error(errorMsg);
-  }
-  if (!configCache.password) {
-    const errorMsg = `DB_READONLY_PASSWORD environment variable is required.
-
-To fix this:
-1. If using Docker: Ensure DB_READONLY_PASSWORD is set in your docker-compose.yml or .env file
-2. If local development: Create a .env file in your project root with:
-   DB_READONLY_PASSWORD=your_password
-3. Check that your environment variables are being loaded correctly.
-
-Current environment: ${debugInfo.nodeEnv || debugInfo.astroMode || 'unknown'}`;
-    throw new Error(errorMsg);
-  }
+  // If required direct DB creds are missing, we'll use Supabase fallback instead of throwing here
+  // (admin-only endpoints may still require direct DB; they will error if used without creds)
   
   return configCache;
 };
@@ -110,6 +118,10 @@ let isConnected = false;
 let connectionPromise: Promise<void> | null = null;
 
 async function ensureConnected() {
+  // If using Supabase fallback, no direct connection is needed
+  if (useSupabaseFallback) {
+    return;
+  }
   // If a connection is already in progress, wait for it
   if (connectionPromise) {
     await connectionPromise;
@@ -127,7 +139,7 @@ async function ensureConnected() {
       // Create a new client if needed
       if (!client || !isConnected) {
         const config = getConfig();
-        client = new Client(config);
+        client = new Client(config as any);
         isConnected = false;
       }
       
@@ -189,19 +201,41 @@ const DATABASE_COLLECTIONS = [
 export async function getCollection(collection: string): Promise<ContentEntry[]> {
   // For markdown-only collections, return empty array to avoid database errors
   if (!DATABASE_COLLECTIONS.includes(collection)) {
-    // Collection not database-backed
     return [];
   }
 
+  // Supabase fallback path
+  if (useSupabaseFallback) {
+    try {
+      const supabase = getSupabaseServerClient();
+      const { data, error } = await supabase
+        .from('content')
+        .select('*')
+        .eq('type', collection)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map((row: any) => ({
+        id: row.slug,
+        slug: row.slug,
+        collection: row.type,
+        data: { ...row.data, title: row.title },
+        body: row.data?.body || ''
+      }));
+    } catch (error) {
+      logError('content-db-direct', error, { action: 'getCollection', collection, via: 'supabase' });
+      return [];
+    }
+  }
+
+  // Direct DB path
   await ensureConnected();
-  
   try {
     const result = await client.query(
       'SELECT * FROM content WHERE type = $1 AND status = $2 ORDER BY created_at DESC',
       [collection, 'published']
     );
-    
-    return result.rows.map(row => ({
+    return result.rows.map((row: any) => ({
       id: row.slug,
       slug: row.slug,
       collection: row.type,
@@ -210,31 +244,48 @@ export async function getCollection(collection: string): Promise<ContentEntry[]>
     }));
   } catch (error) {
     logError('content-db-direct', error, { action: 'getCollection', collection });
-    console.error(`Error fetching ${collection}:`, error);
     return [];
   }
 }
 
 // Get a single entry by collection and slug
 export async function getEntry(collection: string, slug: string): Promise<ContentEntry | null> {
-  // For markdown-only collections, return null to avoid database errors
   if (!DATABASE_COLLECTIONS.includes(collection)) {
-    // Collection not database-backed
     return null;
   }
-
+  if (useSupabaseFallback) {
+    try {
+      const supabase = getSupabaseServerClient();
+      const { data, error } = await supabase
+        .from('content')
+        .select('*')
+        .eq('type', collection)
+        .eq('slug', slug)
+        .eq('status', 'published')
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+      const row = data;
+      return {
+        id: row.slug,
+        slug: row.slug,
+        collection: row.type,
+        data: { ...row.data, title: row.title },
+        body: row.data?.body || ''
+      };
+    } catch (error) {
+      logError('content-db-direct', error, { action: 'getEntry', collection, slug, via: 'supabase' });
+      return null;
+    }
+  }
   await ensureConnected();
-  
   try {
     const result = await client.query(
       'SELECT * FROM content WHERE type = $1 AND slug = $2 AND status = $3 LIMIT 1',
       [collection, slug, 'published']
     );
-    
-    if (result.rows.length === 0) {
-      return null;
-    }
-    
+    if (result.rows.length === 0) return null;
     const row = result.rows[0];
     return {
       id: row.slug,
@@ -245,7 +296,6 @@ export async function getEntry(collection: string, slug: string): Promise<Conten
     };
   } catch (error) {
     logError('content-db-direct', error, { action: 'getEntry', collection, slug });
-    console.error(`Error fetching ${collection}/${slug}:`, error);
     return null;
   }
 }
@@ -258,14 +308,28 @@ export async function getEntries(collection: string, filter: (entry: ContentEntr
 
 // Settings helpers
 export async function getSetting(key: string): Promise<any> {
+  if (useSupabaseFallback) {
+    try {
+      const supabase = getSupabaseServerClient();
+      const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', key)
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data ? data.value : null;
+    } catch (error) {
+      logError('content-db-direct', error, { action: 'getSetting', key, via: 'supabase' });
+      return null;
+    }
+  }
   await ensureConnected();
-  
   try {
     const result = await client.query(
       'SELECT value FROM settings WHERE key = $1 LIMIT 1',
       [key]
     );
-    
     return result.rows.length > 0 ? result.rows[0].value : null;
   } catch (error) {
     console.error(`Error fetching setting ${key}:`, error);
@@ -274,16 +338,26 @@ export async function getSetting(key: string): Promise<any> {
 }
 
 export async function getAllSettings(): Promise<Record<string, any>> {
+  if (useSupabaseFallback) {
+    try {
+      const supabase = getSupabaseServerClient();
+      const { data, error } = await supabase
+        .from('settings')
+        .select('key,value');
+      if (error) throw error;
+      const settings: Record<string, any> = {};
+      (data || []).forEach((row: any) => { settings[row.key] = row.value; });
+      return settings;
+    } catch (error) {
+      logError('content-db-direct', error, { action: 'getAllSettings', via: 'supabase' });
+      return {};
+    }
+  }
   await ensureConnected();
-  
   try {
     const result = await client.query('SELECT key, value FROM settings');
-    
     const settings: Record<string, any> = {};
-    for (const row of result.rows) {
-      settings[row.key] = row.value;
-    }
-    
+    for (const row of result.rows) settings[row.key] = row.value;
     return settings;
   } catch (error) {
     console.error('Error fetching all settings:', error);
