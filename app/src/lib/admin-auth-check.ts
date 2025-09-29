@@ -1,20 +1,48 @@
 import type { AstroGlobal } from 'astro';
-import { checkClerkAuth } from './clerk-auth';
+import { isAdminEmail } from './admin-config';
 
 /**
  * Unified admin authentication check for all admin pages
- * Uses Clerk for authentication
+ * Uses Clerk for authentication (via middleware)
  */
 export async function checkAdminAuth(Astro: AstroGlobal) {
-  return checkClerkAuth(Astro);
+  // Clerk middleware already handles authentication
+  // If we reach here, user is authenticated
+  // Check locals for userId and userEmail set by middleware
+  const userId = (Astro.locals as any).userId;
+  const userEmail = (Astro.locals as any).userEmail;
+
+  if (!userId) {
+    return {
+      isAuthenticated: false,
+      user: null,
+      session: null
+    };
+  }
+
+  // Check if user is admin
+  const isAdmin = isAdminEmail(userEmail);
+
+  return {
+    isAuthenticated: true,
+    isAdmin,
+    user: {
+      id: userId,
+      email: userEmail
+    },
+    session: {
+      userId,
+      userEmail
+    }
+  };
 }
 
 /**
  * Logout admin user
- * Note: With Clerk, logout is handled client-side through the Clerk components
+ * Note: With Clerk, logout is handled client-side through Clerk components
  */
 export async function logoutAdmin(Astro: AstroGlobal) {
   // Clerk handles logout through its own session management
-  // This function is kept for compatibility but doesn't need to do anything
-  return;
+  // Redirect to sign-out page
+  return Astro.redirect('/auth/sign-out');
 }

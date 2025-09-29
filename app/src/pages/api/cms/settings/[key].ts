@@ -50,9 +50,9 @@ export const GET: APIRoute = async ({ params, cookies }) => {
 };
 
 // PUT /api/cms/settings/:key - Update a setting value (admin only)
-export const PUT: APIRoute = async ({ params, request, cookies }) => {
-  const { key } = params;
-  
+export const PUT: APIRoute = async (context) => {
+  const { key } = context.params;
+
   if (!key) {
     return new Response(JSON.stringify({ error: 'Setting key required' }), {
       status: 400,
@@ -60,33 +60,33 @@ export const PUT: APIRoute = async ({ params, request, cookies }) => {
     });
   }
 
-  // Check authentication
-  const accessToken = cookies.get('sb-access-token')?.value;
-  const refreshToken = cookies.get('sb-refresh-token')?.value;
+  // Check authentication via Clerk middleware
+  // @ts-ignore - locals is dynamic
+  const userId = context.locals.userId;
+  // @ts-ignore - locals is dynamic
+  const userEmail = context.locals.userEmail;
 
-  if (!accessToken || !refreshToken) {
+  if (!userId) {
     return new Response(JSON.stringify({ error: 'Authentication required' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' }
     });
   }
 
+  // Verify user is admin
+  if (!isAdminEmail(userEmail)) {
+    return new Response(JSON.stringify({ error: 'Admin access required' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   try {
-    // Create authenticated client
+    // Create service client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Verify user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-    
-    if (authError || !user || !isAdminEmail(user.email)) {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
 
     // Parse request body
-    const value = await request.json();
+    const value = await context.request.json();
 
     // Update setting
     const { data, error } = await supabase
@@ -94,7 +94,7 @@ export const PUT: APIRoute = async ({ params, request, cookies }) => {
       .upsert({
         key,
         value,
-        updated_by: user.email,
+        updated_by: userEmail,
         updated_at: new Date().toISOString()
       })
       .select()

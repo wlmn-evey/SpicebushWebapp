@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
-import { AuditLogger } from '@lib/audit-logger';
 import { errorResponse, successResponse, parseJsonBody } from '@lib/api-utils';
 import { supabase } from '@lib/supabase';
 

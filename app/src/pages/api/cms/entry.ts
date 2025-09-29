@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
-import { AuditLogger } from '@lib/audit-logger';
 import { errorResponse } from '@lib/api-utils';
 
 export const GET: APIRoute = async ({ url, cookies }) => {

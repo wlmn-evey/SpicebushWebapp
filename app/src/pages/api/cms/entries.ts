@@ -1,24 +1,20 @@
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
 
-export const GET: APIRoute = async ({ url, cookies }) => {
+export const GET: APIRoute = async (context) => {
   try {
-    // Check admin authentication
-    const authCookie = cookies.get('sbms-admin-auth');
-    
-    if (authCookie?.value !== 'bypass' && !import.meta.env.DEV) {
-      const { supabase } = await import('@lib/supabase');
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
+    // Check admin authentication via Clerk middleware
+    // @ts-ignore - locals is dynamic
+    const userId = context.locals.userId;
+
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
     
-    const collection = url.searchParams.get('collection');
+    const collection = context.url.searchParams.get('collection');
     if (!collection) {
       return new Response(JSON.stringify({ error: 'Collection required' }), {
         status: 400,

@@ -4,7 +4,6 @@ import {
   getRecentMessages, 
   getCommunicationStats 
 } from '@lib/content-db-direct';
-import { AuditLogger } from '@lib/audit-logger';
 import { errorResponse } from '@lib/api-utils';
 import { supabase } from '@lib/supabase';
 

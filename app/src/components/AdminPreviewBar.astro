@@ -15,7 +15,7 @@ try {
     const comingSoonConfig = await getEntry('coming-soon', 'config');
     isComingSoonEnabled = comingSoonConfig?.data?.enabled || false;
   } catch (err) {
-    console.log('Coming soon config not found');
+    // Coming soon config not found - using default
   }
 }
 

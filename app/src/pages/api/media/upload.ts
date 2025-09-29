@@ -1,7 +1,6 @@
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
 import { handleMediaUpload, validateFile } from '@lib/media-storage';
-import { AuditLogger } from '@lib/audit-logger';
 import { errorResponse } from '@lib/api-utils';
 
 export const POST: APIRoute = async ({ request, cookies }) => {

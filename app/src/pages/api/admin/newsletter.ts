@@ -4,7 +4,6 @@ import {
   getNewsletterSubscribers, 
   getNewsletterStats
 } from '@lib/content-db-direct';
-import { AuditLogger } from '@lib/audit-logger';
 import { errorResponse } from '@lib/api-utils';
 import { parse } from 'csv-parse/sync';
 import { supabase } from '@lib/supabase';

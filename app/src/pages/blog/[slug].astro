@@ -15,7 +15,7 @@ const { slug } = Astro.params;
 const entry = await getEntry('blog', slug);
 
 if (!entry || entry.data.draft === true) {
-  console.log(`Blog post not found or is draft: ${slug}`);
+  // Blog post not found or is draft
   return Astro.redirect('/404');
 }
 

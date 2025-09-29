@@ -1,7 +1,6 @@
 ---
-import { Menu, Phone, Mail } from 'lucide-astro';
+import { Menu, Phone } from 'lucide-astro';
 import OptimizedImage from './OptimizedImage.astro';
-import { getEntry, getCollection } from '@lib/content-db';
 
 // Default values to prevent crashes
 const defaultSchoolInfo = {
@@ -175,13 +174,7 @@ try {
     function initMobileMenu() {
       const toggleButton = document.getElementById('mobile-menu-toggle');
       const mobileMenu = document.getElementById('mobile-menu');
-      
-      // Debug logging
-      console.log('[Mobile Nav] Initializing...', {
-        toggleButton: !!toggleButton,
-        mobileMenu: !!mobileMenu
-      });
-      
+
       if (!toggleButton || !mobileMenu) {
         console.error('[Mobile Nav] Required elements not found');
         return;
@@ -190,7 +183,6 @@ try {
       // Toggle menu function
       function toggleMenu() {
         const isHidden = mobileMenu.classList.contains('hidden');
-        console.log('[Mobile Nav] Toggling menu, currently hidden:', isHidden);
         
         mobileMenu.classList.toggle('hidden');
         
@@ -218,7 +210,6 @@ try {
           toggleMenu();
         });
         
-        console.log('[Mobile Nav] Click listener attached');
       } catch (error) {
         console.error('[Mobile Nav] Error attaching click listener:', error);
       }
@@ -226,7 +217,6 @@ try {
       // Close mobile menu when pressing Escape
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
-          console.log('[Mobile Nav] Closing menu on Escape key');
           mobileMenu.classList.add('hidden');
           toggleButton.setAttribute('aria-expanded', 'false');
           toggleButton.focus();
@@ -238,13 +228,11 @@ try {
         if (!mobileMenu.classList.contains('hidden') && 
             !mobileMenu.contains(event.target) && 
             !toggleButton.contains(event.target)) {
-          console.log('[Mobile Nav] Closing menu on outside click');
           mobileMenu.classList.add('hidden');
           toggleButton.setAttribute('aria-expanded', 'false');
         }
       });
       
-      console.log('[Mobile Nav] Initialization complete');
     }
     
     // Initialize when DOM is ready

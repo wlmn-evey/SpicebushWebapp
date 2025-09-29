@@ -24,14 +24,6 @@ const createMockResponse = (contentType?: string) => ({
 
 const createMockNext = (response: any) => vi.fn().mockResolvedValue(response);
 
-// Mock SessionManager
-vi.mock('../../lib/session-manager', () => ({
-  SessionManager: {
-    validateSession: vi.fn().mockResolvedValue(null),
-    cleanupExpiredSessions: vi.fn().mockResolvedValue(undefined)
-  }
-}));
-
 // Mock Supabase client
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn().mockReturnValue({

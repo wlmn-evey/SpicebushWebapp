@@ -8,7 +8,6 @@ let hoursData = [];
 let hasDataError = false;
 try {
   const hoursEntries = await getSchoolHours();
-  console.log('HoursWidget: Fetched hours entries:', hoursEntries?.length || 0);
   if (hoursEntries && hoursEntries.length > 0) {
     hoursData = hoursEntries;
   } else {
@@ -76,7 +75,6 @@ try {
 </div>
 
 <script type="module">
-  console.log('[HoursWidget] Script loading at', new Date().toISOString());
   
   // Utility functions moved inline to avoid TypeScript import issues in production
   
@@ -212,12 +210,10 @@ try {
 
   // Initialize widget function
   async function initHoursWidget() {
-    console.log('[HoursWidget] Initializing widget');
     const widget = document.getElementById('sbms-hours-widget');
     
     // Prevent duplicate initialization
     if (!widget || widget.dataset.initialized === 'true') {
-      console.log('[HoursWidget] Widget already initialized or not found');
       return;
     }
     widget.dataset.initialized = 'true';
@@ -522,10 +518,8 @@ try {
   
   // Check if DOM is already loaded, otherwise wait for it
   if (document.readyState === 'loading') {
-    console.log('[HoursWidget] Waiting for DOMContentLoaded');
     document.addEventListener('DOMContentLoaded', initHoursWidget);
   } else {
-    console.log('[HoursWidget] DOM already loaded, initializing immediately');
     // DOM is already loaded, initialize immediately
     initHoursWidget();
   }
