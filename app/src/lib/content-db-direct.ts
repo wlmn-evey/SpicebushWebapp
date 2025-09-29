@@ -62,7 +62,7 @@ const getConfig = () => {
     astroMode: typeof import.meta !== 'undefined' ? (import.meta as any).env?.MODE : undefined
   };
   
-  console.log('Environment detection:', debugInfo);
+  // Environment detected
   
   configCache = {
     host: getEnvVar('DB_READONLY_HOST') || 'localhost',
@@ -135,7 +135,7 @@ async function ensureConnected() {
       if (!isConnected) {
         await client.connect();
         isConnected = true;
-        console.log('Successfully connected to content database');
+        // Database connected
       }
     } catch (error) {
       logError('content-db-direct', error, { action: 'connect' });
@@ -148,7 +148,7 @@ async function ensureConnected() {
           console.error('Database authentication failed. Check your DB_READONLY_USER and DB_READONLY_PASSWORD.');
         } else if (error.message.includes('already been connected')) {
           // This shouldn't happen with the new logic, but handle it gracefully
-          console.log('Client was already connected, continuing...');
+          // Client already connected
           isConnected = true;
           return;
         } else {
@@ -189,7 +189,7 @@ const DATABASE_COLLECTIONS = [
 export async function getCollection(collection: string): Promise<ContentEntry[]> {
   // For markdown-only collections, return empty array to avoid database errors
   if (!DATABASE_COLLECTIONS.includes(collection)) {
-    console.log(`Collection '${collection}' is not database-backed, returning empty array`);
+    // Collection not database-backed
     return [];
   }
 
@@ -219,7 +219,7 @@ export async function getCollection(collection: string): Promise<ContentEntry[]>
 export async function getEntry(collection: string, slug: string): Promise<ContentEntry | null> {
   // For markdown-only collections, return null to avoid database errors
   if (!DATABASE_COLLECTIONS.includes(collection)) {
-    console.log(`Collection '${collection}' is not database-backed, returning null for entry '${slug}'`);
+    // Collection not database-backed
     return null;
   }
 
@@ -569,7 +569,7 @@ if (typeof process !== 'undefined' &&
     });
   } catch (error) {
     // Silently ignore if process.on fails in certain environments
-    console.log('Note: Process shutdown handler not available in this environment');
+    // Shutdown handler not available
   }
 }
 

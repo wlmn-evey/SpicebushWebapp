@@ -91,35 +91,35 @@ export class AuthenticationError extends Error implements AuthError {
    */
   toUserMessage(): string {
     switch (this.type) {
-      case AuthErrorType.INVALID_CREDENTIALS:
-        return 'Invalid email or password. Please try again.';
+    case AuthErrorType.INVALID_CREDENTIALS:
+      return 'Invalid email or password. Please try again.';
       
-      case AuthErrorType.USER_NOT_FOUND:
-        return 'No account found with this email address.';
+    case AuthErrorType.USER_NOT_FOUND:
+      return 'No account found with this email address.';
       
-      case AuthErrorType.EMAIL_NOT_VERIFIED:
-        return 'Please verify your email address before signing in.';
+    case AuthErrorType.EMAIL_NOT_VERIFIED:
+      return 'Please verify your email address before signing in.';
       
-      case AuthErrorType.ACCOUNT_DISABLED:
-        return 'Your account has been disabled. Please contact support.';
+    case AuthErrorType.ACCOUNT_DISABLED:
+      return 'Your account has been disabled. Please contact support.';
       
-      case AuthErrorType.SESSION_EXPIRED:
-        return 'Your session has expired. Please sign in again.';
+    case AuthErrorType.SESSION_EXPIRED:
+      return 'Your session has expired. Please sign in again.';
       
-      case AuthErrorType.INVALID_TOKEN:
-        return 'This link has expired or is invalid. Please request a new one.';
+    case AuthErrorType.INVALID_TOKEN:
+      return 'This link has expired or is invalid. Please request a new one.';
       
-      case AuthErrorType.RATE_LIMITED:
-        return 'Too many attempts. Please wait a few minutes and try again.';
+    case AuthErrorType.RATE_LIMITED:
+      return 'Too many attempts. Please wait a few minutes and try again.';
       
-      case AuthErrorType.NETWORK_ERROR:
-        return 'Connection error. Please check your internet and try again.';
+    case AuthErrorType.NETWORK_ERROR:
+      return 'Connection error. Please check your internet and try again.';
       
-      case AuthErrorType.CONFIGURATION_ERROR:
-        return 'Authentication is not properly configured. Please contact support.';
+    case AuthErrorType.CONFIGURATION_ERROR:
+      return 'Authentication is not properly configured. Please contact support.';
       
-      default:
-        return 'An error occurred. Please try again or contact support.';
+    default:
+      return 'An error occurred. Please try again or contact support.';
     }
   }
 
@@ -129,7 +129,7 @@ export class AuthenticationError extends Error implements AuthError {
   isRetryable(): boolean {
     return [
       AuthErrorType.NETWORK_ERROR,
-      AuthErrorType.RATE_LIMITED,
+      AuthErrorType.RATE_LIMITED
     ].includes(this.type);
   }
 
@@ -138,27 +138,27 @@ export class AuthenticationError extends Error implements AuthError {
    */
   getSuggestedAction(): string {
     switch (this.type) {
-      case AuthErrorType.INVALID_CREDENTIALS:
-        return 'Check your email and password';
+    case AuthErrorType.INVALID_CREDENTIALS:
+      return 'Check your email and password';
       
-      case AuthErrorType.USER_NOT_FOUND:
-        return 'Sign up for a new account';
+    case AuthErrorType.USER_NOT_FOUND:
+      return 'Sign up for a new account';
       
-      case AuthErrorType.EMAIL_NOT_VERIFIED:
-        return 'Check your email for verification link';
+    case AuthErrorType.EMAIL_NOT_VERIFIED:
+      return 'Check your email for verification link';
       
-      case AuthErrorType.SESSION_EXPIRED:
-      case AuthErrorType.INVALID_TOKEN:
-        return 'Sign in again';
+    case AuthErrorType.SESSION_EXPIRED:
+    case AuthErrorType.INVALID_TOKEN:
+      return 'Sign in again';
       
-      case AuthErrorType.RATE_LIMITED:
-        return 'Wait a few minutes';
+    case AuthErrorType.RATE_LIMITED:
+      return 'Wait a few minutes';
       
-      case AuthErrorType.NETWORK_ERROR:
-        return 'Check your internet connection';
+    case AuthErrorType.NETWORK_ERROR:
+      return 'Check your internet connection';
       
-      default:
-        return 'Try again or contact support';
+    default:
+      return 'Try again or contact support';
     }
   }
 }
@@ -180,7 +180,7 @@ export async function withAuthErrorHandling<T>(
       type: authError.type,
       message: authError.message,
       code: authError.code,
-      details: authError.details,
+      details: authError.details
     });
 
     // Call error handler if provided
@@ -208,7 +208,7 @@ export function formatAuthError(error: unknown): {
     title: getErrorTitle(authError.type),
     message: authError.toUserMessage(),
     action: authError.getSuggestedAction(),
-    isRetryable: authError.isRetryable(),
+    isRetryable: authError.isRetryable()
   };
 }
 
@@ -217,33 +217,33 @@ export function formatAuthError(error: unknown): {
  */
 function getErrorTitle(type: AuthErrorType): string {
   switch (type) {
-    case AuthErrorType.INVALID_CREDENTIALS:
-    case AuthErrorType.USER_NOT_FOUND:
-      return 'Sign In Failed';
+  case AuthErrorType.INVALID_CREDENTIALS:
+  case AuthErrorType.USER_NOT_FOUND:
+    return 'Sign In Failed';
     
-    case AuthErrorType.EMAIL_NOT_VERIFIED:
-      return 'Email Not Verified';
+  case AuthErrorType.EMAIL_NOT_VERIFIED:
+    return 'Email Not Verified';
     
-    case AuthErrorType.ACCOUNT_DISABLED:
-      return 'Account Disabled';
+  case AuthErrorType.ACCOUNT_DISABLED:
+    return 'Account Disabled';
     
-    case AuthErrorType.SESSION_EXPIRED:
-      return 'Session Expired';
+  case AuthErrorType.SESSION_EXPIRED:
+    return 'Session Expired';
     
-    case AuthErrorType.INVALID_TOKEN:
-      return 'Invalid Link';
+  case AuthErrorType.INVALID_TOKEN:
+    return 'Invalid Link';
     
-    case AuthErrorType.RATE_LIMITED:
-      return 'Too Many Attempts';
+  case AuthErrorType.RATE_LIMITED:
+    return 'Too Many Attempts';
     
-    case AuthErrorType.NETWORK_ERROR:
-      return 'Connection Error';
+  case AuthErrorType.NETWORK_ERROR:
+    return 'Connection Error';
     
-    case AuthErrorType.CONFIGURATION_ERROR:
-      return 'Configuration Error';
+  case AuthErrorType.CONFIGURATION_ERROR:
+    return 'Configuration Error';
     
-    default:
-      return 'Authentication Error';
+  default:
+    return 'Authentication Error';
   }
 }
 

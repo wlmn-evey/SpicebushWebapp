@@ -39,10 +39,7 @@ export const POST: APIRoute = async ({ request }) => {
     // For development, we'll just log the email content
     // In production, you would configure a real email service
     if (import.meta.env.DEV) {
-      console.log('Tour Request Email Content:');
-      console.log('To:', schoolEmail);
-      console.log('Subject: New Tour Request from', parentName);
-      console.log('Content:', emailContent);
+      // Tour request email prepared
 
       // Simulate email sending delay
       await new Promise(resolve => setTimeout(resolve, 500));

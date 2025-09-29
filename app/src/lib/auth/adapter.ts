@@ -34,7 +34,7 @@ export const authAdapter = {
       return {
         success: result.success,
         error: result.error,
-        debugUrl: result.debugUrl, // For testing - remove in production
+        debugUrl: result.debugUrl // For testing - remove in production
       };
     } else {
       const { data, error } = await supabaseAuth.signInWithMagicLink(email);
@@ -43,8 +43,8 @@ export const authAdapter = {
         error: error?.message,
         user: data?.user ? {
           id: data.user.id,
-          email: data.user.email || email,
-        } : undefined,
+          email: data.user.email || email
+        } : undefined
       };
     }
   },
@@ -63,8 +63,8 @@ export const authAdapter = {
         error: error?.message,
         user: data?.user ? {
           id: data.user.id,
-          email: data.user.email || email,
-        } : undefined,
+          email: data.user.email || email
+        } : undefined
       };
     }
   },
@@ -80,7 +80,7 @@ export const authAdapter = {
       const { error } = await supabaseAuth.signOut();
       return {
         success: !error,
-        error: error?.message,
+        error: error?.message
       };
     }
   },
@@ -131,7 +131,7 @@ export const authAdapter = {
       const result = await clerkAuth.verifyMagicLink(token);
       return {
         success: result.success,
-        error: result.error,
+        error: result.error
       };
     } else {
       // Supabase handles this automatically via URL params
@@ -142,13 +142,13 @@ export const authAdapter = {
           error: error?.message,
           user: session?.user ? {
             id: session.user.id,
-            email: session.user.email || '',
-          } : undefined,
+            email: session.user.email || ''
+          } : undefined
         };
       } catch (err) {
         return {
           success: false,
-          error: err instanceof Error ? err.message : 'Verification failed',
+          error: err instanceof Error ? err.message : 'Verification failed'
         };
       }
     }
@@ -159,7 +159,7 @@ export const authAdapter = {
    */
   getProvider(): 'clerk' | 'supabase' {
     return shouldUseClerk() ? 'clerk' : 'supabase';
-  },
+  }
 };
 
 /**

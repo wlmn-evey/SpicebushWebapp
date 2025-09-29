@@ -25,7 +25,7 @@ export const clerkConfig = {
   signInUrl: import.meta.env.PUBLIC_CLERK_SIGN_IN_URL || '/auth/sign-in',
   signUpUrl: import.meta.env.PUBLIC_CLERK_SIGN_UP_URL || '/auth/sign-up',
   afterSignInUrl: import.meta.env.PUBLIC_CLERK_AFTER_SIGN_IN_URL || '/admin',
-  afterSignUpUrl: import.meta.env.PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/admin',
+  afterSignUpUrl: import.meta.env.PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/admin'
 };
 
 /**
@@ -44,7 +44,7 @@ export const magicLinkConfig = {
   // Redirect URL after magic link is clicked
   redirectUrl: '/auth/callback',
   // Expiration time in minutes
-  expirationMinutes: 15,
+  expirationMinutes: 15
 };
 
 /**
@@ -60,7 +60,7 @@ export async function sendMagicLink(email: string): Promise<{ success: boolean; 
     const response = await fetch('/.netlify/functions/send-magic-link', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email })
     });
 
     const result = await response.json();
@@ -124,29 +124,28 @@ export async function getCurrentUser(): Promise<UserResource | null> {
   
   try {
     // Log all calls to track usage
-    console.log('[AUTH] getCurrentUser called');
+    // Get current user
     
     if (USE_REAL_CLERK) {
-      console.log('[AUTH] Attempting real Clerk user fetch');
+      // Attempting Clerk user fetch
       
       // Check if we're in a browser context
       if (typeof window !== 'undefined' && window.Clerk) {
         // Use Clerk's client-side SDK if available
         const clerk = window.Clerk;
         if (clerk.user) {
-          console.log('[AUTH] User found via Clerk SDK');
+          // User found
           return clerk.user as UserResource;
         }
       }
       
       // For SSR context, we need to get user from cookies/session
       // This is a temporary implementation
-      console.warn('[AUTH] getCurrentUser: Unable to fetch real user (SSR context)');
+      // Unable to fetch in SSR
       return null;
     } else {
       // Mock implementation with warning
-      console.warn('[AUTH] getCurrentUser: Returning NULL (mock mode)');
-      console.warn('[AUTH] Set USE_REAL_CLERK_VALIDATION=true for real user data');
+      // Mock mode - no user data
       
       // Return null to maintain existing behavior
       // This is safer than returning fake user data

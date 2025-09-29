@@ -40,7 +40,7 @@ export function toAdminUser(clerkUser: UserResource): AdminUser | null {
     isAdmin: true,
     role: 'admin',
     permissions: ['admin.access', 'admin.manage'],
-    lastSignIn: clerkUser.lastSignInAt || undefined,
+    lastSignIn: clerkUser.lastSignInAt || undefined
   };
 }
 
@@ -65,8 +65,8 @@ export async function verifyAdminAccess(authHeader?: string): Promise<{ isAdmin:
         email: 'admin@spicebushmontessori.org',
         isAdmin: true,
         role: 'admin',
-        permissions: ['admin.access', 'admin.manage'],
-      },
+        permissions: ['admin.access', 'admin.manage']
+      }
     };
   } catch (error) {
     console.error('Admin verification error:', error);
@@ -96,7 +96,7 @@ export async function logAdminAction(
 ): Promise<void> {
   try {
     const timestamp = new Date().toISOString();
-    console.log(`[ADMIN AUDIT] ${timestamp} - User ${userId} performed ${action}`, details);
+    // Admin action logged
     
     // In production, this would send to a logging service
     // For now, just console log
@@ -120,7 +120,7 @@ export function getAdminEmailList(): string[] {
   return [
     'admin@spicebushmontessori.org',
     'director@spicebushmontessori.org',
-    'evey@eveywinters.com',
+    'evey@eveywinters.com'
   ];
 }
 
@@ -147,7 +147,7 @@ export function createAdminSession(userId: string, email: string): AdminSession 
     email,
     isActive: true,
     createdAt: now,
-    expiresAt,
+    expiresAt
   };
 }
 

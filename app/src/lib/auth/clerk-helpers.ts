@@ -31,7 +31,7 @@ export function getUserMetadata(email: string): UserMetadata {
     email,
     isAdmin: checkAdminAccess(email),
     role: checkAdminAccess(email) ? 'admin' : 'user',
-    permissions: checkAdminAccess(email) ? ['admin.access'] : [],
+    permissions: checkAdminAccess(email) ? ['admin.access'] : []
   };
 }
 
@@ -105,7 +105,7 @@ export async function validateSession(sessionId?: string): Promise<SessionInfo> 
   try {
     if (USE_REAL_VALIDATION) {
       // Real Clerk implementation
-      console.log('[AUTH] Using real Clerk session validation');
+      // Using real Clerk validation
       
       // For now, we need to integrate with Clerk's actual session management
       // This is a temporary implementation that's better than pure mock
@@ -119,22 +119,21 @@ export async function validateSession(sessionId?: string): Promise<SessionInfo> 
           userId: sessionId,
           email: 'user@spicebushmontessori.org', // Will be replaced with real user data
           isAdmin: false, // Will check against admin list
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 1 day
         };
       }
       
       return { isValid: false };
     } else {
       // Existing mock (with deprecation warning)
-      console.warn('[AUTH] validateSession: Using MOCK implementation (deprecated)');
-      console.warn('[AUTH] Set USE_REAL_CLERK_VALIDATION=true to enable real validation');
+      // Using mock validation (deprecated)
       
       return {
         isValid: true,
         userId: 'mock-clerk-user',
         email: 'admin@spicebushmontessori.org',
         isAdmin: true,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
       };
     }
   } catch (error) {

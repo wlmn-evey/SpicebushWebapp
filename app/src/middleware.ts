@@ -1,6 +1,6 @@
 import { defineMiddleware } from 'astro:middleware';
 import { clerkMiddleware, createRouteMatcher } from '@clerk/astro/server';
-import { Clerk } from '@clerk/backend';
+import { createClerkClient } from '@clerk/backend';
 
 // Define protected routes
 const isProtectedRoute = createRouteMatcher([
@@ -13,10 +13,10 @@ const comingSoonMiddleware = defineMiddleware(async (context, next) => {
   // Check environment variable for coming soon mode (for testing/staging environments)
   // This allows testing site to have coming soon enabled without database changes
   const isComingSoonEnabled = import.meta.env.COMING_SOON_MODE === 'true';
-  
+
   // Get the current path
   const pathname = context.url.pathname;
-  
+
   // List of paths that should bypass coming soon mode
   const bypassPaths = [
     '/coming-soon',
@@ -29,21 +29,21 @@ const comingSoonMiddleware = defineMiddleware(async (context, next) => {
     '/favicon.svg',
     '/images/'
   ];
-  
+
   // Check if the path should bypass coming soon mode
   const shouldBypass = bypassPaths.some(path => pathname.startsWith(path));
-  
+
   // Also bypass if URL contains auth confirmation parameters
-  const hasAuthParams = context.url.searchParams.has('token_hash') || 
+  const hasAuthParams = context.url.searchParams.has('token_hash') ||
                        context.url.searchParams.has('type') ||
                        context.url.searchParams.has('error') ||
                        context.url.searchParams.has('error_code');
-  
+
   // Redirect to coming soon page if enabled and not bypassed
   if (isComingSoonEnabled && !shouldBypass && !hasAuthParams) {
     return context.redirect('/coming-soon');
   }
-  
+
   // Continue with the request
   return next();
 });
@@ -66,17 +66,17 @@ export const onRequest = clerkMiddleware(async (auth, context, next) => {
       // Optionally enrich with email using Clerk backend if available
       const secret = process.env.CLERK_SECRET_KEY || '';
       if (secret) {
-        const clerk = new Clerk({ secretKey: secret });
+        const clerk = createClerkClient({ secretKey: secret });
         const user = await clerk.users.getUser(authObj.userId);
         const email = user?.emailAddresses?.[0]?.emailAddress;
         // @ts-ignore - locals is dynamic
         if (email) context.locals.userEmail = email;
       }
     } catch (e) {
-      console.warn('[Middleware] Failed to populate userEmail:', e instanceof Error ? e.message : e);
+      // Failed to populate user email - continue anyway
     }
   }
-  
+
   // Apply coming soon middleware
   return comingSoonMiddleware(context, next);
 });

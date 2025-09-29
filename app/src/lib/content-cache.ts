@@ -252,7 +252,7 @@ export const cacheUtils = {
         getCollection('hours'),
         getAllSettings()
       ]);
-      console.log('Content cache preloaded successfully');
+      // Content cache preloaded
     } catch (error) {
       console.warn('Failed to preload cache:', error);
     }
