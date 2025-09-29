@@ -12,11 +12,13 @@ const isProtectedRoute = createRouteMatcher([
 const comingSoonMiddleware = defineMiddleware(async (context, next) => {
   // Check environment variable for coming soon mode (for testing/staging environments)
   // This allows testing site to have coming soon enabled without database changes
-  // Prefer runtime env for SSR (Netlify functions), fallback to build-time env
-  const rawComingSoon = process.env.COMING_SOON_MODE ?? import.meta.env.COMING_SOON_MODE;
+  // Prefer runtime env for SSR (Netlify functions), fallback to build-time env.
+  // Guard against environments where `process` is undefined (e.g., some edge runtimes).
+  const runtimeEnv = (typeof process !== 'undefined' && typeof process.env !== 'undefined') ? process.env : undefined;
+  const rawComingSoon = (runtimeEnv?.COMING_SOON_MODE ?? (import.meta as any)?.env?.COMING_SOON_MODE) as string | undefined;
   const isComingSoonEnabled = typeof rawComingSoon === 'string'
     ? ['true', '1', 'yes', 'on'].includes(rawComingSoon.toLowerCase())
-    : Boolean(rawComingSoon);
+    : false;
 
   // Get the current path
   const pathname = context.url.pathname;
