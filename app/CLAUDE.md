@@ -80,7 +80,7 @@ docker compose up -d
 - **Build Script**: `build-with-env.sh` handles environment setup
 - **Node Version**: 20 (specified in netlify.toml)
 - **Memory Allocation**: 4GB max old space size for large builds
-- **Authentication**: Netlify Identity enabled (migrating from Supabase Auth)
+- **Authentication**: Clerk (Supabase handles data only)
 - **Environment Variables**: Set in Netlify dashboard, not committed to repo
 
 ### Netlify CLI Commands
@@ -118,7 +118,7 @@ npx netlify logs:function
 3. **Common deployment issues**:
    - Missing environment variables → Set in Netlify dashboard
    - Build memory errors → Already configured with NODE_OPTIONS
-   - Authentication failures → Check Clerk/Netlify Identity keys
+   - Authentication failures → Check Clerk keys and Supabase environment values
    - Database connection issues → Verify Supabase credentials
 
 ### Environment Variable Management
@@ -816,7 +816,7 @@ For complete details, see `THINKING_MATRIX.md`.
 1. Dynamic Tuition Calculator (FIT model)
 2. Multilingual Content Management System
 3. Native Tour Scheduling System
-4. Blog and Content Management (Strapi)
+4. Blog and Content Management (Supabase Collections)
 5. Integrated Feedback System
 
 **Next Phase (Medium Priority)**:
@@ -838,7 +838,7 @@ For complete details, see `THINKING_MATRIX.md`.
 - Replace Google Forms with integrated feedback system
 - Support 9-language content management
 - Income-based tuition calculation system
-- Strapi CMS for blog and content management
+- Supabase content collections for blog and site copy management
 
 ### Content & Messaging Alignment
 **Primary Messages to Reinforce**:
@@ -865,7 +865,7 @@ For complete details, see `THINKING_MATRIX.md`.
 
 ### Next Phase (Phase 2 - Weeks 9-16)
 1. **Multilingual Support**: Starting with Spanish
-2. **Blog Content**: Build out blog with Strapi CMS
+2. **Blog Content**: Build out blog with Supabase content collections
 3. **Native Tour Scheduling**: Replace Calendly dependency
 4. **Community Calendar**: Events and RSVP system
 

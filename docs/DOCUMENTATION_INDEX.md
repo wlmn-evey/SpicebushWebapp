@@ -63,6 +63,6 @@ Historical documentation for reference:
 - **Reduction**: 40% less clutter
 
 ## 🚨 Important Notes
-- All Strapi documentation has been deprecated (migrating to Decap CMS)
-- Docker configuration is being simplified
-- Security credentials have been removed from the repository
+- Legacy Strapi references are archived; the live stack is Astro + Supabase + Clerk
+- Tuition calculator and admin dashboards are in maintenance mode pending rebuild
+- Security credentials have been removed from the repository—use Netlify environment variables instead

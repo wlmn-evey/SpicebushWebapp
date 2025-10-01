@@ -15,9 +15,10 @@ These variables are prefixed with `PUBLIC_` and are accessible in the browser:
 | Variable | Purpose | Required | Example |
 |----------|---------|----------|---------|
 | `PUBLIC_SUPABASE_URL` | Supabase project URL | ✅ Yes | `https://abc123.supabase.co` |
-| `PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | ✅ Yes | `eyJhbGc...` |
-| `PUBLIC_STRAPI_URL` | Strapi CMS URL | ❌ No | `https://cms.example.com` |
-| `PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe public key | ❌ No | `pk_live_...` |
+| `PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | ✅ Yes | `sb_publishable_...` |
+| `PUBLIC_SITE_URL` | Canonical site URL | ✅ Yes | `https://spicebushmontessori.org` |
+| `PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk frontend key | ✅ Yes | `pk_live_...` |
+| `PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe public key (donations) | ❌ No | `pk_live_...` |
 
 ### 2. Private Variables (Server-Side)
 
@@ -25,11 +26,14 @@ These are only used during build or in API routes:
 
 | Variable | Purpose | Required | Example |
 |----------|---------|----------|---------|
-| `STRIPE_SECRET_KEY` | Stripe secret key | ❌ No | `sk_live_...` |
-| `SMTP_HOST` | Email server host | ❌ No | `smtp.sendgrid.net` |
-| `SMTP_PORT` | Email server port | ❌ No | `587` |
-| `SMTP_USER` | Email username | ❌ No | `apikey` |
-| `SMTP_PASS` | Email password | ❌ No | `SG.xxx...` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | ✅ Yes | `sb_secret_...` |
+| `CLERK_SECRET_KEY` | Clerk backend key | ✅ Yes | `sk_live_...` |
+| `EMAIL_FROM` | Sender email for transactional mail | ✅ Yes | `info@spicebushmontessori.org` |
+| `EMAIL_FROM_NAME` | Sender display name | ✅ Yes | `Spicebush Montessori School` |
+| `UNIONE_API_KEY` | Unione email API key | ✅ Yes (if using Unione) | `uni_xxx...` |
+| `UNIONE_REGION` | Unione region | ✅ Yes (if using Unione) | `us` |
+| `STRIPE_SECRET_KEY` | Stripe secret/restricted key | ❌ No | `sk_live_...` |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | ❌ No | `whsec_...` |
 
 ## Environment-Specific Configuration
 
@@ -38,56 +42,70 @@ These are only used during build or in API routes:
 File: `.env.local` (git-ignored)
 
 ```env
-# Local Supabase instance
-PUBLIC_SUPABASE_URL=http://localhost:54321
-PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+# Supabase (use the shared testing project)
+PUBLIC_SUPABASE_URL=https://testing-project.supabase.co
+PUBLIC_SUPABASE_ANON_KEY=sb_publishable_testing...
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_testing...
 
-# Local Strapi instance
-PUBLIC_STRAPI_URL=http://localhost:1337
+# Local site + Clerk test keys
+PUBLIC_SITE_URL=http://localhost:4321
+PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
 
-# Test Stripe keys
+# Email service (Unione testing workspace)
+EMAIL_FROM=info@spicebushmontessori.org
+EMAIL_FROM_NAME=Spicebush Montessori (Testing)
+UNIONE_API_KEY=uni_test_...
+UNIONE_REGION=us
+
+# Optional: Stripe test mode
 PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_SECRET_KEY=sk_test_...
 ```
 
-### Staging Environment
+### Staging / Testing Environment
 
-File: `.env.staging` (git-ignored)
+Environment variables are stored in Netlify for the `testing` branch. To mirror them locally, create `.env.testing` (git-ignored):
 
 ```env
-# Staging Supabase project
-PUBLIC_SUPABASE_URL=https://staging-abc123.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+PUBLIC_SUPABASE_URL=https://testing-project.supabase.co
+PUBLIC_SUPABASE_ANON_KEY=sb_publishable_testing...
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_testing...
 
-# Staging CMS
-PUBLIC_STRAPI_URL=https://staging-cms.spicebushmontessori.org
+PUBLIC_SITE_URL=https://spicebush-testing.netlify.app
 
-# Test Stripe keys (same as dev)
-PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_SECRET_KEY=sk_test_...
+PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+
+EMAIL_FROM=info@spicebushmontessori.org
+EMAIL_FROM_NAME=Spicebush Montessori (Testing)
+UNIONE_API_KEY=uni_test_...
+UNIONE_REGION=us
 ```
 
 ### Production Environment
 
-File: `.env.production` (git-ignored)
+File: `.env.production` (git-ignored) — keep values in Netlify only, not in the repository.
 
 ```env
-# Production Supabase project
-PUBLIC_SUPABASE_URL=https://prod-xyz789.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+PUBLIC_SUPABASE_URL=https://prod-project.supabase.co
+PUBLIC_SUPABASE_ANON_KEY=sb_publishable_prod...
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_prod...
 
-# Production CMS
-PUBLIC_STRAPI_URL=https://cms.spicebushmontessori.org
+PUBLIC_SITE_URL=https://spicebushmontessori.org
 
-# Live Stripe keys
+PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
+CLERK_SECRET_KEY=sk_live_...
+
+EMAIL_FROM=info@spicebushmontessori.org
+EMAIL_FROM_NAME=Spicebush Montessori School
+UNIONE_API_KEY=uni_live_...
+UNIONE_REGION=us
+
+# Optional: Stripe live keys when donations go live
 PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_SECRET_KEY=sk_live_...
-
-# Production email configuration
-SMTP_HOST=smtp.sendgrid.net
-SMTP_PORT=587
-SMTP_USER=apikey
-SMTP_PASS=SG.actual-api-key-here
+STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
 ## Build-Time vs Runtime Variables
@@ -96,12 +114,12 @@ Since Astro generates a static site, most environment variables are resolved at 
 
 ### Build-Time Variables (Compiled into the code)
 - All `PUBLIC_*` variables
-- Variables used in `astro.config.mjs`
-- Variables used in `.astro` components
+- Variables referenced during the Astro build (e.g., feature flags)
 
-### Runtime Variables (Not applicable for static sites)
-- Static sites don't have runtime variables
-- All configuration must be done at build time
+### Runtime Variables (Serverless functions)
+- Netlify functions (e.g., `/api/**`) read secrets at runtime via `process.env`
+- Keep secrets such as `SUPABASE_SERVICE_ROLE_KEY` only in the hosting provider
+- Avoid referencing private keys inside `.astro` files or other code that runs in the browser
 
 ## Security Best Practices
 
@@ -129,7 +147,11 @@ Since Astro generates a static site, most environment variables are resolved at 
 // src/lib/env-validation.ts
 const requiredEnvVars = [
   'PUBLIC_SUPABASE_URL',
-  'PUBLIC_SUPABASE_ANON_KEY'
+  'PUBLIC_SUPABASE_ANON_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'PUBLIC_SITE_URL',
+  'PUBLIC_CLERK_PUBLISHABLE_KEY',
+  'CLERK_SECRET_KEY'
 ];
 
 for (const envVar of requiredEnvVars) {

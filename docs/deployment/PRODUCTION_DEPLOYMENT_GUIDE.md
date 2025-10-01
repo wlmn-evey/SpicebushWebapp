@@ -117,19 +117,33 @@
 
 ### Step 4: Production Environment Variables
 
-Create `.env.production` (DO NOT COMMIT):
+Create `.env.production` (DO NOT COMMIT) and mirror the same keys in Netlify → Site Settings → Environment Variables:
 ```env
 # Supabase
 PUBLIC_SUPABASE_URL=https://[your-project-id].supabase.co
-PUBLIC_SUPABASE_ANON_KEY=eyJ...your-real-anon-key
+PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
 
-# Stripe (if using donations)
+# Site configuration
+PUBLIC_SITE_URL=https://spicebushmontessori.org
+
+# Clerk authentication
+PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
+CLERK_SECRET_KEY=sk_live_...
+
+# Email service (Unione or alternate provider)
+EMAIL_FROM=info@spicebushmontessori.org
+EMAIL_FROM_NAME=Spicebush Montessori
+UNIONE_API_KEY=...
+UNIONE_REGION=us
+
+# Stripe (optional donations/payments)
 PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_SECRET_KEY=sk_live_...
-
-# Strapi CMS (if using)
-PUBLIC_STRAPI_URL=https://your-strapi-instance.com
+STRIPE_WEBHOOK_SECRET=whsec_...
 ```
+
+> **Tip:** If you are not using donations yet, omit the Stripe variables to keep the environment minimal.
 
 ### Step 5: Security Checklist
 
@@ -149,15 +163,15 @@ PUBLIC_STRAPI_URL=https://your-strapi-instance.com
    - Login/logout
    - Password reset
 
-2. **Test Tuition Calculator**
-   - Data loads correctly
-   - Calculations work
-   - Mobile responsive
+2. **Check Public Pages**
+   - Homepage content renders from Supabase
+   - Blog posts, contact form, and schedule tour flow load correctly
+   - Maintenance placeholders (Tuition Calculator/Admin) show expected copy until rebuilt
 
-3. **Test Admin Features**
-   - Admin login
-   - Data management
-   - Security boundaries
+3. **Validate Authenticated Endpoints**
+   - Clerk login/logout
+   - `/api/auth/check` confirms admin status for approved emails
+   - Newsletter/communications APIs return data using Supabase service role key
 
 ### Step 7: Monitoring & Maintenance
 
