@@ -1,0 +1,37 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { SignIn as ClerkSignIn } from '@clerk/astro/components';
+---
+
+<Layout 
+  title="Admin Sign In - Spicebush Montessori"
+  description="Securely access the Spicebush Montessori admin dashboard."
+  keywords="Spicebush Montessori admin login"
+>
+  <div class="min-h-screen bg-gradient-to-br from-stone-beige to-light-stone flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-heading font-bold text-earth-brown">Administrator Login</h1>
+        <p class="mt-2 text-gray-600">Use your Spicebush credentials to continue.</p>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-lg p-8">
+        <ClerkSignIn 
+          routing="path"
+          path="/auth/sign-in"
+          appearance={{
+            elements: {
+              formButtonPrimary: 'bg-moss-green hover:bg-forest-canopy text-white',
+              card: 'shadow-none',
+              headerTitle: 'hidden',
+              headerSubtitle: 'hidden',
+              socialButtonsBlockButton: 'border-gray-300 hover:bg-gray-50',
+              formFieldInput: 'border-gray-300 focus:border-moss-green focus:ring-moss-green',
+              footerActionLink: 'text-moss-green hover:text-forest-canopy'
+            }
+          }}
+        />
+      </div>
+    </div>
+  </div>
+</Layout>
