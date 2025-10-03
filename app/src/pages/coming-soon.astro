@@ -1,109 +1,186 @@
 ---
 export const prerender = false;
 
-import { getEntry, getCollection, getEntries, getSchoolInfo, getSetting } from '@lib/content-db';
+import { getCollection, getEntries, getAllSettings } from '@lib/content-db';
 import { Fragment } from 'astro/jsx-runtime';
 
-// Safely attempt to load all data; fall back on failure (e.g., when DB env is missing)
-let dbAvailable = true;
-let schoolInfo: any = null;
+const DEFAULT_LAUNCH_DATE = 'Fall 2025';
+const DEFAULT_UPDATE_MESSAGE = "We're updating our website to enhance your experience. Thank you for your patience!";
+const DEFAULT_PHONE = '(484) 202-0712';
+const DEFAULT_EMAIL = 'information@spicebushmontessori.org';
+const DEFAULT_ADDRESS = {
+  street: '827 Concord Road',
+  city: 'Glen Mills',
+  state: 'PA',
+  zip: '19342'
+};
+
+let settings: Record<string, unknown> = {};
 let hoursCollection: any[] = [];
 let tuitionPrograms: any[] = [];
 let tuitionRates: any[] = [];
 let testimonials: any[] = [];
 
-let launchDateSetting: any = null;
-let messageSetting: any = null;
-let newsletterSetting: any = null;
-
 try {
-  schoolInfo = await getSchoolInfo();
+  settings = await getAllSettings();
   hoursCollection = await getCollection('hours');
   tuitionPrograms = await getEntries('tuition', (entry) => entry.data.type === 'program');
   tuitionRates = await getEntries('tuition', (entry) => entry.data.type === 'rate');
   testimonials = await getEntries('testimonials', (entry) => entry.data.featured);
-
-  // Coming soon settings
-  launchDateSetting = await getSetting('coming_soon_launch_date');
-  messageSetting = await getSetting('coming_soon_message');
-  newsletterSetting = await getSetting('coming_soon_newsletter');
 } catch (e) {
-  dbAvailable = false;
-  schoolInfo = null;
+  settings = {};
   hoursCollection = [];
   tuitionPrograms = [];
   tuitionRates = [];
   testimonials = [];
-  launchDateSetting = null;
-  messageSetting = null;
-  newsletterSetting = null;
 }
 
-// Extract values with fallbacks
-const launchDate = launchDateSetting || 'Fall 2025';
-const updateMessage = messageSetting || "We're updating our website to enhance your experience. Thank you for your patience!";
-const showNewsletter = newsletterSetting !== false; // Default to true if not set
+const settingsRecord = settings as Record<string, unknown>;
 
+const coerceString = (value: unknown, fallback = ''): string => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : fallback;
+  }
+  if (typeof value === 'number') {
+    return value.toString();
+  }
+  return fallback;
+};
 
-// Sort hours by order (safely)
-const sortedHours = (Array.isArray(hoursCollection) ? [...hoursCollection] : [])
-  .sort((a, b) => (a?.data?.order || 0) - (b?.data?.order || 0));
+const coerceBoolean = (value: unknown, fallback: boolean): boolean => {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  return fallback;
+};
+
+const getSettingString = (key: string, fallback: string): string =>
+  coerceString(settingsRecord[key], fallback);
+
+const getSettingBoolean = (key: string, fallback: boolean): boolean =>
+  coerceBoolean(settingsRecord[key], fallback);
+
+const siteName = getSettingString('site_name', 'Spicebush Montessori School');
+const mainPhone = getSettingString('school_phone', getSettingString('contact_phone', DEFAULT_PHONE));
+const mainEmail = getSettingString('school_email', getSettingString('contact_email', DEFAULT_EMAIL));
+
+const addressStreet = getSettingString('school_address_street', DEFAULT_ADDRESS.street);
+const addressCity = getSettingString('school_address_city', DEFAULT_ADDRESS.city);
+const addressState = getSettingString('school_address_state', DEFAULT_ADDRESS.state);
+const addressZip = getSettingString('school_address_zip', DEFAULT_ADDRESS.zip);
+const streetLine = coerceString(addressStreet);
+
+const tagline = `Nurturing Young Minds in ${addressCity}, ${addressState}`;
+const agesServed = getSettingString('school_ages_served', '3-6 years old');
+
+const tourSchedulingEnabled = getSettingBoolean('tour_scheduling_enabled', true);
+
+const rawLaunchDate = getSettingString('coming_soon_launch_date', DEFAULT_LAUNCH_DATE);
+const launchDate = (() => {
+  const parsed = Date.parse(rawLaunchDate);
+  if (!Number.isNaN(parsed)) {
+    return new Date(parsed).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
+  return rawLaunchDate;
+})();
+
+const updateMessage = getSettingString('coming_soon_message', DEFAULT_UPDATE_MESSAGE);
+const showNewsletter = getSettingBoolean('coming_soon_newsletter', true);
+
+const normalizePhoneHref = (value: string) => value.replace(/[^0-9+]/g, '');
+const phoneHrefValue = normalizePhoneHref(mainPhone);
+const hasPhone = phoneHrefValue.length > 0;
+const hasEmail = mainEmail.length > 0;
+const addressLineTwoParts = [addressCity, addressState].filter((part) => coerceString(part).length > 0).join(', ');
+const addressLineTwo = [addressLineTwoParts, coerceString(addressZip)].filter((part) => part.length > 0).join(' ').trim();
+const addressAvailable = streetLine.length > 0 || addressLineTwo.length > 0;
+
+const DAY_ORDER: Record<string, number> = {
+  monday: 1,
+  tuesday: 2,
+  wednesday: 3,
+  thursday: 4,
+  friday: 5,
+  saturday: 6,
+  sunday: 7
+};
+
+const rawHoursEntries = Array.isArray(hoursCollection) ? hoursCollection : [];
+
+const normalizedHours = rawHoursEntries
+  .map((entry) => {
+    const data = (entry?.data ?? {}) as Record<string, unknown>;
+    const rawDay = coerceString(data.day ?? data.dayOfWeek ?? entry?.slug ?? '', '');
+    const dayKey = rawDay.toLowerCase();
+    const day = rawDay ? rawDay.replace(/\b\w/g, (char) => char.toUpperCase()) : '';
+    const regularFallback = (() => {
+      const open = coerceString(data.open_time ?? '', '');
+      const close = coerceString(data.close_time ?? '', '');
+      return open && close ? `${open} - ${close}` : '';
+    })();
+    const regular = coerceString(data.regularDay ?? data.regular_hours, regularFallback);
+    const extended = coerceString(data.extendedDay ?? data.extended_hours ?? data.close_time_extended, '');
+    const morning = coerceString(data.morningCare ?? data.morning_hours, '');
+    return { day, dayKey, regular, extended, morning };
+  })
+  .filter((entry) => entry.dayKey)
+  .sort((a, b) => (DAY_ORDER[a.dayKey] ?? 99) - (DAY_ORDER[b.dayKey] ?? 99));
 
 // Generate hours display functions
 function generateHoursDisplay() {
-  // Get weekdays (Monday-Friday)
-  const weekdays = sortedHours.filter(hour => 
-    !hour.data.is_closed && 
-    !['Saturday', 'Sunday'].includes(hour.data.day)
-  );
-  
+  const weekdays = normalizedHours.filter((entry) => {
+    const order = DAY_ORDER[entry.dayKey];
+    return order !== undefined && order <= 5;
+  });
+
   if (weekdays.length === 0) {
-    return 'Monday - Friday: 8:30 AM - 3:00 PM (pickup 2:45-3:00)';
+    return 'Monday - Friday: 8:30 AM - 3:00 PM';
   }
-  
-  // Check if all weekdays have the same schedule
-  const regularHours = '8:30 AM - 3:00 PM';
-  const hasConsistentRegularHours = weekdays.every(day => 
-    day.data.open_time === '8:30 AM'
-  );
-  
-  if (hasConsistentRegularHours) {
-    return `Monday - Friday: ${regularHours} (pickup 2:45-3:00)`;
+
+  const regularSchedules = weekdays.map((entry) => entry.regular).filter(Boolean);
+  if (regularSchedules.length === 0) {
+    return 'Monday - Friday: 8:30 AM - 3:00 PM';
   }
-  
-  // If hours vary, show individual days
-  return weekdays.map(day => 
-    `${day.data.day}: ${day.data.open_time} - ${day.data.close_time}`
-  ).join(', ');
+
+  const uniqueRegularSchedules = Array.from(new Set(regularSchedules));
+  if (uniqueRegularSchedules.length === 1) {
+    return `Monday - Friday: ${uniqueRegularSchedules[0]}`;
+  }
+
+  return weekdays
+    .map((entry) => `${entry.day}: ${entry.regular || '8:30 AM - 3:00 PM'}`)
+    .join(' • ');
 }
 
 function generateExtendedCareInfo() {
-  // Get days with extended care (close after 3:00 PM)
-  const extendedCareDays = sortedHours.filter(hour => 
-    !hour.data.is_closed && 
-    hour.data.close_time !== '3:00 PM' &&
-    !['Saturday', 'Sunday'].includes(hour.data.day)
-  );
-  
-  if (extendedCareDays.length === 0) {
-    return 'Extended care not available';
+  const extendedEntries = normalizedHours.filter((entry) => entry.extended);
+
+  if (extendedEntries.length === 0) {
+    return {
+      available: false,
+      label: '',
+      description: 'Extended care not currently available.'
+    };
   }
-  
-  // Check if it's Mon-Thu
-  const isMonThu = extendedCareDays.length === 4 && 
-    extendedCareDays.every(day => ['Monday', 'Tuesday', 'Wednesday', 'Thursday'].includes(day.data.day));
-  
-  if (isMonThu && extendedCareDays.every(day => day.data.close_time === '5:30 PM')) {
-    return 'Until 5:30 PM • Additional cost varies by income';
-  }
-  
-  // Show specific days and times
-  const dayRange = extendedCareDays.length === 4 ? 'Mon-Thu' : 
-    extendedCareDays.map(day => day.data.day.substring(0, 3)).join(', ');
-  const latestTime = extendedCareDays[0]?.data.close_time || '5:30 PM';
-  
-  return `${dayRange} until ${latestTime} • Additional cost varies by income`;
+
+  const scheduleSet = new Set(extendedEntries.map((entry) => entry.extended));
+  const coversAllDays = extendedEntries.length === normalizedHours.length;
+  const dayLabel = coversAllDays
+    ? 'Monday - Friday'
+    : extendedEntries.map((entry) => entry.day).join(', ');
+  const description = scheduleSet.size === 1
+    ? `${dayLabel}: ${extendedEntries[0].extended}`
+    : extendedEntries.map((entry) => `${entry.day}: ${entry.extended}`).join(' • ');
+
+  return {
+    available: true,
+    label: dayLabel,
+    description
+  };
 }
+
+const extendedCareInfo = generateExtendedCareInfo();
 
 // Calculate tuition ranges for each program type
 function getTuitionRange(programId: string) {
@@ -149,13 +226,16 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
     :root {
       --moss-green: #5A8065;
       --forest-canopy: #3E6D51;
+      --deep-forest: #2F5640;
       --sunlight-gold: #F89406;
+      --evergreen: #1F2A24;
       --stone-beige: #F7F2DC;
       --earth-brown: #8B5A2B;
       --warm-white: #FDFBF7;
       --text-primary: #2C2C2C;
       --text-secondary: #5A5A5A;
       --border-color: #E8E4D9;
+      --soft-shadow: rgba(62, 109, 81, 0.18);
     }
 
     /* Accessibility: Respect reduced motion */
@@ -249,7 +329,7 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
 
     h1 {
       font-size: 2.75rem;
-      color: var(--forest-canopy);
+      color: var(--evergreen);
       margin-bottom: 0.5rem;
       position: relative;
       z-index: 1;
@@ -267,15 +347,16 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
     .enrollment-notice {
       display: inline-block;
       background: var(--sunlight-gold);
-      color: white;
+      color: var(--forest-canopy);
       padding: 0.75rem 2rem;
       border-radius: 30px;
-      font-weight: 600;
+      font-weight: 700;
       position: relative;
       z-index: 1;
       font-size: 1.1rem;
       box-shadow: 0 4px 15px rgba(248, 148, 6, 0.3);
       animation: pulse 2s ease-in-out infinite;
+      letter-spacing: 0.01em;
     }
 
     @keyframes pulse {
@@ -285,7 +366,7 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
 
     /* Update Notice */
     .update-notice {
-      background: linear-gradient(135deg, var(--moss-green) 0%, var(--forest-canopy) 100%);
+      background: linear-gradient(135deg, var(--forest-canopy) 0%, var(--deep-forest) 100%);
       color: white;
       text-align: center;
       padding: 1.5rem 1rem;
@@ -391,12 +472,12 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
     }
 
     .hours-section strong {
-      color: var(--dark-green);
+      color: var(--forest-canopy);
       font-size: 0.95rem;
     }
 
     .info-card a {
-      color: var(--moss-green);
+      color: var(--forest-canopy);
       text-decoration: none;
       font-weight: 600;
       word-break: break-word;
@@ -407,12 +488,13 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
 
     .info-card a:hover {
       text-decoration: underline;
+      color: var(--deep-forest);
     }
 
     /* CTA Buttons */
     .primary-button {
       display: inline-block;
-      background: var(--moss-green);
+      background: var(--forest-canopy);
       color: white !important;
       padding: 1rem 2.5rem;
       border-radius: 30px;
@@ -423,22 +505,23 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
       line-height: 1.4;
       margin-top: 0.5rem;
       transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(90, 128, 101, 0.3);
+      box-shadow: 0 4px 15px var(--soft-shadow);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
 
-    .primary-button:hover {
-      background: var(--forest-canopy);
+    .primary-button:hover,
+    .primary-button:focus {
+      background: var(--deep-forest);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(90, 128, 101, 0.4);
+      box-shadow: 0 6px 20px rgba(47, 86, 64, 0.45);
     }
 
     .secondary-button {
       display: inline-block;
       background: transparent;
-      color: var(--moss-green);
-      border: 2px solid var(--moss-green);
+      color: var(--forest-canopy);
+      border: 2px solid var(--forest-canopy);
       padding: 0.9rem 2rem;
       border-radius: 30px;
       text-decoration: none;
@@ -447,9 +530,10 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
       transition: all 0.3s ease;
     }
 
-    .secondary-button:hover {
-      background: var(--moss-green);
-      color: white;
+    .secondary-button:hover,
+    .secondary-button:focus {
+      background: rgba(62, 109, 81, 0.12);
+      color: var(--deep-forest);
     }
 
     /* Content Sections */
@@ -823,7 +907,7 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
     }
 
     .submit-button {
-      background: var(--moss-green);
+      background: var(--forest-canopy);
       color: white;
       border: none;
       padding: 1rem 2.5rem;
@@ -833,13 +917,14 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
       cursor: pointer;
       transition: all 0.3s ease;
       width: 100%;
-      box-shadow: 0 4px 15px rgba(90, 128, 101, 0.3);
+      box-shadow: 0 4px 15px var(--soft-shadow);
     }
 
-    .submit-button:hover {
-      background: var(--forest-canopy);
+    .submit-button:hover,
+    .submit-button:focus {
+      background: var(--deep-forest);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(90, 128, 101, 0.4);
+      box-shadow: 0 6px 20px rgba(47, 86, 64, 0.45);
     }
 
     /* Footer */
@@ -953,7 +1038,7 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
 
     /* Success message */
     .success-message {
-      background: #4CAF50;
+      background: var(--forest-canopy);
       color: white;
       padding: 1rem;
       border-radius: 8px;
@@ -971,9 +1056,9 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
 
   <!-- Header Section -->
   <header class="header">
-    <img src="/images/optimized/homepage/homepage-spicebush-logo-brand-identity-800x800.webp" alt="Spicebush Montessori School" class="logo">
-    <h1>Spicebush Montessori School</h1>
-    <p class="tagline">Nurturing Young Minds in Glen Mills, PA</p>
+    <img src="/images/optimized/homepage/homepage-spicebush-logo-brand-identity-800x800.webp" alt={siteName} class="logo">
+    <h1>{siteName}</h1>
+    <p class="tagline">{tagline}</p>
     <div class="enrollment-notice" role="alert">🌟 Now Enrolling for {launchDate} - Limited Spots Available!</div>
   </header>
 
@@ -992,7 +1077,7 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
           </svg>
         </div>
         <h3>Ages Served</h3>
-        <p><strong>{schoolInfo?.data.agesServed || '3-6 years old'}</strong></p>
+        <p><strong>{agesServed}</strong></p>
         <p>Preschool & Primary Programs</p>
       </div>
 
@@ -1010,8 +1095,11 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
           </p>
           
           <p class="hours-section">
-            <strong>Extended Care Option (Mon-Thu only)</strong><br/>
-            {generateExtendedCareInfo()}
+            <strong>
+              Extended Care Option
+              {extendedCareInfo.available && extendedCareInfo.label ? ` (${extendedCareInfo.label})` : ''}
+            </strong><br/>
+            {extendedCareInfo.description}
           </p>
         </div>
       </div>
@@ -1023,8 +1111,20 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
           </svg>
         </div>
         <h3>Contact Us</h3>
-        <p><a href={`tel:${schoolInfo?.data.phone}`}>{schoolInfo?.data.phone}</a></p>
-        <p><a href={`mailto:${schoolInfo?.data.email}`}>{schoolInfo?.data.email}</a></p>
+        <p>
+          {hasPhone ? (
+            <a href={`tel:${phoneHrefValue}`}>{mainPhone}</a>
+          ) : (
+            mainPhone || 'Phone number coming soon'
+          )}
+        </p>
+        <p>
+          {hasEmail ? (
+            <a href={`mailto:${mainEmail}`}>{mainEmail}</a>
+          ) : (
+            mainEmail || 'Email coming soon'
+          )}
+        </p>
       </div>
 
       <div class="info-card">
@@ -1035,8 +1135,9 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
         </div>
         <h3>Schedule a Tour</h3>
         <p>See our beautiful campus</p>
-        <a href="#contact" class="primary-button">Schedule Tour</a>
-        <a href="/auth/sign-in" class="secondary-button" style="margin-left: 1rem;">Administrator Login</a>
+        {tourSchedulingEnabled && (
+          <a href="#contact" class="primary-button">Schedule Tour</a>
+        )}
       </div>
     </section>
 
@@ -1212,9 +1313,11 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
           <a href={applicationLink} target="_blank" rel="noopener noreferrer" class="secondary-button" style="margin-right: 1rem;">
             Apply Now
           </a>
-          <a href="#contact" class="primary-button">
-            Schedule a Tour First
-          </a>
+          {tourSchedulingEnabled && (
+            <a href="#contact" class="primary-button">
+              Schedule a Tour First
+            </a>
+          )}
         </div>
       </div>
     </section>
@@ -1240,12 +1343,25 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
               </div>
               <div class="contact-item-content">
                 <h4>Our Location</h4>
-        {schoolInfo?.data?.address ? (
+        {addressAvailable ? (
           <p>
-            {schoolInfo?.data?.address?.street}<br>
-            {schoolInfo?.data?.address?.city}, {schoolInfo?.data?.address?.state} {schoolInfo?.data?.address?.zip}
+            {streetLine.length > 0 ? (
+              <Fragment>
+                {streetLine}
+                {addressLineTwo && (
+                  <Fragment>
+                    <br />
+                    {addressLineTwo}
+                  </Fragment>
+                )}
+              </Fragment>
+            ) : (
+              addressLineTwo
+            )}
           </p>
-        ) : null}
+        ) : (
+          <p>Address details coming soon.</p>
+        )}
               </div>
             </div>
             
@@ -1257,9 +1373,11 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
               </div>
               <div class="contact-item-content">
                 <h4>Call Us</h4>
-        {schoolInfo?.data?.phone ? (
-          <p><a href={`tel:${schoolInfo?.data?.phone}`}>{schoolInfo?.data?.phone}</a></p>
-        ) : null}
+        {hasPhone ? (
+          <p><a href={`tel:${phoneHrefValue}`}>{mainPhone}</a></p>
+        ) : (
+          <p>{mainPhone || 'Phone number coming soon'}</p>
+        )}
                 <p>Monday-Friday: 8:30 AM - 5:00 PM</p>
               </div>
             </div>
@@ -1272,9 +1390,11 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
               </div>
               <div class="contact-item-content">
                 <h4>Email Us</h4>
-        {schoolInfo?.data?.email ? (
-          <p><a href={`mailto:${schoolInfo?.data?.email}`}>{schoolInfo?.data?.email}</a></p>
-        ) : null}
+        {hasEmail ? (
+          <p><a href={`mailto:${mainEmail}`}>{mainEmail}</a></p>
+        ) : (
+          <p>{mainEmail || 'Email coming soon'}</p>
+        )}
               </div>
             </div>
             
@@ -1380,12 +1500,6 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
       <a href="/non-discrimination-policy">Non-Discrimination Policy</a>
       <a href="/privacy-policy">Privacy Policy</a>
       <a href="/accessibility">Accessibility</a>
-    </div>
-    <div style="margin-top: 1.5rem;">
-      <a href="/auth/sign-in" class="admin-login-button">
-        Staff Dashboard
-        <span style="display: block; font-size: 0.8em; opacity: 0.75; margin-top: 2px;">No password required</span>
-      </a>
     </div>
     <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.9; max-width: 800px; margin-left: auto; margin-right: auto;">
       Spicebush Montessori School admits students of any race, color, national and ethnic origin to all the rights, 
