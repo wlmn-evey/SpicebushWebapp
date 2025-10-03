@@ -2,382 +2,173 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import TuitionCalculator from '../../components/TuitionCalculator.astro';
-import { Calculator, DollarSign, Heart, Users, Shield, Star, Percent, CreditCard } from 'lucide-astro';
-import { getCollection } from 'astro:content';
+import TuitionCalculator from '../../components/TuitionCalculator.tsx';
+import { db } from '@lib/db';
 
-// Fetch data from content collections
-let programs = [];
-let rates = [];
-let settings = {};
+interface ProgramRecord {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  programType?: string;
+  daysPerWeek?: number;
+  dailyHours?: number;
+  displayOrder: number;
+}
+
+interface RateRecord {
+  id: string;
+  programId: string;
+  label: string;
+  tuitionPrice: number;
+  extendedCarePrice: number | null;
+  extendedCareAvailable: boolean;
+  isConstantRate: boolean;
+  incomeThresholdType: string | null;
+  thresholds: Record<string, number | null>;
+  displayOrder: number;
+  schoolYear?: string;
+}
+
+interface CalculatorSettings {
+  upfrontDiscountRate: number;
+  siblingDiscountRate: number;
+  currentSchoolYear: string;
+}
+
+const numberFrom = (value: unknown, fallback = 0): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return fallback;
+    const parsed = Number.parseFloat(trimmed.replace(/[^0-9.-]/g, ''));
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  return fallback;
+};
+
+const stringFrom = (value: unknown, fallback = ''): string => {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : fallback;
+};
+
+let programs: ProgramRecord[] = [];
+let rates: RateRecord[] = [];
+let calculatorSettings: CalculatorSettings = {
+  upfrontDiscountRate: 0.05,
+  siblingDiscountRate: 0.1,
+  currentSchoolYear: '2025-2026'
+};
+let loadError: string | null = null;
 
 try {
-  // Fetch all required data from content collections
-  const tuitionCollection = await getCollection('tuition', ({ data }) => data.active === true);
-  const settingsCollection = await getCollection('settings');
-  
-  // Separate programs and rates from the tuition collection
-  const programsCollection = tuitionCollection.filter(item => item.data.type === 'program');
-  const ratesCollection = tuitionCollection.filter(item => item.data.type === 'rate');
+  const [tuitionEntries, settingsMap] = await Promise.all([
+    db.content.getCollection('tuition'),
+    db.content.getAllSettings()
+  ]);
 
-  // Transform programs to match expected format
-  programs = programsCollection
-    .sort((a, b) => a.data.display_order - b.data.display_order)
-    .map(program => ({
-      id: program.slug,
-      name: program.data.name,
-      program_type: program.data.program_type,
-      days_per_week: program.data.days_per_week,
-      daily_hours: program.data.daily_hours,
-      description: program.data.description,
-      display_order: program.data.display_order,
-      active: program.data.active
-    }));
+  programs = tuitionEntries
+    .filter((entry) => {
+      const data = entry.data as Record<string, unknown>;
+      return stringFrom(data.type) === 'program' && data.active !== false;
+    })
+    .map((entry) => {
+      const data = entry.data as Record<string, unknown>;
+      return {
+        id: stringFrom(data.program_id, entry.slug),
+        slug: entry.slug,
+        name: stringFrom(data.name ?? data.title, entry.slug),
+        description: stringFrom(data.description, ''),
+        programType: stringFrom(data.program_type),
+        daysPerWeek: Number.isFinite(Number(data.days_per_week)) ? Number(data.days_per_week) : undefined,
+        dailyHours: Number.isFinite(Number(data.daily_hours)) ? Number(data.daily_hours) : undefined,
+        displayOrder: numberFrom(data.display_order, 999)
+      } satisfies ProgramRecord;
+    })
+    .sort((a, b) => a.displayOrder - b.displayOrder || a.name.localeCompare(b.name));
 
-  // Transform rates to match expected format
-  rates = ratesCollection
-    .sort((a, b) => a.data.display_order - b.data.display_order)
-    .map(rate => ({
-      id: rate.slug,
-      rate_label: rate.data.rate_label,
-      program_id: rate.data.program_id,
-      tuition_price: rate.data.tuition_price,
-      extended_care_price: rate.data.extended_care_price,
-      extended_care_available: rate.data.extended_care_available,
-      is_constant_rate: rate.data.is_constant_rate,
-      school_year: rate.data.school_year,
-      income_threshold_type: rate.data.income_threshold_type,
-      income_threshold_family_2: rate.data.income_threshold_family_2,
-      income_threshold_family_3: rate.data.income_threshold_family_3,
-      income_threshold_family_4: rate.data.income_threshold_family_4,
-      income_threshold_family_5: rate.data.income_threshold_family_5,
-      income_threshold_family_6: rate.data.income_threshold_family_6,
-      income_threshold_family_7: rate.data.income_threshold_family_7,
-      income_threshold_family_8_plus: rate.data.income_threshold_family_8_plus,
-      display_order: rate.data.display_order,
-      active: rate.data.active
-    }));
-  
-  // Convert settings collection to object
-  settingsCollection.forEach(setting => {
-    try {
-      settings[setting.data.key] = setting.data.type === 'json' 
-        ? JSON.parse(setting.data.value) 
-        : setting.data.value;
-    } catch {
-      settings[setting.data.key] = setting.data.value;
-    }
-  });
+  rates = tuitionEntries
+    .filter((entry) => {
+      const data = entry.data as Record<string, unknown>;
+      return stringFrom(data.type) === 'rate' && data.active !== false;
+    })
+    .map((entry) => {
+      const data = entry.data as Record<string, unknown>;
+      const thresholds: RateRecord['thresholds'] = {};
+      ['2', '3', '4', '5', '6', '7', '8_plus'].forEach((sizeKey) => {
+        const fieldName = sizeKey === '8_plus' ? 'income_threshold_family_8_plus' : `income_threshold_family_${sizeKey}`;
+        thresholds[sizeKey] = data[fieldName] !== undefined ? numberFrom(data[fieldName]) : null;
+      });
 
-  // Set default settings if none exist
-  if (Object.keys(settings).length === 0) {
-    settings = {
-      current_school_year: '2025-2026',
-      upfront_discount_rate: 0.05,
-      sibling_discount_rate: 0.10,
-      annual_increase_rate: 0.04
+      return {
+        id: entry.slug,
+        programId: stringFrom(data.program_id, entry.slug),
+        label: stringFrom(data.rate_label, entry.slug.replace(/-/g, ' ')),
+        tuitionPrice: numberFrom(data.tuition_price),
+        extendedCarePrice: data.extended_care_price !== undefined ? numberFrom(data.extended_care_price, 0) : null,
+        extendedCareAvailable: data.extended_care_available !== false,
+        isConstantRate: data.is_constant_rate === true,
+        incomeThresholdType: data.income_threshold_type ? stringFrom(data.income_threshold_type) : null,
+        thresholds,
+        displayOrder: numberFrom(data.display_order, 999),
+        schoolYear: stringFrom(data.school_year, '')
+      } satisfies RateRecord;
+    })
+    .sort((a, b) => a.displayOrder - b.displayOrder || a.label.localeCompare(b.label));
+
+  if (settingsMap) {
+    const upfront = settingsMap['upfront_discount_rate'];
+    const sibling = settingsMap['sibling_discount_rate'];
+    const schoolYear = settingsMap['current_school_year'];
+
+    calculatorSettings = {
+      upfrontDiscountRate: numberFrom(upfront, calculatorSettings.upfrontDiscountRate),
+      siblingDiscountRate: numberFrom(sibling, calculatorSettings.siblingDiscountRate),
+      currentSchoolYear: stringFrom(schoolYear, calculatorSettings.currentSchoolYear)
     };
   }
-
 } catch (error) {
-  console.error('Error loading tuition data from content collections:', error);
-  // Fallback to empty arrays if content collections fail
-  programs = [];
-  rates = [];
-  settings = {};
+  console.error('Failed to load tuition calculator data', error);
+  loadError = 'We are updating our tuition calculator. Please contact admissions for personalized tuition guidance.';
 }
 ---
 
-<Layout 
-  title="Tuition Calculator - Spicebush Montessori School"
-  description="Calculate your family's tuition with our income-based sliding scale. Quality Montessori education made accessible for all families."
-  keywords="Montessori tuition calculator, sliding scale tuition, affordable preschool, financial aid calculator"
+<Layout
+  title="Tuition Calculator – Spicebush Montessori"
+  description="Estimate your family’s tuition rate using our sliding-scale calculator and learn about payment options at Spicebush Montessori."
 >
   <Header />
-  
-  <main id="main-content">
-    <!-- Modern Hero Section -->
-    <section class="relative overflow-hidden bg-gradient-to-br from-forest-canopy via-moss-green to-forest-canopy py-16 lg:py-24">
-      <!-- Background Geometric Elements -->
-      <div class="absolute inset-0 overflow-hidden">
-        <!-- Large Circle -->
-        <div class="absolute -top-24 -right-24 w-96 h-96 bg-sunlight-gold/20 rounded-full blur-3xl"></div>
-        <!-- Medium Circle -->
-        <div class="absolute top-1/2 -left-32 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
-        <!-- Small Accent Circles -->
-        <div class="absolute bottom-20 right-1/4 w-32 h-32 bg-moss-green/30 rounded-full blur-xl"></div>
-        <div class="absolute top-1/3 left-1/4 w-24 h-24 bg-sunlight-gold/30 rounded-full blur-lg"></div>
-        
-        <!-- Subtle Grid Pattern -->
-        <div class="absolute inset-0 opacity-5">
-          <div class="absolute inset-0" style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 40px 40px;"></div>
-        </div>
+  <main class="bg-stone-beige/20 py-16">
+    <section class="container mx-auto px-4 max-w-6xl">
+      <div class="mb-12 text-center">
+        <h1 class="text-4xl font-heading font-bold text-earth-brown tracking-tight mb-4">
+          Tuition & Sliding Scale Calculator
+        </h1>
+        <p class="text-lg text-earth-brown/80 leading-relaxed max-w-3xl mx-auto">
+          Enter your family size and household income to view tuition options for each program. Our calculator applies the current sliding-scale tiers and highlights tuition assistance programs automatically.
+        </p>
       </div>
-      
-      <div class="container mx-auto px-4">
-        <div class="relative z-10">
-          <div class="max-w-4xl mx-auto text-center">
-            <!-- Icon with animated background -->
-            <div class="flex justify-center mb-6">
-              <div class="relative">
-                <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30 shadow-2xl transform hover:scale-110 transition-transform duration-300">
-                  <Calculator className="w-10 h-10 text-white" />
-                </div>
-                <!-- Glow effect -->
-                <div class="absolute inset-0 w-20 h-20 bg-sunlight-gold/30 rounded-2xl blur-xl -z-10"></div>
-              </div>
-            </div>
-            
-            <!-- Main Headline -->
-            <h1 class="text-4xl lg:text-5xl xl:text-6xl font-heading font-bold text-white mb-4 leading-tight tracking-tight">
-              Find Your
-              <span class="block text-sunlight-gold font-extrabold">Family's Rate</span>
-            </h1>
-            
-            <!-- Subtitle -->
-            <p class="text-lg lg:text-xl text-green-100 max-w-3xl mx-auto leading-relaxed-plus mb-6 font-light">
-              Beautiful learning shouldn't depend on family income. Our sliding scale helps make Montessori education possible for your family.
-            </p>
-            
-            <!-- Value Propositions -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-8">
-              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                <div class="w-10 h-10 bg-sunlight-gold rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <DollarSign className="w-6 h-6 text-white" />
-                </div>
-                <h3 class="text-base font-semibold text-white mb-2">Based on What Works</h3>
-                <p class="text-green-100 text-sm">Tuition rates that fit your family's reality</p>
-              </div>
-              
-              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                <div class="w-10 h-10 bg-sunlight-gold rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <h3 class="text-base font-semibold text-white mb-2">Growing Together</h3>
-                <p class="text-green-100 text-sm">Extra support when siblings learn alongside each other</p>
-              </div>
-              
-              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                <div class="w-10 h-10 bg-sunlight-gold rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <Heart className="w-6 h-6 text-white" />
-                </div>
-                <h3 class="text-base font-semibold text-white mb-2">No Surprises</h3>
-                <p class="text-green-100 text-sm">Clear, honest pricing with everything included</p>
-              </div>
-            </div>
-            
-            <!-- CTA Buttons -->
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="#calculator" 
-                class="inline-flex items-center px-8 py-4 bg-sunlight-gold hover:bg-orange-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-2xl tracking-wide">
-                <Calculator className="w-5 h-5 mr-2" />
-                Find My Rate
-              </a>
-              <a href="/contact" 
-                class="inline-flex items-center px-8 py-4 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold rounded-xl border border-white/30 transition-all duration-300 transform hover:scale-105 tracking-wide">
-                <Users className="w-5 h-5 mr-2" />
-                Let's Talk
-              </a>
-            </div>
-            
-            <!-- Trust Indicators -->
-            <div class="mt-8 pt-6 border-t border-white/20">
-              <p class="text-green-100 text-sm mb-4 font-light">Serving families throughout the Greater Philadelphia area since 2021</p>
-              <div class="flex flex-wrap justify-center items-center gap-8 opacity-60">
-                <div class="flex items-center space-x-2">
-                  <div class="w-2 h-2 bg-sunlight-gold rounded-full"></div>
-                  <span class="text-white text-sm">Sliding Scale Tuition</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <div class="w-2 h-2 bg-sunlight-gold rounded-full"></div>
-                  <span class="text-white text-sm">Additional Support Available</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <div class="w-2 h-2 bg-sunlight-gold rounded-full"></div>
-                  <span class="text-white text-sm">Authentic Montessori</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Scroll Indicator -->
-        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
-          <div class="animate-bounce">
-            <a href="#calculator" class="flex flex-col items-center text-white/80 hover:text-white transition-colors">
-              <span class="text-xs mb-2">Scroll to calculate</span>
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- Calculator Section -->
-    <section id="calculator" class="py-16 bg-white">
-      <div class="container mx-auto px-4">
-        <TuitionCalculator 
+      {loadError ? (
+        <div class="bg-white border border-orange-200 text-orange-800 rounded-2xl p-8 shadow-sm text-center">
+          <h2 class="text-2xl font-semibold mb-3">Calculator Unavailable</h2>
+          <p class="mb-4 text-lg">
+            {loadError}
+          </p>
+          <p class="text-sm text-earth-brown/70">
+            Call <a class="underline font-medium" href="tel:14842020712">(484) 202-0712</a> or email
+            <a class="underline font-medium ml-1" href="mailto:hello@spicebushmontessori.org">hello@spicebushmontessori.org</a>
+            for immediate assistance.
+          </p>
+        </div>
+      ) : (
+        <TuitionCalculator
+          client:load
           programs={programs}
           rates={rates}
-          settings={settings}
+          settings={calculatorSettings}
         />
-      </div>
-    </section>
-
-    <!-- What's Included Section -->
-    <section class="py-16 bg-stone-beige">
-      <div class="container mx-auto px-4">
-        <div class="max-w-4xl mx-auto">
-          <h2 class="text-3xl font-bold text-earth-brown text-center mb-12">
-            Everything Your Child Needs
-          </h2>
-          
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Core Montessori Program -->
-            <div class="bg-white rounded-lg p-6 shadow-sm">
-              <div class="w-12 h-12 bg-forest-canopy rounded-lg flex items-center justify-center mb-4">
-                <Heart className="w-6 h-6 text-white" />
-              </div>
-              <h3 class="text-xl font-semibold text-earth-brown mb-3">Beautiful Montessori Environment</h3>
-              <ul class="text-earth-brown space-y-2 text-sm">
-                <li>• Community of children ages 3-6</li>
-                <li>• Trained, caring Montessori guides</li>
-                <li>• Beautiful, natural learning materials</li>
-                <li>• Time to explore and discover</li>
-                <li>• Everything needed to learn and create</li>
-              </ul>
-            </div>
-
-            <!-- Inclusive Support -->
-            <div class="bg-white rounded-lg p-6 shadow-sm">
-              <div class="w-12 h-12 bg-moss-green rounded-lg flex items-center justify-center mb-4">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <h3 class="text-xl font-semibold text-earth-brown mb-3">Honoring How Each Child Learns</h3>
-              <ul class="text-earth-brown space-y-2 text-sm">
-                <li>• Welcoming all kinds of minds and bodies</li>
-                <li>• Learning approaches that fit each child</li>
-                <li>• Calm, comfortable spaces for everyone</li>
-                <li>• Working with your child's specialists</li>
-                <li>• Celebrating each child's unique gifts</li>
-              </ul>
-            </div>
-
-            <!-- Family Partnership & Community -->
-            <div class="bg-white rounded-lg p-6 shadow-sm">
-              <div class="w-12 h-12 bg-sunlight-gold rounded-lg flex items-center justify-center mb-4">
-                <span class="text-white text-lg">👨‍👩‍👧‍👦</span>
-              </div>
-              <h3 class="text-xl font-semibold text-earth-brown mb-3">Growing Together as a Community</h3>
-              <ul class="text-earth-brown space-y-2 text-sm">
-                <li>• Real partnership with families</li>
-                <li>• Regular check-ins about your child</li>
-                <li>• Learning opportunities for caregivers</li>
-                <li>• Celebrations and gatherings</li>
-                <li>• A close-knit community feel</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Financial Aid Section -->
-    <section class="py-16 bg-white">
-      <div class="container mx-auto px-4">
-        <div class="max-w-4xl mx-auto">
-          <h2 class="text-3xl font-bold text-earth-brown text-center mb-8">
-            Making Beautiful Education Possible
-          </h2>
-          
-          <div class="bg-forest-canopy text-white rounded-lg p-8 mb-8">
-            <h3 class="text-2xl font-bold mb-4 tracking-tight">Why We Believe in Sliding Scale Tuition</h3>
-            <p class="text-lg mb-6 leading-relaxed-plus font-light">
-              Every child deserves to experience the joy of authentic Montessori learning. We don't think a family's income should determine whether their child can be part of our community. That's why we work with each family to find a tuition rate that works—because having children from many different backgrounds makes our school richer for everyone.
-            </p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 class="font-semibold mb-2">📊 Rates That Work for You</h4>
-                <p class="text-sm opacity-90 font-light">We adjust tuition based on what your family can realistically afford, with several tiers to choose from.</p>
-              </div>
-              <div>
-                <h4 class="font-semibold mb-2">👥 Siblings Learn Together</h4>
-                <p class="text-sm opacity-90 font-light">When brothers and sisters join us, we offer additional support to make it more affordable.</p>
-              </div>
-              <div>
-                <h4 class="font-semibold mb-2">🤝 Payment Plans</h4>
-                <p class="text-sm opacity-90 font-light">Monthly payments, paying for the year at once, or something in between—whatever works best.</p>
-              </div>
-              <div>
-                <h4 class="font-semibold mb-2">💡 When You Need Extra Help</h4>
-                <p class="text-sm opacity-90 font-light">Sometimes life happens. We can talk about additional support or ways families can contribute skills instead of just money.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-stone-beige rounded-lg p-6">
-            <h3 class="text-xl font-bold text-earth-brown mb-4">Let's Figure This Out Together</h3>
-            <ol class="text-earth-brown space-y-3">
-              <li class="flex items-start">
-                <span class="w-6 h-6 bg-forest-canopy text-white rounded-full text-xs flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">1</span>
-                <div>
-                  <strong>Try the calculator</strong> above to get a sense of what tuition might look like for your family.
-                </div>
-              </li>
-              <li class="flex items-start">
-                <span class="w-6 h-6 bg-forest-canopy text-white rounded-full text-xs flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">2</span>
-                <div>
-                  <strong>Share what you're comfortable sharing</strong> about your family's financial situation so we can work together.
-                </div>
-              </li>
-              <li class="flex items-start">
-                <span class="w-6 h-6 bg-forest-canopy text-white rounded-full text-xs flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">3</span>
-                <div>
-                  <strong>Let's have a conversation</strong> about what would work best for your family—we're here to listen.
-                </div>
-              </li>
-              <li class="flex items-start">
-                <span class="w-6 h-6 bg-forest-canopy text-white rounded-full text-xs flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">4</span>
-                <div>
-                  <strong>We'll create a plan together</strong> that feels good for your family and allows your child to join our community.
-                </div>
-              </li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section class="py-16 bg-moss-green text-white">
-      <div class="container mx-auto px-4 text-center">
-        <h2 class="text-3xl font-heading font-bold mb-6 tracking-tight">
-          Still Have Questions?
-        </h2>
-        <p class="text-lg text-green-100 mb-8 max-w-3xl mx-auto leading-relaxed-plus font-light">
-          We know thinking about tuition can feel overwhelming. We're here to talk through what might work for your family—no pressure, just honest conversation.
-        </p>
-        
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a 
-            href="/contact" 
-            class="bg-white text-moss-green hover:bg-gray-100 px-8 py-3 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-moss-green tracking-wide"
-          >
-            Get in Touch
-          </a>
-          <a 
-            href="/admissions/schedule-tour" 
-            class="border-2 border-white text-white hover:bg-white hover:text-moss-green px-8 py-3 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-moss-green tracking-wide"
-          >
-            Come Visit Us
-          </a>
-        </div>
-      </div>
+      )}
     </section>
   </main>
-  
   <Footer />
 </Layout>

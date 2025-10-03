@@ -1,27 +1,195 @@
 ---
 // Hours Widget Component
 // Styled specifically for footer integration
-import { getSchoolHours } from '@lib/content-db-direct';
+import { db } from '@lib/db';
+
+const DAY_ORDER = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+type HoursRow = {
+  day_of_week: string;
+  start_time: number;
+  end_time: number;
+  before_care_offset: number;
+  after_care_offset: number;
+  aftercare_available: boolean;
+  closed: boolean;
+  note?: string;
+};
+
+const FALLBACK_CONFIGURATION: Record<string, HoursRow> = {
+  Sunday: {
+    day_of_week: 'Sunday',
+    start_time: 0,
+    end_time: 0,
+    before_care_offset: 0,
+    after_care_offset: 0,
+    aftercare_available: false,
+    closed: true
+  },
+  Monday: {
+    day_of_week: 'Monday',
+    start_time: 8.5,
+    end_time: 15,
+    before_care_offset: 0.5,
+    after_care_offset: 2.5,
+    aftercare_available: true,
+    closed: false
+  },
+  Tuesday: {
+    day_of_week: 'Tuesday',
+    start_time: 8.5,
+    end_time: 15,
+    before_care_offset: 0.5,
+    after_care_offset: 2.5,
+    aftercare_available: true,
+    closed: false
+  },
+  Wednesday: {
+    day_of_week: 'Wednesday',
+    start_time: 8.5,
+    end_time: 15,
+    before_care_offset: 0.5,
+    after_care_offset: 2.5,
+    aftercare_available: true,
+    closed: false
+  },
+  Thursday: {
+    day_of_week: 'Thursday',
+    start_time: 8.5,
+    end_time: 15,
+    before_care_offset: 0.5,
+    after_care_offset: 2.5,
+    aftercare_available: true,
+    closed: false
+  },
+  Friday: {
+    day_of_week: 'Friday',
+    start_time: 8.5,
+    end_time: 15,
+    before_care_offset: 0.5,
+    after_care_offset: 0,
+    aftercare_available: false,
+    closed: false
+  },
+  Saturday: {
+    day_of_week: 'Saturday',
+    start_time: 0,
+    end_time: 0,
+    before_care_offset: 0,
+    after_care_offset: 0,
+    aftercare_available: false,
+    closed: true
+  }
+};
+
+const parseTimeToDecimal = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const match = trimmed.match(/^(\d{1,2})(?::(\d{1,2}))?\s*(AM|PM)?$/i);
+    if (!match) return null;
+
+    let hours = Number.parseInt(match[1] ?? '0', 10);
+    const minutes = Number.parseInt(match[2] ?? '0', 10);
+    const period = match[3]?.toUpperCase();
+
+    if (period === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    return hours + minutes / 60;
+  }
+
+  return null;
+};
+
+const numberFrom = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parsed = Number.parseFloat(trimmed);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+};
+
+const normalizeEntry = (raw: Record<string, unknown>): HoursRow | null => {
+  const day = typeof raw.day === 'string' ? raw.day : typeof raw.day_of_week === 'string' ? raw.day_of_week : '';
+  if (!day) return null;
+
+  const closed = raw.closed === true || raw.is_closed === true;
+
+  const start = closed ? 0 : parseTimeToDecimal(raw.start_time ?? raw.open_time) ?? FALLBACK_CONFIGURATION[day]?.start_time ?? 0;
+  const end = closed ? 0 : parseTimeToDecimal(raw.end_time ?? raw.close_time) ?? FALLBACK_CONFIGURATION[day]?.end_time ?? 0;
+
+  const beforeOffsetExplicit = numberFrom(raw.before_care_offset);
+  const beforeStart = parseTimeToDecimal(raw.before_care_start);
+  const beforeOffset = closed
+    ? 0
+    : beforeOffsetExplicit ?? (beforeStart && start ? Math.max(0, start - beforeStart) : FALLBACK_CONFIGURATION[day]?.before_care_offset ?? 0);
+
+  const afterOffsetExplicit = numberFrom(raw.after_care_offset);
+  const afterEnd = parseTimeToDecimal(raw.after_care_end);
+  const afterOffset = closed
+    ? 0
+    : afterOffsetExplicit ?? (afterEnd && end ? Math.max(0, afterEnd - end) : FALLBACK_CONFIGURATION[day]?.after_care_offset ?? 0);
+
+  const aftercareAvailable = raw.aftercare_available === false ? false : afterOffset > 0;
+
+  return {
+    day_of_week: day,
+    start_time: start,
+    end_time: end,
+    before_care_offset: beforeOffset,
+    after_care_offset: afterOffset,
+    aftercare_available: aftercareAvailable,
+    closed,
+    note: typeof raw.note === 'string' ? raw.note.trim() : undefined
+  };
+};
 
 // Fetch hours data from database with robust error handling
-let hoursData = [];
+let hoursPayload: HoursRow[] = [];
 let hasDataError = false;
+
 try {
-  const hoursEntries = await getSchoolHours();
+  const hoursEntries = await db.content.getCollection('hours');
   if (hoursEntries && hoursEntries.length > 0) {
-    hoursData = hoursEntries;
+    const normalized = new Map<string, HoursRow>();
+    for (const entry of hoursEntries) {
+      const candidate = normalizeEntry((entry?.data as Record<string, unknown>) ?? {});
+      if (candidate) {
+        normalized.set(candidate.day_of_week, candidate);
+      }
+    }
+
+    if (normalized.size === 0) {
+      console.warn('HoursWidget: hours collection is empty after normalization. Using fallback configuration.');
+      hasDataError = true;
+    }
+
+    hoursPayload = DAY_ORDER.map((day) => normalized.get(day) ?? FALLBACK_CONFIGURATION[day]);
   } else {
     console.warn('HoursWidget: No hours data returned from database');
     hasDataError = true;
+    hoursPayload = DAY_ORDER.map((day) => FALLBACK_CONFIGURATION[day]);
   }
 } catch (error) {
   console.error('Error loading hours in HoursWidget:', error);
   hasDataError = true;
-  // Component will still render with fallback data
+  hoursPayload = DAY_ORDER.map((day) => FALLBACK_CONFIGURATION[day]);
 }
 ---
 
-<div id="sbms-hours-widget" class="bg-white rounded-lg p-4 text-earth-brown shadow-sm" data-hours={JSON.stringify(hoursData)}>
+<div id="sbms-hours-widget" class="bg-white rounded-lg p-4 text-earth-brown shadow-sm" data-hours={JSON.stringify(hoursPayload)}>
   <h3 class="text-xl font-bold text-center text-forest-canopy mb-2">School Hours</h3>
   <div id="current-time-container" class="text-center text-xs opacity-80 mb-3">
     Current Time: <span id="current-time" class="font-medium text-forest-canopy"></span>
@@ -74,7 +242,7 @@ try {
   </div>
 </div>
 
-<script type="module">
+<script type="module" is:inline>
   
   // Utility functions moved inline to avoid TypeScript import issues in production
   
@@ -225,6 +393,7 @@ try {
     const debugInfo = document.getElementById('debug-info');
     
     // Get hours data from data attribute
+    /** @type {Array<any>} */
     let hoursData = [];
     try {
       const dataAttr = widget.getAttribute('data-hours');
@@ -244,28 +413,19 @@ try {
     // Enable debug mode if URL contains ?debug=true
     const urlParams = new URLSearchParams(window.location.search);
     const debugMode = urlParams.get('debug') === 'true';
-    if (debugMode) {
+    if (debugMode && debugInfo) {
       debugInfo.classList.remove('hidden');
     }
     
     function updateDebugInfo() {
       if (debugMode) {
-        document.getElementById('data-source').textContent = dataSource;
-        document.getElementById('days-count').textContent = Object.keys(processedHoursData).length;
-        document.getElementById('holidays-count').textContent = upcomingHolidays.length;
+        const dataSourceEl = document.getElementById('data-source');
+        const daysCountEl = document.getElementById('days-count');
+        const holidaysCountEl = document.getElementById('holidays-count');
+        if (dataSourceEl) dataSourceEl.textContent = dataSource;
+        if (daysCountEl) daysCountEl.textContent = Object.keys(processedHoursData).length.toString();
+        if (holidaysCountEl) holidaysCountEl.textContent = upcomingHolidays.length.toString();
       }
-    }
-    
-    // Convert time string to decimal hours
-    function parseTimeToDecimal(timeStr) {
-      if (!timeStr || typeof timeStr !== 'string') return 0;
-      const [time, period] = timeStr.split(' ');
-      let [hours, minutes = 0] = (time || '').split(':').map(Number);
-      
-      if (period === 'PM' && hours !== 12) hours += 12;
-      if (period === 'AM' && hours === 12) hours = 0;
-      
-      return hours + (minutes / 60);
     }
     
     // Process hours data from content collection
@@ -289,9 +449,6 @@ try {
             };
           } else {
             // Database already provides decimal times
-            const openTime = typeof data.open_time === 'number' ? data.open_time : parseTimeToDecimal(data.open_time);
-            const closeTime = typeof data.close_time === 'number' ? data.close_time : parseTimeToDecimal(data.close_time);
-            
             // Use database values for regular hours
             const standardStart = data.start_time || 8.5;
             const standardEnd = data.end_time || 15;
