@@ -1,7 +1,7 @@
 ---
 name: "Coming Soon Message"
 key: "coming_soon_message"
-value: "We're preparing something special for you. Our new website will launch soon with exciting features and resources for families interested in Montessori education."
+value: "We're updating our website while accepting applications for the 2026 school year."
 description: "The custom message to display on the coming soon page"
 type: "string"
 ---

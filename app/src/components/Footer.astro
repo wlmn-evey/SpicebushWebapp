@@ -25,6 +25,8 @@ const toUrlOrNull = (value: unknown): string | null => {
 };
 
 let socialMedia: SocialMediaLinks = { facebook: null, instagram: null };
+const copyrightYear = new Date().getFullYear();
+
 try {
   const [facebookSetting, instagramSetting] = await Promise.all([
     db.content.getSetting('school_facebook').catch(() => null),
@@ -140,7 +142,7 @@ try {
     <div class="border-t border-gray-600 pt-8">
       <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
         <div class="text-light-stone text-sm text-center md:text-left">
-          <p>&copy; 2025 Spicebush Montessori School. All rights reserved.</p>
+          <p>&copy; {copyrightYear} Spicebush Montessori School. All rights reserved.</p>
         </div>
         <div class="flex flex-wrap justify-center md:justify-end space-x-6 text-sm">
           <a href="/privacy-policy" class="text-light-stone hover:text-sunlight-gold transition-colors">Privacy Policy</a>
