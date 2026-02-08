@@ -1,6 +1,6 @@
 import { logError } from '@lib/error-logger';
 import { CacheStore, calculateCacheStats } from './cache';
-import { getPublicClient, getServiceClient } from './client';
+import { queryFirst, queryRows } from './client';
 import type { ContentEntry, ContentRow, SettingRow } from './types';
 
 const DATABASE_COLLECTIONS = new Set([
@@ -70,21 +70,21 @@ async function fetchCollection(collection: string): Promise<ContentEntry[]> {
     return [];
   }
 
-  const client = getPublicClient();
-  const { data, error } = await client
-    .from('content')
-    .select('slug,type,title,data,status,created_at')
-    .eq('type', collection)
-    .eq('status', 'published')
-    .order('created_at', { ascending: false });
-
-  if (error) {
+  try {
+    const rows = await queryRows<ContentRow>(
+      `
+        SELECT slug, type, title, data, status, created_at, updated_at, author_email, id
+        FROM content
+        WHERE type = $1 AND status = 'published'
+        ORDER BY created_at DESC
+      `,
+      [collection]
+    );
+    return rows.map(toContentEntry);
+  } catch (error) {
     logError('db.content', error, { action: 'fetchCollection', collection });
     return [];
   }
-
-  const rows = (data ?? []) as ContentRow[];
-  return rows.map(toContentEntry);
 }
 
 async function fetchEntry(collection: string, slug: string): Promise<ContentEntry | null> {
@@ -92,22 +92,21 @@ async function fetchEntry(collection: string, slug: string): Promise<ContentEntr
     return null;
   }
 
-  const client = getPublicClient();
-  const { data, error } = await client
-    .from('content')
-    .select('slug,type,title,data,status,created_at')
-    .eq('type', collection)
-    .eq('slug', slug)
-    .eq('status', 'published')
-    .maybeSingle();
-
-  if (error) {
+  try {
+    const row = await queryFirst<ContentRow>(
+      `
+        SELECT slug, type, title, data, status, created_at, updated_at, author_email, id
+        FROM content
+        WHERE type = $1 AND slug = $2 AND status = 'published'
+        LIMIT 1
+      `,
+      [collection, slug]
+    );
+    return row ? toContentEntry(row) : null;
+  } catch (error) {
     logError('db.content', error, { action: 'fetchEntry', collection, slug });
     return null;
   }
-
-  const row = data as ContentRow | null;
-  return row ? toContentEntry(row) : null;
 }
 
 function getCollectionTtl(collection: string, fallback: number): number {
@@ -142,7 +141,11 @@ export async function getCollection(collection: string, maxAge = DEFAULT_COLLECT
   return data;
 }
 
-export async function getEntry(collection: string, slug: string, maxAge = DEFAULT_COLLECTION_TTL): Promise<ContentEntry | null> {
+export async function getEntry(
+  collection: string,
+  slug: string,
+  maxAge = DEFAULT_COLLECTION_TTL
+): Promise<ContentEntry | null> {
   const cacheKey = `entry:${collection}:${slug}`;
   queryCount++;
 
@@ -158,7 +161,10 @@ export async function getEntry(collection: string, slug: string, maxAge = DEFAUL
   return entry;
 }
 
-export async function getEntries(collection: string, filter: (entry: ContentEntry) => boolean): Promise<ContentEntry[]> {
+export async function getEntries(
+  collection: string,
+  filter: (entry: ContentEntry) => boolean
+): Promise<ContentEntry[]> {
   const entries = await getCollection(collection);
   return entries.filter(filter);
 }
@@ -174,22 +180,24 @@ export async function getSetting(key: string, maxAge = SETTINGS_TTL): Promise<un
   }
 
   cacheMisses++;
-  const client = getServiceClient();
-  const { data, error } = await client
-    .from('settings')
-    .select('value')
-    .eq('key', key)
-    .maybeSingle();
+  try {
+    const row = await queryFirst<SettingRow>(
+      `
+        SELECT key, value, updated_at
+        FROM settings
+        WHERE key = $1
+        LIMIT 1
+      `,
+      [key]
+    );
 
-  if (error) {
+    const value = row ? parseSettingValue(row.value) : null;
+    cache.set(cacheKey, value, maxAge);
+    return value;
+  } catch (error) {
     logError('db.content', error, { action: 'getSetting', key });
     return null;
   }
-
-  const row = data as SettingRow | null;
-  const value = row ? parseSettingValue(row.value) : null;
-  cache.set(cacheKey, value, maxAge);
-  return value;
 }
 
 export async function getAllSettings(maxAge = SETTINGS_TTL): Promise<Record<string, unknown>> {
@@ -203,27 +211,31 @@ export async function getAllSettings(maxAge = SETTINGS_TTL): Promise<Record<stri
   }
 
   cacheMisses++;
-  const client = getServiceClient();
-  const { data, error } = await client
-    .from('settings')
-    .select('key,value');
+  try {
+    const rows = await queryRows<SettingRow>(
+      `
+        SELECT key, value, updated_at
+        FROM settings
+      `
+    );
 
-  if (error) {
+    const settings: Record<string, unknown> = {};
+    rows.forEach((row) => {
+      settings[row.key] = parseSettingValue(row.value);
+    });
+
+    cache.set(cacheKey, settings, maxAge);
+    return settings;
+  } catch (error) {
     logError('db.content', error, { action: 'getAllSettings' });
     return {};
   }
-
-  const settings: Record<string, unknown> = {};
-  ((data ?? []) as SettingRow[]).forEach((row) => {
-    settings[row.key] = parseSettingValue(row.value);
-  });
-
-  cache.set(cacheKey, settings, maxAge);
-  return settings;
 }
 
 export async function getBatchedPageData(collections: string[]): Promise<Record<string, ContentEntry[]>> {
-  const results = await Promise.all(collections.map(async (collection) => [collection, await getCollection(collection)] as const));
+  const results = await Promise.all(
+    collections.map(async (collection) => [collection, await getCollection(collection)] as const)
+  );
   return Object.fromEntries(results);
 }
 

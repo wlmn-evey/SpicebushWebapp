@@ -12,7 +12,8 @@ interface Props {
   alt?: string; // Add alt prop
 }
 
-import { getCollection, getEntry } from 'astro:content';
+import { getEntry } from 'astro:content';
+import { logServerError } from '@lib/server-logger';
 
 const { 
   photoSlug, 
@@ -32,7 +33,7 @@ let photo;
 try {
   photo = await getEntry('photos', photoSlug);
 } catch (error) {
-  console.error(`Photo not found: ${photoSlug}`);
+  logServerError('Photo lookup failed', error, { component: 'OptimizedImage', photoSlug });
   photo = null;
 }
 
@@ -99,7 +100,7 @@ if (originalWidth > 1280) {
 const loadingStrategy = loading || (priority ? 'eager' : 'lazy');
 
 // Generate a simple data attribute for CSS targeting
-const imageId = `img-${Math.random().toString(36).substr(2, 9)}`;
+const imageId = `img-${Math.random().toString(36).slice(2, 11)}`;
 ---
 
 <div class="optimized-image" data-photo-slug={photoSlug}>

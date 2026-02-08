@@ -16,7 +16,7 @@ Sundays are dedicated to family time, rest, and preparation for the upcoming sch
 
 ## Week Ahead
 Sunday evening is a great time to prepare for the upcoming school week:
-- Review the weekly newsletter for special events
+- Review the school calendar for special events
 - Prepare school bags and lunch items
 - Ensure children get adequate rest before Monday
 

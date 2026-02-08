@@ -16,6 +16,16 @@ interface Holiday {
   localName?: string;
 }
 
+interface DatabaseHoursRow {
+  day_of_week: string;
+  start_time?: number;
+  end_time?: number;
+  before_care_offset?: number;
+  after_care_offset?: number;
+  aftercare_available?: boolean;
+  closed?: boolean;
+}
+
 // Format time helper with improved formatting
 export function formatTime(value: number): string {
   if (value === 0) return '';
@@ -55,7 +65,6 @@ export async function fetchUpcomingHolidays(): Promise<Holiday[]> {
     const response = await fetch(`https://date.nager.at/api/v3/publicholidays/${currentYear}/US`);
     
     if (!response.ok) {
-      console.warn('Holiday API request failed, using fallback');
       return getFallbackHolidays(today, sevenDaysFromNow);
     }
     
@@ -66,8 +75,7 @@ export async function fetchUpcomingHolidays(): Promise<Holiday[]> {
       return holidayDate >= today && holidayDate <= sevenDaysFromNow;
     });
     
-  } catch (error) {
-    console.error('Error fetching holidays from API:', error);
+  } catch {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const sevenDaysFromNow = new Date();
@@ -105,13 +113,62 @@ function getFallbackHolidays(today: Date, sevenDaysFromNow: Date): Holiday[] {
 // Get default hours data
 export function getDefaultHoursData(): Record<string, HoursData> {
   return {
-    Sunday: { start: 0, end: 0, before_care_offset: 0, after_care_offset: 0, aftercare_available: false, closed: true },
-    Monday: { start: 8.5, end: 15, before_care_offset: 1, after_care_offset: 2.5, aftercare_available: true, closed: false },
-    Tuesday: { start: 8.5, end: 15, before_care_offset: 1, after_care_offset: 2.5, aftercare_available: true, closed: false },
-    Wednesday: { start: 8.5, end: 15, before_care_offset: 1, after_care_offset: 2.5, aftercare_available: true, closed: false },
-    Thursday: { start: 8.5, end: 15, before_care_offset: 1, after_care_offset: 2.5, aftercare_available: true, closed: false },
-    Friday: { start: 8.5, end: 15, before_care_offset: 1, after_care_offset: 0, aftercare_available: false, closed: false },
-    Saturday: { start: 0, end: 0, before_care_offset: 0, after_care_offset: 0, aftercare_available: false, closed: true }
+    Sunday: {
+      start: 0,
+      end: 0,
+      before_care_offset: 0,
+      after_care_offset: 0,
+      aftercare_available: false,
+      closed: true
+    },
+    Monday: {
+      start: 8.5,
+      end: 15,
+      before_care_offset: 1,
+      after_care_offset: 2.5,
+      aftercare_available: true,
+      closed: false
+    },
+    Tuesday: {
+      start: 8.5,
+      end: 15,
+      before_care_offset: 1,
+      after_care_offset: 2.5,
+      aftercare_available: true,
+      closed: false
+    },
+    Wednesday: {
+      start: 8.5,
+      end: 15,
+      before_care_offset: 1,
+      after_care_offset: 2.5,
+      aftercare_available: true,
+      closed: false
+    },
+    Thursday: {
+      start: 8.5,
+      end: 15,
+      before_care_offset: 1,
+      after_care_offset: 2.5,
+      aftercare_available: true,
+      closed: false
+    },
+    Friday: {
+      start: 8.5,
+      end: 15,
+      before_care_offset: 1,
+      after_care_offset: 0,
+      aftercare_available: false,
+      closed: false
+    },
+    Saturday: {
+      start: 0,
+      end: 0,
+      before_care_offset: 0,
+      after_care_offset: 0,
+      aftercare_available: false,
+      closed: true
+    }
   };
 }
 
@@ -160,18 +217,21 @@ export function formatHolidayDate(dateString: string): string {
 }
 
 // Convert database hours to local format
-export function processHoursData(dbHours: any[], days: string[]): Record<string, HoursData> {
+export function processHoursData(dbHours: DatabaseHoursRow[], days: string[]): Record<string, HoursData> {
   const hoursData: Record<string, HoursData> = {};
   
   if (dbHours && dbHours.length > 0) {
     dbHours.forEach(hour => {
+      const closed = hour.closed || false;
+      const start = typeof hour.start_time === 'number' ? hour.start_time : 8.5;
+      const end = typeof hour.end_time === 'number' ? hour.end_time : 15;
       hoursData[hour.day_of_week] = {
-        start: hour.start_time,
-        end: hour.end_time,
+        start: closed ? 0 : start,
+        end: closed ? 0 : end,
         before_care_offset: hour.before_care_offset || 1,
         after_care_offset: hour.after_care_offset || 2.5,
         aftercare_available: hour.aftercare_available !== false,
-        closed: hour.closed || false
+        closed
       };
     });
     

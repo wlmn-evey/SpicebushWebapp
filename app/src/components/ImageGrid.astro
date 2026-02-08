@@ -39,7 +39,7 @@ const gridClass = {
     )}
     
     <div class={`grid ${gridClass[columns]} gap-6`}>
-      {images.map((image, index) => (
+      {images.map((image, _index) => (
         <div class="group overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-xl relative aspect-[4/3] border-2 border-stone-beige">
           {image.photoSlug ? (
             <OptimizedImage

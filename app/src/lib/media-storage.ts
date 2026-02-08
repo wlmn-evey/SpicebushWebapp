@@ -6,6 +6,50 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { createHash } from 'crypto';
+import { query, queryRows } from './db/client';
+import { logServerError, logServerWarn } from './server-logger';
+
+type StorageProviderName = 'local' | 'gcs' | 'r2' | 'b2';
+
+type StorageSettingsConfig = {
+  maxFileSize: number;
+  gcs: Record<string, unknown>;
+  r2: Record<string, unknown>;
+  b2: Record<string, unknown>;
+};
+
+type StorageSettings = {
+  provider: StorageProviderName;
+  config: StorageSettingsConfig;
+};
+
+const toConfigRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+
+const toFiniteNumber = (value: unknown, fallback: number): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value.trim());
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return fallback;
+};
+
+const normalizeProvider = (value: unknown): StorageProviderName => {
+  const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  if (normalized === 'gcs' || normalized === 'r2' || normalized === 'b2') {
+    return normalized;
+  }
+  return 'local';
+};
 
 // Storage configuration
 const STORAGE_CONFIG = {
@@ -69,7 +113,7 @@ class LocalStorage implements StorageProvider {
     try {
       await fs.unlink(filePath);
     } catch (error) {
-      console.error('Error deleting file:', error);
+      logServerWarn('Failed to delete local media file', { filePath, error });
     }
   }
 
@@ -81,21 +125,21 @@ class LocalStorage implements StorageProvider {
 // Future: Google Cloud Storage implementation
 class GoogleCloudStorage implements StorageProvider {
   // Placeholder for future implementation
-  async upload(file: Buffer, filename: string): Promise<{ url: string; path: string }> {
+  async upload(_file: Buffer, _filename: string): Promise<{ url: string; path: string }> {
     throw new Error('Google Cloud Storage not yet implemented');
   }
 
-  async delete(path: string): Promise<void> {
+  async delete(_path: string): Promise<void> {
     throw new Error('Google Cloud Storage not yet implemented');
   }
 
-  getUrl(path: string): string {
+  getUrl(_path: string): string {
     throw new Error('Google Cloud Storage not yet implemented');
   }
 }
 
 // Cache for storage settings
-let storageSettingsCache: { provider: string; config: any } | null = null;
+let storageSettingsCache: StorageSettings | null = null;
 let cacheExpiry = 0;
 
 // Get storage settings from database
@@ -108,29 +152,37 @@ async function getStorageSettings() {
   }
   
   try {
-    const { supabase } = await import('./supabase');
-    const { data } = await supabase
-      .from('admin_settings')
-      .select('setting_key, setting_value')
-      .in('setting_key', ['storage_provider', 'max_file_size', 'gcs_config', 'r2_config', 'b2_config'])
-      .eq('setting_category', 'storage');
+    const data = await queryRows<{ setting_key: string; setting_value: unknown }>(
+      `
+        SELECT setting_key, setting_value
+        FROM admin_settings
+        WHERE setting_category = 'storage'
+          AND setting_key = ANY($1::text[])
+      `,
+      [['storage_provider', 'max_file_size', 'gcs_config', 'r2_config', 'b2_config']]
+    );
     
-    const settings: any = {};
+    const settings: Record<string, unknown> = {};
     data?.forEach(row => {
       try {
-        settings[row.setting_key] = JSON.parse(row.setting_value);
+        if (typeof row.setting_value === 'string') {
+          settings[row.setting_key] = JSON.parse(row.setting_value);
+        } else {
+          settings[row.setting_key] = row.setting_value;
+        }
       } catch {
         settings[row.setting_key] = row.setting_value;
       }
     });
     
+    const maxFileSizeMb = toFiniteNumber(settings.max_file_size, 10);
     storageSettingsCache = {
-      provider: settings.storage_provider || 'local',
+      provider: normalizeProvider(settings.storage_provider),
       config: {
-        maxFileSize: (settings.max_file_size || 10) * 1024 * 1024,
-        gcs: settings.gcs_config || {},
-        r2: settings.r2_config || {},
-        b2: settings.b2_config || {}
+        maxFileSize: maxFileSizeMb * 1024 * 1024,
+        gcs: toConfigRecord(settings.gcs_config),
+        r2: toConfigRecord(settings.r2_config),
+        b2: toConfigRecord(settings.b2_config)
       }
     };
     
@@ -139,12 +191,15 @@ async function getStorageSettings() {
     
     return storageSettingsCache;
   } catch (error) {
-    console.error('Error loading storage settings:', error);
+    logServerWarn('Failed to load storage settings, using local defaults', { error });
     // Fallback to local storage
     return {
       provider: 'local',
       config: {
-        maxFileSize: STORAGE_CONFIG.local.maxFileSize
+        maxFileSize: STORAGE_CONFIG.local.maxFileSize,
+        gcs: {},
+        r2: {},
+        b2: {}
       }
     };
   }
@@ -186,32 +241,28 @@ export async function handleMediaUpload(
     
     // Upload file
     const storage = await getStorageProvider();
-    const { url, path } = await storage.upload(file.buffer, file.originalname);
+    const { url } = await storage.upload(file.buffer, file.originalname);
     
     // Save to database
-    const { supabase } = await import('./supabase');
-    const { error } = await supabase
-      .from('media')
-      .insert({
-        filename: file.originalname,
-        url,
-        size: file.size,
-        mimetype: file.mimetype,
-        uploaded_by: userId,
-        storage_path: path
-      });
-    
-    if (error) throw error;
+    await query(
+      `
+        INSERT INTO media (filename, url, size, uploaded_by)
+        VALUES ($1, $2, $3, $4)
+      `,
+      [file.originalname, url, file.size, userId]
+    );
     
     return { success: true, url };
   } catch (error) {
-    console.error('Upload error:', error);
+    logServerError('Media upload failed', error);
     return { success: false, error: 'Upload failed' };
   }
 }
 
 // Helper to validate uploaded files
-export async function validateFile(file: { mimetype: string; size: number }): Promise<{ valid: boolean; error?: string }> {
+export async function validateFile(
+  file: { mimetype: string; size: number }
+): Promise<{ valid: boolean; error?: string }> {
   const settings = await getStorageSettings();
   const maxFileSize = settings.config.maxFileSize || STORAGE_CONFIG.local.maxFileSize;
   

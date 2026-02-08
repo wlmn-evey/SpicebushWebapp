@@ -1,8 +1,7 @@
 ---
 export const prerender = false;
 
-import { getCollection, getEntries, getAllSettings } from '@lib/content-db';
-import { Fragment } from 'astro/jsx-runtime';
+import { getCollection, getEntries, getAllSettings, type ContentEntry } from '@lib/content-db';
 
 const DEFAULT_LAUNCH_DATE = 'Fall 2025';
 const DEFAULT_UPDATE_MESSAGE = "We're updating our website to enhance your experience. Thank you for your patience!";
@@ -16,21 +15,27 @@ const DEFAULT_ADDRESS = {
 };
 
 let settings: Record<string, unknown> = {};
-let hoursCollection: any[] = [];
-let tuitionPrograms: any[] = [];
-let tuitionRates: any[] = [];
-let testimonials: any[] = [];
+type GenericEntryData = Record<string, unknown>;
+type GenericContentEntry = ContentEntry<GenericEntryData>;
+
+let hoursCollection: GenericContentEntry[] = [];
+let tuitionRates: GenericContentEntry[] = [];
+let testimonials: GenericContentEntry[] = [];
 
 try {
   settings = await getAllSettings();
   hoursCollection = await getCollection('hours');
-  tuitionPrograms = await getEntries('tuition', (entry) => entry.data.type === 'program');
-  tuitionRates = await getEntries('tuition', (entry) => entry.data.type === 'rate');
-  testimonials = await getEntries('testimonials', (entry) => entry.data.featured);
+  tuitionRates = await getEntries('tuition', (entry) => {
+    const data = (entry.data ?? {}) as GenericEntryData;
+    return data.type === 'rate';
+  });
+  testimonials = await getEntries('testimonials', (entry) => {
+    const data = (entry.data ?? {}) as Record<string, unknown>;
+    return Boolean(data.featured);
+  });
 } catch (e) {
   settings = {};
   hoursCollection = [];
-  tuitionPrograms = [];
   tuitionRates = [];
   testimonials = [];
 }
@@ -86,7 +91,6 @@ const launchDate = (() => {
 })();
 
 const updateMessage = getSettingString('coming_soon_message', DEFAULT_UPDATE_MESSAGE);
-const showNewsletter = getSettingBoolean('coming_soon_newsletter', true);
 
 const normalizePhoneHref = (value: string) => value.replace(/[^0-9+]/g, '');
 const phoneHrefValue = normalizePhoneHref(mainPhone);
@@ -184,13 +188,22 @@ const extendedCareInfo = generateExtendedCareInfo();
 
 // Calculate tuition ranges for each program type
 function getTuitionRange(programId: string) {
-  const rates = tuitionRates.filter(rate => 
-    rate.data.program_id === programId && rate.data.active
-  );
+  const rates = tuitionRates.filter((rate) => {
+    const data = (rate.data ?? {}) as GenericEntryData;
+    return coerceString(data.program_id, '') === programId && data.active === true;
+  });
   
   if (rates.length === 0) return { min: 0, max: 0 };
   
-  const prices = rates.map(r => r.data.tuition_price);
+  const prices = rates
+    .map((rate) => {
+      const data = (rate.data ?? {}) as GenericEntryData;
+      const price = Number(data.tuition_price);
+      return Number.isFinite(price) ? price : 0;
+    })
+    .filter((price) => price > 0);
+
+  if (prices.length === 0) return { min: 0, max: 0 };
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   
@@ -254,7 +267,7 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
       background: var(--warm-white);
     }
 
-    h1, h2, h3, h4, h5, h6 {
+    h1, h2, h3, h4 {
       font-family: 'Poppins', sans-serif;
       font-weight: 600;
       line-height: 1.3;
@@ -958,23 +971,6 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
       margin: 0 1rem;
     }
 
-    .admin-login-button {
-      display: inline-block;
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--stone-beige);
-      padding: 0.5rem 1.5rem;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      transition: all 0.3s ease;
-    }
-
-    .admin-login-button:hover {
-      background: rgba(255, 255, 255, 0.2);
-      text-decoration: none;
-      transform: translateY(-1px);
-    }
-
     /* Responsive Design */
     @media (max-width: 768px) {
       h1 {
@@ -1046,9 +1042,6 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
       display: none;
     }
 
-    .success-message.show {
-      display: block;
-    }
     </style>
   </head>
   <body>
@@ -1190,21 +1183,28 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
       </div>
       
       <div class="testimonials-grid">
-        {testimonials.length > 0 ? testimonials.slice(0, 3).map((testimonial) => (
-          <div class="testimonial-card">
-            <div class="testimonial-rating">
-              {[...Array(testimonial.data.rating)].map(() => (
-                <span class="star">★</span>
-              ))}
+        {testimonials.length > 0 ? testimonials.slice(0, 3).map((testimonial) => {
+          const testimonialData = (testimonial.data ?? {}) as GenericEntryData;
+          const rating = Math.max(1, Math.round(Number(testimonialData.rating) || 5));
+          const author = coerceString(testimonialData.author, 'Spicebush Family');
+          const yearsAtSpicebush = coerceString(testimonialData.yearsAtSpicebush, '');
+
+          return (
+            <div class="testimonial-card">
+              <div class="testimonial-rating">
+                {[...Array(rating)].map(() => (
+                  <span class="star">★</span>
+                ))}
+              </div>
+              <p class="testimonial-quote">{testimonial.body}</p>
+              <div class="testimonial-author">{author}</div>
+              <div class="testimonial-role">
+                {yearsAtSpicebush && `Parent for ${yearsAtSpicebush} years`}
+              </div>
             </div>
-            <p class="testimonial-quote">{testimonial.body}</p>
-            <div class="testimonial-author">{testimonial.data.author}</div>
-            <div class="testimonial-role">
-              {testimonial.data.yearsAtSpicebush && `Parent for ${testimonial.data.yearsAtSpicebush} years`}
-            </div>
-          </div>
-        )) : (
-          <Fragment>
+          );
+        }) : (
+          <div style="display: contents;">
             <div class="testimonial-card">
               <div class="testimonial-rating">
                 <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
@@ -1229,7 +1229,7 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
               <div class="testimonial-author">David L.</div>
               <div class="testimonial-role">Parent of 5-year-old</div>
             </div>
-          </Fragment>
+          </div>
         )}
       </div>
     </section>
@@ -1343,25 +1343,21 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
               </div>
               <div class="contact-item-content">
                 <h4>Our Location</h4>
-        {addressAvailable ? (
-          <p>
-            {streetLine.length > 0 ? (
-              <Fragment>
-                {streetLine}
-                {addressLineTwo && (
-                  <Fragment>
-                    <br />
-                    {addressLineTwo}
-                  </Fragment>
+                {addressAvailable ? (
+                  <p>
+                    {streetLine.length > 0 ? (
+                      <span>
+                        {streetLine}
+                        {addressLineTwo && <br />}
+                        {addressLineTwo && <span>{addressLineTwo}</span>}
+                      </span>
+                    ) : (
+                      addressLineTwo
+                    )}
+                  </p>
+                ) : (
+                  <p>Address details coming soon.</p>
                 )}
-              </Fragment>
-            ) : (
-              addressLineTwo
-            )}
-          </p>
-        ) : (
-          <p>Address details coming soon.</p>
-        )}
               </div>
             </div>
             
@@ -1373,11 +1369,11 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
               </div>
               <div class="contact-item-content">
                 <h4>Call Us</h4>
-        {hasPhone ? (
-          <p><a href={`tel:${phoneHrefValue}`}>{mainPhone}</a></p>
-        ) : (
-          <p>{mainPhone || 'Phone number coming soon'}</p>
-        )}
+                {hasPhone ? (
+                  <p><a href={`tel:${phoneHrefValue}`}>{mainPhone}</a></p>
+                ) : (
+                  <p>{mainPhone || 'Phone number coming soon'}</p>
+                )}
                 <p>Monday-Friday: 8:30 AM - 5:00 PM</p>
               </div>
             </div>
@@ -1390,11 +1386,11 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
               </div>
               <div class="contact-item-content">
                 <h4>Email Us</h4>
-        {hasEmail ? (
-          <p><a href={`mailto:${mainEmail}`}>{mainEmail}</a></p>
-        ) : (
-          <p>{mainEmail || 'Email coming soon'}</p>
-        )}
+                {hasEmail ? (
+                  <p><a href={`mailto:${mainEmail}`}>{mainEmail}</a></p>
+                ) : (
+                  <p>{mainEmail || 'Email coming soon'}</p>
+                )}
               </div>
             </div>
             
@@ -1403,7 +1399,7 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
             </div>
           </div>
           
-          {showNewsletter && (
+          {tourSchedulingEnabled && (
             <div class="contact-form">
               <h3>Schedule a Tour or Ask a Question</h3>
               <form name="coming-soon-contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="contact-form">
@@ -1510,46 +1506,61 @@ const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_appl
   <script>
     // Form submission handling
     const form = document.getElementById('contact-form');
-    if (form) {
+    if (form instanceof HTMLFormElement) {
       const successMessage = document.getElementById('success-message');
       const submitButton = form.querySelector('.submit-button');
-      const buttonText = submitButton.querySelector('.button-text');
-      const loadingSpinner = submitButton.querySelector('.loading');
+      const buttonText = submitButton?.querySelector('.button-text');
+      const loadingSpinner = submitButton?.querySelector('.loading');
 
-      form.addEventListener('submit', async (e) => {
-      // Show loading state
-        buttonText.style.display = 'none';
-        loadingSpinner.style.display = 'inline-block';
-        submitButton.disabled = true;
+      if (
+        successMessage instanceof HTMLElement &&
+        submitButton instanceof HTMLButtonElement &&
+        buttonText instanceof HTMLElement &&
+        loadingSpinner instanceof HTMLElement
+      ) {
+        form.addEventListener('submit', () => {
+          // Show loading state
+          buttonText.style.display = 'none';
+          loadingSpinner.style.display = 'inline-block';
+          submitButton.disabled = true;
 
-        // Let Netlify handle the form submission
-        setTimeout(() => {
-        // Show success message
-          successMessage.classList.add('show');
-          form.reset();
-        
-          // Reset button
-          buttonText.style.display = 'inline';
-          loadingSpinner.style.display = 'none';
-          submitButton.disabled = false;
-        
-          // Scroll to success message
-          successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        
-          // Hide success message after 10 seconds
+          // Let Netlify handle the form submission
           setTimeout(() => {
-            successMessage.classList.remove('show');
-          }, 10000);
-        }, 1000);
-    });
+            // Show success message
+            successMessage.style.display = 'block';
+            form.reset();
+        
+            // Reset button
+            buttonText.style.display = 'inline';
+            loadingSpinner.style.display = 'none';
+            submitButton.disabled = false;
+        
+            // Scroll to success message
+            successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+            // Hide success message after 10 seconds
+            setTimeout(() => {
+              successMessage.style.display = 'none';
+            }, 10000);
+          }, 1000);
+        });
+      }
     }
 
     // Smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
+    const anchorLinks = document.querySelectorAll('a[href^="#"]');
+    anchorLinks.forEach((anchor) => {
+      if (!(anchor instanceof HTMLAnchorElement)) {
+        return;
+      }
+
+      anchor.addEventListener('click', (event) => {
+        event.preventDefault();
+        const href = anchor.getAttribute('href');
+        if (!href) return;
+
+        const target = document.querySelector(href);
+        if (target instanceof HTMLElement) {
           target.scrollIntoView({
             behavior: 'smooth',
             block: 'start'

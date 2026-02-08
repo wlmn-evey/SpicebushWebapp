@@ -15,11 +15,8 @@ const defaultConfig: AdminConfig = {
     'director@spicebushmontessori.org',
     'evey@eveywinters.com'
   ],
-  // Domains that automatically grant admin access
-  adminDomains: [
-    '@spicebushmontessori.org',
-    '@eveywinters.com'
-  ]
+  // Keep empty by default. Broad domain-based admin access must be explicitly enabled via ADMIN_DOMAINS.
+  adminDomains: []
 };
 
 // Get admin configuration from environment or use defaults

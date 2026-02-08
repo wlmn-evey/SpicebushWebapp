@@ -2,22 +2,17 @@ import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
 import { handleMediaUpload, validateFile } from '@lib/media-storage';
 import { errorResponse } from '@lib/api-utils';
+import { logServerError } from '@lib/server-logger';
 
-export const POST: APIRoute = async ({ request, cookies }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    // Check authentication
-    const { isAuthenticated, session, user } = await checkAdminAuth({ cookies, request } as any);
+    const { isAuthenticated, isAdmin, session, user } = await checkAdminAuth({ locals });
     
-    if (!isAuthenticated || !session) {
+    if (!isAuthenticated || !isAdmin || !session) {
       return errorResponse('Unauthorized', 401);
     }
     
-    const userId = user?.email || session.userEmail;
-    
-    // Initialize audit logger
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip');
-    const audit = new AuditLogger(session, ipAddress || undefined);
+    const userId = user?.email || session.userEmail || session.userId;
     
     // Parse multipart form data
     const formData = await request.formData();
@@ -64,9 +59,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
     
-    // Log the upload
-    await audit.logMediaUpload(file.name, file.size, result.url);
-    
     return new Response(JSON.stringify({ 
       success: true, 
       url: result.url,
@@ -77,7 +69,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
     
   } catch (error) {
-    console.error('Upload API error:', error);
+    logServerError('Media upload endpoint failed', error, { route: '/api/media/upload' });
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

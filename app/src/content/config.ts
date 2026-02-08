@@ -229,9 +229,6 @@ const comingSoonCollection = defineCollection({
     launchDate: z.coerce.date(),
     headline: z.string(),
     message: z.string(),
-    showNewsletter: z.boolean().default(false),
-    newsletterHeading: z.string().optional(),
-    newsletterText: z.string().optional(),
     showContact: z.boolean().default(false),
     showSocial: z.boolean().default(false),
     backgroundImage: z.string().optional()

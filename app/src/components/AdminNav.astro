@@ -1,5 +1,7 @@
 ---
-import { Home, Clock, DollarSign, MessageSquare, Users, BarChart3, Settings } from 'lucide-astro';
+import { Home, Clock, DollarSign, Users, Settings } from 'lucide-astro';
+
+const currentPath = Astro.url.pathname;
 ---
 
 <!-- Admin Navigation Sidebar Component -->
@@ -25,6 +27,7 @@ import { Home, Clock, DollarSign, MessageSquare, Users, BarChart3, Settings } fr
       <div class="px-3 space-y-1">
         <a 
           href="/admin" 
+          aria-current={currentPath === '/admin' ? 'page' : undefined}
           class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
         >
           <Home className="w-5 h-5 mr-3" />
@@ -33,6 +36,7 @@ import { Home, Clock, DollarSign, MessageSquare, Users, BarChart3, Settings } fr
         
         <a 
           href="/admin/hours" 
+          aria-current={currentPath === '/admin/hours' ? 'page' : undefined}
           class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
         >
           <Clock className="w-5 h-5 mr-3" />
@@ -41,6 +45,7 @@ import { Home, Clock, DollarSign, MessageSquare, Users, BarChart3, Settings } fr
         
         <a 
           href="/admin/tuition" 
+          aria-current={currentPath === '/admin/tuition' ? 'page' : undefined}
           class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
         >
           <DollarSign className="w-5 h-5 mr-3" />
@@ -48,31 +53,17 @@ import { Home, Clock, DollarSign, MessageSquare, Users, BarChart3, Settings } fr
         </a>
         
         <a 
-          href="/admin/communications" 
-          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
-        >
-          <MessageSquare className="w-5 h-5 mr-3" />
-          Communications
-        </a>
-        
-        <a 
-          href="/admin/users" 
+          href="/admin/staff" 
+          aria-current={currentPath === '/admin/staff' ? 'page' : undefined}
           class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
         >
           <Users className="w-5 h-5 mr-3" />
-          User Management
-        </a>
-        
-        <a 
-          href="/admin/analytics" 
-          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
-        >
-          <BarChart3 className="w-5 h-5 mr-3" />
-          Analytics
+          Staff
         </a>
         
         <a 
           href="/admin/settings" 
+          aria-current={currentPath === '/admin/settings' ? 'page' : undefined}
           class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
         >
           <Settings className="w-5 h-5 mr-3" />
@@ -108,17 +99,3 @@ import { Home, Clock, DollarSign, MessageSquare, Users, BarChart3, Settings } fr
     @apply bg-forest-canopy text-white;
   }
 </style>
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Mark current page as active
-    const currentPath = window.location.pathname;
-    const navLinks = document.querySelectorAll('.admin-nav-link');
-    
-    navLinks.forEach(link => {
-      if (link.getAttribute('href') === currentPath) {
-        link.setAttribute('aria-current', 'page');
-      }
-    });
-  });
-</script>

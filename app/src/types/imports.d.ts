@@ -1,15 +1,26 @@
 // Type declarations for imports without types
 
 declare module '@sendgrid/mail' {
-  export default any;
+  type SendGridMessage = Record<string, unknown>;
+  type SendGridResponse = unknown;
+
   export function setApiKey(key: string): void;
-  export function send(msg: any): Promise<any>;
+  export function send(msg: SendGridMessage): Promise<SendGridResponse>;
+
+  const sendGrid: {
+    setApiKey: typeof setApiKey;
+    send: typeof send;
+  };
+  export default sendGrid;
 }
 
 declare module 'postmark' {
+  type PostmarkEmailOptions = Record<string, unknown>;
+  type PostmarkEmailResponse = unknown;
+
   export class ServerClient {
     constructor(token: string);
-    sendEmail(options: any): Promise<any>;
+    sendEmail(options: PostmarkEmailOptions): Promise<PostmarkEmailResponse>;
   }
 }
 
@@ -41,5 +52,5 @@ declare module '@lib/email-service' {
 
 // Vitest config type fix
 declare module 'vitest/config' {
-  export function defineConfig(config: any): any;
+  export function defineConfig<TConfig>(config: TConfig): TConfig;
 }

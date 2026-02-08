@@ -2,7 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import { ChevronDown, ChevronUp } from 'lucide-astro';
+import { ChevronDown } from 'lucide-astro';
 ---
 
 <Layout 
@@ -315,7 +315,7 @@ import { ChevronDown, ChevronUp } from 'lucide-astro';
                   <p class="text-earth-brown/80">We maintain open communication through:</p>
                   <ul class="list-disc list-inside mt-2 space-y-1 text-earth-brown/80">
                     <li>Daily brief check-ins at drop-off and pick-up</li>
-                    <li>Weekly classroom newsletters with photos and updates</li>
+                    <li>Weekly classroom updates with photos and progress notes</li>
                     <li>Parent-teacher conferences twice yearly</li>
                     <li>Digital portfolio updates showing your child's work</li>
                     <li>Parent education evenings and community events</li>
@@ -386,10 +386,6 @@ import { ChevronDown, ChevronUp } from 'lucide-astro';
 </script>
 
 <style>
-  .faq-toggle svg {
-    transition: transform 0.3s ease;
-  }
-  
   .faq-content {
     animation: slideDown 0.3s ease-out;
   }

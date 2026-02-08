@@ -46,14 +46,10 @@ RUN --mount=type=cache,target=/root/.npm \
 FROM base AS build
 
 # Accept build arguments for environment variables
-ARG PUBLIC_SUPABASE_URL
-ARG PUBLIC_SUPABASE_ANON_KEY
-ARG PUBLIC_STRAPI_URL
+ARG PUBLIC_SITE_URL
 
 # Set environment variables for the build
-ENV PUBLIC_SUPABASE_URL=$PUBLIC_SUPABASE_URL
-ENV PUBLIC_SUPABASE_ANON_KEY=$PUBLIC_SUPABASE_ANON_KEY
-ENV PUBLIC_STRAPI_URL=$PUBLIC_STRAPI_URL
+ENV PUBLIC_SITE_URL=$PUBLIC_SITE_URL
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules

@@ -43,17 +43,6 @@ export default defineConfig({
               return 'react-vendor';
             }
             
-            // Separate chunk for Stripe payment libraries
-            if (id.includes('@stripe/stripe-js') || 
-                id.includes('@stripe/react-stripe-js')) {
-              return 'stripe-vendor';
-            }
-            
-            // Separate chunk for Supabase client
-            if (id.includes('@supabase/supabase-js')) {
-              return 'supabase-vendor';
-            }
-            
             // Separate chunk for icon libraries
             if (id.includes('lucide-astro') || 
                 id.includes('lucide')) {

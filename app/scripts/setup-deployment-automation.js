@@ -174,12 +174,13 @@ async function configureEnvironmentVariables() {
   log('Go to: Site settings → Environment variables\n');
   
   const envVars = [
-    { name: 'PUBLIC_SUPABASE_URL', description: 'Supabase project URL' },
-    { name: 'PUBLIC_SUPABASE_ANON_KEY', description: 'Supabase anonymous key' },
-    { name: 'SUPABASE_SERVICE_ROLE_KEY', description: 'Supabase service role key (keep secret!)' },
-    { name: 'DATABASE_URL', description: 'PostgreSQL connection string' },
-    { name: 'ADMIN_EMAIL', description: 'Admin email address' },
-    { name: 'SENDGRID_API_KEY', description: 'SendGrid API key (optional)' },
+    { name: 'NETLIFY_DATABASE_URL', description: 'Netlify DB / Neon PostgreSQL connection string' },
+    { name: 'DATABASE_URL', description: 'Optional local fallback PostgreSQL connection string' },
+    { name: 'PUBLIC_SITE_URL', description: 'Public site origin (for auth links)' },
+    { name: 'AUTH_PROVIDER', description: 'Set to netlify-magic-link' },
+    { name: 'ADMIN_EMAILS', description: 'Optional comma-separated explicit admin allow-list' },
+    { name: 'ADMIN_DOMAINS', description: 'Optional comma-separated admin domain allow-list' },
+    { name: 'EMAIL_SERVICE', description: 'Optional provider: unione, sendgrid, postmark, resend' },
     { name: 'NODE_ENV', description: 'Environment (staging/production)' }
   ];
   
@@ -194,27 +195,20 @@ async function configureEnvironmentVariables() {
 async function createExampleEnvFile() {
   logSection('Creating Example Environment File');
   
-  const envExample = `# Supabase Configuration
-PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-# Database
-DATABASE_URL=postgresql://postgres:password@db.your-project.supabase.co:5432/postgres
-DIRECT_URL=postgresql://postgres:password@db.your-project.supabase.co:5432/postgres
+  const envExample = `# Netlify DB / Neon
+NETLIFY_DATABASE_URL=postgres://user:pass@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
+DATABASE_URL=
+PUBLIC_SITE_URL=https://spicebushmontessori.org
 
 # Admin Configuration
-ADMIN_EMAIL=admin@spicebushmontessori.org
+AUTH_PROVIDER=netlify-magic-link
+ADMIN_EMAILS=admin@spicebushmontessori.org
+ADMIN_DOMAINS=@spicebushmontessori.org
 
 # Email Service (choose one)
 SENDGRID_API_KEY=SG.your-sendgrid-key
 # RESEND_API_KEY=re_your-resend-key
 # POSTMARK_SERVER_TOKEN=your-postmark-token
-
-# Stripe (optional)
-STRIPE_SECRET_KEY=sk_test_your-stripe-key
-PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your-stripe-key
-STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret
 
 # Monitoring (optional)
 SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
@@ -267,12 +261,10 @@ async function generateDeploymentChecklist() {
 - [ ] NETLIFY_AUTH_TOKEN
 - [ ] NETLIFY_STAGING_SITE_ID
 - [ ] NETLIFY_PRODUCTION_SITE_ID
-- [ ] STAGING_PUBLIC_SUPABASE_URL
-- [ ] STAGING_PUBLIC_SUPABASE_ANON_KEY
-- [ ] STAGING_SUPABASE_SERVICE_ROLE_KEY
-- [ ] PRODUCTION_PUBLIC_SUPABASE_URL
-- [ ] PRODUCTION_PUBLIC_SUPABASE_ANON_KEY
-- [ ] PRODUCTION_SUPABASE_SERVICE_ROLE_KEY
+- [ ] STAGING_NETLIFY_DATABASE_URL
+- [ ] PRODUCTION_NETLIFY_DATABASE_URL
+- [ ] STAGING_PUBLIC_SITE_URL
+- [ ] PRODUCTION_PUBLIC_SITE_URL
 - [ ] SLACK_WEBHOOK_URL (optional)
 
 ## Netlify Configuration
@@ -342,8 +334,8 @@ async function main() {
   console.log('5. Monitor the GitHub Actions tab for deployment status');
   
   log('\nFor detailed instructions, see:', 'cyan');
-  console.log('- docs/deployment/AUTOMATED_DEPLOYMENT_GUIDE.md');
-  console.log('- NETLIFY_DEPLOYMENT_GUIDE.md');
+  console.log('- ../docs/deployment/production-guide.md');
+  console.log('- ../docs/refactor-master-plan.md');
   
   log('\n✨ Happy deploying!', 'green');
   

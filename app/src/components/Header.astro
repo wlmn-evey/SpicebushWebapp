@@ -1,41 +1,70 @@
 ---
 import { Menu, Phone } from 'lucide-astro';
+import { db, type ContentEntry } from '@lib/db';
+import { logServerError } from '@lib/server-logger';
 import OptimizedImage from './OptimizedImage.astro';
 
-// Default values to prevent crashes
+interface SchoolInfoData {
+  phone?: unknown;
+  agesServed?: unknown;
+  extendedCareUntil?: unknown;
+}
+
+interface HoursData {
+  day?: unknown;
+  open_time?: unknown;
+  close_time?: unknown;
+}
+
 const defaultSchoolInfo = {
   phone: '(484) 202-0712',
   agesServed: '3-6',
   extendedCareUntil: '5:30 PM'
 };
 
-let schoolInfo;
-let phone = defaultSchoolInfo.phone;
-let agesServed = defaultSchoolInfo.agesServed;
-let extendedCareUntil = defaultSchoolInfo.extendedCareUntil;
-
-// Get school info from Supabase with error handling
-try {
-  schoolInfo = await getEntry('school-info', 'general');
-  if (schoolInfo?.data) {
-    phone = schoolInfo.data.phone || defaultSchoolInfo.phone;
-    agesServed = schoolInfo.data.agesServed || defaultSchoolInfo.agesServed;
-    extendedCareUntil = schoolInfo.data.extendedCareUntil || defaultSchoolInfo.extendedCareUntil;
+const toDisplayString = (value: unknown, fallback: string): string => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : fallback;
   }
+  return fallback;
+};
+
+let schoolEntry: ContentEntry | null = null;
+try {
+  schoolEntry = await db.content.getEntry('school-info', 'general');
 } catch (error) {
-  console.error('Error loading school info in Header:', error);
-  // Use default values
+  logServerError('Failed to load school info', error, { component: 'Header' });
 }
 
-// Get hours to display standard schedule from Supabase with error handling
-let weekdayHours;
+const schoolData = (schoolEntry?.data ?? {}) as SchoolInfoData;
+
+const phone = toDisplayString(schoolData.phone, defaultSchoolInfo.phone);
+const agesServed = toDisplayString(schoolData.agesServed, defaultSchoolInfo.agesServed);
+const extendedCareUntil = toDisplayString(schoolData.extendedCareUntil, defaultSchoolInfo.extendedCareUntil);
+const phoneDigits = phone.replace(/[^0-9]/g, '');
+
+const HOURS_FALLBACK = {
+  open: '8:30 AM',
+  close: '3:30 PM'
+};
+
+let hoursEntries: ContentEntry[] = [];
 try {
-  const hours = await getCollection('hours');
-  weekdayHours = hours.find(h => h.data.day === 'Monday');
+  hoursEntries = await db.content.getCollection('hours');
 } catch (error) {
-  console.error('Error loading hours in Header:', error);
-  // weekdayHours will remain undefined, handled in template
+  logServerError('Failed to load hours in header', error, { component: 'Header' });
 }
+const mondayHoursEntry = hoursEntries.find((entry: ContentEntry) => {
+  const data = entry.data as HoursData;
+  return typeof data.day === 'string' && data.day.toLowerCase() === 'monday';
+});
+
+const mondayData = (mondayHoursEntry?.data ?? {}) as HoursData;
+const weekdayHours = {
+  open: toDisplayString(mondayData.open_time, HOURS_FALLBACK.open),
+  close: toDisplayString(mondayData.close_time, HOURS_FALLBACK.close)
+};
 ---
 
 <header class="bg-white shadow-sm sticky top-0 z-50">
@@ -45,8 +74,8 @@ try {
       <div class="flex justify-between items-center">
         <!-- Left side: Quick Info -->
         <div class="flex items-center space-x-4 text-sm">
-          <span class="text-earth-brown hidden md:inline">Ages {agesServed} • Mon-Fri {weekdayHours?.data.open_time || '8:30 AM'} - {weekdayHours?.data.close_time || '3:30 PM'}</span>
-          <a href="tel:{phone.replace(/[^0-9]/g, '')}" class="flex items-center space-x-2 text-forest-canopy hover:text-moss-green transition-colors font-semibold">
+          <span class="text-earth-brown hidden md:inline">Ages {agesServed} • Mon-Fri {weekdayHours.open} - {weekdayHours.close}</span>
+          <a href={`tel:${phoneDigits}`} class="flex items-center space-x-2 text-forest-canopy hover:text-moss-green transition-colors font-semibold">
             <Phone className="w-4 h-4" />
             <span>{phone}</span>
           </a>
@@ -81,7 +110,6 @@ try {
           <a href="/about" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">About</a>
           <a href="/programs" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Programs</a>
           <a href="/admissions" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Admissions</a>
-          <a href="/blog" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Blog</a>
           <a href="/contact" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Contact</a>
         </div>
         
@@ -122,7 +150,6 @@ try {
         <a href="/about" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">About</a>
         <a href="/programs" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Programs</a>
         <a href="/admissions" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Admissions</a>
-        <a href="/blog" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Blog</a>
         <a href="/contact" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Contact</a>
         <a href="/resources/faq" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">FAQ</a>
         <a href="/donate" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Donate</a>
@@ -148,14 +175,14 @@ try {
         <div class="pt-4 border-t border-gray-200">
           <div class="px-3 py-2 text-sm text-earth-brown space-y-2">
             <p class="font-semibold">School Hours</p>
-            <p>Monday - Friday: {weekdayHours?.data.open_time || '8:30 AM'} - {weekdayHours?.data.close_time || '3:30 PM'}</p>
+            <p>Monday - Friday: {weekdayHours.open} - {weekdayHours.close}</p>
             <p>Extended care until {extendedCareUntil}</p>
           </div>
         </div>
         
         <!-- Mobile Contact -->
         <div class="pt-4 border-t border-gray-200">
-          <a href="tel:{phone.replace(/[^0-9]/g, '')}" class="flex items-center justify-center space-x-2 bg-forest-canopy hover:bg-moss-green text-white px-6 py-3 rounded-lg font-semibold transition-colors mx-3">
+          <a href={`tel:${phoneDigits}`} class="flex items-center justify-center space-x-2 bg-forest-canopy hover:bg-moss-green text-white px-6 py-3 rounded-lg font-semibold transition-colors mx-3">
             <Phone className="w-5 h-5" />
             <span>Call {phone}</span>
           </a>
@@ -172,18 +199,18 @@ try {
     
     // Function to initialize mobile menu
     function initMobileMenu() {
-      const toggleButton = document.getElementById('mobile-menu-toggle');
-      const mobileMenu = document.getElementById('mobile-menu');
+      const toggleButtonEl = document.getElementById('mobile-menu-toggle');
+      const mobileMenuEl = document.getElementById('mobile-menu');
 
-      if (!toggleButton || !mobileMenu) {
-        console.error('[Mobile Nav] Required elements not found');
+      if (!(toggleButtonEl instanceof HTMLButtonElement) || !(mobileMenuEl instanceof HTMLElement)) {
         return;
       }
+
+      const toggleButton = toggleButtonEl;
+      const mobileMenu = mobileMenuEl;
       
       // Toggle menu function
       function toggleMenu() {
-        const isHidden = mobileMenu.classList.contains('hidden');
-        
         mobileMenu.classList.toggle('hidden');
         
         // Update aria-expanded attribute for accessibility
@@ -194,7 +221,7 @@ try {
         if (isExpanded) {
           // Small delay to ensure menu is visible before focusing
           setTimeout(() => {
-            const firstMenuItem = mobileMenu.querySelector('a[role="menuitem"]');
+            const firstMenuItem = mobileMenu.querySelector<HTMLAnchorElement>('a[role="menuitem"]');
             if (firstMenuItem) {
               firstMenuItem.focus();
             }
@@ -210,8 +237,8 @@ try {
           toggleMenu();
         });
         
-      } catch (error) {
-        console.error('[Mobile Nav] Error attaching click listener:', error);
+      } catch {
+        // Leave menu closed if binding fails.
       }
       
       // Close mobile menu when pressing Escape
@@ -225,9 +252,13 @@ try {
       
       // Close menu when clicking outside
       document.addEventListener('click', (event) => {
+        const target = event.target;
+        if (!(target instanceof Node)) {
+          return;
+        }
         if (!mobileMenu.classList.contains('hidden') && 
-            !mobileMenu.contains(event.target) && 
-            !toggleButton.contains(event.target)) {
+            !mobileMenu.contains(target) && 
+            !toggleButton.contains(target)) {
           mobileMenu.classList.add('hidden');
           toggleButton.setAttribute('aria-expanded', 'false');
         }

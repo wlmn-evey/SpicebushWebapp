@@ -1,41 +1,48 @@
 ---
-// Check if user is admin and coming soon mode is enabled
-const isAdmin = Astro.cookies.get('sbms-admin-auth')?.value === 'true';
-import { getEntry } from 'astro:content';
-import { getSetting } from '@lib/content-db';
+import { db } from '@lib/db';
 
-// Try to get coming soon status from settings first (database)
+const parseBoolean = (value: unknown): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    return ['true', '1', 'yes', 'on'].includes(value.trim().toLowerCase());
+  }
+  return false;
+};
+
+const locals = Astro.locals as unknown as Record<string, unknown>;
+const isAdmin = locals.isAdmin === true;
+const previewMode = Astro.cookies.get('sbms-preview-mode')?.value === 'site' ? 'site' : 'coming-soon';
+
 let isComingSoonEnabled = false;
 try {
-  const comingSoonMode = await getSetting('coming_soon_enabled');
-  isComingSoonEnabled = comingSoonMode === 'true';
-} catch (error) {
-  // If database fails, try markdown config as fallback
-  try {
-    const comingSoonConfig = await getEntry('coming-soon', 'config');
-    isComingSoonEnabled = comingSoonConfig?.data?.enabled || false;
-  } catch (err) {
-    // Coming soon config not found - using default
-  }
+  isComingSoonEnabled = parseBoolean(await db.content.getSetting('coming_soon_enabled'));
+} catch {
+  isComingSoonEnabled = false;
 }
 
-// Only show bar if admin and coming soon mode is enabled
 const showBar = isAdmin && isComingSoonEnabled;
+const enableSitePreview = previewMode !== 'site';
+const toggleMode = enableSitePreview ? 'site' : 'coming-soon';
+const buttonLabel = enableSitePreview ? 'View Full Site' : 'View Coming Soon';
+const statusLabel = enableSitePreview
+  ? 'Coming soon mode is active for visitors.'
+  : 'You are bypassing coming soon mode.';
+const redirectTarget = enableSitePreview ? '/' : '/coming-soon';
+const formAction = `/api/admin/preview-mode?mode=${encodeURIComponent(toggleMode)}&redirect=${encodeURIComponent(redirectTarget)}`;
 ---
 
 {showBar && (
-  <div class="admin-preview-bar">
+  <div class="admin-preview-bar" role="status" aria-live="polite">
     <div class="admin-preview-content">
       <span class="admin-preview-text">
-        🔒 Admin Preview Mode - Coming Soon mode is active
+        Admin Preview: {statusLabel}
       </span>
-      <button 
-        id="toggle-preview" 
-        class="admin-preview-button"
-        data-current-mode="preview"
-      >
-        View Coming Soon Page
-      </button>
+      <form method="post" action={formAction}>
+        <button type="submit" class="admin-preview-button">
+          {buttonLabel}
+        </button>
+      </form>
     </div>
   </div>
 )}
@@ -94,21 +101,3 @@ const showBar = isAdmin && isComingSoonEnabled;
     }
   }
 </style>
-
-<script>
-  const toggleButton = document.getElementById('toggle-preview');
-  
-  if (toggleButton) {
-    toggleButton.addEventListener('click', () => {
-      const currentMode = toggleButton.getAttribute('data-current-mode');
-      
-      if (currentMode === 'preview') {
-        // Go to coming soon page
-        window.location.href = '/coming-soon';
-      } else {
-        // Go back to home page
-        window.location.href = '/';
-      }
-    });
-  }
-</script>

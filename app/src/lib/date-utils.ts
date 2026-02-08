@@ -3,9 +3,11 @@
  * These functions provide robust date parsing and formatting with graceful error handling
  */
 
+type DateInput = Date | string | number | null | undefined;
+
 /**
  * Safely parses a date from various input formats
- * @param date - The date input (Date object, string, number, or any)
+ * @param date - The date input (Date object, string, number, or nullish)
  * @returns A valid Date object or null if parsing fails
  * 
  * @example
@@ -13,7 +15,7 @@
  * safeParseDate(new Date()) // Returns: Date object
  * safeParseDate('invalid') // Returns: null
  */
-export function safeParseDate(date: any): Date | null {
+export function safeParseDate(date: DateInput): Date | null {
   if (!date) {
     return null;
   }
@@ -24,6 +26,10 @@ export function safeParseDate(date: any): Date | null {
   }
 
   // Try to parse string or number inputs
+  if (typeof date !== 'string' && typeof date !== 'number') {
+    return null;
+  }
+
   try {
     const parsed = new Date(date);
     
@@ -49,7 +55,7 @@ export function safeParseDate(date: any): Date | null {
  * formatBlogDate('invalid') // Returns: "Date unavailable"
  */
 export function formatBlogDate(
-  date: any, 
+  date: DateInput,
   options: Intl.DateTimeFormatOptions = {
     month: 'short',
     day: 'numeric',
@@ -79,7 +85,7 @@ export function formatBlogDate(
  * getISOString('2024-01-15') // Returns: "2024-01-15T00:00:00.000Z"
  * getISOString('invalid') // Returns: ""
  */
-export function getISOString(date: any): string {
+export function getISOString(date: DateInput): string {
   const parsedDate = safeParseDate(date);
   
   if (!parsedDate) {
@@ -101,7 +107,7 @@ export function getISOString(date: any): string {
  * @param descending - Sort in descending order (newest first)
  * @returns Comparison result for Array.sort()
  */
-export function compareDates(a: any, b: any, descending: boolean = true): number {
+export function compareDates(a: DateInput, b: DateInput, descending: boolean = true): number {
   const dateA = safeParseDate(a);
   const dateB = safeParseDate(b);
   

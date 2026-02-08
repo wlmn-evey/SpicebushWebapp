@@ -1,13 +1,11 @@
 import type { APIRoute } from 'astro';
-import { isAdminEmail } from '@lib/admin-config';
+import { logServerError } from '@lib/server-logger';
 
 export const GET: APIRoute = async (context) => {
   try {
-    // Check if user is authenticated via Clerk middleware
-    // @ts-ignore - locals is dynamic
-    const userId = context.locals.userId;
-    // @ts-ignore - locals is dynamic
-    const userEmail = context.locals.userEmail;
+    const locals = context.locals as unknown as Record<string, unknown>;
+    const userId = locals.userId as string | undefined;
+    const isAdmin = locals.isAdmin === true;
 
     if (!userId) {
       return new Response(JSON.stringify({ authenticated: false }), {
@@ -16,8 +14,7 @@ export const GET: APIRoute = async (context) => {
       });
     }
 
-    // Verify admin email
-    if (!isAdminEmail(userEmail)) {
+    if (!isAdmin) {
       return new Response(JSON.stringify({ authenticated: false }), {
         status: 403,
         headers: { 'Content-Type': 'application/json' }
@@ -30,7 +27,7 @@ export const GET: APIRoute = async (context) => {
     });
 
   } catch (error) {
-    console.error('Auth check error:', error);
+    logServerError('Auth check failed', error, { route: '/api/auth/check' });
     return new Response(JSON.stringify({ authenticated: false }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

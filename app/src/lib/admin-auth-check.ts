@@ -1,27 +1,46 @@
 import type { AstroGlobal } from 'astro';
 import { isAdminEmail } from './admin-config';
 
+type AuthContext = Pick<AstroGlobal, 'locals'> | { locals?: unknown };
+
+type AdminSession = {
+  userId: string;
+  userEmail?: string;
+};
+
+type AdminUser = {
+  id: string;
+  email?: string;
+};
+
+export type AdminAuthResult = {
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  user: AdminUser | null;
+  session: AdminSession | null;
+};
+
 /**
  * Unified admin authentication check for all admin pages
- * Uses Clerk for authentication (via middleware)
+ * Auth provider is handled upstream in middleware.
  */
-export async function checkAdminAuth(Astro: AstroGlobal) {
-  // Clerk middleware already handles authentication
-  // If we reach here, user is authenticated
-  // Check locals for userId and userEmail set by middleware
-  const userId = (Astro.locals as any).userId;
-  const userEmail = (Astro.locals as any).userEmail;
+export async function checkAdminAuth(context: AuthContext): Promise<AdminAuthResult> {
+  // Middleware sets user identity and admin flags on locals.
+  const locals = (context.locals ?? {}) as Record<string, unknown>;
+  const userId = typeof locals.userId === 'string' ? locals.userId : undefined;
+  const userEmail = typeof locals.userEmail === 'string' ? locals.userEmail : undefined;
 
   if (!userId) {
     return {
       isAuthenticated: false,
+      isAdmin: false,
       user: null,
       session: null
     };
   }
 
   // Check if user is admin
-  const isAdmin = isAdminEmail(userEmail);
+  const isAdmin = locals.isAdmin === true || isAdminEmail(userEmail);
 
   return {
     isAuthenticated: true,
@@ -39,10 +58,8 @@ export async function checkAdminAuth(Astro: AstroGlobal) {
 
 /**
  * Logout admin user
- * Note: With Clerk, logout is handled client-side through Clerk components
+ * Session revocation is handled by /auth/logout.
  */
 export async function logoutAdmin(Astro: AstroGlobal) {
-  // Clerk handles logout through its own session management
-  // Redirect to sign-out page
-  return Astro.redirect('/auth/sign-out');
+  return Astro.redirect('/auth/logout');
 }

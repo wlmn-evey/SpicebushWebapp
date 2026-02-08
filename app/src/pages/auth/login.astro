@@ -1,16 +1,37 @@
 ---
-// Redirect to Netlify Identity login
-return Astro.redirect('/auth/sign-in');
----
+import {
+  ADMIN_SESSION_COOKIE_NAME,
+  ADMIN_SESSION_MAX_AGE_SECONDS,
+  consumeAdminMagicLink
+} from '@lib/auth/admin-session';
 
-<Layout 
-  title="Sign In - Spicebush Montessori School"
-  description="Sign in to your Spicebush Montessori School administrative account."
-  keywords="login, sign in, admin, administration"
->
-  <AuthForm 
-    type="login" 
-    title="Welcome Back" 
-    subtitle="Sign in to your account to continue"
-  />
-</Layout>
+const token = Astro.url.searchParams.get('token');
+if (!token) {
+  return Astro.redirect('/auth/sign-in');
+}
+
+const locals = Astro.locals as unknown as Record<string, unknown>;
+const netlify = locals.netlify as { context?: { ip?: string } } | undefined;
+const forwarded = Astro.request.headers.get('x-forwarded-for');
+const requestedIp = netlify?.context?.ip ?? forwarded?.split(',')[0]?.trim() ?? null;
+
+const session = await consumeAdminMagicLink({
+  token,
+  requestedIp,
+  userAgent: Astro.request.headers.get('user-agent')
+});
+
+if (!session) {
+  return Astro.redirect('/auth/sign-in?error=invalid-link');
+}
+
+Astro.cookies.set(ADMIN_SESSION_COOKIE_NAME, session.sessionToken, {
+  path: '/',
+  httpOnly: true,
+  sameSite: 'strict',
+  secure: Astro.url.protocol === 'https:',
+  maxAge: ADMIN_SESSION_MAX_AGE_SECONDS
+});
+
+return Astro.redirect('/admin');
+---

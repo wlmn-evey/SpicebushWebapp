@@ -42,17 +42,13 @@ function readEnv(key: string, { required = false }: { required?: boolean } = {})
   return value;
 }
 
-export function getSupabaseUrl(): string {
-  return readEnv('PUBLIC_SUPABASE_URL', { required: true });
-}
+export function getNetlifyDatabaseUrl(): string {
+  const netlifyDatabaseUrl = readEnv('NETLIFY_DATABASE_URL');
+  if (netlifyDatabaseUrl) {
+    return netlifyDatabaseUrl;
+  }
 
-export function getSupabaseAnonKey(): string {
-  return readEnv('PUBLIC_SUPABASE_ANON_KEY', { required: true });
-}
-
-export function getSupabaseServiceRoleKey(): string | null {
-  const key = readEnv('SUPABASE_SERVICE_ROLE_KEY');
-  return key || null;
+  return readEnv('DATABASE_URL', { required: true });
 }
 
 export function clearEnvCache() {

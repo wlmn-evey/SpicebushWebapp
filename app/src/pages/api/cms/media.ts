@@ -1,25 +1,27 @@
 import type { APIRoute } from 'astro';
+import { query, queryRows, queryFirst } from '@lib/db/client';
+import { logServerError } from '@lib/server-logger';
 
 export const GET: APIRoute = async (context) => {
   try {
-    // Check admin authentication via Clerk middleware
-    // @ts-ignore - locals is dynamic
-    const userId = context.locals.userId;
+    // Check admin authentication via middleware.
+    const locals = context.locals as unknown as Record<string, unknown>;
+    const userId = locals.userId as string | undefined;
+    const isAdmin = locals.isAdmin === true;
 
-    if (!userId) {
+    if (!userId || !isAdmin) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    const { supabase } = await import('@lib/supabase');
-    const { data, error } = await supabase
-      .from('media')
-      .select('*')
-      .order('uploaded_at', { ascending: false });
-
-    if (error) throw error;
+    const data = await queryRows<{ id: string; filename: string; url: string }>(
+      `
+        SELECT id, filename, url
+        FROM media
+      `
+    );
 
     const media = data.map(item => ({
       id: item.id,
@@ -34,7 +36,7 @@ export const GET: APIRoute = async (context) => {
     });
 
   } catch (error) {
-    console.error('Error fetching media:', error);
+    logServerError('Failed to fetch media', error, { route: '/api/cms/media' });
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -44,11 +46,12 @@ export const GET: APIRoute = async (context) => {
 
 export const DELETE: APIRoute = async (context) => {
   try {
-    // Check admin authentication via Clerk middleware
-    // @ts-ignore - locals is dynamic
-    const userId = context.locals.userId;
+    // Check admin authentication via middleware.
+    const locals = context.locals as unknown as Record<string, unknown>;
+    const userId = locals.userId as string | undefined;
+    const isAdmin = locals.isAdmin === true;
 
-    if (!userId) {
+    if (!userId || !isAdmin) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
@@ -64,16 +67,18 @@ export const DELETE: APIRoute = async (context) => {
       });
     }
 
-    const { supabase } = await import('@lib/supabase');
-
     // Get the media record first to get file path for cleanup
-    const { data: mediaRecord, error: fetchError } = await supabase
-      .from('media')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const mediaRecord = await queryFirst<{ id: string; filename: string; url: string }>(
+      `
+        SELECT id, filename, url
+        FROM media
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
 
-    if (fetchError || !mediaRecord) {
+    if (!mediaRecord) {
       return new Response(JSON.stringify({ error: 'Photo not found' }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' }
@@ -81,12 +86,13 @@ export const DELETE: APIRoute = async (context) => {
     }
 
     // Delete from database
-    const { error: deleteError } = await supabase
-      .from('media')
-      .delete()
-      .eq('id', id);
-
-    if (deleteError) throw deleteError;
+    await query(
+      `
+        DELETE FROM media
+        WHERE id = $1
+      `,
+      [id]
+    );
 
     // TODO: Delete physical file from storage
     // This would be handled by the storage provider in production
@@ -101,7 +107,7 @@ export const DELETE: APIRoute = async (context) => {
     });
 
   } catch (error) {
-    console.error('Error deleting media:', error);
+    logServerError('Failed to delete media', error, { route: '/api/cms/media' });
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

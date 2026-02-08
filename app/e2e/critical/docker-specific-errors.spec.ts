@@ -115,8 +115,7 @@ test.describe('Docker Specific Error Detection', () => {
           text.includes('Connection refused') ||
           text.includes('connect ETIMEDOUT') ||
           text.includes('ENOTFOUND') ||
-          text.includes('getaddrinfo') ||
-          (text.includes('supabase') && text.includes('error'))) {
+          text.includes('getaddrinfo')) {
         dbErrors.push(text);
       }
     });
@@ -144,7 +143,7 @@ test.describe('Docker Specific Error Detection', () => {
       console.log('1. Check DATABASE_URL environment variable');
       console.log('2. Ensure database container is running');
       console.log('3. Check network connectivity between containers');
-      console.log('4. Verify Supabase credentials');
+      console.log('4. Verify database credentials');
     }
 
     expect(dbErrors, 'No database connection errors').toHaveLength(0);
@@ -326,7 +325,7 @@ docker restart <container_name>
 ### For database issues:
 \`\`\`bash
 # Check environment variables
-docker exec <container_name> env | grep -E "(DATABASE|SUPABASE)"
+docker exec <container_name> env | grep -E "(DATABASE|NETLIFY_DATABASE_URL)"
 
 # Test database connection
 docker exec <container_name> npm run test:db

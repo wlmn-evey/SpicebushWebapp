@@ -489,7 +489,7 @@ test.describe('Magic Link Security Tests', () => {
         expect(content).not.toContain('SQLException');
         expect(content).not.toContain('database');
         expect(content).not.toContain('postgres://');
-        expect(content).not.toContain('supabase');
+        expect(content).not.toContain('NETLIFY_DATABASE_URL');
         expect(content).not.toContain('env.');
         expect(content).not.toContain('process.');
         

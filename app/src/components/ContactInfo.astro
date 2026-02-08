@@ -1,5 +1,6 @@
 ---
-import { getSetting } from '@lib/content-db';
+import { db } from '@lib/db';
+import { logServerError } from '@lib/server-logger';
 import { Phone, Mail, MapPin } from 'lucide-astro';
 
 interface Props {
@@ -22,23 +23,29 @@ let addressZip = '19342';
 try {
   // Try to get all settings in parallel for better performance
   const [dbPhone, dbEmail, dbStreet, dbCity, dbState, dbZip] = await Promise.all([
-    getSetting('school_phone').catch(() => null),
-    getSetting('school_email').catch(() => null),
-    getSetting('school_address_street').catch(() => null),
-    getSetting('school_address_city').catch(() => null),
-    getSetting('school_address_state').catch(() => null),
-    getSetting('school_address_zip').catch(() => null)
+    db.content.getSetting('school_phone').catch(() => null),
+    db.content.getSetting('school_email').catch(() => null),
+    db.content.getSetting('school_address_street').catch(() => null),
+    db.content.getSetting('school_address_city').catch(() => null),
+    db.content.getSetting('school_address_state').catch(() => null),
+    db.content.getSetting('school_address_zip').catch(() => null)
   ]);
   
-  // Use database values if available, otherwise keep defaults
-  phone = dbPhone || phone;
-  email = dbEmail || email;
-  addressStreet = dbStreet || addressStreet;
-  addressCity = dbCity || addressCity;
-  addressState = dbState || addressState;
-  addressZip = dbZip || addressZip;
+  const coerceSetting = (value: unknown, fallback: string) => {
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value;
+    }
+    return fallback;
+  };
+
+  phone = coerceSetting(dbPhone, phone);
+  email = coerceSetting(dbEmail, email);
+  addressStreet = coerceSetting(dbStreet, addressStreet);
+  addressCity = coerceSetting(dbCity, addressCity);
+  addressState = coerceSetting(dbState, addressState);
+  addressZip = coerceSetting(dbZip, addressZip);
 } catch (error) {
-  console.error('Error loading contact info from database:', error);
+  logServerError('Failed to load contact info from database', error, { component: 'ContactInfo' });
   // Use default values defined above
 }
 

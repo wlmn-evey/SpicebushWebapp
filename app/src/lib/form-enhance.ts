@@ -3,7 +3,7 @@
  * Builds upon HTML5 validation with better UX
  */
 
-import { validators, validateField } from './form-validation';
+import { validateField } from './form-validation';
 
 interface FormEnhanceOptions {
   // Map of field names to validation rules

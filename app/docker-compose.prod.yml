@@ -13,10 +13,7 @@ services:
       target: production
       args:
         # Build arguments from environment
-        PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL}
-        PUBLIC_SUPABASE_ANON_KEY: ${PUBLIC_SUPABASE_ANON_KEY}
-        PUBLIC_STRAPI_URL: ${PUBLIC_STRAPI_URL:-}
-        PUBLIC_STRIPE_PUBLISHABLE_KEY: ${PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+        PUBLIC_SITE_URL: ${PUBLIC_SITE_URL}
     ports:
       - "${PORT:-80}:4321"
     restart: unless-stopped

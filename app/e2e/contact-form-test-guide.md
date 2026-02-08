@@ -113,7 +113,7 @@ Since Netlify Forms handles the primary submission, the webhook is a backup. To 
 
 1. Configure Netlify webhook in site settings
 2. Submit a form
-3. Check Supabase database for stored submission
+3. Check the database for stored submission
 4. Verify all fields are saved correctly
 
 ## Common Issues and Solutions
@@ -135,7 +135,7 @@ Since Netlify Forms handles the primary submission, the webhook is a backup. To 
 
 ### Issue: Webhook not receiving data
 - Verify webhook URL is correctly configured in Netlify
-- Check Supabase credentials are set in environment
+- Check database credentials are set in environment
 - Review webhook logs for errors
 
 ## Performance Considerations

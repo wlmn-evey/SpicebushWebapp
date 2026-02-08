@@ -164,8 +164,6 @@ function applySiblingDiscount(amount: number, siblings: number, rate: number): {
 function computeProgramResult(
   program: ProgramRecord,
   rate: RateRecord,
-  familySize: number,
-  income: number,
   childrenCount: number,
   settings: CalculatorSettings
 ): ProgramResult {
@@ -263,7 +261,7 @@ export default function TuitionCalculator({ programs, rates, settings }: Props) 
       const selectedRate = selectRateForFamily(programRates, familySizeNumber, incomeValue);
       if (selectedRate) {
         programResults.push(
-          computeProgramResult(program, selectedRate, familySizeNumber, incomeValue, parsedChildren, settings)
+          computeProgramResult(program, selectedRate, parsedChildren, settings)
         );
       }
     });

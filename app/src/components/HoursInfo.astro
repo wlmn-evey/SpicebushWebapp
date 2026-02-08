@@ -23,7 +23,7 @@ const todayHours = sortedHours.find(h => h.data.day === currentDay);
 
 // Format time
 const formatTime = (time: string) => {
-  return time.replace(/(\d{1,2}):(\d{2})/, (match, hour, minute) => {
+  return time.replace(/(\d{1,2}):(\d{2})/, (_match, hour, minute) => {
     const h = parseInt(hour);
     const period = h >= 12 ? 'PM' : 'AM';
     const displayHour = h > 12 ? h - 12 : h === 0 ? 12 : h;

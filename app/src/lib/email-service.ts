@@ -4,8 +4,7 @@
  * This module provides a unified interface for sending emails across different providers.
  * It supports multiple email services and handles provider-specific implementation details.
  */
-
-import type { EmailMessage, EmailProvider, EmailResult } from '@types/email';
+import { logServerWarn } from '@lib/server-logger';
 
 // Email message interface
 export interface EmailMessage {
@@ -81,7 +80,7 @@ class UnioneProvider implements EmailProvider {
           subject: message.subject,
           from_email: message.from || import.meta.env.EMAIL_FROM || process.env.EMAIL_FROM,
           from_name: message.fromName || import.meta.env.EMAIL_FROM_NAME || process.env.EMAIL_FROM_NAME || 'Spicebush Montessori',
-          recipients: recipients.map(email => ({ email })),
+          recipients: recipients.map((email: string) => ({ email })),
           ...(message.replyTo && { reply_to: message.replyTo })
         }
       };
@@ -173,7 +172,10 @@ class EmailService {
         if (result.success) return result;
         
         // Log the failure but continue to fallback
-        console.warn(`Preferred provider ${preferred.name} failed:`, result.error);
+        logServerWarn('Preferred email provider failed, attempting fallback', {
+          provider: preferred.name,
+          error: result.error
+        });
       }
     }
 
@@ -218,6 +220,3 @@ export const emailService = new EmailService();
 
 // Export the class for direct instantiation when needed
 export { EmailService };
-
-// Export types
-export type { EmailMessage, EmailProvider, EmailResult };

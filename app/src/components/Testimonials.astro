@@ -1,16 +1,114 @@
 ---
 import { Star } from 'lucide-astro';
-import { getCollection } from '@lib/content-db';
+import { db, type ContentEntry } from '@lib/db';
 
-// Get featured testimonials from Supabase
-const allTestimonials = await getCollection('testimonials');
-const featuredTestimonials = allTestimonials
-  .filter(testimonial => testimonial.data.featured === true)
-  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
-  .slice(0, 3);
+interface TestimonialData {
+  featured?: unknown;
+  rating?: unknown;
+  author?: unknown;
+  authorPhoto?: unknown;
+  authorTitle?: unknown;
+  childAge?: unknown;
+  date?: unknown;
+}
 
-// Fallback if no featured testimonials are available
-const displayTestimonials = featuredTestimonials.length > 0 ? featuredTestimonials : allTestimonials.slice(0, 3);
+interface TestimonialCard {
+  id: string;
+  rating: number;
+  author: string;
+  authorInitials: string;
+  authorTitle?: string;
+  childAgeLabel?: string;
+  authorPhoto?: string;
+  body?: string;
+  featured: boolean;
+  dateValue?: Date;
+}
+
+const normalizeString = (value: unknown): string | undefined => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+  return undefined;
+};
+
+const normalizeRating = (value: unknown): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.min(Math.max(Math.round(value), 1), 5);
+  }
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isNaN(parsed)) {
+      return Math.min(Math.max(parsed, 1), 5);
+    }
+  }
+  return 5;
+};
+
+const normalizeDate = (value: unknown): Date | undefined => {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+  return undefined;
+};
+
+const toCard = (entry: ContentEntry): TestimonialCard | null => {
+  const data = entry.data as TestimonialData;
+  const author = normalizeString(data.author);
+  if (!author) {
+    return null;
+  }
+
+  const body = typeof entry.body === 'string' ? entry.body.trim() : undefined;
+  const rating = normalizeRating(data.rating);
+  const authorPhoto = normalizeString(data.authorPhoto);
+  const authorTitle = normalizeString(data.authorTitle);
+  const childAgeLabel = normalizeString(data.childAge);
+  const featured = data.featured === true;
+  const dateValue = normalizeDate(data.date);
+
+  const initials = author
+    .split(' ')
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase())
+    .join('')
+    .slice(0, 3) || author.charAt(0).toUpperCase();
+
+  return {
+    id: entry.id,
+    rating,
+    author,
+    authorInitials: initials,
+    authorTitle,
+    childAgeLabel,
+    authorPhoto,
+    body,
+    featured,
+    dateValue
+  };
+};
+
+const testimonials = (await db.content.getCollection('testimonials'))
+  .map(toCard)
+  .filter((testimonial): testimonial is TestimonialCard => testimonial !== null)
+  .sort((a, b) => {
+    if (a.dateValue && b.dateValue) {
+      return b.dateValue.getTime() - a.dateValue.getTime();
+    }
+    if (a.dateValue) return -1;
+    if (b.dateValue) return 1;
+    return 0;
+  });
+
+const featuredTestimonials = testimonials.filter((testimonial) => testimonial.featured).slice(0, 3);
+const displayTestimonials = featuredTestimonials.length > 0 ? featuredTestimonials : testimonials.slice(0, 3);
 ---
 
 <!-- Social Proof Section -->
@@ -36,31 +134,33 @@ const displayTestimonials = featuredTestimonials.length > 0 ? featuredTestimonia
       {displayTestimonials.map((testimonial, index) => (
         <div class="bg-white p-8 rounded-lg shadow-sm hover:shadow-md transition-shadow" role="article" aria-labelledby={`testimonial-${index + 1}-name`}>
           <div class="flex space-x-1 mb-4">
-            {Array.from({ length: testimonial.data.rating }, (_, i) => (
+            {Array.from({ length: testimonial.rating }, () => (
               <Star className="w-4 h-4 text-yellow-400 fill-current" />
             ))}
           </div>
-          <div class="text-earth-brown mb-4 italic" set:html={testimonial.body} />
+          {testimonial.body && (
+            <div class="text-earth-brown mb-4 italic" set:html={testimonial.body} />
+          )}
           <div class="flex items-center space-x-3">
-            {testimonial.data.authorPhoto ? (
+            {testimonial.authorPhoto ? (
               <img 
-                src={testimonial.data.authorPhoto}
-                alt={`Portrait of ${testimonial.data.author}`}
+                src={testimonial.authorPhoto}
+                alt={`Portrait of ${testimonial.author}`}
                 class="w-10 h-10 rounded-full object-cover"
                 loading="lazy"
               />
             ) : (
               <div class="w-10 h-10 rounded-full bg-forest-canopy text-white flex items-center justify-center text-sm font-semibold">
-                {testimonial.data.author.split(' ').map(n => n[0]).join('')}
+                {testimonial.authorInitials}
               </div>
             )}
             <div>
               <div class="font-semibold text-earth-brown" id={`testimonial-${index + 1}-name`}>
-                {testimonial.data.author}
+                {testimonial.author}
               </div>
               <div class="text-sm text-earth-brown">
-                {testimonial.data.authorTitle || 'Parent'}
-                {testimonial.data.childAge && ` of ${testimonial.data.childAge}`}
+                {testimonial.authorTitle ?? 'Parent'}
+                {testimonial.childAgeLabel && ` of ${testimonial.childAgeLabel}`}
               </div>
             </div>
           </div>

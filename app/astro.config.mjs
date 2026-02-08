@@ -5,7 +5,6 @@ import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 import react from '@astrojs/react';
 import netlify from '@astrojs/netlify';
-import clerk from '@clerk/astro';
 
 // https://astro.build/config
 export default defineConfig({
@@ -13,8 +12,7 @@ export default defineConfig({
   integrations: [
     tailwind(),
     sitemap(),
-    react(),
-    clerk()
+    react()
   ],
   output: 'server',
   adapter: netlify(),
@@ -44,17 +42,6 @@ export default defineConfig({
                 id.includes('node_modules/react-dom') ||
                 id.includes('node_modules/scheduler')) {
               return 'react-vendor';
-            }
-            
-            // Separate chunk for Stripe payment libraries
-            if (id.includes('@stripe/stripe-js') || 
-                id.includes('@stripe/react-stripe-js')) {
-              return 'stripe-vendor';
-            }
-            
-            // Separate chunk for Supabase client
-            if (id.includes('@supabase/supabase-js')) {
-              return 'supabase-vendor';
             }
             
             // Separate chunk for icon libraries

@@ -1,10 +1,104 @@
 ---
 import { Mail } from 'lucide-astro';
-import { getCollection } from 'astro:content';
+import { db, type ContentEntry } from '@lib/db';
 
-// Get staff from content collections
-const staff = await getCollection('staff');
-const sortedStaff = staff.sort((a, b) => (a.data.order || 999) - (b.data.order || 999));
+type StaffContentEntry = ContentEntry<Record<string, unknown>>;
+
+interface StaffViewModel {
+  id: string;
+  name: string;
+  role?: string;
+  photo?: string;
+  email?: string;
+  certificationBadge?: string;
+  credentials: string[];
+  languages: string[];
+  startYearLabel?: string;
+  order: number;
+  bio?: string;
+  initials: string;
+}
+
+const normalizeString = (value: unknown): string | undefined => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+  return undefined;
+};
+
+const normalizeStringArray = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter((item) => item.length > 0);
+  }
+  return [];
+};
+
+const normalizeOrder = (value: unknown): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+  return 999;
+};
+
+const toViewModel = (entry: StaffContentEntry): StaffViewModel | null => {
+  const data = entry.data as Record<string, unknown>;
+  const name = normalizeString(data.name);
+  if (!name) {
+    return null;
+  }
+
+  const role = normalizeString(data.role);
+  const email = normalizeString(data.email);
+  const photo = normalizeString(data.photo);
+  const certificationBadge = normalizeString(data.certificationBadge);
+  const credentials = normalizeStringArray(data.credentials);
+  const languages = normalizeStringArray(data.languages);
+  const startYearRaw = data.startYear;
+  const startYearValue = typeof startYearRaw === 'number'
+    ? String(startYearRaw)
+    : normalizeString(startYearRaw);
+  const order = normalizeOrder(data.order);
+
+  const bodyText = typeof entry.body === 'string' ? entry.body.trim() : '';
+  const bio = bodyText.length > 0 ? bodyText : undefined;
+
+  const initials = name
+    .split(' ')
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase())
+    .join('')
+    .slice(0, 3) || name.charAt(0).toUpperCase();
+
+  return {
+    id: entry.id,
+    name,
+    role,
+    photo,
+    email,
+    certificationBadge,
+    credentials,
+    languages,
+    startYearLabel: startYearValue ? `Since ${startYearValue}` : undefined,
+    order,
+    bio,
+    initials
+  };
+};
+
+const staffEntries = await db.content.getCollection('staff');
+const sortedStaff = staffEntries
+  .map(toViewModel)
+  .filter((staffMember): staffMember is StaffViewModel => staffMember !== null)
+  .sort((a, b) => a.order - b.order);
 ---
 
 <!-- Teachers Section for About Page -->
@@ -26,7 +120,6 @@ const sortedStaff = staff.sort((a, b) => (a.data.order || 999) - (b.data.order |
         sortedStaff.map((teacher, index) => {
           const isEven = index % 2 === 0;
           const layoutClass = isEven ? 'lg:flex-row' : 'lg:flex-row-reverse';
-          const initials = teacher.data.name.split(' ').map(n => n[0]).join('');
 
           return (
             <div 
@@ -37,18 +130,18 @@ const sortedStaff = staff.sort((a, b) => (a.data.order || 999) - (b.data.order |
                 
                 <!-- Photo Section -->
                 <div class="w-full lg:w-2/5 relative">
-                  {teacher.data.photo ? (
+                  {teacher.photo ? (
                     <div class="aspect-square lg:aspect-auto lg:h-full overflow-hidden">
                       <img 
-                        src={teacher.data.photo}
-                        alt={`${teacher.data.name}, ${teacher.data.role} at Spicebush Montessori School`}
+                        src={teacher.photo}
+                        alt={`${teacher.name}${teacher.role ? `, ${teacher.role}` : ''} at Spicebush Montessori School`}
                         class="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                         loading="lazy"
                       />
                     </div>
                   ) : (
                     <div class="aspect-square lg:aspect-auto lg:h-full bg-gradient-to-br from-forest-canopy to-moss-green flex items-center justify-center">
-                      <span class="text-white text-6xl font-bold">{initials}</span>
+                      <span class="text-white text-6xl font-bold">{teacher.initials}</span>
                     </div>
                   )}
                   
@@ -60,22 +153,27 @@ const sortedStaff = staff.sort((a, b) => (a.data.order || 999) - (b.data.order |
                 <div class="w-full lg:w-3/5 p-8 lg:p-12 flex flex-col justify-center">
                   <div class="mb-6">
                     <h3 class="text-2xl lg:text-3xl font-heading font-bold text-earth-brown mb-3 tracking-tight">
-                      {teacher.data.name}
+                      {teacher.name}
                     </h3>
-                    {teacher.data.role && (
+                    {teacher.role && (
                       <div class="text-forest-canopy font-semibold text-lg mb-3">
-                        {teacher.data.role}
+                        {teacher.role}
+                      </div>
+                    )}
+                    {teacher.startYearLabel && (
+                      <div class="text-sm text-earth-brown/70 mb-3">
+                        {teacher.startYearLabel}
                       </div>
                     )}
                     <div class="flex items-center gap-3 mb-4">
-                      {teacher.data.certificationBadge && (
+                      {teacher.certificationBadge && (
                         <span class="inline-block px-3 py-1 bg-sunlight-gold text-white rounded-full text-sm font-bold">
-                          {teacher.data.certificationBadge} Certified
+                          {teacher.certificationBadge} Certified
                         </span>
                       )}
-                      {teacher.data.credentials && teacher.data.credentials.length > 0 && (
+                      {teacher.credentials.length > 0 && (
                         <div class="flex flex-wrap gap-2">
-                          {teacher.data.credentials.map(credential => (
+                          {teacher.credentials.map((credential) => (
                             <span class="inline-block px-3 py-1 bg-forest-canopy/10 text-forest-canopy rounded-full text-sm font-medium">
                               {credential}
                             </span>
@@ -85,15 +183,17 @@ const sortedStaff = staff.sort((a, b) => (a.data.order || 999) - (b.data.order |
                     </div>
                   </div>
                   
-                  <div class="text-earth-brown leading-relaxed text-base lg:text-lg mb-8 max-w-none">
-                    {teacher.body}
-                  </div>
+                  {teacher.bio && (
+                    <div class="text-earth-brown leading-relaxed text-base lg:text-lg mb-8 max-w-none">
+                      {teacher.bio}
+                    </div>
+                  )}
                   
-                  {teacher.data.email && (
+                  {teacher.email && (
                     <div class="flex items-center text-moss-green">
                       <Mail className="w-5 h-5 mr-2" />
-                      <a href={`mailto:${teacher.data.email}`} class="hover:text-forest-canopy transition-colors">
-                        {teacher.data.email}
+                      <a href={`mailto:${teacher.email}`} class="hover:text-forest-canopy transition-colors">
+                        {teacher.email}
                       </a>
                     </div>
                   )}
@@ -107,7 +207,7 @@ const sortedStaff = staff.sort((a, b) => (a.data.order || 999) - (b.data.order |
   </div>
 </section>
 
-<script>
+<script is:inline>
   // Trigger animation on page load
   document.addEventListener('DOMContentLoaded', () => {
     const cards = document.querySelectorAll('.teacher-card');

@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createMockSupabaseClient } from '@/test/utils/mockSupabaseClient';
 
-const logErrorMock = vi.fn();
-const publicClientMock = createMockSupabaseClient();
-const serviceClientMock = createMockSupabaseClient();
+const { logErrorMock, queryRowsMock, queryFirstMock } = vi.hoisted(() => ({
+  logErrorMock: vi.fn(),
+  queryRowsMock: vi.fn(),
+  queryFirstMock: vi.fn()
+}));
 
 vi.mock('../client', () => ({
-  getPublicClient: () => publicClientMock.client,
-  getServiceClient: () => serviceClientMock.client,
-  withServiceClient: async (callback: (client: unknown) => Promise<unknown>) => callback(serviceClientMock.client)
+  queryRows: queryRowsMock,
+  queryFirst: queryFirstMock
 }));
 
 vi.mock('@lib/error-logger', () => ({
@@ -26,8 +26,8 @@ import {
 describe('db.content facade', () => {
   beforeEach(() => {
     logErrorMock.mockClear();
-    publicClientMock.reset();
-    serviceClientMock.reset();
+    queryRowsMock.mockReset();
+    queryFirstMock.mockReset();
     cacheUtils.clearAll();
     cacheUtils.resetMetrics();
   });
@@ -56,10 +56,9 @@ describe('db.content facade', () => {
       created_at: '2024-02-01T00:00:00.000Z'
     };
 
-    publicClientMock.setTableResponses('content', [
-      { data: [firstRow], error: null },
-      { data: [secondRow], error: null }
-    ]);
+    queryRowsMock
+      .mockResolvedValueOnce([firstRow])
+      .mockResolvedValueOnce([secondRow]);
 
     const initial = await getCollection('blog');
     expect(initial).toEqual([
@@ -75,25 +74,24 @@ describe('db.content facade', () => {
       }
     ]);
 
-    expect(publicClientMock.client.from).toHaveBeenCalledTimes(1);
-    const operations = publicClientMock.getTableExecutions('content')[0]?.operations ?? [];
-    expect(operations.map((op) => op.method)).toEqual(['select', 'eq', 'eq', 'order']);
+    expect(queryRowsMock).toHaveBeenCalledTimes(1);
+    expect(queryRowsMock).toHaveBeenNthCalledWith(1, expect.stringContaining('FROM content'), ['blog']);
 
     // Second call uses cached value
     const cached = await getCollection('blog');
     expect(cached).toEqual(initial);
-    expect(publicClientMock.client.from).toHaveBeenCalledTimes(1);
+    expect(queryRowsMock).toHaveBeenCalledTimes(1);
 
     cacheUtils.invalidateCollection('blog');
     const refreshed = await getCollection('blog');
-    expect(publicClientMock.client.from).toHaveBeenCalledTimes(2);
+    expect(queryRowsMock).toHaveBeenCalledTimes(2);
     expect(refreshed[0]?.id).toBe('update');
   });
 
   it('returns empty array for unknown collections without hitting the database', async () => {
     const entries = await getCollection('non-existent');
     expect(entries).toEqual([]);
-    expect(publicClientMock.client.from).not.toHaveBeenCalled();
+    expect(queryRowsMock).not.toHaveBeenCalled();
   });
 
   it('fetches a single entry and falls back to merged data title', async () => {
@@ -109,39 +107,34 @@ describe('db.content facade', () => {
       created_at: '2024-01-01T00:00:00.000Z'
     };
 
-    publicClientMock.setTableResponses('content', [{ data: row, error: null }]);
+    queryFirstMock.mockResolvedValueOnce(row);
 
     const entry = await getEntry('blog', 'welcome');
     expect(entry?.data.title).toBe('Title From Data');
     expect(entry?.body).toBe('Entry body');
 
-    const operations = publicClientMock.getTableExecutions('content')[0]?.operations ?? [];
-    expect(operations.map((op) => op.method)).toEqual(['select', 'eq', 'eq', 'maybeSingle']);
+    expect(queryFirstMock).toHaveBeenCalledWith(
+      expect.stringContaining('WHERE type = $1 AND slug = $2 AND status = \'published\''),
+      ['blog', 'welcome']
+    );
   });
 
   it('parses and caches settings values from the service client', async () => {
-    serviceClientMock.setTableResponses('settings', [
-      { data: { key: 'homepage', value: '{"cta":"Join"}' }, error: null }
-    ]);
+    queryFirstMock.mockResolvedValueOnce({ key: 'homepage', value: '{"cta":"Join"}' });
 
     const value = await getSetting('homepage');
     expect(value).toEqual({ cta: 'Join' });
-    expect(serviceClientMock.client.from).toHaveBeenCalledTimes(1);
+    expect(queryFirstMock).toHaveBeenCalledTimes(1);
 
     const cachedValue = await getSetting('homepage');
     expect(cachedValue).toEqual({ cta: 'Join' });
-    expect(serviceClientMock.client.from).toHaveBeenCalledTimes(1);
+    expect(queryFirstMock).toHaveBeenCalledTimes(1);
   });
 
   it('merges all settings into a keyed object and caches the result', async () => {
-    serviceClientMock.setTableResponses('settings', [
-      {
-        data: [
-          { key: 'hero', value: '{"headline":"Welcome"}' },
-          { key: 'hours', value: '{"weekday":"9-5"}' }
-        ],
-        error: null
-      }
+    queryRowsMock.mockResolvedValueOnce([
+      { key: 'hero', value: '{"headline":"Welcome"}' },
+      { key: 'hours', value: '{"weekday":"9-5"}' }
     ]);
 
     const settings = await getAllSettings();
@@ -150,19 +143,18 @@ describe('db.content facade', () => {
       hours: { weekday: '9-5' }
     });
 
-    expect(serviceClientMock.client.from).toHaveBeenCalledTimes(1);
+    expect(queryRowsMock).toHaveBeenCalledTimes(1);
 
     const cached = await getAllSettings();
     expect(cached).toEqual(settings);
-    expect(serviceClientMock.client.from).toHaveBeenCalledTimes(1);
+    expect(queryRowsMock).toHaveBeenCalledTimes(1);
   });
 
   it('logs errors and returns safe defaults on query failures', async () => {
-    publicClientMock.setTableResponses('content', [
-      { data: null, error: new Error('boom') },
-      { data: null, error: new Error('still missing') }
-    ]);
-    serviceClientMock.setTableResponses('settings', [{ data: null, error: new Error('fail') }]);
+    queryRowsMock.mockRejectedValueOnce(new Error('boom'));
+    queryFirstMock
+      .mockRejectedValueOnce(new Error('still missing'))
+      .mockRejectedValueOnce(new Error('fail'));
 
     const [collection, entry, setting] = await Promise.all([
       getCollection('blog'),

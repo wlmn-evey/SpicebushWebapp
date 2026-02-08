@@ -2,20 +2,41 @@
 import { Facebook, Instagram } from 'lucide-astro';
 import OptimizedImage from '@components/OptimizedImage.astro';
 import ContactInfo from '@components/ContactInfo.astro';
-import NewsletterSignup from '@components/NewsletterSignup.astro';
 import HoursWidget from '@components/HoursWidget.astro';
-import { getSetting } from '@lib/content-db';
+import { db } from '@lib/db';
+import { logServerError } from '@lib/server-logger';
 
-// Get social media links from database settings with error handling
-let socialMedia = { facebook: null, instagram: null };
+interface SocialMediaLinks {
+  facebook: string | null;
+  instagram: string | null;
+}
+
+const toUrlOrNull = (value: unknown): string | null => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.startsWith('http')) {
+      return trimmed;
+    }
+    if (trimmed.length > 0) {
+      return `https://${trimmed.replace(/^https?:\/\//, '')}`;
+    }
+  }
+  return null;
+};
+
+let socialMedia: SocialMediaLinks = { facebook: null, instagram: null };
 try {
-  const [facebook, instagram] = await Promise.all([
-    getSetting('school_facebook').catch(() => null),
-    getSetting('school_instagram').catch(() => null)
+  const [facebookSetting, instagramSetting] = await Promise.all([
+    db.content.getSetting('school_facebook').catch(() => null),
+    db.content.getSetting('school_instagram').catch(() => null)
   ]);
-  socialMedia = { facebook, instagram };
+
+  socialMedia = {
+    facebook: toUrlOrNull(facebookSetting),
+    instagram: toUrlOrNull(instagramSetting)
+  };
 } catch (error) {
-  console.error('Error loading social media links in Footer:', error);
+  logServerError('Failed to load social media links', error, { component: 'Footer' });
 }
 ---
 
@@ -63,35 +84,21 @@ try {
               <li><a href="/our-principles" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Our Principles</a></li>
               <li><a href="/admissions" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Admissions</a></li>
               <li><a href="/admissions/tuition-calculator" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Tuition Calculator</a></li>
-              <li class="pt-3 border-t border-white/20">
-                <div class="footer-auth-nav">
-                </div>
-              </li>
             </ul>
           </div>
           
-          <!-- Grid Cell 3: Resources & Newsletter -->
+          <!-- Grid Cell 3: Resources -->
           <div class="space-y-6">
             <div class="space-y-4">
               <h3 class="text-lg font-semibold text-sunlight-gold">Resources</h3>
               <ul class="space-y-2 text-sm">
                 <li><a href="/resources/faq" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">FAQ</a></li>
                 <li><a href="/resources/parent-resources" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Caregiver Resources</a></li>
-                <li><a href="/blog" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Blog</a></li>
                 <li><a href="/resources/events" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Community Events</a></li>
                 <li><a href="/policies" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Policies</a></li>
                 <li><a href="/contact" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Contact</a></li>
               </ul>
             </div>
-            
-            <!-- Newsletter Signup -->
-            <NewsletterSignup 
-              variant="footer"
-              title="Newsletter"
-              description="Stay updated with school news and events"
-              buttonText="Subscribe"
-              subscriptionType="general"
-            />
           </div>
           
           <!-- Grid Cell 4: Contact Info -->
@@ -144,23 +151,3 @@ try {
     </div>
   </div>
 </footer>
-
-<style>
-  .footer-auth-nav {
-    --auth-nav-color: #F5F5DC; /* light-stone */
-    --auth-nav-hover-color: #FFD700; /* sunlight-gold */
-  }
-  
-  /* Additional footer-specific styles for authenticated state */
-  .footer-auth-nav #auth-nav button {
-    @apply text-light-stone hover:text-sunlight-gold transition-colors font-medium;
-  }
-  
-  .footer-auth-nav #auth-nav #user-menu {
-    @apply bg-forest-canopy border-white/20;
-  }
-  
-  .footer-auth-nav #auth-nav #user-menu button {
-    @apply text-light-stone hover:bg-white/10 hover:text-sunlight-gold;
-  }
-</style>

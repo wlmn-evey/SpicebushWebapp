@@ -1,38 +1,34 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- app/: Astro app (core site). Key paths: `app/src/pages/`, `app/src/components/`, `app/src/lib/`, `app/tests/`.
-- scripts/: Strapi and deployment helpers (e.g., `scripts/netlify-build.sh`).
-- src/: Legacy/shared services. Note: Strapi code moved under `deprecated/strapi/`.
-- docs/, journal/, debug/: Operational notes and reports.
+- `app/`: Astro site, with pages in `app/src/pages/`, components in `app/src/components/`, shared utilities under `app/src/lib/`, and tests in `app/tests/` or near code.
+- `scripts/`: Operational helpers for deployment, migration, and maintenance tasks.
+- `src/`: Shared root-level services used by non-app tooling.
+- `docs/`, `journal/`, `debug/`: Internal documentation and operational notes; review before touching infrastructure or incident playbooks.
 
 ## Build, Test, and Development Commands
-- Dev (Netlify, root): `npm run dev` — runs local Netlify dev with functions/proxy.
-- Dev (Astro app): `cd app && npm run dev` — fast local app server.
-- Build: `cd app && npm run build` — outputs to `app/dist/`.
-- Lint/Format: `cd app && npm run lint && npm run format:check`.
-- Unit/Integration: `cd app && npm run test` or `npm run test:coverage`.
-- E2E (Playwright): `cd app && npm run test:e2e` (add `--ui` for runner).
-- Deploy (Netlify): root `npm run deploy`, or `cd app && npm run deploy:staging`.
+- `npm run dev`: Launches Netlify dev server with functions/proxy (run from repo root).
+- `cd app && npm run dev`: Starts the Astro app server for faster front-end iteration.
+- `cd app && npm run build`: Produces `app/dist/` for deployment and staging previews.
+- `cd app && npm run lint && npm run format:check`: Verifies linting and Prettier formatting.
+- `cd app && npm run test` / `npm run test:coverage`: Executes Vitest suites with optional coverage report.
+- `cd app && npm run test:e2e [-- --ui]`: Runs Playwright E2E tests; add `--ui` for interactive runner.
 
 ## Coding Style & Naming Conventions
-- Indentation: 2 spaces; TypeScript preferred in app/.
-- Linting/Formatting: ESLint + Prettier (`app/.eslintrc.json`, `.prettierrc`).
-- Components: PascalCase in `app/src/components` (e.g., `Button.tsx`).
-- Pages: kebab-case route files in `app/src/pages` (e.g., `tuition-policy.astro`).
-- Utilities: camelCase in `app/src/lib` or `app/src/utils`.
+- Use TypeScript in `app/` with 2-space indentation; follow ESLint (`app/.eslintrc.json`) and Prettier defaults.
+- Components are PascalCase (`Button.tsx`); pages are kebab-case route files (`tuition-policy.astro`).
+- Utilities follow camelCase naming in `app/src/lib/` or `app/src/utils/`.
 
 ## Testing Guidelines
-- Frameworks: Vitest (unit/integration under `app/src/test/`) and Playwright (E2E under `app/e2e/` or `app/tests/`).
-- Naming: `*.test.ts` or `*.spec.ts`. Keep tests close to code or under `app/src/test`.
-- Run locally: `cd app && npm run test && npm run test:e2e`.
-- Aim for meaningful coverage; add tests with new/changed logic and routes.
+- Write unit/integration tests with Vitest (`*.test.ts` or `*.spec.ts`) close to source or under `app/src/test/`.
+- Place Playwright scenarios in `app/e2e/` or `app/tests/`; keep fixtures minimal and deterministic.
+- Run `npm run test` and `npm run test:e2e` locally before pushing; aim to cover new logic and routes.
 
 ## Commit & Pull Request Guidelines
-- Commits: Conventional prefix + scope when helpful, e.g. `feat(auth): add magic link flow`, `fix(netlify): correct build dir`. Existing patterns include `feat:`, `fix:`, `docs:`, `debug:` and bracketed tags like `[BUILD-FIX]`.
-- PRs: Clear description, linked issues, screenshots for UI, and a summary of test results. Include Netlify preview link if applicable.
+- Use conventional prefixes (e.g., `feat(auth):`, `fix(netlify):`, `[BUILD-FIX]`) observed in history.
+- PRs should describe scope, link issues, list key commands run, and include screenshots or Netlify preview URLs for UI changes.
 
 ## Security & Configuration Tips
-- Do not commit secrets. Use `app/.env.local` (copy from `app/.env.example`) and Netlify environment variables.
-- Validate env before running: `cd app && npm run setup:dev` then update values.
-- External CMS: Historical Strapi helpers now in `deprecated/strapi/`; keep any future API URLs configurable via env.
+- Do not commit secrets; populate `app/.env.local` from `app/.env.example` and rely on Netlify env vars.
+- Run `cd app && npm run setup:dev` to validate required variables before development.
+- Keep API endpoints configurable via environment variables.

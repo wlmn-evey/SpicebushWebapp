@@ -2,7 +2,6 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import BlogLinkCard from '../../components/BlogLinkCard.astro';
 import { Book, Download, Calendar, Users, ExternalLink } from 'lucide-astro';
 ---
 
@@ -32,12 +31,6 @@ import { Book, Download, Calendar, Users, ExternalLink } from 'lucide-astro';
     <section class="py-16">
       <div class="container mx-auto px-4">
         <div class="max-w-6xl mx-auto">
-          <!-- Blog Link Card -->
-          <div class="mb-12">
-            <h2 class="text-2xl font-semibold text-earth-brown mb-6">Stay Connected</h2>
-            <BlogLinkCard variant="secondary" />
-          </div>
-
           <!-- Resource Categories -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Educational Resources -->

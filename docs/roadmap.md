@@ -1,113 +1,46 @@
 # Spicebush Project Roadmap
+*Last Updated: February 8, 2026*
 
-This document consolidates the project's planned features, phases, and current task list.
+This is the high-level sequence for delivery. Detailed tasks live in `docs/refactor-master-plan.md`.
 
-## Current Phase: Simplification & Production Readiness
+## Current Runtime Direction
+- Platform: Netlify
+- Database: Neon through Netlify DB
+- Auth: Netlify-compatible magic-link admin sessions
+- Core admin modules: Hours, Staff, Tuition, Settings
 
-### Immediate Priorities
+## Phase 1: Stabilize and Simplify (In Progress)
+- Keep and harden essential features:
+  - Hours widget + hours management backend
+  - Staff management
+  - Tuition calculator + tuition management
+  - Coming soon mode with admin bypass toggle
+- Remove/defer non-essential features:
+  - Blog UI (redirect remains in place)
+  - Newsletter
+  - Stripe/payments
+- Finish codebase hygiene:
+  - Type safety and lint quality gates
+  - Documentation consolidation
+  - Archive stale implementation plans
 
-1. **Complete Architecture Simplification**
-   - Remove unnecessary dependencies
-   - Consolidate duplicate functionality
-   - Streamline component structure
+## Phase 2: Admin and Operations Hardening
+- Finalize admin auth rollout in all environments
+- Verify migration + email delivery for login links
+- Complete DB-backed external links for donate/enrollment
+- Improve admin UX for core modules (Hours/Staff/Tuition/Settings)
+- Add/expand automated test coverage for admin and API paths
 
-2. **Security & Accessibility Fixes**
-   - Implement proper authentication
-   - Fix accessibility issues
-   - Secure admin routes
+## Phase 3: Controlled Feature Reintroduction (Deferred)
+- Media management refactor after admin media UI exists
+- Optional reintroduction candidates:
+  - Blog
+  - Newsletter
+  - Payments
+- Reintroduced features must pass security + maintainability gates before launch
 
-3. **Content Management Migration**
-   - Migrate from Strapi to Decap CMS
-   - Set up MDX content structure
-   - Implement blog functionality
-
-## Planned Features
-
-### Phase 1: Core Functionality (Current)
-- ✅ Basic site structure
-- ✅ Photo gallery
-- ✅ Tuition calculator
-- 🔄 Blog system (migrating to Decap)
-- 🔄 Admin interface
-- ⏳ Contact forms
-- ⏳ Application system
-
-### Phase 2: Enhanced Features
-- Email notifications
-- Event calendar
-- Parent portal
-- Document management
-- Newsletter signup
-
-### Phase 3: Advanced Features
-- Online payments
-- Student information system
-- Parent communication tools
-- Analytics dashboard
-- Multi-language support
-
-## Technical Upgrades
-
-### Completed
-- Next.js 15 upgrade
-- TypeScript implementation
-- Supabase integration
-- Responsive design
-
-### In Progress
-- Decap CMS integration
-- Performance optimization
-- SEO improvements
-- Accessibility compliance
-
-### Planned
-- Progressive Web App features
-- Automated testing suite
-- CI/CD pipeline
-- Performance monitoring
-
-## Current Task List
-
-### High Priority
-1. Complete Decap CMS migration
-2. Fix remaining accessibility issues
-3. Implement proper error handling
-4. Add loading states
-5. Complete admin authentication
-
-### Medium Priority
-1. Optimize images and assets
-2. Implement contact forms
-3. Add search functionality
-4. Create sitemap
-5. Set up analytics
-
-### Low Priority
-1. Add animations
-2. Implement dark mode
-3. Create style guide
-4. Add print styles
-5. Optimize for slow connections
-
-## Success Metrics
-
-- Page load time < 3 seconds
-- Accessibility score > 95
-- SEO score > 90
-- Zero critical security issues
-- Mobile-first responsive design
-
-## Timeline
-
-- **Week 1-2**: Complete simplification and security fixes
-- **Week 3-4**: Finish CMS migration and content setup
-- **Week 5-6**: Testing, optimization, and deployment
-- **Week 7-8**: Phase 2 planning and initial development
-
-## Notes
-
-- Focus on stability over features
-- Maintain backward compatibility
-- Document all decisions
-- Regular testing on actual devices
-- Keep stakeholders informed
+## Quality Gates
+- `cd app && npm run lint -- --max-warnings=0`
+- `cd app && npm run typecheck`
+- `cd app && npm run test`
+- `cd app && npm run test:e2e`

@@ -44,7 +44,7 @@ echo "=== Verifying critical packages ==="
 MISSING_PACKAGES=""
 
 # Check each critical package
-for package in "astro" "lucide-astro" "bcryptjs" "decap-cms-app" "jsonwebtoken" "sharp" "@astrojs/node" "@astrojs/react" "@astrojs/tailwind" "@supabase/supabase-js"; do
+for package in "astro" "lucide-astro" "bcryptjs" "decap-cms-app" "jsonwebtoken" "sharp" "@astrojs/node" "@astrojs/react" "@astrojs/tailwind"; do
     if ! check_package "$package"; then
         MISSING_PACKAGES="$MISSING_PACKAGES $package"
     fi

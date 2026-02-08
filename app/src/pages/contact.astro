@@ -477,8 +477,13 @@ import ErrorMessage from '../components/ErrorMessage.astro';
     const submitLoading = document.getElementById('submit-loading');
     
     // Simple form enhancement for loading state
-    if (form && submitBtn) {
-      form.addEventListener('submit', (e) => {
+    if (
+      form instanceof HTMLFormElement &&
+      submitBtn instanceof HTMLButtonElement &&
+      submitText instanceof HTMLElement &&
+      submitLoading instanceof HTMLElement
+    ) {
+      form.addEventListener('submit', () => {
         // Show loading state
         submitBtn.disabled = true;
         submitText.classList.add('hidden');
@@ -490,7 +495,7 @@ import ErrorMessage from '../components/ErrorMessage.astro';
     }
 
     // Enhanced form validation
-    if (form) {
+    if (form instanceof HTMLFormElement) {
       enhanceForm(form, {
         validationSchema: {
           name: [validators.required],
@@ -504,15 +509,15 @@ import ErrorMessage from '../components/ErrorMessage.astro';
 
     // Phone number formatting
     const phoneField = document.getElementById('phone');
-    if (phoneField) {
-      phoneField.addEventListener('input', function() {
-        let value = this.value.replace(/\D/g, '');
+    if (phoneField instanceof HTMLInputElement) {
+      phoneField.addEventListener('input', () => {
+        let value = phoneField.value.replace(/\D/g, '');
         if (value.length >= 6) {
           value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
         } else if (value.length >= 3) {
           value = value.replace(/(\d{3})(\d{0,3})/, '($1) $2');
         }
-        this.value = value;
+        phoneField.value = value;
       });
     }
   });

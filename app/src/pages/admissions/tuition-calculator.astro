@@ -2,8 +2,9 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import TuitionCalculator from '../../components/TuitionCalculator.tsx';
+import TuitionCalculatorComponent from '../../components/TuitionCalculator.tsx';
 import { db } from '@lib/db';
+import { logServerError } from '@lib/server-logger';
 
 interface ProgramRecord {
   id: string;
@@ -127,7 +128,9 @@ try {
     };
   }
 } catch (error) {
-  console.error('Failed to load tuition calculator data', error);
+  logServerError('Failed to load tuition calculator data', error, {
+    page: '/admissions/tuition-calculator'
+  });
   loadError = 'We are updating our tuition calculator. Please contact admissions for personalized tuition guidance.';
 }
 ---
@@ -161,7 +164,7 @@ try {
           </p>
         </div>
       ) : (
-        <TuitionCalculator
+        <TuitionCalculatorComponent
           client:load
           programs={programs}
           rates={rates}

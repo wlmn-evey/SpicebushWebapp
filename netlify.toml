@@ -21,11 +21,8 @@
   [build.environment]
     NODE_VERSION = "20"
     NODE_OPTIONS = "--max_old_space_size=4096"
-    # Netlify Identity disabled (using Clerk)
-    NETLIFY_IDENTITY_ENABLED = "false"
-    # Authentication feature flags with safe defaults
-    USE_CLERK_AUTH = "clerk"
-    USE_REAL_CLERK_VALIDATION = "true"
+    # Admin auth mode
+    AUTH_PROVIDER = "netlify-magic-link"
     COMING_SOON_MODE = "false"
 
 # Testing branch context - ensures proper environment setup

@@ -1,234 +1,215 @@
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
-import { errorResponse } from '@lib/api-utils';
+import { query, queryFirst } from '@lib/db/client';
 
-export const GET: APIRoute = async ({ url, cookies }) => {
-  try {
-    // Check authentication
-    const { isAuthenticated } = await checkAdminAuth({ cookies } as any);
-    
-    if (!isAuthenticated) {
-      return errorResponse('Unauthorized', 401);
-    }
-    
-    const collection = url.searchParams.get('collection');
-    const slug = url.searchParams.get('slug');
-    
-    if (!collection || !slug) {
-      return new Response(JSON.stringify({ error: 'Collection and slug required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    
-    const { supabase } = await import('@lib/supabase');
-    const { data, error } = await supabase
-      .from('content')
-      .select('*')
-      .eq('type', collection)
-      .eq('slug', slug)
-      .single();
-    
-    if (error && error.code !== 'PGRST116') throw error;
-    if (!data) {
-      return new Response(JSON.stringify(null), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    
-    // Transform to CMS format
-    const entry = {
-      ...data.data,
-      title: data.title,
-      slug: data.slug,
-      collection
-    };
-    
-    return new Response(JSON.stringify(entry), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
-  } catch (error) {
-    console.error('Error fetching entry:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
+const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info']);
+
+type EntryPayload = {
+  collection?: string;
+  type?: string;
+  slug?: string;
+  title?: string;
+  status?: string;
+  data?: Record<string, unknown>;
+  dataJson?: string;
 };
 
-export const POST: APIRoute = async ({ request, cookies }) => {
-  try {
-    // Check authentication
-    const { isAuthenticated, session } = await checkAdminAuth({ cookies, request } as any);
-    
-    if (!isAuthenticated || !session) {
-      return errorResponse('Unauthorized', 401);
-    }
-    
-    // Initialize audit logger
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip');
-    const audit = new AuditLogger(session, ipAddress || undefined);
-    
-    const contentData = await request.json();
-    
-    // Handle both old format (entry object) and new format (direct data)
-    const entry = contentData.entry || contentData;
-    
-    const content = {
-      type: entry.type,
-      slug: entry.slug,
-      title: entry.title,
-      data: entry.data || {},
-      author_email: session.userEmail,
-      status: entry.status || 'draft'
-    };
-    
-    const { supabase } = await import('@lib/supabase');
-    const { error } = await supabase
-      .from('content')
-      .upsert(content, { onConflict: 'type,slug' });
-    
-    if (error) throw error;
-    
-    // Log the action
-    await audit.logContentChange('CREATE', entry.type, entry.slug, {
-      title: entry.title,
-      status: entry.status || 'draft'
-    });
-    
-    return new Response(JSON.stringify({ success: true, data: content }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
-  } catch (error) {
-    console.error('Error saving entry:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-};
+const jsonResponse = (payload: Record<string, unknown>, status = 200) =>
+  new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
 
-export const PUT: APIRoute = async ({ request, cookies }) => {
-  try {
-    // Check authentication
-    const { isAuthenticated, session } = await checkAdminAuth({ cookies, request } as any);
-    
-    if (!isAuthenticated || !session) {
-      return errorResponse('Unauthorized', 401);
-    }
-    
-    // Initialize audit logger
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip');
-    const audit = new AuditLogger(session, ipAddress || undefined);
-    
-    const contentData = await request.json();
-    
-    // Handle both old format (entry object) and new format (direct data)
-    const entry = contentData.entry || contentData;
-    
-    const content = {
-      type: entry.type,
-      slug: entry.slug,
-      title: entry.title,
-      data: entry.data || {},
-      author_email: session.userEmail,
-      status: entry.status || 'draft',
-      updated_at: new Date().toISOString()
-    };
-    
-    const { supabase } = await import('@lib/supabase');
-    const { error } = await supabase
-      .from('content')
-      .upsert(content, { onConflict: 'type,slug' });
-    
-    if (error) throw error;
-    
-    // Log the action
-    await audit.logContentChange('UPDATE', entry.type, entry.slug, {
-      title: entry.title,
-      status: entry.status || 'draft'
-    });
-    
-    return new Response(JSON.stringify({ success: true, data: content }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
-  } catch (error) {
-    console.error('Error updating entry:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-};
+const parseCollection = (payload: EntryPayload, url: URL): string =>
+  String(payload.collection ?? payload.type ?? url.searchParams.get('collection') ?? '').trim();
 
-export const DELETE: APIRoute = async ({ url, request, cookies }) => {
-  try {
-    // Check authentication
-    const { isAuthenticated, session } = await checkAdminAuth({ cookies, request } as any);
-    
-    if (!isAuthenticated || !session) {
-      return errorResponse('Unauthorized', 401);
-    }
-    
-    // Initialize audit logger
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip');
-    const audit = new AuditLogger(session, ipAddress || undefined);
-    
-    let collection, slug;
-    
-    // Try to get from URL params first, then from request body
-    collection = url.searchParams.get('collection') || url.searchParams.get('type');
-    slug = url.searchParams.get('slug');
-    
-    if (!collection || !slug) {
-      try {
-        const body = await request.json();
-        collection = body.type || body.collection;
-        slug = body.slug;
-      } catch (e) {
-        // If body parsing fails, fall back to URL params
+const parseSlug = (payload: EntryPayload, url: URL): string =>
+  String(payload.slug ?? url.searchParams.get('slug') ?? '').trim().toLowerCase();
+
+const parseData = (payload: EntryPayload): Record<string, unknown> | null => {
+  if (payload.data && typeof payload.data === 'object') return payload.data;
+  if (typeof payload.dataJson === 'string') {
+    if (payload.dataJson.trim() === '') return {};
+    try {
+      const parsed = JSON.parse(payload.dataJson);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
       }
+      return null;
+    } catch {
+      return null;
     }
-    
-    if (!collection || !slug) {
-      return new Response(JSON.stringify({ error: 'Collection/type and slug required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+  }
+  return {};
+};
+
+const parseRequestPayload = async (request: Request): Promise<EntryPayload | null> => {
+  const contentType = request.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
+    try {
+      return await request.json();
+    } catch {
+      return null;
     }
-    
-    const { supabase } = await import('@lib/supabase');
-    const { error } = await supabase
-      .from('content')
-      .delete()
-      .eq('type', collection)
-      .eq('slug', slug);
-    
-    if (error) throw error;
-    
-    // Log the action
-    await audit.logContentChange('DELETE', collection, slug);
-    
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
+  }
+
+  try {
+    const formData = await request.formData();
+    return {
+      collection: String(formData.get('collection') ?? ''),
+      type: String(formData.get('type') ?? ''),
+      slug: String(formData.get('slug') ?? ''),
+      title: String(formData.get('title') ?? ''),
+      status: String(formData.get('status') ?? ''),
+      dataJson: String(formData.get('dataJson') ?? '')
+    };
+  } catch {
+    return null;
+  }
+};
+
+const requireAdmin = async (locals: Record<string, unknown>) => {
+  const auth = await checkAdminAuth({ locals });
+  if (!auth.isAuthenticated || !auth.isAdmin || !auth.session) {
+    return null;
+  }
+  return auth.session;
+};
+
+export const GET: APIRoute = async ({ url, locals }) => {
+  const session = await requireAdmin(locals as unknown as Record<string, unknown>);
+  if (!session) {
+    return jsonResponse({ error: 'Admin access required' }, 403);
+  }
+
+  const collection = String(url.searchParams.get('collection') ?? '').trim();
+  const slug = String(url.searchParams.get('slug') ?? '').trim().toLowerCase();
+
+  if (!ALLOWED_COLLECTIONS.has(collection) || !slug) {
+    return jsonResponse({ error: 'Collection and slug are required' }, 400);
+  }
+
+  try {
+    const data = await queryFirst<{
+      type: string;
+      slug: string;
+      title: string | null;
+      status: string | null;
+      data: Record<string, unknown>;
+    }>(
+      `
+        SELECT type, slug, title, data, status, updated_at
+        FROM content
+        WHERE type = $1 AND slug = $2
+        LIMIT 1
+      `,
+      [collection, slug]
+    );
+
+    if (!data) {
+      return jsonResponse({ entry: null });
+    }
+
+    return jsonResponse({
+      entry: {
+        collection: data.type,
+        slug: data.slug,
+        title: data.title,
+        status: data.status,
+        data: data.data
+      }
     });
-    
-  } catch (error) {
-    console.error('Error deleting entry:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+  } catch {
+    return jsonResponse({ error: 'Failed to fetch entry' }, 500);
+  }
+};
+
+export const POST: APIRoute = async ({ request, url, locals }) => {
+  const session = await requireAdmin(locals as unknown as Record<string, unknown>);
+  if (!session) {
+    return jsonResponse({ error: 'Admin access required' }, 403);
+  }
+
+  const payload = await parseRequestPayload(request);
+  if (!payload) {
+    return jsonResponse({ error: 'Invalid request body' }, 400);
+  }
+
+  const collection = parseCollection(payload, url);
+  const slug = parseSlug(payload, url);
+  const data = parseData(payload);
+  const title = payload.title?.trim() || null;
+  const status = payload.status?.trim() || 'published';
+
+  if (!ALLOWED_COLLECTIONS.has(collection)) {
+    return jsonResponse({ error: 'Collection is not allowed' }, 400);
+  }
+
+  if (!slug || !/^[a-z0-9-_]+$/.test(slug)) {
+    return jsonResponse({ error: 'Invalid slug format' }, 400);
+  }
+
+  if (!data) {
+    return jsonResponse({ error: 'dataJson must be a JSON object' }, 400);
+  }
+
+  try {
+    await query(
+      `
+        INSERT INTO content (type, slug, title, data, status, author_email, updated_at)
+        VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7)
+        ON CONFLICT (type, slug)
+        DO UPDATE SET
+          title = EXCLUDED.title,
+          data = EXCLUDED.data,
+          status = EXCLUDED.status,
+          author_email = EXCLUDED.author_email,
+          updated_at = EXCLUDED.updated_at
+      `,
+      [
+        collection,
+        slug,
+        title,
+        JSON.stringify(data),
+        status,
+        session.userEmail ?? null,
+        new Date().toISOString()
+      ]
+    );
+
+    return jsonResponse({ success: true, collection, slug });
+  } catch {
+    return jsonResponse({ error: 'Failed to save entry' }, 500);
+  }
+};
+
+export const PUT = POST;
+
+export const DELETE: APIRoute = async ({ request, url, locals }) => {
+  const session = await requireAdmin(locals as unknown as Record<string, unknown>);
+  if (!session) {
+    return jsonResponse({ error: 'Admin access required' }, 403);
+  }
+
+  const payload = await parseRequestPayload(request);
+  const collection = payload ? parseCollection(payload, url) : String(url.searchParams.get('collection') ?? '').trim();
+  const slug = payload ? parseSlug(payload, url) : String(url.searchParams.get('slug') ?? '').trim().toLowerCase();
+
+  if (!ALLOWED_COLLECTIONS.has(collection) || !slug) {
+    return jsonResponse({ error: 'Collection and slug are required' }, 400);
+  }
+
+  try {
+    await query(
+      `
+        DELETE FROM content
+        WHERE type = $1 AND slug = $2
+      `,
+      [collection, slug]
+    );
+
+    return jsonResponse({ success: true });
+  } catch {
+    return jsonResponse({ error: 'Failed to delete entry' }, 500);
   }
 };

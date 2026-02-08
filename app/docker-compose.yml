@@ -13,23 +13,9 @@ services:
       - ./astro.config.dev.mjs:/app/astro.config.mjs:ro
     environment:
       - NODE_ENV=development
-      # Supabase hosted instance configuration
-      - PUBLIC_SUPABASE_URL=${PUBLIC_SUPABASE_URL}
-      - PUBLIC_SUPABASE_ANON_KEY=${PUBLIC_SUPABASE_ANON_KEY}
-      - PUBLIC_SUPABASE_PUBLIC_KEY=${PUBLIC_SUPABASE_PUBLIC_KEY}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      # Database connection
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_DATABASE=${DB_DATABASE}
-      # Read-only database connection
-      - DB_READONLY_HOST=${DB_READONLY_HOST}
-      - DB_READONLY_PORT=${DB_READONLY_PORT}
-      - DB_READONLY_DATABASE=${DB_READONLY_DATABASE}
-      - DB_READONLY_USER=${DB_READONLY_USER}
-      - DB_READONLY_PASSWORD=${DB_READONLY_PASSWORD}
+      - NETLIFY_DATABASE_URL=${NETLIFY_DATABASE_URL}
+      - DATABASE_URL=${DATABASE_URL}
+      - PUBLIC_SITE_URL=${PUBLIC_SITE_URL}
     command: npm run dev -- --host 0.0.0.0
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4321/api/health"]
@@ -52,5 +38,4 @@ networks:
   spicebush-network:
     driver: bridge
 
-# Simplified from 11+ services to just 2!
-# All Supabase services now use hosted instance
+# Simplified development stack: app + mail testing.

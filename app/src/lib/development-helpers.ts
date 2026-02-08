@@ -68,9 +68,11 @@ export function getAuthErrorMessage(error: unknown, email?: string): string {
   } else if (error instanceof Error) {
     errorMessage = error.message;
   } else if (typeof error === 'object' && error !== null) {
-    // Handle Supabase error format
-    const supabaseError = error as any;
-    errorMessage = supabaseError.message || supabaseError.error_description || 'Unknown error';
+    // Handle provider error formats with message + optional description.
+    const providerError = error as { message?: unknown; error_description?: unknown };
+    const message = typeof providerError.message === 'string' ? providerError.message : '';
+    const description = typeof providerError.error_description === 'string' ? providerError.error_description : '';
+    errorMessage = message || description || 'Unknown error';
   } else {
     errorMessage = 'An unexpected error occurred';
   }
@@ -128,7 +130,7 @@ export function getAuthErrorMessage(error: unknown, email?: string): string {
   // Development-specific error enhancements
   if (isDevEnvironment()) {
     // In development, show more detailed error information
-    if (normalizedError.includes('auth') || normalizedError.includes('supabase')) {
+    if (normalizedError.includes('auth') || normalizedError.includes('database')) {
       return `Authentication error: ${errorMessage}. Check browser console for details.`;
     }
   }
@@ -162,12 +164,12 @@ export function isDevEnvironment(): boolean {
       return true;
     }
     
-    // Check for local development URLs
-    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-    if (supabaseUrl && (
-      supabaseUrl.includes('localhost') || 
-      supabaseUrl.includes('127.0.0.1') ||
-      supabaseUrl.includes('.local')
+    // Check for explicit local database environment values.
+    const databaseUrl = import.meta.env.DATABASE_URL ?? import.meta.env.NETLIFY_DATABASE_URL;
+    if (databaseUrl && (
+      databaseUrl.includes('localhost') ||
+      databaseUrl.includes('127.0.0.1') ||
+      databaseUrl.includes('.local')
     )) {
       return true;
     }

@@ -50,11 +50,6 @@ const testOptions: TestOption[] = [
     description: 'Run all browser tests in the critical folder'
   },
   {
-    name: 'Coming Soon Tests',
-    command: 'npm run test:coming-soon:e2e',
-    description: 'Test coming soon functionality'
-  },
-  {
     name: 'Interactive Test UI',
     command: 'npx playwright test --ui',
     description: 'Open Playwright UI for interactive testing'
@@ -75,7 +70,7 @@ async function main() {
     console.log(`   ${option.description}\n`);
   });
 
-  const choice = await question('Enter your choice (1-8) or q to quit: ');
+  const choice = await question(`Enter your choice (1-${testOptions.length}) or q to quit: `);
 
   if (choice.toLowerCase() === 'q') {
     console.log('Goodbye!');

@@ -1,54 +1,52 @@
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
+import { queryRows } from '@lib/db/client';
 
-export const GET: APIRoute = async (context) => {
+const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info']);
+
+const jsonResponse = (payload: Record<string, unknown>, status = 200) =>
+  new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
+
+export const GET: APIRoute = async ({ url, locals }) => {
+  const auth = await checkAdminAuth({ locals });
+  if (!auth.isAuthenticated || !auth.isAdmin) {
+    return jsonResponse({ error: 'Admin access required' }, 403);
+  }
+
+  const collection = String(url.searchParams.get('collection') ?? '').trim();
+  if (!ALLOWED_COLLECTIONS.has(collection)) {
+    return jsonResponse({ error: 'Collection is not allowed' }, 400);
+  }
+
   try {
-    // Check admin authentication via Clerk middleware
-    // @ts-ignore - locals is dynamic
-    const userId = context.locals.userId;
-
-    if (!userId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    
-    const collection = context.url.searchParams.get('collection');
-    if (!collection) {
-      return new Response(JSON.stringify({ error: 'Collection required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    
-    const { supabase } = await import('@lib/supabase');
-    const { data, error } = await supabase
-      .from('content')
-      .select('*')
-      .eq('type', collection)
-      .order('updated_at', { ascending: false });
-    
-    if (error) throw error;
-    
-    // Transform to CMS format
-    const entries = data.map(entry => ({
-      ...entry.data,
-      title: entry.title,
+    const data = await queryRows<{
+      type: string;
+      slug: string;
+      title: string | null;
+      status: string | null;
+      data: Record<string, unknown>;
+    }>(
+      `
+        SELECT type, slug, title, data, status, updated_at
+        FROM content
+        WHERE type = $1
+        ORDER BY updated_at DESC
+      `,
+      [collection]
+    );
+    const entries = (data ?? []).map((entry) => ({
+      collection: entry.type,
       slug: entry.slug,
-      collection
+      title: entry.title,
+      status: entry.status,
+      data: entry.data
     }));
-    
-    return new Response(JSON.stringify(entries), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
-  } catch (error) {
-    console.error('Error fetching entries:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+
+    return jsonResponse({ entries });
+  } catch {
+    return jsonResponse({ error: 'Failed to fetch entries' }, 500);
   }
 };

@@ -117,7 +117,6 @@ export function createResponsiveImage(
   loading: 'lazy' | 'eager' = 'lazy'
 ): string {
   const srcSet = generateResponsiveSrcSet('', photoSlug);
-  const primarySrc = getOptimizedImagePath(photoSlug, '1280w', 'webp');
   const fallbackSrc = getOptimizedImagePath(photoSlug, '1280w', 'jpg');
   
   return `

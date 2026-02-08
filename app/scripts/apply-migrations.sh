@@ -1,48 +1,53 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Database connection details
-DB_HOST="localhost"
-DB_PORT="5432"
-DB_NAME="spicebush_dev"
-DB_USER="postgres"
-DB_PASSWORD="postgres"
+set -euo pipefail
 
-echo "Applying database migrations..."
+MIGRATIONS_DIR="${MIGRATIONS_DIR:-db/migrations}"
+DB_URL="${NETLIFY_DATABASE_URL:-${DATABASE_URL:-}}"
 
-# Create migrations tracking table if it doesn't exist
-PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c "
+if [[ -z "${DB_URL}" ]]; then
+  echo "Error: set NETLIFY_DATABASE_URL (or DATABASE_URL) before running migrations."
+  exit 1
+fi
+
+if ! command -v psql >/dev/null 2>&1; then
+  echo "Error: psql is required to run migrations."
+  exit 1
+fi
+
+if [[ ! -d "${MIGRATIONS_DIR}" ]]; then
+  echo "Error: migration directory not found: ${MIGRATIONS_DIR}"
+  exit 1
+fi
+
+echo "Applying migrations from ${MIGRATIONS_DIR}"
+
+psql "${DB_URL}" -v ON_ERROR_STOP=1 <<'SQL'
 CREATE TABLE IF NOT EXISTS schema_migrations (
-    version TEXT PRIMARY KEY,
-    applied_at TIMESTAMPTZ DEFAULT NOW()
-);"
+  version TEXT PRIMARY KEY,
+  applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+SQL
 
-# Apply each migration in order
-for migration in supabase/migrations/*.sql; do
-    filename=$(basename "$migration")
-    echo "Checking migration: $filename"
-    
-    # Check if migration has already been applied
-    result=$(PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -t -c "SELECT COUNT(*) FROM schema_migrations WHERE version = '$filename';")
-    
-    if [ "$result" -eq 0 ]; then
-        echo "Applying migration: $filename"
-        PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$migration"
-        
-        if [ $? -eq 0 ]; then
-            # Record successful migration
-            PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c "INSERT INTO schema_migrations (version) VALUES ('$filename');"
-            echo "Migration applied successfully: $filename"
-        else
-            echo "ERROR: Failed to apply migration: $filename"
-            exit 1
-        fi
-    else
-        echo "Migration already applied: $filename"
-    fi
+mapfile -t migrations < <(find "${MIGRATIONS_DIR}" -maxdepth 1 -type f -name '*.sql' | sort)
+
+if [[ ${#migrations[@]} -eq 0 ]]; then
+  echo "No migrations found."
+  exit 0
+fi
+
+for migration in "${migrations[@]}"; do
+  filename="$(basename "${migration}")"
+  applied="$(psql "${DB_URL}" -Atqc "SELECT 1 FROM schema_migrations WHERE version='${filename}' LIMIT 1;")"
+
+  if [[ "${applied}" == "1" ]]; then
+    echo "Skipping already applied migration: ${filename}"
+    continue
+  fi
+
+  echo "Applying migration: ${filename}"
+  psql "${DB_URL}" -v ON_ERROR_STOP=1 -f "${migration}"
+  psql "${DB_URL}" -v ON_ERROR_STOP=1 -c "INSERT INTO schema_migrations (version) VALUES ('${filename}');"
 done
 
-echo "All migrations applied successfully!"
-
-# Show created tables
-echo -e "\nCreated tables:"
-PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c "\dt"
+echo "Migration run complete."

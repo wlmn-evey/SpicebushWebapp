@@ -1,0 +1,353 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+import { db, type ContentEntry } from '@lib/db';
+
+type HoursEntry = ContentEntry<Record<string, unknown>>;
+
+const collection = 'hours';
+const entries = (await db.content.getCollection(collection)) as HoursEntry[];
+const savedSlug = Astro.url.searchParams.get('saved');
+const errorMessage = Astro.url.searchParams.get('error');
+
+const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const dayOrderMap = new Map(DAY_ORDER.map((day, index) => [day, index + 1]));
+
+const stringFrom = (value: unknown, fallback = ''): string => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.length > 0) return trimmed;
+  }
+  return fallback;
+};
+
+const numberFrom = (value: unknown, fallback: number): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number.parseFloat(value.trim());
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+};
+
+const boolFrom = (value: unknown): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    return ['true', '1', 'yes', 'on'].includes(value.trim().toLowerCase());
+  }
+  return false;
+};
+
+const numberInputValue = (value: unknown): string => {
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  if (typeof value === 'string' && value.trim().length > 0) return value.trim();
+  return '';
+};
+
+const asRecord = (value: unknown): Record<string, unknown> => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+};
+
+const sortedEntries = [...entries].sort((a, b) => {
+  const aDay = stringFrom(a.data.day, stringFrom(a.data.day_of_week, a.slug));
+  const bDay = stringFrom(b.data.day, stringFrom(b.data.day_of_week, b.slug));
+  const aOrder = numberFrom(a.data.order, dayOrderMap.get(aDay) ?? 99);
+  const bOrder = numberFrom(b.data.order, dayOrderMap.get(bDay) ?? 99);
+  if (aOrder !== bOrder) return aOrder - bOrder;
+  return a.slug.localeCompare(b.slug);
+});
+
+const editableEntries = sortedEntries.map((entry) => {
+  const data = asRecord(entry.data);
+  const entryDay = stringFrom(data.day, stringFrom(data.day_of_week, 'Monday'));
+  const entryOpen = stringFrom(data.open_time, stringFrom(data.start_time, ''));
+  const entryClose = stringFrom(data.close_time, stringFrom(data.end_time, ''));
+  const entryClosed = boolFrom(data.is_closed) || boolFrom(data.closed);
+  const entryOrder = numberFrom(data.order, dayOrderMap.get(entryDay) ?? 99);
+  const entryStatus = stringFrom(data.status, 'published');
+
+  return {
+    entry,
+    data,
+    entryDay,
+    entryOpen,
+    entryClose,
+    entryClosed,
+    entryOrder,
+    entryStatus
+  };
+});
+---
+
+<AdminLayout title="Manage Hours">
+  {savedSlug && (
+    <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+      Saved entry: <strong>{savedSlug}</strong>
+    </p>
+  )}
+
+  {errorMessage && (
+    <p class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+      {errorMessage}
+    </p>
+  )}
+
+  <div class="space-y-6">
+    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <h2 class="mb-1 text-lg font-semibold">Create New Hours Entry</h2>
+      <p class="mb-4 text-sm text-earth-brown/80">
+        Add one day at a time. Use a lowercase slug like <code>monday</code>.
+      </p>
+      <form method="post" action="/api/admin/content" class="space-y-3">
+        <input type="hidden" name="collection" value={collection} />
+        <input type="hidden" name="redirectTo" value="/admin/hours?saved=new" />
+
+        <label class="block text-sm font-medium">
+          Slug
+          <input
+            type="text"
+            name="slug"
+            required
+            placeholder="monday"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium">
+          Entry Title (optional)
+          <input
+            type="text"
+            name="title"
+            placeholder="Monday Hours"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium">
+          Status
+          <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+          </select>
+        </label>
+
+        <label class="block text-sm font-medium">
+          Day
+          <select name="data.day" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+            {DAY_ORDER.map((day) => (
+              <option value={day}>{day}</option>
+            ))}
+          </select>
+        </label>
+
+        <label class="block text-sm font-medium">
+          Open Time
+          <input
+            type="text"
+            name="data.open_time"
+            placeholder="8:30 AM"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium">
+          Close Time
+          <input
+            type="text"
+            name="data.close_time"
+            placeholder="3:00 PM"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium">
+          Closed
+          <select name="data.is_closed" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </label>
+
+        <label class="block text-sm font-medium">
+          Display Order
+          <input
+            type="number"
+            name="data.order"
+            min="1"
+            step="1"
+            value="1"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium">
+          Before Care Offset (hours)
+          <input
+            type="number"
+            name="data.before_care_offset"
+            step="0.25"
+            min="0"
+            placeholder="0.5"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium">
+          After Care Offset (hours)
+          <input
+            type="number"
+            name="data.after_care_offset"
+            step="0.25"
+            min="0"
+            placeholder="2.5"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium">
+          Note
+          <input
+            type="text"
+            name="data.note"
+            placeholder="Optional note (e.g. closes early)"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
+          Create Entry
+        </button>
+      </form>
+    </section>
+
+    {editableEntries.map(({ entry, data, entryDay, entryOpen, entryClose, entryClosed, entryOrder, entryStatus }) => (
+      <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="mb-3 text-lg font-semibold">Edit: {entry.slug}</h3>
+        <form method="post" action="/api/admin/content" class="space-y-3">
+          <input type="hidden" name="collection" value={collection} />
+          <input type="hidden" name="redirectTo" value={`/admin/hours?saved=${encodeURIComponent(entry.slug)}`} />
+          <input type="hidden" name="baseDataJson" value={JSON.stringify(data ?? {})} />
+
+          <label class="block text-sm font-medium">
+              Slug
+            <input
+              type="text"
+              name="slug"
+              value={entry.slug}
+              required
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+
+          <label class="block text-sm font-medium">
+              Entry Title (optional)
+            <input
+              type="text"
+              name="title"
+              value={stringFrom(data.title, entry.slug)}
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+
+          <label class="block text-sm font-medium">
+              Status
+            <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+              <option value="published" selected={entryStatus !== 'draft'}>Published</option>
+              <option value="draft" selected={entryStatus === 'draft'}>Draft</option>
+            </select>
+          </label>
+
+          <label class="block text-sm font-medium">
+              Day
+            <select name="data.day" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+              {DAY_ORDER.map((day) => (
+                <option value={day} selected={day === entryDay}>{day}</option>
+              ))}
+            </select>
+          </label>
+
+          <label class="block text-sm font-medium">
+              Open Time
+            <input
+              type="text"
+              name="data.open_time"
+              value={entryOpen}
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+
+          <label class="block text-sm font-medium">
+              Close Time
+            <input
+              type="text"
+              name="data.close_time"
+              value={entryClose}
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+
+          <label class="block text-sm font-medium">
+              Closed
+            <select name="data.is_closed" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+              <option value="false" selected={!entryClosed}>No</option>
+              <option value="true" selected={entryClosed}>Yes</option>
+            </select>
+          </label>
+
+          <label class="block text-sm font-medium">
+              Display Order
+            <input
+              type="number"
+              name="data.order"
+              min="1"
+              step="1"
+              value={String(entryOrder)}
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+
+          <label class="block text-sm font-medium">
+              Before Care Offset (hours)
+            <input
+              type="number"
+              name="data.before_care_offset"
+              step="0.25"
+              min="0"
+              value={numberInputValue(data.before_care_offset)}
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+
+          <label class="block text-sm font-medium">
+              After Care Offset (hours)
+            <input
+              type="number"
+              name="data.after_care_offset"
+              step="0.25"
+              min="0"
+              value={numberInputValue(data.after_care_offset)}
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+
+          <label class="block text-sm font-medium">
+              Note
+            <input
+              type="text"
+              name="data.note"
+              value={stringFrom(data.note, '')}
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+
+          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
+              Save {entry.slug}
+          </button>
+        </form>
+      </section>
+    ))}
+  </div>
+</AdminLayout>

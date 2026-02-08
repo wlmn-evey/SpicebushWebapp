@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
-import { createClient } from '@supabase/supabase-js';
+import { query } from '@lib/db/client';
+import { logServerError, logServerWarn } from '@lib/server-logger';
 
 /**
  * Simple webhook endpoint for Netlify Forms
@@ -10,10 +11,6 @@ import { createClient } from '@supabase/supabase-js';
  * The primary form handling is done by Netlify Forms - this is just
  * a backup/logging mechanism.
  */
-
-// Get Supabase credentials from environment
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || import.meta.env.SUPABASE_URL;
-const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -34,30 +31,39 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response('Not a contact form submission', { status: 200 });
     }
 
-    // Initialize Supabase client with service role key for admin access
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Missing Supabase credentials');
+    // Ensure database configuration exists
+    const hasDatabaseUrl = Boolean(import.meta.env.NETLIFY_DATABASE_URL || import.meta.env.DATABASE_URL);
+    if (!hasDatabaseUrl) {
+      logServerWarn('Netlify form webhook skipped due to missing database credentials', {
+        route: '/api/webhooks/netlify-form'
+      });
       // Don't fail the webhook - Netlify has already handled the form
       return new Response('Configuration error', { status: 200 });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
     // Store the submission in our database
-    const { error } = await supabase
-      .from('contact_form_submissions')
-      .insert({
-        name: formData.name || '',
-        email: formData.email || '',
-        phone: formData.phone || null,
-        subject: formData.subject || '',
-        message: formData.message || '',
-        child_age: formData['child-age'] || null,
-        tour_interest: formData['tour-interest'] === 'yes'
+    try {
+      await query(
+        `
+          INSERT INTO contact_form_submissions
+          (name, email, phone, subject, message, child_age, tour_interest)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `,
+        [
+          formData.name || '',
+          formData.email || '',
+          formData.phone || null,
+          formData.subject || '',
+          formData.message || '',
+          formData['child-age'] || null,
+          formData['tour-interest'] === 'yes'
+        ]
+      );
+    } catch (error) {
+      logServerWarn('Failed to store Netlify form submission', {
+        route: '/api/webhooks/netlify-form',
+        error
       });
-
-    if (error) {
-      console.error('Error storing form submission:', error);
       // Don't fail the webhook - this is just logging
     }
 
@@ -65,7 +71,9 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response('OK', { status: 200 });
     
   } catch (error) {
-    console.error('Webhook processing error:', error);
+    logServerError('Netlify form webhook processing failed', error, {
+      route: '/api/webhooks/netlify-form'
+    });
     // Don't fail the webhook - Netlify has already handled the form
     return new Response('OK', { status: 200 });
   }

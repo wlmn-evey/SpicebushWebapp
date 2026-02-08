@@ -1,22 +1,22 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const path = require('path');
-
 const required = [
-  'PUBLIC_SUPABASE_URL',
-  'PUBLIC_SUPABASE_ANON_KEY',
-  'SUPABASE_SERVICE_ROLE_KEY',
+  'NETLIFY_DATABASE_URL',
   'PUBLIC_SITE_URL'
 ];
 
 const optional = [
   'UNIONE_API_KEY',
-  'STRIPE_SECRET_KEY',
-  'PUBLIC_STRIPE_PUBLISHABLE_KEY',
+  'RESEND_API_KEY',
+  'SENDGRID_API_KEY',
+  'POSTMARK_SERVER_TOKEN',
   'EMAIL_FROM',
   'EMAIL_FROM_NAME',
   'UNIONE_REGION',
-  'EMAIL_SERVICE'
+  'EMAIL_SERVICE',
+  'AUTH_PROVIDER',
+  'ADMIN_EMAILS',
+  'ADMIN_DOMAINS',
+  'COMING_SOON_MODE'
 ];
 
 // Load .env.local
@@ -55,14 +55,12 @@ optional.forEach(key => {
 // Check for test vs production keys
 console.log('\n🔐 Security Check:');
 console.log('==================');
-if (process.env.STRIPE_SECRET_KEY?.startsWith('sk_test')) {
-  console.log('⚠️  Using Stripe TEST keys (ok for development)');
-} else if (process.env.STRIPE_SECRET_KEY?.startsWith('sk_live')) {
-  console.log('✅ Using Stripe LIVE keys (production)');
+if (!process.env.NETLIFY_DATABASE_URL?.includes('sslmode=require')) {
+  console.log('⚠️  NETLIFY_DATABASE_URL should include sslmode=require for production');
 }
 
-if (process.env.PUBLIC_SUPABASE_URL?.includes('test-project')) {
-  console.log('⚠️  Using test Supabase project');
+if (process.env.AUTH_PROVIDER && process.env.AUTH_PROVIDER !== 'netlify-magic-link') {
+  console.log('⚠️  AUTH_PROVIDER is not set to netlify-magic-link');
 }
 
 // Final result
@@ -80,6 +78,6 @@ if (hasErrors) {
   console.log(`📋 ${configuredOptional}/${optional.length} optional variables configured`);
   
   if (configuredOptional < optional.length / 2) {
-    console.log('\n💡 Tip: Configure email service (UNIONE_API_KEY) for magic link functionality');
+    console.log('\n💡 Tip: Configure an email provider API key for admin magic-link delivery');
   }
 }

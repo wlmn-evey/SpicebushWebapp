@@ -1,29 +1,76 @@
-import { defineMiddleware } from 'astro:middleware';
-import { clerkMiddleware, createRouteMatcher } from '@clerk/astro/server';
-import { createClerkClient } from '@clerk/backend';
+import type { APIContext, MiddlewareNext } from 'astro';
+import { isAdminEmail } from '@lib/admin-config';
+import { ADMIN_SESSION_COOKIE_NAME, validateAdminSession } from '@lib/auth/admin-session';
+import { queryFirst } from '@lib/db/client';
 
-// Define protected routes
-const isProtectedRoute = createRouteMatcher([
-  '/admin(.*)',
-  '/api/admin(.*)'
-]);
+const PREVIEW_MODE_COOKIE = 'sbms-preview-mode';
+const PREVIEW_MODE_SITE = 'site';
+const COMING_SOON_CACHE_TTL_MS = 30 * 1000;
 
-// Coming soon middleware
-const comingSoonMiddleware = defineMiddleware(async (context, next) => {
-  // Check environment variable for coming soon mode (for testing/staging environments)
-  // This allows testing site to have coming soon enabled without database changes
-  // Prefer runtime env for SSR (Netlify functions), fallback to build-time env.
-  // Guard against environments where `process` is undefined (e.g., some edge runtimes).
+let cachedComingSoonValue: boolean | null = null;
+let cachedComingSoonExpiresAt = 0;
+
+const PROTECTED_PREFIXES = ['/admin', '/api/admin', '/api/cms', '/api/media/upload', '/api/storage/stats'];
+
+const isProtectedRoute = (pathname: string): boolean =>
+  PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+
+const parseBoolean = (value: unknown): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return ['true', '1', 'yes', 'on'].includes(normalized);
+  }
+  return false;
+};
+
+const isApiRoute = (pathname: string): boolean => pathname.startsWith('/api/');
+
+const unauthorizedResponse = (status: 401 | 403, message: string) =>
+  new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
+
+async function getComingSoonEnabled(): Promise<boolean> {
   const runtimeEnv = (typeof process !== 'undefined' && typeof process.env !== 'undefined') ? process.env : undefined;
-  const rawComingSoon = (runtimeEnv?.COMING_SOON_MODE ?? (import.meta as any)?.env?.COMING_SOON_MODE) as string | undefined;
-  const isComingSoonEnabled = typeof rawComingSoon === 'string'
-    ? ['true', '1', 'yes', 'on'].includes(rawComingSoon.toLowerCase())
-    : false;
+  const rawComingSoon = runtimeEnv?.COMING_SOON_MODE ?? import.meta.env.COMING_SOON_MODE;
+  if (typeof rawComingSoon === 'string') {
+    return parseBoolean(rawComingSoon);
+  }
 
-  // Get the current path
+  const now = Date.now();
+  if (cachedComingSoonValue !== null && cachedComingSoonExpiresAt > now) {
+    return cachedComingSoonValue;
+  }
+
+  try {
+    const data = await queryFirst<{ value: unknown }>(
+      `
+        SELECT value
+        FROM settings
+        WHERE key = $1
+        LIMIT 1
+      `,
+      ['coming_soon_enabled']
+    );
+
+    const enabled = parseBoolean(data?.value ?? false);
+    cachedComingSoonValue = enabled;
+    cachedComingSoonExpiresAt = now + COMING_SOON_CACHE_TTL_MS;
+    return enabled;
+  } catch {
+    cachedComingSoonValue = false;
+    cachedComingSoonExpiresAt = now + COMING_SOON_CACHE_TTL_MS;
+    return false;
+  }
+}
+
+const handleComingSoon = async (context: APIContext, next: MiddlewareNext) => {
+  const isComingSoonEnabled = await getComingSoonEnabled();
   const pathname = context.url.pathname;
 
-  // List of paths that should bypass coming soon mode
   const bypassPaths = [
     '/coming-soon',
     '/coming-soon-comprehensive',
@@ -36,53 +83,65 @@ const comingSoonMiddleware = defineMiddleware(async (context, next) => {
     '/images/'
   ];
 
-  // Check if the path should bypass coming soon mode
-  const shouldBypass = bypassPaths.some(path => pathname.startsWith(path));
-
-  // Also bypass if URL contains auth confirmation parameters
+  const shouldBypass = bypassPaths.some((path) => pathname.startsWith(path));
   const hasAuthParams = context.url.searchParams.has('token_hash') ||
                        context.url.searchParams.has('type') ||
                        context.url.searchParams.has('error') ||
                        context.url.searchParams.has('error_code');
 
-  // Redirect to coming soon page if enabled and not bypassed
   if (isComingSoonEnabled && !shouldBypass && !hasAuthParams) {
+    const locals = context.locals as unknown as Record<string, unknown>;
+    const isAdmin = locals.isAdmin === true;
+    const previewMode = context.cookies.get(PREVIEW_MODE_COOKIE)?.value;
+    if (isAdmin && previewMode === PREVIEW_MODE_SITE) {
+      return next();
+    }
+
     return context.redirect('/coming-soon');
   }
 
-  // Continue with the request
   return next();
-});
+};
 
-// Combine Clerk and coming soon middleware
-export const onRequest = clerkMiddleware(async (auth, context, next) => {
-  // Check if route requires authentication
-  if (isProtectedRoute(context.request)) {
-    const authObj = auth();
-    if (!authObj.userId) {
-      // Redirect to sign-in for protected routes
-      return context.redirect('/auth/sign-in');
-    }
+export const onRequest = async (context: APIContext, next: MiddlewareNext) => {
+  const locals = context.locals as unknown as Record<string, unknown>;
+  const sessionToken = context.cookies.get(ADMIN_SESSION_COOKIE_NAME)?.value;
+  let userId: string | null = null;
+  let userEmail: string | undefined;
 
-    // Attach minimal user context for downstream handlers/pages
-    try {
-      // Always set userId
-      // @ts-ignore - locals is dynamic
-      context.locals.userId = authObj.userId;
-      // Optionally enrich with email using Clerk backend if available
-      const secret = process.env.CLERK_SECRET_KEY || '';
-      if (secret) {
-        const clerk = createClerkClient({ secretKey: secret });
-        const user = await clerk.users.getUser(authObj.userId);
-        const email = user?.emailAddresses?.[0]?.emailAddress;
-        // @ts-ignore - locals is dynamic
-        if (email) context.locals.userEmail = email;
-      }
-    } catch (e) {
-      // Failed to populate user email - continue anyway
+  if (sessionToken) {
+    const session = await validateAdminSession(sessionToken);
+    if (session) {
+      userId = session.sessionId;
+      userEmail = session.email;
     }
   }
 
-  // Apply coming soon middleware
-  return comingSoonMiddleware(context, next);
-});
+  locals.userId = userId;
+  if (userEmail) {
+    locals.userEmail = userEmail;
+  } else {
+    delete locals.userEmail;
+  }
+
+  const isAdmin = isAdminEmail(userEmail);
+  locals.isAdmin = isAdmin;
+
+  if (isProtectedRoute(context.url.pathname)) {
+    if (!userId) {
+      if (isApiRoute(context.url.pathname)) {
+        return unauthorizedResponse(401, 'Authentication required');
+      }
+      return context.redirect('/auth/sign-in');
+    }
+
+    if (!isAdmin) {
+      if (isApiRoute(context.url.pathname)) {
+        return unauthorizedResponse(403, 'Admin access required');
+      }
+      return context.redirect('/');
+    }
+  }
+
+  return handleComingSoon(context, next);
+};

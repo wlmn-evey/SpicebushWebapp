@@ -1,4 +1,4 @@
-import type { APIContext } from 'astro';
+import { logServerError } from '@lib/server-logger';
 
 // Simple error response helper
 export function errorResponse(message: string, status = 400) {
@@ -12,7 +12,7 @@ export function errorResponse(message: string, status = 400) {
 }
 
 // Success response helper
-export function successResponse(data: any, status = 200) {
+export function successResponse(data: unknown, status = 200) {
   return new Response(
     JSON.stringify(data),
     { 
@@ -33,9 +33,10 @@ export function validatePhone(phone: string): boolean {
   return cleaned.length >= 10 && cleaned.length <= 15;
 }
 
-export function validateRequired(data: Record<string, any>, fields: string[]): string | null {
+export function validateRequired(data: Record<string, unknown>, fields: string[]): string | null {
   for (const field of fields) {
-    if (!data[field] || (typeof data[field] === 'string' && !data[field].trim())) {
+    const value = data[field];
+    if (!value || (typeof value === 'string' && !value.trim())) {
       return `${field} is required`;
     }
   }
@@ -50,7 +51,7 @@ export async function handleApiRequest<T>(
     const result = await handler();
     return successResponse(result);
   } catch (error) {
-    console.error('API Error:', error);
+    logServerError('API request failed', error);
     
     // Handle known error types
     if (error instanceof Error) {
@@ -68,28 +69,10 @@ export async function handleApiRequest<T>(
 }
 
 // Parse JSON body with error handling
-export async function parseJsonBody<T = any>(request: Request): Promise<T | null> {
+export async function parseJsonBody<T = unknown>(request: Request): Promise<T | null> {
   try {
     return await request.json();
   } catch {
     return null;
   }
-}
-
-// Check if user is authenticated (for admin routes)
-export async function requireAuth(context: APIContext): Promise<Response | null> {
-  const authCookie = context.cookies.get('sbms-admin-auth');
-  
-  if (authCookie?.value === 'bypass' && import.meta.env.DEV) {
-    return null; // Allow bypass in dev
-  }
-  
-  const { supabase } = await import('./supabase');
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    return errorResponse('Unauthorized', 401);
-  }
-  
-  return null; // Auth passed
 }

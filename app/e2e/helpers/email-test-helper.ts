@@ -15,7 +15,7 @@ interface EmailMessage {
 }
 
 export class EmailTestHelper {
-  private strategy: 'mailhog' | 'mailtrap' | 'console' | 'supabase-logs';
+  private strategy: 'mailhog' | 'mailtrap' | 'console';
   
   constructor(strategy?: string) {
     this.strategy = (strategy || process.env.EMAIL_TEST_STRATEGY || 'console') as any;
@@ -30,8 +30,6 @@ export class EmailTestHelper {
         return this.getMailHogLink(email);
       case 'mailtrap':
         return this.getMailtrapLink(email);
-      case 'supabase-logs':
-        return this.getSupabaseLogLink(email, page!);
       case 'console':
       default:
         return this.getConsoleLink(email, page!);
@@ -121,44 +119,6 @@ export class EmailTestHelper {
   }
 
   /**
-   * Get magic link from Supabase logs (development only)
-   */
-  private async getSupabaseLogLink(email: string, page: Page): Promise<string | null> {
-    // In development, Supabase logs auth emails to the database
-    const supabaseUrl = process.env.SUPABASE_URL || 'http://localhost:54321';
-    const serviceKey = process.env.SUPABASE_SERVICE_KEY;
-    
-    if (!serviceKey) {
-      console.warn('No service key, falling back to console strategy');
-      return this.getConsoleLink(email, page);
-    }
-    
-    try {
-      const response = await fetch(
-        `${supabaseUrl}/rest/v1/auth.email_logs?email=eq.${email}&order=created_at.desc&limit=1`,
-        {
-          headers: {
-            'apikey': serviceKey,
-            'Authorization': `Bearer ${serviceKey}`,
-            'Accept': 'application/json'
-          }
-        }
-      );
-      
-      const logs = await response.json();
-      if (logs.length === 0) return null;
-      
-      const content = logs[0].content;
-      const linkMatch = content.match(/href="([^"]+)"/);
-      
-      return linkMatch ? linkMatch[1] : null;
-    } catch (error) {
-      console.error('Supabase logs error:', error);
-      return null;
-    }
-  }
-
-  /**
    * Get magic link from browser console (development fallback)
    */
   private async getConsoleLink(email: string, page: Page): Promise<string | null> {
@@ -169,7 +129,7 @@ export class EmailTestHelper {
       const listener = (msg: any) => {
         const text = msg.text();
         
-        // Look for Supabase auth URL patterns
+        // Look for common auth URL patterns
         if (text.includes('auth/confirm') || 
             text.includes('auth/verify') || 
             text.includes('#access_token=')) {
@@ -344,7 +304,7 @@ export class EmailTestHelper {
  * Utility function to extract magic link from email content
  */
 export function extractMagicLink(emailContent: string): string | null {
-  // Try different patterns that Supabase might use
+  // Try different patterns the auth provider might use
   const patterns = [
     /href="([^"]+auth\/confirm[^"]+)"/,
     /href="([^"]+auth\/verify[^"]+)"/,

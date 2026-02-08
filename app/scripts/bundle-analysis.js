@@ -73,8 +73,6 @@ function analyzeBundle() {
   
   const reactVendor = vendors.find(f => f.name.includes('react-vendor'));
   const generalVendor = vendors.find(f => f.name.includes('vendor') && !f.name.includes('react'));
-  const stripeVendor = vendors.find(f => f.name.includes('stripe'));
-  const supabaseVendor = vendors.find(f => f.name.includes('supabase'));
   
   if (reactVendor) {
     const status = reactVendor.sizeKB < 200 ? '✅' : '⚠️ ';
@@ -84,14 +82,6 @@ function analyzeBundle() {
   if (generalVendor) {
     const status = generalVendor.sizeKB < 150 ? '✅' : '⚠️ ';
     console.log(`  ${status} General vendor: ${generalVendor.sizeKB}KB (target: <150KB)`);
-  }
-  
-  if (stripeVendor) {
-    console.log(`  💳 Stripe vendor: ${stripeVendor.sizeKB}KB (loaded on-demand)`);
-  }
-  
-  if (supabaseVendor) {
-    console.log(`  🗄️  Supabase vendor: ${supabaseVendor.sizeKB}KB (database client)`);
   }
   
   console.log();

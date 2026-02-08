@@ -4,8 +4,6 @@ export const prerender = false;
 
 // Get the request path
 const { path } = Astro.params;
-const url = Astro.request.url;
-
 // Check if this is a module import or static asset request
 if (path?.includes('/lib/') || 
     path?.includes('/assets/') || 

@@ -46,21 +46,6 @@ export interface CommunicationTemplateRow {
   updated_at: string;
 }
 
-export interface NewsletterSubscriberRow {
-  id: string;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-  subscription_status: string;
-  subscription_type: string | null;
-  signup_source: string | null;
-  signup_page: string | null;
-  referral_source: string | null;
-  created_at: string;
-  updated_at: string;
-  unsubscribed_at: string | null;
-}
-
 export interface MediaRow {
   id: string;
   filename: string;
@@ -72,7 +57,7 @@ export interface MediaRow {
   created_at: string;
 }
 
-export type SupabaseTable<Row> = {
+export type DatabaseTable<Row> = {
   Row: Row;
   Insert: Partial<Row>;
   Update: Partial<Row>;
@@ -81,12 +66,11 @@ export type SupabaseTable<Row> = {
 export interface Database {
   public: {
     Tables: {
-      content: SupabaseTable<ContentRow>;
-      settings: SupabaseTable<SettingRow>;
-      communications_messages: SupabaseTable<CommunicationMessageRow>;
-      communications_templates: SupabaseTable<CommunicationTemplateRow>;
-      newsletter_subscribers: SupabaseTable<NewsletterSubscriberRow>;
-      media: SupabaseTable<MediaRow>;
+      content: DatabaseTable<ContentRow>;
+      settings: DatabaseTable<SettingRow>;
+      communications_messages: DatabaseTable<CommunicationMessageRow>;
+      communications_templates: DatabaseTable<CommunicationTemplateRow>;
+      media: DatabaseTable<MediaRow>;
     };
     Views: Record<string, never>;
     Functions: Record<string, unknown>;

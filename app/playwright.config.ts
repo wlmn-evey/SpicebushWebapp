@@ -4,7 +4,7 @@ import { defineConfig, devices } from '@playwright/test';
  * Playwright configuration for E2E testing
  */
 export default defineConfig({
-  testDir: './tests',
+  testDir: './e2e',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code */
@@ -36,6 +36,7 @@ export default defineConfig({
     /* Navigation timeout */
     navigationTimeout: 30000,
   },
+  outputDir: 'test-results/artifacts',
 
   /* Configure projects for major browsers */
   projects: [

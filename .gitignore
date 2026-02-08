@@ -12,6 +12,7 @@ build/
 .output/
 .vercel/
 *.log
+logs/
 
 # Environment files
 .env

@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
-import { emailService } from '@lib/email-service';
-import type { EmailMessage } from '@lib/email-service';
+import { emailService, type EmailMessage } from '@lib/email-service';
+import { checkAdminAuth } from '@lib/admin-auth-check';
+import { logServerError } from '@lib/server-logger';
 
 /**
  * API endpoint for sending emails using the configured email service
@@ -8,7 +9,15 @@ import type { EmailMessage } from '@lib/email-service';
  * This endpoint is used internally by the application to send transactional emails
  * such as contact form notifications, tour scheduling confirmations, etc.
  */
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
+  const auth = await checkAdminAuth({ locals });
+  if (!auth.isAuthenticated || !auth.isAdmin) {
+    return new Response(JSON.stringify({ error: 'Admin access required' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   try {
     // Parse request body
     const body = await request.json();
@@ -57,7 +66,7 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
   } catch (error) {
-    console.error('Email API error:', error);
+    logServerError('Email send endpoint failed', error, { route: '/api/email/send', method: 'POST' });
     return new Response(JSON.stringify({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
@@ -71,7 +80,15 @@ export const POST: APIRoute = async ({ request }) => {
 /**
  * GET endpoint to check email service status
  */
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ locals }) => {
+  const auth = await checkAdminAuth({ locals });
+  if (!auth.isAuthenticated || !auth.isAdmin) {
+    return new Response(JSON.stringify({ error: 'Admin access required' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   try {
     const status = emailService.getStatus();
     const configured = Object.values(status).some(v => v);
@@ -86,7 +103,7 @@ export const GET: APIRoute = async () => {
     });
 
   } catch (error) {
-    console.error('Email status check error:', error);
+    logServerError('Email status endpoint failed', error, { route: '/api/email/send', method: 'GET' });
     return new Response(JSON.stringify({
       error: 'Failed to check email service status'
     }), {

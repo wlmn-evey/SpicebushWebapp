@@ -102,7 +102,7 @@ class ThinkingMatrixValidator {
   }
 
   private assessImpactLevel(description: string): 'low' | 'medium' | 'high' {
-    const highImpactKeywords = ['auth', 'login', 'database', 'supabase', 'header', 'layout', 'navigation', 'tuition', 'security'];
+    const highImpactKeywords = ['auth', 'login', 'database', 'netlify', 'header', 'layout', 'navigation', 'tuition', 'security'];
     const mediumImpactKeywords = ['component', 'page', 'style', 'admin', 'form', 'calculator', 'image'];
     
     const lower = description.toLowerCase();

@@ -154,9 +154,6 @@ test.describe('Docker Container Health Checks', () => {
       if (text.includes('database') && (text.includes('error') || text.includes('failed'))) {
         dbErrors.push(msg.text());
       }
-      if (text.includes('supabase') && text.includes('error')) {
-        dbErrors.push(msg.text());
-      }
     });
 
     // Try to access a page that uses database
@@ -246,7 +243,8 @@ test.describe('Docker Container Health Checks', () => {
     
     // Check if critical services are configured
     const criticalEndpoints = [
-      { name: 'Supabase', indicator: 'SUPABASE_URL' },
+      { name: 'Database', indicator: 'NETLIFY_DATABASE_URL' },
+      { name: 'Database fallback', indicator: 'DATABASE_URL' },
       { name: 'API Base', indicator: 'API' },
     ];
 

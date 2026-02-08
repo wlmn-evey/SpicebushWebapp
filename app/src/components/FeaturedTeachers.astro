@@ -1,20 +1,107 @@
 ---
-import { getCollection } from '@lib/content-db';
+import { db, type ContentEntry } from '@lib/db';
+import { logServerError } from '@lib/server-logger';
 import { ArrowRight } from 'lucide-astro';
 
-// Get all staff members from Supabase with error handling
-let featuredStaff = [];
-try {
-  const staff = await getCollection('staff');
-  if (staff && staff.length > 0) {
-    // Sort by display order and take first 2-3
-    featuredStaff = staff
-      .sort((a, b) => (a.data.order || 999) - (b.data.order || 999))
-      .slice(0, 3);
+interface StaffData {
+  name?: unknown;
+  role?: unknown;
+  photo?: unknown;
+  order?: unknown;
+  startYear?: unknown;
+  certificationBadge?: unknown;
+}
+
+interface StaffCard {
+  id: string;
+  name: string;
+  role?: string;
+  photo?: string;
+  certificationBadge?: string;
+  startYearLabel?: string;
+  initials: string;
+  bioSnippet?: string;
+  order: number;
+}
+
+const normalizeString = (value: unknown): string | undefined => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.length > 0) {
+      return trimmed;
+    }
   }
+  return undefined;
+};
+
+const normalizeNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+  return undefined;
+};
+
+const createStaffCard = (entry: ContentEntry): StaffCard | null => {
+  const data = entry.data as StaffData;
+  const name = normalizeString(data.name);
+  if (!name) {
+    return null;
+  }
+
+  const role = normalizeString(data.role);
+  const photo = normalizeString(data.photo);
+  const order = normalizeNumber(data.order) ?? 999;
+  const certificationBadge = normalizeString(data.certificationBadge);
+
+  const startYearValue = normalizeString(data.startYear) ?? normalizeNumber(data.startYear)?.toString();
+  const startYearLabel = startYearValue ? `Since ${startYearValue}` : undefined;
+
+  const bodyText = typeof entry.body === 'string' ? entry.body : '';
+  const firstSentence = bodyText
+    .split('.')
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)[0];
+  const bioSnippet = firstSentence ? `${firstSentence}.` : undefined;
+
+  const initials = name
+    .split(' ')
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase())
+    .join('')
+    .slice(0, 3);
+
+  return {
+    id: entry.id,
+    name,
+    role,
+    photo,
+    certificationBadge,
+    startYearLabel,
+    initials: initials || name.charAt(0).toUpperCase(),
+    bioSnippet,
+    order
+  };
+};
+
+let featuredStaff: StaffCard[] = [];
+
+try {
+  const staffEntries = await db.content.getCollection('staff');
+  const staffCards = staffEntries
+    .map(createStaffCard)
+    .filter((card): card is StaffCard => card !== null)
+    .sort((a, b) => a.order - b.order)
+    .slice(0, 3);
+
+  featuredStaff = staffCards;
 } catch (error) {
-  console.error('Error loading staff in FeaturedTeachers:', error);
-  // Will show empty state if no data available
+  logServerError('Failed to load staff entries', error, { component: 'FeaturedTeachers' });
 }
 ---
 
@@ -35,39 +122,45 @@ try {
         featuredStaff.map((teacher) => (
           <div class="text-center">
             <div class="mb-6 relative inline-block">
-              {teacher.data.photo ? (
+              {teacher.photo ? (
                 <img 
-                  src={teacher.data.photo}
-                  alt={`${teacher.data.name}, ${teacher.data.role} at Spicebush Montessori School`}
+                  src={teacher.photo}
+                  alt={`${teacher.name}${teacher.role ? `, ${teacher.role}` : ''} at Spicebush Montessori School`}
                   class="w-48 h-48 rounded-full object-cover mx-auto shadow-lg"
                   loading="lazy"
                 />
               ) : (
                 <div class="w-48 h-48 rounded-full bg-gradient-to-br from-forest-canopy to-moss-green flex items-center justify-center mx-auto shadow-lg">
                   <span class="text-white text-4xl font-bold">
-                    {teacher.data.name.split(' ').map(n => n[0]).join('')}
+                    {teacher.initials}
                   </span>
                 </div>
               )}
-              {teacher.data.certificationBadge && (
+              {teacher.certificationBadge && (
                 <div class="absolute -bottom-2 -right-2 bg-sunlight-gold text-white rounded-full w-12 h-12 flex items-center justify-center text-xs font-bold shadow-md">
-                  {teacher.data.certificationBadge}
+                  {teacher.certificationBadge}
                 </div>
               )}
             </div>
           
             <h3 class="text-xl font-semibold text-earth-brown mb-1">
-              {teacher.data.name}
+              {teacher.name}
             </h3>
-            <p class="text-forest-canopy font-medium mb-2">
-              {teacher.data.role}
-            </p>
-            <p class="text-sm text-earth-brown/80 mb-3">
-              {teacher.data.startYear && `Since ${teacher.data.startYear}`}
-            </p>
-          
-            {teacher.body && (
-              <div class="text-earth-brown leading-relaxed text-sm max-w-sm mx-auto" set:html={`${teacher.body.split('.')[0]  }.`} />
+            {teacher.role && (
+              <p class="text-forest-canopy font-medium mb-2">
+                {teacher.role}
+              </p>
+            )}
+            {teacher.startYearLabel && (
+              <p class="text-sm text-earth-brown/80 mb-3">
+                {teacher.startYearLabel}
+              </p>
+            )}
+
+            {teacher.bioSnippet && (
+              <p class="text-earth-brown leading-relaxed text-sm max-w-sm mx-auto">
+                {teacher.bioSnippet}
+              </p>
             )}
           </div>
         ))

@@ -31,6 +31,19 @@ interface TuitionRate {
   display_order: number;
 }
 
+const toNumber = (value: unknown, fallback = 0): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value.trim());
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return fallback;
+};
+
 export function createProgramForm(program: Program | null = null): string {
   return `
     <form id="program-form" class="space-y-4">
@@ -156,7 +169,7 @@ export function createRateForm(rate: TuitionRate | null = null, programs: Progra
   `;
 }
 
-export function renderPrograms(programs: any[]): void {
+export function renderPrograms(programs: Program[]): void {
   const container = document.getElementById('programs-list');
   if (!container) return;
   
@@ -183,9 +196,9 @@ export function renderPrograms(programs: any[]): void {
   });
 }
 
-export function renderRates(rates: any[], programs: any[]): void {
+export function renderRates(rates: TuitionRate[], programs: Program[]): void {
   const tbody = document.getElementById('rates-table-body');
-  if (!tbody) return;
+  if (!(tbody instanceof HTMLTableSectionElement)) return;
   
   tbody.innerHTML = '';
 
@@ -222,14 +235,19 @@ export function renderRates(rates: any[], programs: any[]): void {
   });
 }
 
-export function populateSettings(settings: Record<string, any>): void {
+export function populateSettings(settings: Record<string, unknown>): void {
   const schoolYearInput = document.getElementById('school-year') as HTMLInputElement;
   const upfrontDiscountInput = document.getElementById('upfront-discount') as HTMLInputElement;
   const siblingDiscountInput = document.getElementById('sibling-discount') as HTMLInputElement;
   const annualIncreaseInput = document.getElementById('annual-increase') as HTMLInputElement;
 
-  if (schoolYearInput) schoolYearInput.value = settings.current_school_year || '2025-2026';
-  if (upfrontDiscountInput) upfrontDiscountInput.value = (settings.upfront_discount_rate * 100) || 5;
-  if (siblingDiscountInput) siblingDiscountInput.value = (settings.sibling_discount_rate * 100) || 10;
-  if (annualIncreaseInput) annualIncreaseInput.value = (settings.annual_increase_rate * 100) || 4;
+  if (schoolYearInput) {
+    const schoolYear = settings.current_school_year;
+    schoolYearInput.value = typeof schoolYear === 'string' && schoolYear.trim()
+      ? schoolYear
+      : '2025-2026';
+  }
+  if (upfrontDiscountInput) upfrontDiscountInput.value = String(toNumber(settings.upfront_discount_rate, 0.05) * 100);
+  if (siblingDiscountInput) siblingDiscountInput.value = String(toNumber(settings.sibling_discount_rate, 0.1) * 100);
+  if (annualIncreaseInput) annualIncreaseInput.value = String(toNumber(settings.annual_increase_rate, 0.04) * 100);
 }

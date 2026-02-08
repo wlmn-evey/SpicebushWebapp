@@ -12,7 +12,6 @@ import {
   cacheUtils
 } from './content';
 import { getRecentMessages, getCommunicationStats, getTemplates } from './communications';
-import { getNewsletterSubscribers, getNewsletterStats } from './newsletter';
 
 export const db = {
   content: {
@@ -31,10 +30,6 @@ export const db = {
     getRecentMessages,
     getCommunicationStats,
     getTemplates
-  },
-  newsletter: {
-    getNewsletterSubscribers,
-    getNewsletterStats
   },
   raw: {
     getPublicClient,
@@ -62,5 +57,4 @@ export {
 } from './content';
 
 export { getRecentMessages, getCommunicationStats, getTemplates } from './communications';
-export { getNewsletterSubscribers, getNewsletterStats } from './newsletter';
 export { getPublicClient, getServiceClient, withServiceClient } from './client';

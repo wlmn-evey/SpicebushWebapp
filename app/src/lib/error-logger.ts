@@ -1,3 +1,5 @@
+import { logServerError } from '@lib/server-logger';
+
 /**
  * Simple error logging utility for debugging server-side errors
  * In production, this should be replaced with a proper logging service
@@ -8,14 +10,14 @@ interface ErrorLogEntry {
   component: string;
   error: string;
   stack?: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 class ErrorLogger {
   private logs: ErrorLogEntry[] = [];
   private maxLogs = 100; // Keep only recent logs in memory
 
-  log(component: string, error: Error | unknown, context?: Record<string, any>) {
+  log(component: string, error: Error | unknown, context?: Record<string, unknown>) {
     const entry: ErrorLogEntry = {
       timestamp: new Date().toISOString(),
       component,
@@ -24,12 +26,9 @@ class ErrorLogger {
       context
     };
 
-    // In development, log to console
+    // In development, write structured logs for easier local debugging.
     if (import.meta.env.DEV) {
-      console.error(`[${component}] Error:`, error);
-      if (context) {
-        console.error('Context:', context);
-      }
+      logServerError(`[${component}] Error`, error, context);
     }
 
     // Store in memory (in production, send to logging service)
@@ -57,6 +56,6 @@ class ErrorLogger {
 export const errorLogger = new ErrorLogger();
 
 // Helper function for easy logging
-export function logError(component: string, error: Error | unknown, context?: Record<string, any>) {
+export function logError(component: string, error: Error | unknown, context?: Record<string, unknown>) {
   errorLogger.log(component, error, context);
 }
