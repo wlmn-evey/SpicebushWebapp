@@ -30,6 +30,7 @@ export interface AdminSessionIdentity {
 export interface RequestMagicLinkParams {
   email: string;
   requestUrl?: string;
+  nextPath?: string;
   requestedIp?: string | null;
   userAgent?: string | null;
 }
@@ -41,6 +42,16 @@ export interface ConsumeMagicLinkParams {
 }
 
 const normalizeEmail = (value: string): string => value.trim().toLowerCase();
+const DEFAULT_AFTER_LOGIN_PATH = '/admin';
+
+const normalizeInternalPath = (value: string | null | undefined): string => {
+  if (!value) return DEFAULT_AFTER_LOGIN_PATH;
+  const trimmed = value.trim();
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//')) {
+    return DEFAULT_AFTER_LOGIN_PATH;
+  }
+  return trimmed;
+};
 
 const hashToken = (value: string): string => createHash('sha256').update(value).digest('hex');
 
@@ -110,6 +121,7 @@ const isRateLimited = async (email: string): Promise<boolean> => {
 export async function requestAdminMagicLink({
   email,
   requestUrl,
+  nextPath,
   requestedIp = null,
   userAgent = null
 }: RequestMagicLinkParams): Promise<{ accepted: boolean; delivered: boolean }> {
@@ -137,8 +149,14 @@ export async function requestAdminMagicLink({
     [normalizedEmail, tokenHash, requestedIp, userAgent, `${MAGIC_LINK_TTL_MINUTES} minutes`]
   );
 
-  const loginUrl = `${getSiteOrigin(requestUrl)}/auth/login?token=${encodeURIComponent(rawToken)}`;
-  await sendMagicLinkEmail(normalizedEmail, loginUrl);
+  const safeNextPath = normalizeInternalPath(nextPath);
+  const loginUrl = new URL('/auth/login', getSiteOrigin(requestUrl));
+  loginUrl.searchParams.set('token', rawToken);
+  if (safeNextPath !== DEFAULT_AFTER_LOGIN_PATH) {
+    loginUrl.searchParams.set('next', safeNextPath);
+  }
+
+  await sendMagicLinkEmail(normalizedEmail, loginUrl.toString());
 
   return { accepted: true, delivered: true };
 }

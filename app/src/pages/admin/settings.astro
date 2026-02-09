@@ -27,6 +27,7 @@ const comingSoonMessage = stringifyValue(settings.coming_soon_message);
 const comingSoonLaunchDate = stringifyValue(settings.coming_soon_launch_date);
 const donationLink = stringifyValue(settings.donation_external_link);
 const enrollmentLink = stringifyValue(settings.enrollment_external_link);
+const tourExternalLink = stringifyValue(settings.tour_external_link);
 const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompare(b));
 ---
 
@@ -124,6 +125,18 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
             Save Enrollment Link
           </button>
         </form>
+
+        <form method="post" action="/api/admin/settings" class="space-y-2">
+          <input type="hidden" name="key" value="tour_external_link" />
+          <input type="hidden" name="redirectTo" value="/admin/settings?saved=tour_external_link" />
+          <label class="block text-sm font-medium">
+            Tour External Link
+            <input type="text" name="value" value={tourExternalLink} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+          </label>
+          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+            Save Tour Link
+          </button>
+        </form>
       </div>
     </section>
 
@@ -161,4 +174,3 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
     </section>
   </div>
 </AdminLayout>
-

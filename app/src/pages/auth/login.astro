@@ -6,6 +6,7 @@ import {
 } from '@lib/auth/admin-session';
 
 const token = Astro.url.searchParams.get('token');
+const nextPathParam = Astro.url.searchParams.get('next');
 if (!token) {
   return Astro.redirect('/auth/sign-in');
 }
@@ -33,5 +34,13 @@ Astro.cookies.set(ADMIN_SESSION_COOKIE_NAME, session.sessionToken, {
   maxAge: ADMIN_SESSION_MAX_AGE_SECONDS
 });
 
-return Astro.redirect('/admin');
+const safeNextPath = nextPathParam && nextPathParam.startsWith('/') && !nextPathParam.startsWith('//')
+  ? nextPathParam
+  : '/admin';
+
+if (safeNextPath === '/admin') {
+  return Astro.redirect('/admin');
+}
+
+return Astro.redirect(safeNextPath);
 ---

@@ -34,6 +34,7 @@ const CONTENT_COLLECTIONS = [
 const DEFAULT_SETTINGS = new Map([
   ['donation_external_link', ''],
   ['enrollment_external_link', ''],
+  ['tour_external_link', 'https://calendly.com/spicebushmontessori/tour-of-spicebush-montessori-school?month=2026-02'],
   ['tour_scheduling_enabled', true]
 ]);
 

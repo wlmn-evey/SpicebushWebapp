@@ -1,5 +1,8 @@
 ---
 import { Calculator, Calendar, Phone } from 'lucide-astro';
+import { getTourLink } from '@lib/tour-settings';
+
+const tourLink = await getTourLink();
 ---
 
 <!-- Sticky Mobile Bottom Navigation -->
@@ -15,7 +18,7 @@ import { Calculator, Calendar, Phone } from 'lucide-astro';
     </a>
     
     <a 
-      href="/admissions/schedule-tour" 
+      href={tourLink}
       class="bg-sunlight-gold py-3 px-2 flex flex-col items-center justify-center hover:bg-orange-600 transition-colors"
       aria-label="Schedule a tour"
     >

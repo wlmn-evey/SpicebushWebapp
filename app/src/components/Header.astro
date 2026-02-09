@@ -2,6 +2,7 @@
 import { Menu, Phone } from 'lucide-astro';
 import { db, type ContentEntry } from '@lib/db';
 import { logServerError } from '@lib/server-logger';
+import { getTourLink } from '@lib/tour-settings';
 import OptimizedImage from './OptimizedImage.astro';
 
 interface SchoolInfoData {
@@ -43,6 +44,7 @@ const phone = toDisplayString(schoolData.phone, defaultSchoolInfo.phone);
 const agesServed = toDisplayString(schoolData.agesServed, defaultSchoolInfo.agesServed);
 const extendedCareUntil = toDisplayString(schoolData.extendedCareUntil, defaultSchoolInfo.extendedCareUntil);
 const phoneDigits = phone.replace(/[^0-9]/g, '');
+const tourLink = await getTourLink();
 
 const HOURS_FALLBACK = {
   open: '8:30 AM',
@@ -124,7 +126,7 @@ const weekdayHours = {
             Calculate Tuition
           </a>
           <a 
-            href="/admissions/schedule-tour" 
+            href={tourLink}
             class="bg-sunlight-gold hover:bg-orange-600 text-white px-4 xl:px-5 py-2 xl:py-2.5 rounded-lg font-semibold text-sm xl:text-base transition-colors focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 whitespace-nowrap"
             aria-label="Schedule a tour"
           >
@@ -164,7 +166,7 @@ const weekdayHours = {
             Calculate Tuition
           </a>
           <a 
-            href="/admissions/schedule-tour" 
+            href={tourLink}
             class="w-full bg-sunlight-gold hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 text-center block text-base tracking-wide"
           >
             Schedule Tour

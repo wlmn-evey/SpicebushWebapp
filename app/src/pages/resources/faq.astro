@@ -3,6 +3,9 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { ChevronDown } from 'lucide-astro';
+import { getTourLink } from '@lib/tour-settings';
+
+const tourLink = await getTourLink();
 ---
 
 <Layout 
@@ -43,7 +46,7 @@ import { ChevronDown } from 'lucide-astro';
                   <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
                 </button>
                 <div class="faq-content hidden px-6 pb-4">
-                  <p class="text-earth-brown/80">We serve children ages 3-6 years old in our primary program. Children must be 3 years old by September 1st to enroll. We maintain a mixed-age classroom following the Montessori approach, which allows younger children to learn from older peers and older children to develop leadership skills.</p>
+                  <p class="text-earth-brown/80">We serve children ages 3-6 years old in our Preschool and Kindergarten program. Children must be 3 years old by September 1st to enroll. We maintain a mixed-age classroom following the Montessori approach, which allows younger children to learn from older peers and older children to develop leadership skills.</p>
                 </div>
               </div>
               
@@ -332,7 +335,7 @@ import { ChevronDown } from 'lucide-astro';
             <h3 class="text-2xl font-bold text-earth-brown mb-4">Still Have Questions?</h3>
             <p class="text-earth-brown/80 mb-6">We're here to help! Contact us directly or schedule a tour to learn more about our school.</p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/admissions/schedule-tour" class="bg-sunlight-gold hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+              <a href={tourLink} class="bg-sunlight-gold hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
                 Schedule a Tour
               </a>
               <a href="/contact" class="bg-white hover:bg-gray-50 text-earth-brown border border-earth-brown px-6 py-3 rounded-lg font-semibold transition-colors">

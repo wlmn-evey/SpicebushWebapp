@@ -1,8 +1,18 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 
+const DEFAULT_AFTER_LOGIN_PATH = '/admin';
+const parseNextPath = (value: string | null): string => {
+  if (!value) return DEFAULT_AFTER_LOGIN_PATH;
+  if (!value.startsWith('/')) return DEFAULT_AFTER_LOGIN_PATH;
+  if (value.startsWith('//')) return DEFAULT_AFTER_LOGIN_PATH;
+  return value;
+};
+
 const notice = Astro.url.searchParams.get('notice');
 const error = Astro.url.searchParams.get('error');
+const nextPath = parseNextPath(Astro.url.searchParams.get('next'));
+const redirectToValue = `/auth/sign-in?next=${encodeURIComponent(nextPath)}`;
 
 const noticeMessageMap: Record<string, string> = {
   'check-email': 'Check your inbox for a secure admin sign-in link.',
@@ -44,7 +54,8 @@ const errorMessage = error ? errorMessageMap[error] : undefined;
         )}
 
         <form method="POST" action="/api/auth/request-link" class="space-y-4">
-          <input type="hidden" name="redirectTo" value="/auth/sign-in" />
+          <input type="hidden" name="redirectTo" value={redirectToValue} />
+          <input type="hidden" name="next" value={nextPath} />
 
           <label for="email" class="block text-sm font-semibold text-earth-brown">Admin Email</label>
           <input

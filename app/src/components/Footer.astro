@@ -5,6 +5,7 @@ import ContactInfo from '@components/ContactInfo.astro';
 import HoursWidget from '@components/HoursWidget.astro';
 import { db } from '@lib/db';
 import { logServerError } from '@lib/server-logger';
+import { getTourLink } from '@lib/tour-settings';
 
 interface SocialMediaLinks {
   facebook: string | null;
@@ -26,6 +27,7 @@ const toUrlOrNull = (value: unknown): string | null => {
 
 let socialMedia: SocialMediaLinks = { facebook: null, instagram: null };
 const copyrightYear = new Date().getFullYear();
+const tourLink = await getTourLink();
 
 try {
   const [facebookSetting, instagramSetting] = await Promise.all([
@@ -114,7 +116,7 @@ try {
             <!-- CTA Buttons -->
             <div class="space-y-2 pt-2">
               <a 
-                href="/admissions/schedule-tour" 
+                href={tourLink}
                 class="block text-center bg-sunlight-gold hover:bg-orange-600 text-white px-4 py-2.5 rounded-lg font-semibold transition-colors text-sm tracking-wide"
               >
                 Come Visit

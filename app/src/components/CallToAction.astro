@@ -1,5 +1,8 @@
 ---
 import { Calendar, Phone, Mail } from 'lucide-astro';
+import { getTourLink } from '@lib/tour-settings';
+
+const tourLink = await getTourLink();
 ---
 
 <!-- CTA Section -->
@@ -21,7 +24,7 @@ import { Calendar, Phone, Mail } from 'lucide-astro';
         <h3 class="text-xl font-semibold mb-2" id="schedule-tour-heading">Come for a Visit</h3>
         <p class="text-green-100 mb-4 font-light">See our children at work and feel the magic of our environment</p>
         <a 
-          href="/admissions/schedule-tour" 
+          href={tourLink}
           class="text-sunlight-gold hover:text-yellow-300 font-semibold focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 focus:ring-offset-forest-canopy rounded px-2 py-1"
         >
           Schedule Your Visit →

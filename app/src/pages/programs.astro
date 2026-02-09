@@ -3,6 +3,9 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { Clock, Users, Calendar, Leaf } from 'lucide-astro';
+import { getTourLink } from '@lib/tour-settings';
+
+const tourLink = await getTourLink();
 ---
 
 <Layout 
@@ -27,12 +30,12 @@ import { Clock, Users, Calendar, Leaf } from 'lucide-astro';
       </div>
     </section>
     
-    <!-- Primary Program Overview -->
+    <!-- Preschool & Kindergarten Program Overview -->
     <section class="py-16 bg-white">
       <div class="container mx-auto px-4">
         <div class="max-w-6xl mx-auto">
           <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-earth-brown mb-4">Primary Program (Ages 3-6)</h2>
+            <h2 class="text-3xl font-bold text-earth-brown mb-4">Preschool & Kindergarten Program (Ages 3-6)</h2>
             <p class="text-lg text-earth-brown/80 max-w-3xl mx-auto">
               Our mixed-age classroom brings together children from 3 to 6 years old, creating a vibrant community where younger children learn from older peers and older children develop leadership and mentoring skills.
             </p>
@@ -246,7 +249,7 @@ import { Clock, Users, Calendar, Leaf } from 'lucide-astro';
             The best way to understand our program is to see it in action. Schedule a tour to observe our classroom and meet our teachers.
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/admissions/schedule-tour" class="bg-sunlight-gold hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+            <a href={tourLink} class="bg-sunlight-gold hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
               Schedule a Tour
             </a>
             <a href="/admissions/tuition-calculator" class="bg-white hover:bg-gray-50 text-earth-brown border-2 border-earth-brown px-8 py-3 rounded-lg font-semibold transition-colors">

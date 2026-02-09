@@ -4,6 +4,9 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import OptimizedImage from '../components/OptimizedImage.astro';
 import { FileText, ExternalLink, Phone, Mail, CheckCircle, ArrowRight } from 'lucide-astro';
+import { getTourLink } from '@lib/tour-settings';
+
+const tourLink = await getTourLink();
 ---
 
 <Layout 
@@ -93,7 +96,7 @@ import { FileText, ExternalLink, Phone, Mail, CheckCircle, ArrowRight } from 'lu
                 </p>
                 <div class="text-center">
                   <a 
-                    href="/contact"
+                    href={tourLink}
                     class="inline-flex items-center text-moss-green hover:text-forest-canopy font-semibold"
                   >
                     Schedule Tour
@@ -327,7 +330,7 @@ import { FileText, ExternalLink, Phone, Mail, CheckCircle, ArrowRight } from 'lu
             <div class="mt-8 pt-6 border-t border-white/20">
               <p class="text-green-200 text-sm">
                 Want to visit us first? 
-                <a href="/admissions/schedule-tour" class="text-white hover:text-sunlight-gold font-medium underline">
+                <a href={tourLink} class="text-white hover:text-sunlight-gold font-medium underline">
                   Schedule a tour
                 </a> 
                 to see our community in action.
