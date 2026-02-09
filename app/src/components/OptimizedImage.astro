@@ -131,14 +131,12 @@ const imageId = `img-${Math.random().toString(36).slice(2, 11)}`;
   
   {showFocalPoints && (
     <div class="focal-points-debug">
-      <!-- Primary focal point -->
       <div 
         class="focal-point focal-point-primary"
         style={`left: ${primaryFocalX}%; top: ${primaryFocalY}%;`}
         title={`Primary: ${primaryFocalX}%, ${primaryFocalY}%`}
       ></div>
       
-      <!-- Secondary focal point -->
       {secondaryFocalX && secondaryFocalY && (
         <div 
           class="focal-point focal-point-secondary"
@@ -147,14 +145,12 @@ const imageId = `img-${Math.random().toString(36).slice(2, 11)}`;
         ></div>
       )}
       
-      <!-- Mobile crop zone -->
       <div 
         class="crop-zone crop-zone-mobile"
         style={`left: ${mobileCropX}%; top: ${mobileCropY}%; width: ${mobileCropWidth}%; height: ${mobileCropHeight}%;`}
         title="Mobile crop zone"
       ></div>
       
-      <!-- Tablet crop zone -->
       <div 
         class="crop-zone crop-zone-tablet"
         style={`left: ${tabletCropX}%; top: ${tabletCropY}%; width: ${tabletCropWidth}%; height: ${tabletCropHeight}%;`}

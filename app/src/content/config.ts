@@ -30,33 +30,6 @@ const staffCollection = defineCollection({
   })
 });
 
-const announcementsCollection = defineCollection({
-  type: 'content',
-  schema: z.object({
-    title: z.string(),
-    type: z.enum(['notice', 'closure', 'event', 'update']).default('notice'),
-    priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
-    startDate: z.date(),
-    endDate: z.date(),
-    audience: z.array(z.enum(['all', 'parents', 'staff', 'community'])).default(['all'])
-  })
-});
-
-const eventsCollection = defineCollection({
-  type: 'content',
-  schema: z.object({
-    title: z.string(),
-    date: z.date(),
-    endDate: z.date().optional(),
-    location: z.string(),
-    type: z.enum(['school', 'community', 'fundraising', 'parent-education']).default('school'),
-    image: z.string().optional(),
-    rsvpRequired: z.boolean().default(false),
-    rsvpLink: z.string().optional(),
-    cost: z.string().default('Free')
-  })
-});
-
 const tuitionCollection = defineCollection({
   type: 'content',
   schema: z.object({
@@ -238,8 +211,6 @@ const comingSoonCollection = defineCollection({
 export const collections = {
   blog: blogCollection,
   staff: staffCollection,
-  announcements: announcementsCollection,
-  events: eventsCollection,
   tuition: tuitionCollection,
   settings: settingsCollection,
   hours: hoursCollection,
