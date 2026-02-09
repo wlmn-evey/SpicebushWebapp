@@ -29,7 +29,10 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 );
 SQL
 
-mapfile -t migrations < <(find "${MIGRATIONS_DIR}" -maxdepth 1 -type f -name '*.sql' | sort)
+migrations=()
+while IFS= read -r migration; do
+  migrations+=("${migration}")
+done < <(find "${MIGRATIONS_DIR}" -maxdepth 1 -type f -name '*.sql' | sort)
 
 if [[ ${#migrations[@]} -eq 0 ]]; then
   echo "No migrations found."

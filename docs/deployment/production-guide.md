@@ -1,5 +1,5 @@
 # Production Deployment Guide (Netlify + Neon)
-*Last Updated: February 8, 2026*
+*Last Updated: February 9, 2026*
 
 This guide reflects the current scope only.
 
@@ -27,6 +27,10 @@ Set these in Netlify Site Settings -> Environment Variables.
 - `COMING_SOON_MODE`: Optional override (`true`/`false`)
 - `AUTH_PROVIDER`: set to `netlify-magic-link`
 
+Required for local/CI deploy scripts that read Netlify env vars:
+- `NETLIFY_SITE_ID`: target Netlify site UUID
+- `NETLIFY_AUTH_TOKEN`: token with permission to read env vars and deploy
+
 For admin login email delivery, configure one provider:
 - `UNIONE_API_KEY` (+ optional `UNIONE_REGION`)
 - or `RESEND_API_KEY`
@@ -38,10 +42,10 @@ Optional sender identity:
 - `EMAIL_FROM_NAME`
 
 ## Pre-Deploy Checklist
-1. Confirm migration is applied in target DB:
-   - `cd app && npm run db:migrate`
-2. Confirm critical seed data is present:
-   - `cd app && npm run db:seed`
+1. Confirm migration parity between target DB and local migration files:
+   - `cd app && NETLIFY_SITE_ID=<site-id> npm run db:check:migrations:netlify -- production`
+2. If parity check fails with pending migrations, apply migrations + critical seed against target DB:
+   - `cd app && NETLIFY_SITE_ID=<site-id> npm run db:seed:netlify -- production`
    - `cd app && npm run test:db`
 3. Confirm admin allow-list config is set:
    - `ADMIN_EMAILS` should be explicitly configured.
@@ -59,6 +63,9 @@ Optional sender identity:
    - Base directory should resolve to `app`
    - Build command should resolve to `npm run build`
    - Publish directory should resolve to `dist` (when base is `app`)
+8. Confirm deploy preflight hooks are using the intended Netlify site:
+   - `cd app && NETLIFY_SITE_ID=<site-id> npm run predeploy:staging`
+   - `cd app && NETLIFY_SITE_ID=<site-id> npm run predeploy:production`
 
 ## Remote Security Spot Checks
 Run these against preview URL before promoting to production:
