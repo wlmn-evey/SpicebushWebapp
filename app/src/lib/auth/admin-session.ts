@@ -67,10 +67,7 @@ const getSiteOrigin = (requestUrl?: string): string => {
   }
 
   const runtimeEnv = typeof process !== 'undefined' ? process.env : undefined;
-  const configured =
-    runtimeEnv?.PUBLIC_SITE_URL ||
-    runtimeEnv?.URL ||
-    (import.meta as ImportMeta).env.PUBLIC_SITE_URL;
+  const configured = runtimeEnv?.PUBLIC_SITE_URL || runtimeEnv?.URL;
 
   if (configured && typeof configured === 'string') {
     return configured.replace(/\/$/, '');

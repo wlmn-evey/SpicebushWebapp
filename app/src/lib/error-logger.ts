@@ -16,6 +16,7 @@ interface ErrorLogEntry {
 class ErrorLogger {
   private logs: ErrorLogEntry[] = [];
   private maxLogs = 100; // Keep only recent logs in memory
+  private isDevelopment = process.env.NODE_ENV !== 'production';
 
   log(component: string, error: Error | unknown, context?: Record<string, unknown>) {
     const entry: ErrorLogEntry = {
@@ -27,7 +28,7 @@ class ErrorLogger {
     };
 
     // In development, write structured logs for easier local debugging.
-    if (import.meta.env.DEV) {
+    if (this.isDevelopment) {
       logServerError(`[${component}] Error`, error, context);
     }
 

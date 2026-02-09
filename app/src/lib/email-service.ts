@@ -46,9 +46,9 @@ class UnioneProvider implements EmailProvider {
   private baseUrl: string;
 
   constructor() {
-    this.apiKey = import.meta.env.UNIONE_API_KEY || process.env.UNIONE_API_KEY || '';
+    this.apiKey = process.env.UNIONE_API_KEY || '';
     // Use EU region by default, can be overridden with UNIONE_REGION=us
-    const region = import.meta.env.UNIONE_REGION || process.env.UNIONE_REGION || 'eu';
+    const region = process.env.UNIONE_REGION || 'eu';
     this.baseUrl = region === 'us' 
       ? 'https://us1.unione.io/en/transactional/api/v1' 
       : 'https://eu1.unione.io/en/transactional/api/v1';
@@ -78,8 +78,8 @@ class UnioneProvider implements EmailProvider {
             plaintext: message.text
           },
           subject: message.subject,
-          from_email: message.from || import.meta.env.EMAIL_FROM || process.env.EMAIL_FROM,
-          from_name: message.fromName || import.meta.env.EMAIL_FROM_NAME || process.env.EMAIL_FROM_NAME || 'Spicebush Montessori',
+          from_email: message.from || process.env.EMAIL_FROM,
+          from_name: message.fromName || process.env.EMAIL_FROM_NAME || 'Spicebush Montessori',
           recipients: recipients.map((email: string) => ({ email })),
           ...(message.replyTo && { reply_to: message.replyTo })
         }
@@ -138,7 +138,7 @@ class EmailService {
     ];
 
     // Set preferred provider from environment (defaults to Unione)
-    this.preferredProvider = import.meta.env.EMAIL_SERVICE || process.env.EMAIL_SERVICE || 'Unione';
+    this.preferredProvider = process.env.EMAIL_SERVICE || 'Unione';
   }
 
   /**

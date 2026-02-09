@@ -6,6 +6,8 @@ export interface AdminConfig {
   adminDomains: string[];
 }
 
+const isDevelopmentEnvironment = (): boolean => process.env.NODE_ENV !== 'production';
+
 // Default admin configuration
 // In production, these should come from environment variables
 const defaultConfig: AdminConfig = {
@@ -21,8 +23,8 @@ const defaultConfig: AdminConfig = {
 
 // Get admin configuration from environment or use defaults
 export function getAdminConfig(): AdminConfig {
-  const envAdminEmails = import.meta.env.ADMIN_EMAILS;
-  const envAdminDomains = import.meta.env.ADMIN_DOMAINS;
+  const envAdminEmails = process.env.ADMIN_EMAILS;
+  const envAdminDomains = process.env.ADMIN_DOMAINS;
 
   return {
     adminEmails: envAdminEmails 
@@ -56,7 +58,7 @@ export function isAdminEmail(email: string | null | undefined): boolean {
   }
   
   // For development/testing, allow specific test admin accounts
-  if (import.meta.env.DEV) {
+  if (isDevelopmentEnvironment()) {
     if (normalizedEmail === 'admin@spicebushmontessori.test') {
       return true;
     }
