@@ -234,6 +234,38 @@ function generateContactHoursSummary() {
   return regularByDay.map((entry) => `${entry.day}: ${entry.regular}`).join(' • ');
 }
 
+function generateHoursDisplayForDayKeys(dayKeys: string[], fallback: string) {
+  const selected = normalizedHours
+    .filter((entry) => dayKeys.includes(entry.dayKey))
+    .sort((a, b) => a.order - b.order);
+
+  if (selected.length === 0) {
+    return fallback;
+  }
+
+  const regularByDay = selected
+    .map((entry) => ({
+      day: entry.day,
+      dayKey: entry.dayKey,
+      order: entry.order,
+      regular: entry.regular || ''
+    }))
+    .filter((entry) => entry.regular);
+
+  if (regularByDay.length === 0) {
+    return fallback;
+  }
+
+  const uniqueRegular = Array.from(new Set(regularByDay.map((entry) => entry.regular)));
+  const label = formatDayLabelFromHoursEntries(regularByDay);
+
+  if (uniqueRegular.length === 1) {
+    return `${label}: ${uniqueRegular[0]}`;
+  }
+
+  return regularByDay.map((entry) => `${entry.day}: ${entry.regular}`).join(' • ');
+}
+
 const EXTENDED_UNAVAILABLE_NOTE = /(no|not)\s+extended\s+care|extended\s+care\s+not\s+available/i;
 const EXTENDED_AVAILABLE_NOTE = /extended\s+care\s+available/i;
 const EXTENDED_UNTIL_PATTERN = /until\s+([0-9]{1,2}(?::[0-9]{2})?\s*[ap]m)/i;
@@ -491,6 +523,14 @@ function getTuitionRange(programId: string) {
     max: Math.round(max / 12)
   };
 }
+
+const formatCurrency = (value: number) => value.toLocaleString('en-US');
+
+const formatMonthlyTuition = (range: { min: number; max: number }): string | null => {
+  if (!range || range.min <= 0 || range.max <= 0) return null;
+  if (range.min === range.max) return `$${formatCurrency(range.min)}/month`;
+  return `$${formatCurrency(range.min)} - $${formatCurrency(range.max)}/month`;
+};
 
 // Constants
 const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_applications/new';
@@ -1649,44 +1689,72 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
         
         <div class="programs-grid">
           <div class="program-card">
-            <h3>Half Day Program</h3>
+            <h3>Half Day Program (5 Days)</h3>
+            <div class="program-details">
+              <p><strong>Ages:</strong> {agesServedShort}</p>
+              <p><strong>Schedule:</strong> 5 days/week (M-F)</p>
+              <p><strong>Hours:</strong> 8:30 AM - 12:00 PM</p>
+              <p>Consistent weekday mornings with a predictable routine.</p>
+            </div>
+            <div class="tuition-range">
+              <h4>Tuition (Fixed Rate)</h4>
+              {(() => {
+                const formatted = formatMonthlyTuition(getTuitionRange('half-day-5-days-program'));
+                return <p class="price">{formatted ?? '$1,000/month'}</p>;
+              })()}
+              <p>Flat rate for all families</p>
+            </div>
+          </div>
+
+          <div class="program-card">
+            <h3>Half Day Program (3 Days)</h3>
             <div class="program-details">
               <p><strong>Ages:</strong> {agesServedShort}</p>
               <p><strong>Schedule:</strong> 3 days/week (T/W/Th)</p>
               <p><strong>Hours:</strong> 8:30 AM - 12:00 PM</p>
-              <p>Perfect for younger children beginning their Montessori journey.</p>
+              <p>A gentle introduction with a Tuesday-Thursday schedule.</p>
+            </div>
+            <div class="tuition-range">
+              <h4>Tuition (Fixed Rate)</h4>
+              {(() => {
+                const formatted = formatMonthlyTuition(getTuitionRange('half-day-3-days-twr-program'));
+                return <p class="price">{formatted ?? '$833/month'}</p>;
+              })()}
+              <p>Flat rate for all families</p>
+            </div>
+          </div>
+
+          <div class="program-card">
+            <h3>Full Day Program (5 Days)</h3>
+            <div class="program-details">
+              <p><strong>Ages:</strong> {agesServedShort}</p>
+              <p><strong>Schedule:</strong> 5 days/week (M-F)</p>
+              <p><strong>Hours:</strong> {generateHoursDisplay()}</p>
+              <p>Our most comprehensive Montessori experience, five days a week.</p>
             </div>
             <div class="tuition-range">
               <h4>Tuition Range (FIT Model)</h4>
               {(() => {
-                const range = getTuitionRange('half-day-3-days-twr-program');
-                return range.min > 0 ? (
-                  <p class="price">${range.min} - ${range.max}/month</p>
-                ) : (
-                  <p class="price">$833/month</p>
-                );
+                const formatted = formatMonthlyTuition(getTuitionRange('full-day-5-days'));
+                return <p class="price">{formatted ?? '$450 - $1,503/month'}</p>;
               })()}
               <p>Based on family income & size</p>
             </div>
           </div>
 
           <div class="program-card">
-            <h3>Full Day Program</h3>
+            <h3>Full Day Program (3 Days)</h3>
             <div class="program-details">
               <p><strong>Ages:</strong> {agesServedShort}</p>
-              <p><strong>Schedule:</strong> 5 days/week (M-F)</p>
-              <p><strong>Hours:</strong> {generateHoursDisplay()}</p>
-              <p>Comprehensive Montessori program with afternoon enrichment.</p>
+              <p><strong>Schedule:</strong> 3 days/week (T/W/Th)</p>
+              <p><strong>Hours:</strong> {generateHoursDisplayForDayKeys(['tuesday', 'wednesday', 'thursday'], 'Tuesday - Thursday: 8:30 AM - 3:00 PM')}</p>
+              <p>A balanced option with more at-home days while keeping continuity.</p>
             </div>
             <div class="tuition-range">
               <h4>Tuition Range (FIT Model)</h4>
               {(() => {
-                const range = getTuitionRange('full-day-5-days');
-                return range.min > 0 ? (
-                  <p class="price">${range.min} - ${range.max}/month</p>
-                ) : (
-                  <p class="price">$450 - $1,503/month</p>
-                );
+                const formatted = formatMonthlyTuition(getTuitionRange('full-day-3-days-twr'));
+                return <p class="price">{formatted ?? '$270 - $902/month'}</p>;
               })()}
               <p>Based on family income & size</p>
             </div>
@@ -1715,7 +1783,7 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
                   'Not currently available'
                 )}
               </p>
-              <p><strong>For:</strong> Full Day Students</p>
+              <p><strong>For:</strong> Full Day Students (available on enrolled days)</p>
               <p><strong>Additional:</strong> Cost varies by income tier</p>
               <p>Extended morning and afternoon care for working families.</p>
             </div>
@@ -1732,7 +1800,7 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
         
         <div style="text-align: center; margin-top: 3rem;">
           <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 1.1rem;">
-            Our Family Income Tuition (FIT) model ensures every family pays what they can afford.
+            Our Family Income Tuition (FIT) model ensures every family pays what they can afford for our full-day programs. Half-day tuition is a fixed rate.
           </p>
           <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem; font-style: italic;">
             Note: These tuition ranges do not include additional financial aid that may be available. 
@@ -1866,9 +1934,11 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
                     <label for="program-interest">Program Interest *</label>
                     <select id="program-interest" name="program-interest" required>
                       <option value="">Select a program</option>
-                      <option value="half-day">Half Day Program (3 days)</option>
-                      <option value="full-day">Full Day Program (5 days)</option>
-                      <option value="extended-care">Extended Care Program</option>
+                      <option value="half-day-5">Half Day Program (5 days/week)</option>
+                      <option value="half-day-3">Half Day Program (3 days/week)</option>
+                      <option value="full-day-5">Full Day Program (5 days/week)</option>
+                      <option value="full-day-3">Full Day Program (3 days/week)</option>
+                      <option value="extended-care">Extended Care Option</option>
                       <option value="not-sure">Not sure - need guidance</option>
                     </select>
                   </div>
