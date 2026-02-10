@@ -8,6 +8,7 @@ const DEFAULT_UPDATE_MESSAGE = 'Enrollment is open for the 2026-2027 school year
 const DEFAULT_TOUR_EXTERNAL_LINK = 'https://calendly.com/spicebushmontessori/tour-of-spicebush-montessori-school?month=2026-02';
 const DEFAULT_PHONE = '(484) 202-0712';
 const DEFAULT_EMAIL = 'information@spicebushmontessori.org';
+const SHOW_TESTIMONIALS = false; // Temporarily hidden.
 const DEFAULT_ADDRESS = {
   street: '827 Concord Road',
   city: 'Glen Mills',
@@ -30,10 +31,12 @@ try {
     const data = (entry.data ?? {}) as GenericEntryData;
     return data.type === 'rate';
   });
-  testimonials = await getEntries('testimonials', (entry) => {
-    const data = (entry.data ?? {}) as Record<string, unknown>;
-    return Boolean(data.featured);
-  });
+  testimonials = SHOW_TESTIMONIALS
+    ? await getEntries('testimonials', (entry) => {
+        const data = (entry.data ?? {}) as Record<string, unknown>;
+        return Boolean(data.featured);
+      })
+    : [];
 } catch (e) {
   settings = {};
   hoursCollection = [];
@@ -1638,67 +1641,68 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
       </div>
     </section>
 
-    <!-- Testimonials Section -->
-    <section class="testimonials-section" aria-labelledby="testimonials-heading">
-      <div class="section-header">
-        <h2 id="testimonials-heading">What Parents Are Saying</h2>
-        <p>Real experiences from our Spicebush families</p>
-      </div>
-      
-      <div class="testimonials-grid">
-        {testimonials.length > 0 ? testimonials.slice(0, 3).map((testimonial) => {
-          const testimonialData = (testimonial.data ?? {}) as GenericEntryData;
-          const rating = Math.max(1, Math.round(Number(testimonialData.rating) || 5));
-          const author = coerceString(testimonialData.author, 'Spicebush Family');
-          const yearsAtSpicebush = coerceString(testimonialData.yearsAtSpicebush, '');
+	    {SHOW_TESTIMONIALS && (
+	      <section class="testimonials-section" aria-labelledby="testimonials-heading">
+	        <div class="section-header">
+	          <h2 id="testimonials-heading">What Parents Are Saying</h2>
+	          <p>Real experiences from our Spicebush families</p>
+	        </div>
+	        
+	        <div class="testimonials-grid">
+	          {testimonials.length > 0 ? testimonials.slice(0, 3).map((testimonial) => {
+	            const testimonialData = (testimonial.data ?? {}) as GenericEntryData;
+	            const rating = Math.max(1, Math.round(Number(testimonialData.rating) || 5));
+	            const author = coerceString(testimonialData.author, 'Spicebush Family');
+	            const yearsAtSpicebush = coerceString(testimonialData.yearsAtSpicebush, '');
+	
+	            return (
+	              <div class="testimonial-card">
+	                <div class="testimonial-rating">
+	                  {[...Array(rating)].map(() => (
+	                    <span class="star">★</span>
+	                  ))}
+	                </div>
+	                <p class="testimonial-quote">{testimonial.body}</p>
+	                <div class="testimonial-author">{author}</div>
+	                <div class="testimonial-role">
+	                  {yearsAtSpicebush && `Parent for ${yearsAtSpicebush} years`}
+	                </div>
+	              </div>
+	            );
+	          }) : (
+	            <div style="display: contents;">
+	              <div class="testimonial-card">
+	                <div class="testimonial-rating">
+	                  <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+	                </div>
+	                <p class="testimonial-quote">The teachers at Spicebush truly understand each child's individual needs. My daughter has flourished here in ways I never imagined possible.</p>
+	                <div class="testimonial-author">Sarah M.</div>
+	                <div class="testimonial-role">Parent of 4-year-old</div>
+	              </div>
+	              <div class="testimonial-card">
+	                <div class="testimonial-rating">
+	                  <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+	                </div>
+	                <p class="testimonial-quote">The FIT tuition model made quality Montessori education possible for our family. We're so grateful for this inclusive approach.</p>
+	                <div class="testimonial-author">Michael & Jennifer P.</div>
+	                <div class="testimonial-role">Parents of two students</div>
+	              </div>
+	              <div class="testimonial-card">
+	                <div class="testimonial-rating">
+	                  <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+	                </div>
+	                <p class="testimonial-quote">The outdoor learning environment and focus on nature connection has been perfect for my active son. He comes home excited about learning every day!</p>
+	                <div class="testimonial-author">David L.</div>
+	                <div class="testimonial-role">Parent of 5-year-old</div>
+	              </div>
+	            </div>
+	          )}
+	        </div>
+	      </section>
+	    )}
 
-          return (
-            <div class="testimonial-card">
-              <div class="testimonial-rating">
-                {[...Array(rating)].map(() => (
-                  <span class="star">★</span>
-                ))}
-              </div>
-              <p class="testimonial-quote">{testimonial.body}</p>
-              <div class="testimonial-author">{author}</div>
-              <div class="testimonial-role">
-                {yearsAtSpicebush && `Parent for ${yearsAtSpicebush} years`}
-              </div>
-            </div>
-          );
-        }) : (
-          <div style="display: contents;">
-            <div class="testimonial-card">
-              <div class="testimonial-rating">
-                <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-              </div>
-              <p class="testimonial-quote">The teachers at Spicebush truly understand each child's individual needs. My daughter has flourished here in ways I never imagined possible.</p>
-              <div class="testimonial-author">Sarah M.</div>
-              <div class="testimonial-role">Parent of 4-year-old</div>
-            </div>
-            <div class="testimonial-card">
-              <div class="testimonial-rating">
-                <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-              </div>
-              <p class="testimonial-quote">The FIT tuition model made quality Montessori education possible for our family. We're so grateful for this inclusive approach.</p>
-              <div class="testimonial-author">Michael & Jennifer P.</div>
-              <div class="testimonial-role">Parents of two students</div>
-            </div>
-            <div class="testimonial-card">
-              <div class="testimonial-rating">
-                <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-              </div>
-              <p class="testimonial-quote">The outdoor learning environment and focus on nature connection has been perfect for my active son. He comes home excited about learning every day!</p>
-              <div class="testimonial-author">David L.</div>
-              <div class="testimonial-role">Parent of 5-year-old</div>
-            </div>
-          </div>
-        )}
-      </div>
-    </section>
-
-    <!-- Programs Section -->
-    <section class="programs-section" aria-labelledby="programs-heading">
+	    <!-- Programs Section -->
+	    <section class="programs-section" aria-labelledby="programs-heading">
       <div class="section">
         <div class="section-header">
           <h2 id="programs-heading">Our Programs</h2>
