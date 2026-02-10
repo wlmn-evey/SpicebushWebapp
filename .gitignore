@@ -104,6 +104,10 @@ blog-backend/public/uploads/*
 .stylelintcache
 .prettiercache
 
+# Playwright CLI artifacts
+.playwright-cli/
+output/playwright/
+
 # Mac specific
 .AppleDouble
 .LSOverride
