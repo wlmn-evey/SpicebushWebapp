@@ -1,10 +1,12 @@
 import type { APIRoute } from 'astro';
 import { requestAdminMagicLink } from '@lib/auth/admin-session';
+import { isAllowedAdminLoginEmail } from '@lib/admin-config';
 import { logServerError } from '@lib/server-logger';
 
 const DEFAULT_REDIRECT = '/auth/sign-in';
 const SUCCESS_NOTICE = 'check-email';
 const ERROR_NOTICE = 'request-failed';
+const DOMAIN_NOTICE = 'invalid-domain';
 
 const parseRedirectPath = (value: FormDataEntryValue | string | null | undefined): string => {
   if (typeof value !== 'string') return DEFAULT_REDIRECT;
@@ -85,6 +87,16 @@ const handleRequest: APIRoute = async (context) => {
   try {
     const { email, redirectTo, nextPath, isForm } = await parseEmail(context.request);
     const locals = context.locals as unknown as Record<string, unknown>;
+
+    if (!isAllowedAdminLoginEmail(email)) {
+      if (isForm) {
+        return context.redirect(appendPathParam(redirectTo, 'error', DOMAIN_NOTICE));
+      }
+
+      return toJsonResponse(403, {
+        error: 'Please use a @spicebushmontessori.org or @eveywinters.com email address.'
+      });
+    }
 
     await requestAdminMagicLink({
       email,

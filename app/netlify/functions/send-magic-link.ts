@@ -5,6 +5,7 @@
 
 import type { Handler } from '@netlify/functions';
 import { requestAdminMagicLink } from '../../src/lib/auth/admin-session';
+import { isAllowedAdminLoginEmail } from '../../src/lib/admin-config';
 
 const getRequestUrl = (event: Parameters<Handler>[0]): string | undefined => {
   if (event.rawUrl) return event.rawUrl;
@@ -31,6 +32,18 @@ export const handler: Handler = async (event) => {
       return {
         statusCode: 400,
         body: JSON.stringify({ error: 'Email is required' })
+      };
+    }
+
+    if (!isAllowedAdminLoginEmail(email)) {
+      return {
+        statusCode: 403,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          error: 'Email domain not authorized'
+        })
       };
     }
 
