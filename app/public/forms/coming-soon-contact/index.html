@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Thanks - Spicebush Montessori School</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        padding: 2rem;
+        line-height: 1.5;
+      }
+      .card {
+        max-width: 40rem;
+        margin: 0 auto;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 1.5rem;
+      }
+      a {
+        color: #1f5b3a;
+        font-weight: 700;
+      }
+      form {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      Netlify Forms requires a static HTML file to reliably process submissions.
+      This page is the form "action" target for the SSR Coming Soon page.
+    -->
+    <form name="coming-soon-contact" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+      <input type="hidden" name="form-name" value="coming-soon-contact" />
+      <p style="display: none;">
+        <label>Don't fill this out: <input name="bot-field" /></label>
+      </p>
+      <input type="text" name="parent-name" />
+      <input type="email" name="email" />
+      <input type="tel" name="phone" />
+      <input type="date" name="child-birthdate" />
+      <select name="program-interest">
+        <option value="half-day-5">Half Day Program (5 days/week)</option>
+        <option value="half-day-3">Half Day Program (3 days/week)</option>
+        <option value="full-day-5">Full Day Program (5 days/week)</option>
+        <option value="full-day-3">Full Day Program (3 days/week)</option>
+        <option value="extended-care">Extended Care Option</option>
+        <option value="not-sure">Not sure - need guidance</option>
+      </select>
+      <select name="tour-preference">
+        <option value="morning">Weekday Morning (9-11 AM)</option>
+        <option value="afternoon">Weekday Afternoon (1-3 PM)</option>
+        <option value="call">Call me to schedule</option>
+      </select>
+      <textarea name="message"></textarea>
+      <select name="referral">
+        <option value="search">Online Search</option>
+        <option value="friend">Friend/Family</option>
+        <option value="community">Community Event</option>
+        <option value="social">Social Media</option>
+        <option value="other">Other</option>
+      </select>
+    </form>
+
+    <div class="card">
+      <h1>Thanks</h1>
+      <p>Your message has been sent. We'll be in touch soon.</p>
+      <p><a href="/coming-soon">Back to Spicebush Montessori</a></p>
+    </div>
+  </body>
+</html>
+

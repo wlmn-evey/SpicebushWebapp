@@ -1465,15 +1465,33 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
       to { transform: rotate(360deg); }
     }
 
-    /* Success message */
-    .success-message {
-      background: var(--forest-canopy);
-      color: white;
-      padding: 1rem;
-      border-radius: 8px;
-      margin-top: 1rem;
-      display: none;
-    }
+	    /* Success message */
+	    .success-message {
+	      background: var(--forest-canopy);
+	      color: white;
+	      padding: 1rem;
+	      border-radius: 8px;
+	      margin-top: 1rem;
+	      display: none;
+	    }
+
+	    /* Error message */
+	    .error-message {
+	      background: #7a1f1f;
+	      color: white;
+	      padding: 1rem;
+	      border-radius: 8px;
+	      margin-top: 1rem;
+	      display: none;
+	      overflow-wrap: anywhere;
+	      word-break: break-word;
+	    }
+
+	    .error-message a {
+	      color: white;
+	      font-weight: 700;
+	      text-decoration: underline;
+	    }
 
     </style>
   </head>
@@ -1898,7 +1916,7 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
           {tourSchedulingEnabled && (
             <div class="contact-form">
               <h3>Schedule a Tour or Ask a Question</h3>
-              <form name="coming-soon-contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="contact-form">
+              <form name="coming-soon-contact" method="POST" action="/forms/coming-soon-contact/" data-netlify="true" netlify-honeypot="bot-field" id="contact-form">
                 <input type="hidden" name="form-name" value="coming-soon-contact">
                 <p style="display: none;">
                   <label>Don't fill this out: <input name="bot-field"></label>
@@ -1979,6 +1997,9 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
                 <div class="success-message" id="success-message">
                 Thank you for your interest! We'll contact you within 24 hours to schedule your tour.
                 </div>
+                <div class="error-message" id="error-message">
+                  Sorry, something went wrong. Please try again, or email us at <a href="mailto:information@spicebushmontessori.org">information@spicebushmontessori.org</a>.
+                </div>
               </form>
             </div>
           )}
@@ -2002,48 +2023,76 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
   </footer>
 
   <script>
-    // Form submission handling
-    const form = document.getElementById('contact-form');
-    if (form instanceof HTMLFormElement) {
-      const successMessage = document.getElementById('success-message');
-      const submitButton = form.querySelector('.submit-button');
-      const buttonText = submitButton?.querySelector('.button-text');
-      const loadingSpinner = submitButton?.querySelector('.loading');
+	    // Form submission handling
+	    const form = document.getElementById('contact-form');
+	    if (form instanceof HTMLFormElement) {
+	      const successMessage = document.getElementById('success-message');
+	      const errorMessage = document.getElementById('error-message');
+	      const submitButton = form.querySelector('.submit-button');
+	      const buttonText = submitButton?.querySelector('.button-text');
+	      const loadingSpinner = submitButton?.querySelector('.loading');
 
-      if (
-        successMessage instanceof HTMLElement &&
-        submitButton instanceof HTMLButtonElement &&
-        buttonText instanceof HTMLElement &&
-        loadingSpinner instanceof HTMLElement
-      ) {
-        form.addEventListener('submit', () => {
-          // Show loading state
-          buttonText.style.display = 'none';
-          loadingSpinner.style.display = 'inline-block';
-          submitButton.disabled = true;
+	      if (
+	        successMessage instanceof HTMLElement &&
+	        errorMessage instanceof HTMLElement &&
+	        submitButton instanceof HTMLButtonElement &&
+	        buttonText instanceof HTMLElement &&
+	        loadingSpinner instanceof HTMLElement
+	      ) {
+	        form.addEventListener('submit', async (event) => {
+	          event.preventDefault();
 
-          // Let Netlify handle the form submission
-          setTimeout(() => {
-            // Show success message
-            successMessage.style.display = 'block';
-            form.reset();
-        
-            // Reset button
-            buttonText.style.display = 'inline';
-            loadingSpinner.style.display = 'none';
-            submitButton.disabled = false;
-        
-            // Scroll to success message
-            successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        
-            // Hide success message after 10 seconds
-            setTimeout(() => {
-              successMessage.style.display = 'none';
-            }, 10000);
-          }, 1000);
-        });
-      }
-    }
+	          // Show loading state
+	          buttonText.style.display = 'none';
+	          loadingSpinner.style.display = 'inline-block';
+	          submitButton.disabled = true;
+
+	          successMessage.style.display = 'none';
+	          errorMessage.style.display = 'none';
+
+	          try {
+	            const formData = new FormData(form);
+	            const body = new URLSearchParams();
+	            for (const [key, value] of formData.entries()) {
+	              if (typeof value === 'string') {
+	                body.append(key, value);
+	              }
+	            }
+
+	            const action = form.getAttribute('action') || window.location.pathname;
+	            const response = await fetch(action, {
+	              method: 'POST',
+	              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+	              body,
+	            });
+
+	            if (!response.ok) {
+	              throw new Error(`Form submission failed with status: ${response.status}`);
+	            }
+
+	            successMessage.style.display = 'block';
+	            form.reset();
+
+	            // Scroll to success message
+	            successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+	            // Hide success message after 10 seconds
+	            setTimeout(() => {
+	              successMessage.style.display = 'none';
+	            }, 10000);
+	          } catch (err) {
+	            console.error(err);
+	            errorMessage.style.display = 'block';
+	            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+	          } finally {
+	            // Reset button
+	            buttonText.style.display = 'inline';
+	            loadingSpinner.style.display = 'none';
+	            submitButton.disabled = false;
+	          }
+	        });
+	      }
+	    }
 
     // Smooth scrolling for anchor links
     const anchorLinks = document.querySelectorAll('a[href^="#"]');
