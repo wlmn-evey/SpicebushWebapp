@@ -33,9 +33,9 @@ try {
   });
   testimonials = SHOW_TESTIMONIALS
     ? await getEntries('testimonials', (entry) => {
-        const data = (entry.data ?? {}) as Record<string, unknown>;
-        return Boolean(data.featured);
-      })
+      const data = (entry.data ?? {}) as Record<string, unknown>;
+      return Boolean(data.featured);
+    })
     : [];
 } catch (e) {
   settings = {};
@@ -695,24 +695,22 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
       letter-spacing: 0.01em;
     }
 
-    .admin-access {
-      margin-top: 1rem;
-      position: relative;
-      z-index: 1;
+    .footer-admin-access {
+      margin-top: 1.5rem;
     }
 
-    .admin-access p {
-      color: var(--text-secondary);
+    .footer-admin-access p {
+      color: rgba(255, 255, 255, 0.9);
       font-size: 0.95rem;
       margin-bottom: 0.5rem;
     }
 
-    .admin-access-link {
+    .footer-admin-access-link {
       display: inline-block;
       text-decoration: none;
-      color: var(--deep-forest);
-      border: 1px solid rgba(47, 86, 64, 0.35);
-      background: rgba(255, 255, 255, 0.75);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.12);
       border-radius: 999px;
       padding: 0.45rem 1rem;
       font-weight: 700;
@@ -720,11 +718,12 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
       transition: all 0.2s ease;
     }
 
-    .admin-access-link:hover,
-    .admin-access-link:focus {
-      background: white;
-      border-color: var(--deep-forest);
-      color: var(--deep-forest);
+    .footer .footer-admin-access-link:hover,
+    .footer .footer-admin-access-link:focus {
+      background: rgba(255, 255, 255, 0.24);
+      border-color: white;
+      color: white;
+      text-decoration: none;
       transform: translateY(-1px);
     }
 
@@ -1468,33 +1467,33 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
       to { transform: rotate(360deg); }
     }
 
-	    /* Success message */
-	    .success-message {
-	      background: var(--forest-canopy);
-	      color: white;
-	      padding: 1rem;
-	      border-radius: 8px;
-	      margin-top: 1rem;
-	      display: none;
-	    }
+      /* Success message */
+      .success-message {
+        background: var(--forest-canopy);
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        display: none;
+      }
 
-	    /* Error message */
-	    .error-message {
-	      background: #7a1f1f;
-	      color: white;
-	      padding: 1rem;
-	      border-radius: 8px;
-	      margin-top: 1rem;
-	      display: none;
-	      overflow-wrap: anywhere;
-	      word-break: break-word;
-	    }
+      /* Error message */
+      .error-message {
+        background: #7a1f1f;
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        display: none;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
 
-	    .error-message a {
-	      color: white;
-	      font-weight: 700;
-	      text-decoration: underline;
-	    }
+      .error-message a {
+        color: white;
+        font-weight: 700;
+        text-decoration: underline;
+      }
 
     </style>
   </head>
@@ -1507,10 +1506,6 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
     <h1>{siteName}</h1>
     <p class="tagline">{tagline}</p>
     <div class="enrollment-notice" role="alert">🌟 Enrollment Open for {applicationSchoolYear} - Limited Spots Available!</div>
-    <div class="admin-access">
-      <p>School team members can sign in to access the full site preview.</p>
-      <a href={adminSignInPath} class="admin-access-link">Admin Sign In</a>
-    </div>
   </header>
 
   <!-- Update Notice -->
@@ -1641,204 +1636,204 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
       </div>
     </section>
 
-	    {SHOW_TESTIMONIALS && (
-	      <section class="testimonials-section" aria-labelledby="testimonials-heading">
-	        <div class="section-header">
-	          <h2 id="testimonials-heading">What Parents Are Saying</h2>
-	          <p>Real experiences from our Spicebush families</p>
-	        </div>
-	        
-	        <div class="testimonials-grid">
-	          {testimonials.length > 0 ? testimonials.slice(0, 3).map((testimonial) => {
-	            const testimonialData = (testimonial.data ?? {}) as GenericEntryData;
-	            const rating = Math.max(1, Math.round(Number(testimonialData.rating) || 5));
-	            const author = coerceString(testimonialData.author, 'Spicebush Family');
-	            const yearsAtSpicebush = coerceString(testimonialData.yearsAtSpicebush, '');
-	
-	            return (
-	              <div class="testimonial-card">
-	                <div class="testimonial-rating">
-	                  {[...Array(rating)].map(() => (
-	                    <span class="star">★</span>
-	                  ))}
-	                </div>
-	                <p class="testimonial-quote">{testimonial.body}</p>
-	                <div class="testimonial-author">{author}</div>
-	                <div class="testimonial-role">
-	                  {yearsAtSpicebush && `Parent for ${yearsAtSpicebush} years`}
-	                </div>
-	              </div>
-	            );
-	          }) : (
-	            <div style="display: contents;">
-	              <div class="testimonial-card">
-	                <div class="testimonial-rating">
-	                  <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-	                </div>
-	                <p class="testimonial-quote">The teachers at Spicebush truly understand each child's individual needs. My daughter has flourished here in ways I never imagined possible.</p>
-	                <div class="testimonial-author">Sarah M.</div>
-	                <div class="testimonial-role">Parent of 4-year-old</div>
-	              </div>
-	              <div class="testimonial-card">
-	                <div class="testimonial-rating">
-	                  <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-	                </div>
-	                <p class="testimonial-quote">The FIT tuition model made quality Montessori education possible for our family. We're so grateful for this inclusive approach.</p>
-	                <div class="testimonial-author">Michael & Jennifer P.</div>
-	                <div class="testimonial-role">Parents of two students</div>
-	              </div>
-	              <div class="testimonial-card">
-	                <div class="testimonial-rating">
-	                  <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-	                </div>
-	                <p class="testimonial-quote">The outdoor learning environment and focus on nature connection has been perfect for my active son. He comes home excited about learning every day!</p>
-	                <div class="testimonial-author">David L.</div>
-	                <div class="testimonial-role">Parent of 5-year-old</div>
-	              </div>
-	            </div>
-	          )}
-	        </div>
-	      </section>
-	    )}
-
-	    <!-- Programs Section -->
-	    <section class="programs-section" aria-labelledby="programs-heading">
-      <div class="section">
+    {SHOW_TESTIMONIALS && (
+      <section class="testimonials-section" aria-labelledby="testimonials-heading">
         <div class="section-header">
-          <h2 id="programs-heading">Our Programs</h2>
-          <p>Flexible options designed to meet your family's needs</p>
+          <h2 id="testimonials-heading">What Parents Are Saying</h2>
+          <p>Real experiences from our Spicebush families</p>
         </div>
-        
-        <div class="programs-grid">
-          <div class="program-card">
-            <h3>Half Day Program (5 Days)</h3>
-            <div class="program-details">
-              <p><strong>Ages:</strong> {agesServedShort}</p>
-              <p><strong>Schedule:</strong> 5 days/week (M-F)</p>
-              <p><strong>Hours:</strong> 8:30 AM - 12:00 PM</p>
-              <p>Consistent weekday mornings with a predictable routine.</p>
+          
+        <div class="testimonials-grid">
+          {testimonials.length > 0 ? testimonials.slice(0, 3).map((testimonial) => {
+            const testimonialData = (testimonial.data ?? {}) as GenericEntryData;
+            const rating = Math.max(1, Math.round(Number(testimonialData.rating) || 5));
+            const author = coerceString(testimonialData.author, 'Spicebush Family');
+            const yearsAtSpicebush = coerceString(testimonialData.yearsAtSpicebush, '');
+  
+            return (
+              <div class="testimonial-card">
+                <div class="testimonial-rating">
+                  {[...Array(rating)].map(() => (
+                    <span class="star">★</span>
+                  ))}
+                </div>
+                <p class="testimonial-quote">{testimonial.body}</p>
+                <div class="testimonial-author">{author}</div>
+                <div class="testimonial-role">
+                  {yearsAtSpicebush && `Parent for ${yearsAtSpicebush} years`}
+                </div>
+              </div>
+            );
+          }) : (
+            <div style="display: contents;">
+              <div class="testimonial-card">
+                <div class="testimonial-rating">
+                  <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+                </div>
+                <p class="testimonial-quote">The teachers at Spicebush truly understand each child's individual needs. My daughter has flourished here in ways I never imagined possible.</p>
+                <div class="testimonial-author">Sarah M.</div>
+                <div class="testimonial-role">Parent of 4-year-old</div>
+              </div>
+              <div class="testimonial-card">
+                <div class="testimonial-rating">
+                  <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+                </div>
+                <p class="testimonial-quote">The FIT tuition model made quality Montessori education possible for our family. We're so grateful for this inclusive approach.</p>
+                <div class="testimonial-author">Michael & Jennifer P.</div>
+                <div class="testimonial-role">Parents of two students</div>
+              </div>
+              <div class="testimonial-card">
+                <div class="testimonial-rating">
+                  <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+                </div>
+                <p class="testimonial-quote">The outdoor learning environment and focus on nature connection has been perfect for my active son. He comes home excited about learning every day!</p>
+                <div class="testimonial-author">David L.</div>
+                <div class="testimonial-role">Parent of 5-year-old</div>
+              </div>
             </div>
-            <div class="tuition-range">
-              <h4>Tuition (Fixed Rate)</h4>
-              {(() => {
-                const formatted = formatMonthlyTuition(getTuitionRange('half-day-5-days-program'));
-                return <p class="price">{formatted ?? '$1,000/month'}</p>;
-              })()}
-              <p>Flat rate for all families</p>
-            </div>
-          </div>
-
-          <div class="program-card">
-            <h3>Half Day Program (3 Days)</h3>
-            <div class="program-details">
-              <p><strong>Ages:</strong> {agesServedShort}</p>
-              <p><strong>Schedule:</strong> 3 days/week (T/W/Th)</p>
-              <p><strong>Hours:</strong> 8:30 AM - 12:00 PM</p>
-              <p>A gentle introduction with a Tuesday-Thursday schedule.</p>
-            </div>
-            <div class="tuition-range">
-              <h4>Tuition (Fixed Rate)</h4>
-              {(() => {
-                const formatted = formatMonthlyTuition(getTuitionRange('half-day-3-days-twr-program'));
-                return <p class="price">{formatted ?? '$833/month'}</p>;
-              })()}
-              <p>Flat rate for all families</p>
-            </div>
-          </div>
-
-          <div class="program-card">
-            <h3>Full Day Program (5 Days)</h3>
-            <div class="program-details">
-              <p><strong>Ages:</strong> {agesServedShort}</p>
-              <p><strong>Schedule:</strong> 5 days/week (M-F)</p>
-              <p><strong>Hours:</strong> {generateHoursDisplay()}</p>
-              <p>Our most comprehensive Montessori experience, five days a week.</p>
-            </div>
-            <div class="tuition-range">
-              <h4>Tuition Range (FIT Model)</h4>
-              {(() => {
-                const formatted = formatMonthlyTuition(getTuitionRange('full-day-5-days'));
-                return <p class="price">{formatted ?? '$450 - $1,503/month'}</p>;
-              })()}
-              <p>Based on family income & size</p>
-            </div>
-          </div>
-
-          <div class="program-card">
-            <h3>Full Day Program (3 Days)</h3>
-            <div class="program-details">
-              <p><strong>Ages:</strong> {agesServedShort}</p>
-              <p><strong>Schedule:</strong> 3 days/week (T/W/Th)</p>
-              <p><strong>Hours:</strong> {generateHoursDisplayForDayKeys(['tuesday', 'wednesday', 'thursday'], 'Tuesday - Thursday: 8:30 AM - 3:00 PM')}</p>
-              <p>A balanced option with more at-home days while keeping continuity.</p>
-            </div>
-            <div class="tuition-range">
-              <h4>Tuition Range (FIT Model)</h4>
-              {(() => {
-                const formatted = formatMonthlyTuition(getTuitionRange('full-day-3-days-twr'));
-                return <p class="price">{formatted ?? '$270 - $902/month'}</p>;
-              })()}
-              <p>Based on family income & size</p>
-            </div>
-          </div>
-
-          <div class="program-card">
-            <h3>Extended Care Option</h3>
-            <div class="program-details">
-              <p>
-                <strong>Before Care:</strong>{' '}
-                {beforeCareInfo.available ? (
-                  beforeCareInfo.label && !beforeCareInfo.description.includes('•')
-                    ? `${beforeCareInfo.label}: ${beforeCareInfo.description}`
-                    : beforeCareInfo.description
-                ) : (
-                  'Not currently available'
-                )}
-              </p>
-              <p>
-                <strong>After Care:</strong>{' '}
-                {extendedCareInfo.available ? (
-                  extendedCareInfo.label && !extendedCareInfo.description.includes('•')
-                    ? `${extendedCareInfo.label}: ${extendedCareInfo.description}`
-                    : extendedCareInfo.description
-                ) : (
-                  'Not currently available'
-                )}
-              </p>
-              <p><strong>For:</strong> Full Day Students (available on enrolled days)</p>
-              <p><strong>Additional:</strong> Cost varies by income tier</p>
-              <p>Extended morning and afternoon care for working families.</p>
-            </div>
-            <div class="tuition-range">
-              <h4>Total with Extended Care</h4>
-              <p class="tuition-note">
-                  Extended care costs vary by income tier. Contact us at{' '}
-                {hasEmail ? <a href={`mailto:${mainEmail}`}>{mainEmail}</a> : (mainEmail || 'Email coming soon')}
-                {' '}to learn your family's specific rate.
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 3rem;">
-          <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 1.1rem;">
-            Our Family Income Tuition (FIT) model ensures every family pays what they can afford for our full-day programs. Half-day tuition is a fixed rate.
-          </p>
-          <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem; font-style: italic;">
-            Note: These tuition ranges do not include additional financial aid that may be available. 
-            Please contact us to discuss your family's specific needs.
-          </p>
-          <a href={applicationLink} target="_blank" rel="noopener noreferrer" class="secondary-button" style="margin-right: 1rem;">
-            Apply for {applicationSchoolYear}
-          </a>
-          {tourSchedulingEnabled && (
-            <a href={tourExternalLink} class="primary-button">
-              Schedule a Tour First
-            </a>
           )}
         </div>
-      </div>
-    </section>
+      </section>
+    )}
+
+      <!-- Programs Section -->
+      <section class="programs-section" aria-labelledby="programs-heading">
+        <div class="section">
+          <div class="section-header">
+            <h2 id="programs-heading">Our Programs</h2>
+            <p>Flexible options designed to meet your family's needs</p>
+          </div>
+        
+          <div class="programs-grid">
+            <div class="program-card">
+              <h3>Half Day Program (5 Days)</h3>
+              <div class="program-details">
+                <p><strong>Ages:</strong> {agesServedShort}</p>
+                <p><strong>Schedule:</strong> 5 days/week (M-F)</p>
+                <p><strong>Hours:</strong> 8:30 AM - 12:00 PM</p>
+                <p>Consistent weekday mornings with a predictable routine.</p>
+              </div>
+              <div class="tuition-range">
+                <h4>Tuition (Fixed Rate)</h4>
+                {(() => {
+                  const formatted = formatMonthlyTuition(getTuitionRange('half-day-5-days-program'));
+                  return <p class="price">{formatted ?? '$1,000/month'}</p>;
+                })()}
+                <p>Flat rate for all families</p>
+              </div>
+            </div>
+
+            <div class="program-card">
+              <h3>Half Day Program (3 Days)</h3>
+              <div class="program-details">
+                <p><strong>Ages:</strong> {agesServedShort}</p>
+                <p><strong>Schedule:</strong> 3 days/week (T/W/Th)</p>
+                <p><strong>Hours:</strong> 8:30 AM - 12:00 PM</p>
+                <p>A gentle introduction with a Tuesday-Thursday schedule.</p>
+              </div>
+              <div class="tuition-range">
+                <h4>Tuition (Fixed Rate)</h4>
+                {(() => {
+                  const formatted = formatMonthlyTuition(getTuitionRange('half-day-3-days-twr-program'));
+                  return <p class="price">{formatted ?? '$833/month'}</p>;
+                })()}
+                <p>Flat rate for all families</p>
+              </div>
+            </div>
+
+            <div class="program-card">
+              <h3>Full Day Program (5 Days)</h3>
+              <div class="program-details">
+                <p><strong>Ages:</strong> {agesServedShort}</p>
+                <p><strong>Schedule:</strong> 5 days/week (M-F)</p>
+                <p><strong>Hours:</strong> {generateHoursDisplay()}</p>
+                <p>Our most comprehensive Montessori experience, five days a week.</p>
+              </div>
+              <div class="tuition-range">
+                <h4>Tuition Range (FIT Model)</h4>
+                {(() => {
+                  const formatted = formatMonthlyTuition(getTuitionRange('full-day-5-days'));
+                  return <p class="price">{formatted ?? '$450 - $1,503/month'}</p>;
+                })()}
+                <p>Based on family income & size</p>
+              </div>
+            </div>
+
+            <div class="program-card">
+              <h3>Full Day Program (3 Days)</h3>
+              <div class="program-details">
+                <p><strong>Ages:</strong> {agesServedShort}</p>
+                <p><strong>Schedule:</strong> 3 days/week (T/W/Th)</p>
+                <p><strong>Hours:</strong> {generateHoursDisplayForDayKeys(['tuesday', 'wednesday', 'thursday'], 'Tuesday - Thursday: 8:30 AM - 3:00 PM')}</p>
+                <p>A balanced option with more at-home days while keeping continuity.</p>
+              </div>
+              <div class="tuition-range">
+                <h4>Tuition Range (FIT Model)</h4>
+                {(() => {
+                  const formatted = formatMonthlyTuition(getTuitionRange('full-day-3-days-twr'));
+                  return <p class="price">{formatted ?? '$270 - $902/month'}</p>;
+                })()}
+                <p>Based on family income & size</p>
+              </div>
+            </div>
+
+            <div class="program-card">
+              <h3>Extended Care Option</h3>
+              <div class="program-details">
+                <p>
+                  <strong>Before Care:</strong>{' '}
+                  {beforeCareInfo.available ? (
+                    beforeCareInfo.label && !beforeCareInfo.description.includes('•')
+                      ? `${beforeCareInfo.label}: ${beforeCareInfo.description}`
+                      : beforeCareInfo.description
+                  ) : (
+                    'Not currently available'
+                  )}
+                </p>
+                <p>
+                  <strong>After Care:</strong>{' '}
+                  {extendedCareInfo.available ? (
+                    extendedCareInfo.label && !extendedCareInfo.description.includes('•')
+                      ? `${extendedCareInfo.label}: ${extendedCareInfo.description}`
+                      : extendedCareInfo.description
+                  ) : (
+                    'Not currently available'
+                  )}
+                </p>
+                <p><strong>For:</strong> Full Day Students (available on enrolled days)</p>
+                <p><strong>Additional:</strong> Cost varies by income tier</p>
+                <p>Extended morning and afternoon care for working families.</p>
+              </div>
+              <div class="tuition-range">
+                <h4>Total with Extended Care</h4>
+                <p class="tuition-note">
+                  Extended care costs vary by income tier. Contact us at{' '}
+                  {hasEmail ? <a href={`mailto:${mainEmail}`}>{mainEmail}</a> : (mainEmail || 'Email coming soon')}
+                  {' '}to learn your family's specific rate.
+                </p>
+              </div>
+            </div>
+          </div>
+        
+          <div style="text-align: center; margin-top: 3rem;">
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 1.1rem;">
+            Our Family Income Tuition (FIT) model ensures every family pays what they can afford for our full-day programs. Half-day tuition is a fixed rate.
+            </p>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem; font-style: italic;">
+            Note: These tuition ranges do not include additional financial aid that may be available. 
+            Please contact us to discuss your family's specific needs.
+            </p>
+            <a href={applicationLink} target="_blank" rel="noopener noreferrer" class="secondary-button" style="margin-right: 1rem;">
+            Apply for {applicationSchoolYear}
+            </a>
+            {tourSchedulingEnabled && (
+              <a href={tourExternalLink} class="primary-button">
+              Schedule a Tour First
+              </a>
+            )}
+          </div>
+        </div>
+      </section>
 
     <!-- Contact Section -->
     <section class="section" id="contact" aria-labelledby="contact-heading">
@@ -2020,6 +2015,10 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
       <a href="/privacy-policy">Privacy Policy</a>
       <a href="/accessibility">Accessibility</a>
     </div>
+    <div class="footer-admin-access">
+      <p>School team members can sign in to access the full site preview.</p>
+      <a href={adminSignInPath} class="footer-admin-access-link">Admin Sign In</a>
+    </div>
     <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.9; max-width: 800px; margin-left: auto; margin-right: auto;">
       Spicebush Montessori School admits students of any race, color, national and ethnic origin to all the rights, 
       privileges, programs, and activities generally accorded or made available to students at the school.
@@ -2027,76 +2026,76 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
   </footer>
 
   <script>
-	    // Form submission handling
-	    const form = document.getElementById('contact-form');
-	    if (form instanceof HTMLFormElement) {
-	      const successMessage = document.getElementById('success-message');
-	      const errorMessage = document.getElementById('error-message');
-	      const submitButton = form.querySelector('.submit-button');
-	      const buttonText = submitButton?.querySelector('.button-text');
-	      const loadingSpinner = submitButton?.querySelector('.loading');
+    // Form submission handling
+    const form = document.getElementById('contact-form');
+    if (form instanceof HTMLFormElement) {
+      const successMessage = document.getElementById('success-message');
+      const errorMessage = document.getElementById('error-message');
+      const submitButton = form.querySelector('.submit-button');
+      const buttonText = submitButton?.querySelector('.button-text');
+      const loadingSpinner = submitButton?.querySelector('.loading');
 
-	      if (
-	        successMessage instanceof HTMLElement &&
-	        errorMessage instanceof HTMLElement &&
-	        submitButton instanceof HTMLButtonElement &&
-	        buttonText instanceof HTMLElement &&
-	        loadingSpinner instanceof HTMLElement
-	      ) {
-	        form.addEventListener('submit', async (event) => {
-	          event.preventDefault();
+      if (
+        successMessage instanceof HTMLElement &&
+          errorMessage instanceof HTMLElement &&
+          submitButton instanceof HTMLButtonElement &&
+          buttonText instanceof HTMLElement &&
+          loadingSpinner instanceof HTMLElement
+      ) {
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
 
-	          // Show loading state
-	          buttonText.style.display = 'none';
-	          loadingSpinner.style.display = 'inline-block';
-	          submitButton.disabled = true;
+          // Show loading state
+          buttonText.style.display = 'none';
+          loadingSpinner.style.display = 'inline-block';
+          submitButton.disabled = true;
 
-	          successMessage.style.display = 'none';
-	          errorMessage.style.display = 'none';
+          successMessage.style.display = 'none';
+          errorMessage.style.display = 'none';
 
-	          try {
-	            const formData = new FormData(form);
-	            const body = new URLSearchParams();
-	            for (const [key, value] of formData.entries()) {
-	              if (typeof value === 'string') {
-	                body.append(key, value);
-	              }
-	            }
+          try {
+            const formData = new FormData(form);
+            const body = new URLSearchParams();
+            for (const [key, value] of formData.entries()) {
+              if (typeof value === 'string') {
+                body.append(key, value);
+              }
+            }
 
-	            const action = form.getAttribute('action') || window.location.pathname;
-	            const response = await fetch(action, {
-	              method: 'POST',
-	              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-	              body,
-	            });
+            const action = form.getAttribute('action') || window.location.pathname;
+            const response = await fetch(action, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body
+            });
 
-	            if (!response.ok) {
-	              throw new Error(`Form submission failed with status: ${response.status}`);
-	            }
+            if (!response.ok) {
+              throw new Error(`Form submission failed with status: ${response.status}`);
+            }
 
-	            successMessage.style.display = 'block';
-	            form.reset();
+            successMessage.style.display = 'block';
+            form.reset();
 
-	            // Scroll to success message
-	            successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Scroll to success message
+            successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-	            // Hide success message after 10 seconds
-	            setTimeout(() => {
-	              successMessage.style.display = 'none';
-	            }, 10000);
-	          } catch (err) {
-	            console.error(err);
-	            errorMessage.style.display = 'block';
-	            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-	          } finally {
-	            // Reset button
-	            buttonText.style.display = 'inline';
-	            loadingSpinner.style.display = 'none';
-	            submitButton.disabled = false;
-	          }
-	        });
-	      }
-	    }
+            // Hide success message after 10 seconds
+            setTimeout(() => {
+              successMessage.style.display = 'none';
+            }, 10000);
+          } catch (err) {
+            console.error(err);
+            errorMessage.style.display = 'block';
+            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          } finally {
+            // Reset button
+            buttonText.style.display = 'inline';
+            loadingSpinner.style.display = 'none';
+            submitButton.disabled = false;
+          }
+        });
+      }
+    }
 
     // Smooth scrolling for anchor links
     const anchorLinks = document.querySelectorAll('a[href^="#"]');
