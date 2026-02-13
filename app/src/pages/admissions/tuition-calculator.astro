@@ -52,6 +52,13 @@ const stringFrom = (value: unknown, fallback = ''): string => {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : fallback;
 };
 
+const optionalNumberFrom = (value: unknown): number | null => {
+  if (value === undefined || value === null) return null;
+  if (typeof value === 'string' && value.trim().length === 0) return null;
+  const parsed = numberFrom(value, Number.NaN);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 let programs: ProgramRecord[] = [];
 let rates: RateRecord[] = [];
 let calculatorSettings: CalculatorSettings = {
@@ -97,7 +104,7 @@ try {
       const thresholds: RateRecord['thresholds'] = {};
       ['2', '3', '4', '5', '6', '7', '8_plus'].forEach((sizeKey) => {
         const fieldName = sizeKey === '8_plus' ? 'income_threshold_family_8_plus' : `income_threshold_family_${sizeKey}`;
-        thresholds[sizeKey] = data[fieldName] !== undefined ? numberFrom(data[fieldName]) : null;
+        thresholds[sizeKey] = optionalNumberFrom(data[fieldName]);
       });
 
       return {
@@ -105,7 +112,7 @@ try {
         programId: stringFrom(data.program_id, entry.slug),
         label: stringFrom(data.rate_label, entry.slug.replace(/-/g, ' ')),
         tuitionPrice: numberFrom(data.tuition_price),
-        extendedCarePrice: data.extended_care_price !== undefined ? numberFrom(data.extended_care_price, 0) : null,
+        extendedCarePrice: optionalNumberFrom(data.extended_care_price),
         extendedCareAvailable: data.extended_care_available !== false,
         isConstantRate: data.is_constant_rate === true,
         incomeThresholdType: data.income_threshold_type ? stringFrom(data.income_threshold_type) : null,

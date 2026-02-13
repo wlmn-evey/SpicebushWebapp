@@ -76,6 +76,13 @@
       }
     },
     {
+      "files": ["src/pages/admin/tuition.astro"],
+      "rules": {
+        // Work around ESLint indent recursion on deeply nested Astro templates
+        "indent": "off"
+      }
+    },
+    {
       "files": ["scripts/**/*.js", "scripts/**/*.ts"],
       "rules": {
         // Allow console logs in scripts

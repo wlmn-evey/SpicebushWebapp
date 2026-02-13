@@ -1,12 +1,14 @@
 ---
 import AdminLayout from '@layouts/AdminLayout.astro';
-import { db } from '@lib/db';
+import { db, type ContentEntry } from '@lib/db';
+
+type StaffEntry = ContentEntry<Record<string, unknown>>;
 
 const collection = 'staff';
-const entries = await db.content.getCollection(collection);
+const entries = (await db.content.getCollection(collection)) as StaffEntry[];
 const sortedEntries = [...entries].sort((a, b) => {
-  const aOrder = Number(a.data.order ?? 999);
-  const bOrder = Number(b.data.order ?? 999);
+  const aOrder = Number((a.data as Record<string, unknown>).order ?? 999);
+  const bOrder = Number((b.data as Record<string, unknown>).order ?? 999);
   if (aOrder !== bOrder) return aOrder - bOrder;
   return a.slug.localeCompare(b.slug);
 });
@@ -14,7 +16,65 @@ const sortedEntries = [...entries].sort((a, b) => {
 const savedSlug = Astro.url.searchParams.get('saved');
 const errorMessage = Astro.url.searchParams.get('error');
 
-const toJson = (value: unknown): string => JSON.stringify(value ?? {}, null, 2);
+const asRecord = (value: unknown): Record<string, unknown> => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+};
+
+const stringFrom = (value: unknown, fallback = ''): string => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.length > 0) return trimmed;
+  }
+  return fallback;
+};
+
+const numberFrom = (value: unknown, fallback: number): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number.parseFloat(value.trim());
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+};
+
+const numberInputValue = (value: unknown): string => {
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  if (typeof value === 'string' && value.trim().length > 0) return value.trim();
+  return '';
+};
+
+const csvFrom = (value: unknown, fallback = ''): string => {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter((item) => item.length > 0)
+      .join(', ');
+  }
+  return fallback;
+};
+
+const editableEntries = sortedEntries.map((entry) => {
+  const data = asRecord(entry.data);
+  return {
+    entry,
+    data,
+    status: stringFrom(data.status, 'published'),
+    title: stringFrom(data.title, entry.slug),
+    name: stringFrom(data.name, stringFrom(data.title, entry.slug)),
+    role: stringFrom(data.role, ''),
+    email: stringFrom(data.email, ''),
+    photo: stringFrom(data.photo, ''),
+    badge: stringFrom(data.certificationBadge, ''),
+    credentials: csvFrom(data.credentials, ''),
+    languages: csvFrom(data.languages, 'English'),
+    startYear: numberInputValue(data.startYear),
+    order: numberFrom(data.order, 99),
+    bio: stringFrom(data.body, '')
+  };
+});
 ---
 
 <AdminLayout title="Manage Staff">
@@ -32,85 +92,283 @@ const toJson = (value: unknown): string => JSON.stringify(value ?? {}, null, 2);
 
   <div class="space-y-6">
     <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 class="text-lg font-semibold mb-3">Create New Staff Entry</h2>
-      <form method="post" action="/api/admin/content" class="space-y-3">
+      <h2 class="mb-1 text-lg font-semibold">Add Staff Member</h2>
+      <p class="mb-4 text-sm text-earth-brown/80">
+        Use this form to add teachers and staff profiles without editing JSON.
+      </p>
+      <form method="post" action="/api/admin/content" class="space-y-4">
         <input type="hidden" name="collection" value={collection} />
         <input type="hidden" name="redirectTo" value="/admin/staff?saved=new" />
-        <input
-          type="text"
-          name="slug"
-          placeholder="Slug (example: jane-doe)"
-          required
-          class="w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
-        <input
-          type="text"
-          name="title"
-          placeholder="Title (example: Jane Doe)"
-          class="w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
-        <select name="status" class="w-full rounded-lg border border-gray-300 px-3 py-2">
-          <option value="published">Published</option>
-          <option value="draft">Draft</option>
-        </select>
-        <textarea
-          name="dataJson"
-          rows="10"
-          class="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm"
-        >{toJson({ name: 'Jane Doe', role: 'Lead Teacher', email: 'jane@example.com', photo: '/images/teachers/placeholder.jpg', credentials: ['AMI'], languages: ['English'], startYear: 2024, order: 1 })}</textarea>
-        <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
-          Create Entry
-        </button>
-      </form>
-    </section>
-
-    {sortedEntries.map((entry) => (
-      <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 class="text-lg font-semibold mb-3">Edit: {entry.slug}</h3>
-        <form method="post" action="/api/admin/content" class="space-y-3">
-          <input type="hidden" name="collection" value={collection} />
-          <input type="hidden" name="redirectTo" value={`/admin/staff?saved=${encodeURIComponent(entry.slug)}`} />
-
+        <div class="grid gap-3 md:grid-cols-2">
           <label class="block text-sm font-medium">
-            Slug
+            URL Slug
             <input
               type="text"
               name="slug"
-              value={entry.slug}
+              placeholder="jane-doe"
               required
               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
             />
           </label>
-
           <label class="block text-sm font-medium">
-            Title
+            Internal Title (optional)
             <input
               type="text"
               name="title"
-              value={entry.data.title ?? entry.slug}
+              placeholder="Jane Doe"
               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
             />
           </label>
-
           <label class="block text-sm font-medium">
-            Status
+            Publish Status
             <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
               <option value="published">Published</option>
               <option value="draft">Draft</option>
             </select>
           </label>
-
           <label class="block text-sm font-medium">
-            Data JSON
-            <textarea
-              name="dataJson"
-              rows="12"
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm"
-            >{toJson(entry.data)}</textarea>
+            Display Order
+            <input
+              type="number"
+              name="data.order"
+              min="1"
+              step="1"
+              value="99"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
           </label>
+          <label class="block text-sm font-medium">
+            Full Name
+            <input
+              type="text"
+              name="data.name"
+              placeholder="Jane Doe"
+              required
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="block text-sm font-medium">
+            Role / Title
+            <input
+              type="text"
+              name="data.role"
+              placeholder="Lead Teacher"
+              required
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="block text-sm font-medium">
+            Email (optional)
+            <input
+              type="email"
+              name="data.email"
+              placeholder="jane@spicebushmontessori.org"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="block text-sm font-medium">
+            Photo URL (optional)
+            <input
+              type="text"
+              name="data.photo"
+              placeholder="/images/teachers/jane-doe.jpg"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="block text-sm font-medium">
+            Certification Badge (optional)
+            <input
+              type="text"
+              name="data.certificationBadge"
+              placeholder="AMI"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="block text-sm font-medium">
+            Start Year (optional)
+            <input
+              type="number"
+              name="data.startYear"
+              min="1900"
+              max="2100"
+              step="1"
+              placeholder="2024"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="block text-sm font-medium md:col-span-2">
+            Credentials (comma-separated)
+            <input
+              type="text"
+              name="data.credentials_csv"
+              placeholder="AMI, M.Ed., CPR"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="block text-sm font-medium md:col-span-2">
+            Languages (comma-separated)
+            <input
+              type="text"
+              name="data.languages_csv"
+              placeholder="English, Spanish"
+              value="English"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="block text-sm font-medium md:col-span-2">
+            Bio (optional)
+            <textarea
+              name="data.body"
+              rows="4"
+              placeholder="Short bio shown on staff sections."
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            ></textarea>
+          </label>
+        </div>
+        <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
+          Add Staff Member
+        </button>
+      </form>
+    </section>
+
+    {editableEntries.map(({ entry, data, status, title, name, role, email, photo, badge, credentials, languages, startYear, order, bio }) => (
+      <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="mb-1 text-lg font-semibold">Edit: {entry.slug}</h3>
+        <p class="mb-4 text-sm text-earth-brown/80">
+          Update fields and save. This keeps existing DB structure and preserves any hidden metadata.
+        </p>
+        <form method="post" action="/api/admin/content" class="space-y-4">
+          <input type="hidden" name="collection" value={collection} />
+          <input type="hidden" name="redirectTo" value={`/admin/staff?saved=${encodeURIComponent(entry.slug)}`} />
+          <input type="hidden" name="baseDataJson" value={JSON.stringify(data ?? {})} />
+
+          <div class="grid gap-3 md:grid-cols-2">
+            <label class="block text-sm font-medium">
+              URL Slug
+              <input
+                type="text"
+                name="slug"
+                value={entry.slug}
+                required
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm font-medium">
+              Internal Title (optional)
+              <input
+                type="text"
+                name="title"
+                value={title}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm font-medium">
+              Publish Status
+              <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                <option value="published" selected={status !== 'draft'}>Published</option>
+                <option value="draft" selected={status === 'draft'}>Draft</option>
+              </select>
+            </label>
+            <label class="block text-sm font-medium">
+              Display Order
+              <input
+                type="number"
+                name="data.order"
+                min="1"
+                step="1"
+                value={String(order)}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm font-medium">
+              Full Name
+              <input
+                type="text"
+                name="data.name"
+                value={name}
+                required
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm font-medium">
+              Role / Title
+              <input
+                type="text"
+                name="data.role"
+                value={role}
+                required
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm font-medium">
+              Email (optional)
+              <input
+                type="email"
+                name="data.email"
+                value={email}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm font-medium">
+              Photo URL (optional)
+              <input
+                type="text"
+                name="data.photo"
+                value={photo}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm font-medium">
+              Certification Badge (optional)
+              <input
+                type="text"
+                name="data.certificationBadge"
+                value={badge}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm font-medium">
+              Start Year (optional)
+              <input
+                type="number"
+                name="data.startYear"
+                min="1900"
+                max="2100"
+                step="1"
+                value={startYear}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm font-medium md:col-span-2">
+              Credentials (comma-separated)
+              <input
+                type="text"
+                name="data.credentials_csv"
+                value={credentials}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm font-medium md:col-span-2">
+              Languages (comma-separated)
+              <input
+                type="text"
+                name="data.languages_csv"
+                value={languages}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm font-medium md:col-span-2">
+              Bio (optional)
+              <textarea
+                name="data.body"
+                rows="4"
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              >{bio}</textarea>
+            </label>
+          </div>
 
           <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
-            Save {entry.slug}
+            Save Staff Member
           </button>
         </form>
       </section>

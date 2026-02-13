@@ -97,125 +97,127 @@ const editableEntries = sortedEntries.map((entry) => {
 
   <div class="space-y-6">
     <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 class="mb-1 text-lg font-semibold">Create New Hours Entry</h2>
+      <h2 class="mb-1 text-lg font-semibold">Add School Hours Day</h2>
       <p class="mb-4 text-sm text-earth-brown/80">
-        Add one day at a time. Use a lowercase slug like <code>monday</code>.
+        These fields power the public hours widget and coming-soon schedule. Add one day at a time using plain-language values.
       </p>
-      <form method="post" action="/api/admin/content" class="space-y-3">
+      <form method="post" action="/api/admin/content" class="space-y-4">
         <input type="hidden" name="collection" value={collection} />
         <input type="hidden" name="redirectTo" value="/admin/hours?saved=new" />
 
-        <label class="block text-sm font-medium">
-          Slug
-          <input
-            type="text"
-            name="slug"
-            required
-            placeholder="monday"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-          />
-        </label>
+        <div class="grid gap-3 md:grid-cols-2">
+          <label class="block text-sm font-medium">
+            URL Slug (usually day name)
+            <input
+              type="text"
+              name="slug"
+              required
+              placeholder="monday"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
 
-        <label class="block text-sm font-medium">
-          Entry Title (optional)
-          <input
-            type="text"
-            name="title"
-            placeholder="Monday Hours"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-          />
-        </label>
+          <label class="block text-sm font-medium">
+            Entry Title (optional)
+            <input
+              type="text"
+              name="title"
+              placeholder="Monday Hours"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
 
-        <label class="block text-sm font-medium">
-          Status
-          <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-          </select>
-        </label>
+          <label class="block text-sm font-medium">
+            Publish Status
+            <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+            </select>
+          </label>
 
-        <label class="block text-sm font-medium">
-          Day
-          <select name="data.day" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-            {DAY_ORDER.map((day) => (
-              <option value={day}>{day}</option>
-            ))}
-          </select>
-        </label>
+          <label class="block text-sm font-medium">
+            Day of Week
+            <select name="data.day" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+              {DAY_ORDER.map((day) => (
+                <option value={day}>{day}</option>
+              ))}
+            </select>
+          </label>
 
-        <label class="block text-sm font-medium">
-          Open Time
-          <input
-            type="text"
-            name="data.open_time"
-            placeholder="8:30 AM"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-          />
-        </label>
+          <label class="block text-sm font-medium">
+            School Start Time
+            <input
+              type="text"
+              name="data.open_time"
+              placeholder="8:30 AM"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
 
-        <label class="block text-sm font-medium">
-          Close Time
-          <input
-            type="text"
-            name="data.close_time"
-            placeholder="3:00 PM"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-          />
-        </label>
+          <label class="block text-sm font-medium">
+            School End Time
+            <input
+              type="text"
+              name="data.close_time"
+              placeholder="3:00 PM"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
 
-        <label class="block text-sm font-medium">
-          Closed
-          <select name="data.is_closed" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-            <option value="false">No</option>
-            <option value="true">Yes</option>
-          </select>
-        </label>
+          <label class="block text-sm font-medium">
+            Closed All Day
+            <select name="data.is_closed" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select>
+          </label>
 
-        <label class="block text-sm font-medium">
-          Display Order
-          <input
-            type="number"
-            name="data.order"
-            min="1"
-            step="1"
-            value="1"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-          />
-        </label>
+          <label class="block text-sm font-medium">
+            Display Order (1 = Monday)
+            <input
+              type="number"
+              name="data.order"
+              min="1"
+              step="1"
+              value="1"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
 
-        <label class="block text-sm font-medium">
-          Before Care Offset (hours)
-          <input
-            type="number"
-            name="data.before_care_offset"
-            step="0.25"
-            min="0"
-            placeholder="1"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-          />
-        </label>
+          <label class="block text-sm font-medium">
+            Before Care (hours before open)
+            <input
+              type="number"
+              name="data.before_care_offset"
+              step="0.25"
+              min="0"
+              placeholder="1"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
 
-        <label class="block text-sm font-medium">
-          After Care Offset (hours)
-          <input
-            type="number"
-            name="data.after_care_offset"
-            step="0.25"
-            min="0"
-            placeholder="2.5"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-          />
-        </label>
+          <label class="block text-sm font-medium">
+            After Care (hours after close)
+            <input
+              type="number"
+              name="data.after_care_offset"
+              step="0.25"
+              min="0"
+              placeholder="2.5"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
 
-        <label class="block text-sm font-medium">
-          Note
-          <input
-            type="text"
-            name="data.note"
-            placeholder="Optional note (e.g. closes early)"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-          />
-        </label>
+          <label class="block text-sm font-medium md:col-span-2">
+            Public Note (optional)
+            <input
+              type="text"
+              name="data.note"
+              placeholder="Example: Early dismissal at 1:00 PM"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+        </div>
 
         <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
           Create Entry
@@ -225,126 +227,131 @@ const editableEntries = sortedEntries.map((entry) => {
 
     {editableEntries.map(({ entry, data, entryDay, entryOpen, entryClose, entryClosed, entryOrder, entryStatus }) => (
       <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 class="mb-3 text-lg font-semibold">Edit: {entry.slug}</h3>
-        <form method="post" action="/api/admin/content" class="space-y-3">
+        <h3 class="mb-1 text-lg font-semibold">Edit: {entry.slug}</h3>
+        <p class="mb-4 text-sm text-earth-brown/80">
+          Update this day and save. This form is DB-backed and keeps any hidden metadata intact.
+        </p>
+        <form method="post" action="/api/admin/content" class="space-y-4">
           <input type="hidden" name="collection" value={collection} />
           <input type="hidden" name="redirectTo" value={`/admin/hours?saved=${encodeURIComponent(entry.slug)}`} />
           <input type="hidden" name="baseDataJson" value={JSON.stringify(data ?? {})} />
 
-          <label class="block text-sm font-medium">
-              Slug
-            <input
-              type="text"
-              name="slug"
-              value={entry.slug}
-              required
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
+          <div class="grid gap-3 md:grid-cols-2">
+            <label class="block text-sm font-medium">
+              URL Slug (usually day name)
+              <input
+                type="text"
+                name="slug"
+                value={entry.slug}
+                required
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
 
-          <label class="block text-sm font-medium">
+            <label class="block text-sm font-medium">
               Entry Title (optional)
-            <input
-              type="text"
-              name="title"
-              value={stringFrom(data.title, entry.slug)}
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
+              <input
+                type="text"
+                name="title"
+                value={stringFrom(data.title, entry.slug)}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
 
-          <label class="block text-sm font-medium">
-              Status
-            <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-              <option value="published" selected={entryStatus !== 'draft'}>Published</option>
-              <option value="draft" selected={entryStatus === 'draft'}>Draft</option>
-            </select>
-          </label>
+            <label class="block text-sm font-medium">
+              Publish Status
+              <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                <option value="published" selected={entryStatus !== 'draft'}>Published</option>
+                <option value="draft" selected={entryStatus === 'draft'}>Draft</option>
+              </select>
+            </label>
 
-          <label class="block text-sm font-medium">
-              Day
-            <select name="data.day" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-              {DAY_ORDER.map((day) => (
-                <option value={day} selected={day === entryDay}>{day}</option>
-              ))}
-            </select>
-          </label>
+            <label class="block text-sm font-medium">
+              Day of Week
+              <select name="data.day" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                {DAY_ORDER.map((day) => (
+                  <option value={day} selected={day === entryDay}>{day}</option>
+                ))}
+              </select>
+            </label>
 
-          <label class="block text-sm font-medium">
-              Open Time
-            <input
-              type="text"
-              name="data.open_time"
-              value={entryOpen}
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
+            <label class="block text-sm font-medium">
+              School Start Time
+              <input
+                type="text"
+                name="data.open_time"
+                value={entryOpen}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
 
-          <label class="block text-sm font-medium">
-              Close Time
-            <input
-              type="text"
-              name="data.close_time"
-              value={entryClose}
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
+            <label class="block text-sm font-medium">
+              School End Time
+              <input
+                type="text"
+                name="data.close_time"
+                value={entryClose}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
 
-          <label class="block text-sm font-medium">
-              Closed
-            <select name="data.is_closed" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-              <option value="false" selected={!entryClosed}>No</option>
-              <option value="true" selected={entryClosed}>Yes</option>
-            </select>
-          </label>
+            <label class="block text-sm font-medium">
+              Closed All Day
+              <select name="data.is_closed" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                <option value="false" selected={!entryClosed}>No</option>
+                <option value="true" selected={entryClosed}>Yes</option>
+              </select>
+            </label>
 
-          <label class="block text-sm font-medium">
-              Display Order
-            <input
-              type="number"
-              name="data.order"
-              min="1"
-              step="1"
-              value={String(entryOrder)}
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
+            <label class="block text-sm font-medium">
+              Display Order (1 = Monday)
+              <input
+                type="number"
+                name="data.order"
+                min="1"
+                step="1"
+                value={String(entryOrder)}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
 
-          <label class="block text-sm font-medium">
-              Before Care Offset (hours)
-            <input
-              type="number"
-              name="data.before_care_offset"
-              step="0.25"
-              min="0"
-              value={numberInputValue(data.before_care_offset)}
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
+            <label class="block text-sm font-medium">
+              Before Care (hours before open)
+              <input
+                type="number"
+                name="data.before_care_offset"
+                step="0.25"
+                min="0"
+                value={numberInputValue(data.before_care_offset)}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
 
-          <label class="block text-sm font-medium">
-              After Care Offset (hours)
-            <input
-              type="number"
-              name="data.after_care_offset"
-              step="0.25"
-              min="0"
-              value={numberInputValue(data.after_care_offset)}
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
+            <label class="block text-sm font-medium">
+              After Care (hours after close)
+              <input
+                type="number"
+                name="data.after_care_offset"
+                step="0.25"
+                min="0"
+                value={numberInputValue(data.after_care_offset)}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
 
-          <label class="block text-sm font-medium">
-              Note
-            <input
-              type="text"
-              name="data.note"
-              value={stringFrom(data.note, '')}
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
+            <label class="block text-sm font-medium md:col-span-2">
+              Public Note (optional)
+              <input
+                type="text"
+                name="data.note"
+                value={stringFrom(data.note, '')}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+          </div>
 
           <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
-              Save {entry.slug}
+              Save Hours Entry
           </button>
         </form>
       </section>
