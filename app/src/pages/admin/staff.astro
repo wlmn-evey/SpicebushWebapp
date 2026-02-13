@@ -92,286 +92,345 @@ const editableEntries = sortedEntries.map((entry) => {
 
   <div class="space-y-6">
     <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 class="mb-1 text-lg font-semibold">Add Staff Member</h2>
+      <h2 class="mb-2 text-lg font-semibold">Staff Manager</h2>
       <p class="mb-4 text-sm text-earth-brown/80">
-        Use this form to add teachers and staff profiles without editing JSON.
+        Keep this simple: update the essentials first, then use Advanced Options for ordering, badges, and profile details.
       </p>
-      <form method="post" action="/api/admin/content" class="space-y-4">
-        <input type="hidden" name="collection" value={collection} />
-        <input type="hidden" name="redirectTo" value="/admin/staff?saved=new" />
-        <div class="grid gap-3 md:grid-cols-2">
-          <label class="block text-sm font-medium">
-            URL Slug
-            <input
-              type="text"
-              name="slug"
-              placeholder="jane-doe"
-              required
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="block text-sm font-medium">
-            Internal Title (optional)
-            <input
-              type="text"
-              name="title"
-              placeholder="Jane Doe"
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="block text-sm font-medium">
-            Publish Status
-            <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-              <option value="published">Published</option>
-              <option value="draft">Draft</option>
-            </select>
-          </label>
-          <label class="block text-sm font-medium">
-            Display Order
-            <input
-              type="number"
-              name="data.order"
-              min="1"
-              step="1"
-              value="99"
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="block text-sm font-medium">
-            Full Name
-            <input
-              type="text"
-              name="data.name"
-              placeholder="Jane Doe"
-              required
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="block text-sm font-medium">
-            Role / Title
-            <input
-              type="text"
-              name="data.role"
-              placeholder="Lead Teacher"
-              required
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="block text-sm font-medium">
-            Email (optional)
-            <input
-              type="email"
-              name="data.email"
-              placeholder="jane@spicebushmontessori.org"
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="block text-sm font-medium">
-            Photo URL (optional)
-            <input
-              type="text"
-              name="data.photo"
-              placeholder="/images/teachers/jane-doe.jpg"
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="block text-sm font-medium">
-            Certification Badge (optional)
-            <input
-              type="text"
-              name="data.certificationBadge"
-              placeholder="AMI"
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="block text-sm font-medium">
-            Start Year (optional)
-            <input
-              type="number"
-              name="data.startYear"
-              min="1900"
-              max="2100"
-              step="1"
-              placeholder="2024"
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="block text-sm font-medium md:col-span-2">
-            Credentials (comma-separated)
-            <input
-              type="text"
-              name="data.credentials_csv"
-              placeholder="AMI, M.Ed., CPR"
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="block text-sm font-medium md:col-span-2">
-            Languages (comma-separated)
-            <input
-              type="text"
-              name="data.languages_csv"
-              placeholder="English, Spanish"
-              value="English"
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="block text-sm font-medium md:col-span-2">
-            Bio (optional)
-            <textarea
-              name="data.body"
-              rows="4"
-              placeholder="Short bio shown on staff sections."
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            ></textarea>
-          </label>
+      <div class="grid gap-3 md:grid-cols-3">
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Staff Profiles</p>
+          <p class="text-2xl font-semibold text-earth-brown">{editableEntries.length}</p>
         </div>
-        <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
-          Add Staff Member
-        </button>
-      </form>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Quick Tip</p>
+          <p class="text-sm text-earth-brown/80">Display order controls who appears first.</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Photo Tip</p>
+          <p class="text-sm text-earth-brown/80">Use a full image URL or a site-relative path.</p>
+        </div>
+      </div>
     </section>
 
-    {editableEntries.map(({ entry, data, status, title, name, role, email, photo, badge, credentials, languages, startYear, order, bio }) => (
-      <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 class="mb-1 text-lg font-semibold">Edit: {entry.slug}</h3>
-        <p class="mb-4 text-sm text-earth-brown/80">
-          Update fields and save. This keeps existing DB structure and preserves any hidden metadata.
-        </p>
-        <form method="post" action="/api/admin/content" class="space-y-4">
-          <input type="hidden" name="collection" value={collection} />
-          <input type="hidden" name="redirectTo" value={`/admin/staff?saved=${encodeURIComponent(entry.slug)}`} />
-          <input type="hidden" name="baseDataJson" value={JSON.stringify(data ?? {})} />
+    <section class="space-y-4">
+      <details class="rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary class="cursor-pointer px-5 py-4 text-base font-semibold text-earth-brown">Add Staff Member</summary>
+        <div class="space-y-4 border-t border-gray-200 p-5">
+          <p class="text-sm text-earth-brown/80">Start with name, role, and contact info. Open Advanced Options for everything else.</p>
+          <form method="post" action="/api/admin/content" class="space-y-4">
+            <input type="hidden" name="collection" value={collection} />
+            <input type="hidden" name="redirectTo" value="/admin/staff?saved=new" />
 
-          <div class="grid gap-3 md:grid-cols-2">
-            <label class="block text-sm font-medium">
-              URL Slug
-              <input
-                type="text"
-                name="slug"
-                value={entry.slug}
-                required
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="block text-sm font-medium">
-              Internal Title (optional)
-              <input
-                type="text"
-                name="title"
-                value={title}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="block text-sm font-medium">
-              Publish Status
-              <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                <option value="published" selected={status !== 'draft'}>Published</option>
-                <option value="draft" selected={status === 'draft'}>Draft</option>
-              </select>
-            </label>
-            <label class="block text-sm font-medium">
-              Display Order
-              <input
-                type="number"
-                name="data.order"
-                min="1"
-                step="1"
-                value={String(order)}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="block text-sm font-medium">
-              Full Name
-              <input
-                type="text"
-                name="data.name"
-                value={name}
-                required
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="block text-sm font-medium">
-              Role / Title
-              <input
-                type="text"
-                name="data.role"
-                value={role}
-                required
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="block text-sm font-medium">
-              Email (optional)
-              <input
-                type="email"
-                name="data.email"
-                value={email}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="block text-sm font-medium">
-              Photo URL (optional)
-              <input
-                type="text"
-                name="data.photo"
-                value={photo}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="block text-sm font-medium">
-              Certification Badge (optional)
-              <input
-                type="text"
-                name="data.certificationBadge"
-                value={badge}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="block text-sm font-medium">
-              Start Year (optional)
-              <input
-                type="number"
-                name="data.startYear"
-                min="1900"
-                max="2100"
-                step="1"
-                value={startYear}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="block text-sm font-medium md:col-span-2">
-              Credentials (comma-separated)
-              <input
-                type="text"
-                name="data.credentials_csv"
-                value={credentials}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="block text-sm font-medium md:col-span-2">
-              Languages (comma-separated)
-              <input
-                type="text"
-                name="data.languages_csv"
-                value={languages}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="block text-sm font-medium md:col-span-2">
-              Bio (optional)
-              <textarea
-                name="data.body"
-                rows="4"
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              >{bio}</textarea>
-            </label>
-          </div>
+            <div class="grid gap-3 md:grid-cols-2">
+              <label class="block text-sm font-medium">
+                Full Name
+                <input
+                  type="text"
+                  name="data.name"
+                  placeholder="Jane Doe"
+                  required
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <label class="block text-sm font-medium">
+                Role / Title
+                <input
+                  type="text"
+                  name="data.role"
+                  placeholder="Lead Teacher"
+                  required
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <label class="block text-sm font-medium">
+                Email (optional)
+                <input
+                  type="email"
+                  name="data.email"
+                  placeholder="jane@spicebushmontessori.org"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <label class="block text-sm font-medium">
+                Photo URL (optional)
+                <input
+                  type="text"
+                  name="data.photo"
+                  placeholder="/images/teachers/jane-doe.jpg"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+            </div>
 
-          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
-            Save Staff Member
-          </button>
-        </form>
-      </section>
-    ))}
+            <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+              <summary class="cursor-pointer text-sm font-semibold text-earth-brown">Advanced Options</summary>
+              <div class="mt-3 grid gap-3 md:grid-cols-2">
+                <label class="block text-sm font-medium">
+                  URL Slug
+                  <input
+                    type="text"
+                    name="slug"
+                    placeholder="jane-doe"
+                    required
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+                <label class="block text-sm font-medium">
+                  Internal Title (optional)
+                  <input
+                    type="text"
+                    name="title"
+                    placeholder="Jane Doe"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+                <label class="block text-sm font-medium">
+                  Publish Status
+                  <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                  </select>
+                </label>
+                <label class="block text-sm font-medium">
+                  Display Order
+                  <input
+                    type="number"
+                    name="data.order"
+                    min="1"
+                    step="1"
+                    value="99"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+                <label class="block text-sm font-medium">
+                  Certification Badge (optional)
+                  <input
+                    type="text"
+                    name="data.certificationBadge"
+                    placeholder="AMI"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+                <label class="block text-sm font-medium">
+                  Start Year (optional)
+                  <input
+                    type="number"
+                    name="data.startYear"
+                    min="1900"
+                    max="2100"
+                    step="1"
+                    placeholder="2024"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+                <label class="block text-sm font-medium md:col-span-2">
+                  Credentials (comma-separated)
+                  <input
+                    type="text"
+                    name="data.credentials_csv"
+                    placeholder="AMI, M.Ed., CPR"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+                <label class="block text-sm font-medium md:col-span-2">
+                  Languages (comma-separated)
+                  <input
+                    type="text"
+                    name="data.languages_csv"
+                    placeholder="English, Spanish"
+                    value="English"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+                <label class="block text-sm font-medium md:col-span-2">
+                  Bio (optional)
+                  <textarea
+                    name="data.body"
+                    rows="4"
+                    placeholder="Short bio shown on staff sections."
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  ></textarea>
+                </label>
+              </div>
+            </details>
+
+            <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
+              Add Staff Member
+            </button>
+          </form>
+        </div>
+      </details>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <h2 class="mb-2 text-lg font-semibold">Existing Staff</h2>
+      <p class="mb-4 text-sm text-earth-brown/80">Open any card to edit. Save to apply changes.</p>
+
+      {editableEntries.length === 0 ? (
+        <p class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-earth-brown/80">No staff entries found yet.</p>
+      ) : (
+        <div class="space-y-3">
+          {editableEntries.map(({ entry, data, status, title, name, role, email, photo, badge, credentials, languages, startYear, order, bio }) => (
+            <details class="rounded-lg border border-gray-200 bg-gray-50">
+              <summary class="cursor-pointer px-4 py-3">
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p class="font-semibold text-earth-brown">{name}</p>
+                    <p class="text-xs text-earth-brown/70">{role || 'Role not set'}{email ? ` | ${email}` : ''}</p>
+                  </div>
+                  <div class="flex flex-wrap gap-2 text-xs">
+                    <span class="rounded-full border border-gray-200 bg-white px-2 py-1 text-earth-brown">order: {order}</span>
+                    <span class="rounded-full border border-gray-200 bg-white px-2 py-1 text-earth-brown">{status === 'draft' ? 'draft' : 'published'}</span>
+                  </div>
+                </div>
+              </summary>
+
+              <div class="border-t border-gray-200 bg-white p-4">
+                <form method="post" action="/api/admin/content" class="space-y-4">
+                  <input type="hidden" name="collection" value={collection} />
+                  <input type="hidden" name="redirectTo" value={`/admin/staff?saved=${encodeURIComponent(entry.slug)}`} />
+                  <input type="hidden" name="baseDataJson" value={JSON.stringify(data ?? {})} />
+
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <label class="block text-sm font-medium">
+                      Full Name
+                      <input
+                        type="text"
+                        name="data.name"
+                        value={name}
+                        required
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium">
+                      Role / Title
+                      <input
+                        type="text"
+                        name="data.role"
+                        value={role}
+                        required
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium">
+                      Email (optional)
+                      <input
+                        type="email"
+                        name="data.email"
+                        value={email}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium">
+                      Photo URL (optional)
+                      <input
+                        type="text"
+                        name="data.photo"
+                        value={photo}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                  </div>
+
+                  <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                    <summary class="cursor-pointer text-sm font-semibold text-earth-brown">Advanced Options</summary>
+                    <div class="mt-3 grid gap-3 md:grid-cols-2">
+                      <label class="block text-sm font-medium">
+                        URL Slug
+                        <input
+                          type="text"
+                          name="slug"
+                          value={entry.slug}
+                          required
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+                      <label class="block text-sm font-medium">
+                        Internal Title (optional)
+                        <input
+                          type="text"
+                          name="title"
+                          value={title}
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+                      <label class="block text-sm font-medium">
+                        Publish Status
+                        <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                          <option value="published" selected={status !== 'draft'}>Published</option>
+                          <option value="draft" selected={status === 'draft'}>Draft</option>
+                        </select>
+                      </label>
+                      <label class="block text-sm font-medium">
+                        Display Order
+                        <input
+                          type="number"
+                          name="data.order"
+                          min="1"
+                          step="1"
+                          value={String(order)}
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+                      <label class="block text-sm font-medium">
+                        Certification Badge (optional)
+                        <input
+                          type="text"
+                          name="data.certificationBadge"
+                          value={badge}
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+                      <label class="block text-sm font-medium">
+                        Start Year (optional)
+                        <input
+                          type="number"
+                          name="data.startYear"
+                          min="1900"
+                          max="2100"
+                          step="1"
+                          value={startYear}
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+                      <label class="block text-sm font-medium md:col-span-2">
+                        Credentials (comma-separated)
+                        <input
+                          type="text"
+                          name="data.credentials_csv"
+                          value={credentials}
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+                      <label class="block text-sm font-medium md:col-span-2">
+                        Languages (comma-separated)
+                        <input
+                          type="text"
+                          name="data.languages_csv"
+                          value={languages}
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+                      <label class="block text-sm font-medium md:col-span-2">
+                        Bio (optional)
+                        <textarea
+                          name="data.body"
+                          rows="4"
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        >{bio}</textarea>
+                      </label>
+                    </div>
+                  </details>
+
+                  <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
+                    Save Staff Member
+                  </button>
+                </form>
+              </div>
+            </details>
+          ))}
+        </div>
+      )}
+    </section>
   </div>
 </AdminLayout>
