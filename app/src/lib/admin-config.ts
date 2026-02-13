@@ -29,8 +29,8 @@ const defaultConfig: AdminConfig = {
     'director@spicebushmontessori.org',
     'evey@eveywinters.com'
   ],
-  // Keep empty by default. Broad domain-based admin access must be explicitly enabled via ADMIN_DOMAINS.
-  adminDomains: []
+  // Allow any school-domain account by default.
+  adminDomains: ['spicebushmontessori.org']
 };
 
 // Get admin configuration from environment or use defaults
