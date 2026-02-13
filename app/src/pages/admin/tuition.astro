@@ -4,11 +4,56 @@ import { db, type ContentEntry } from '@lib/db';
 
 type TuitionEntry = ContentEntry<Record<string, unknown>>;
 
+type RateModel = {
+  entry: TuitionEntry;
+  data: Record<string, unknown>;
+  slug: string;
+  title: string;
+  status: string;
+  active: boolean;
+  programId: string;
+  rateLabel: string;
+  tuitionPrice: string;
+  schoolYear: string;
+  displayOrder: number;
+  extendedCareAvailable: boolean;
+  extendedCarePrice: string;
+  isConstantRate: boolean;
+  incomeThresholdType: string;
+  threshold2: string;
+  threshold3: string;
+  threshold4: string;
+  threshold5: string;
+  threshold6: string;
+  threshold7: string;
+  threshold8Plus: string;
+};
+
+type ProgramModel = {
+  entry: TuitionEntry;
+  data: Record<string, unknown>;
+  slug: string;
+  title: string;
+  status: string;
+  active: boolean;
+  displayOrder: number;
+  name: string;
+  programId: string;
+  programType: string;
+  daysPerWeek: string;
+  dailyHours: string;
+  description: string;
+  rates: RateModel[];
+};
+
 const collection = 'tuition';
 const entries = (await db.content.getCollection(collection)) as TuitionEntry[];
 
 const savedSlug = Astro.url.searchParams.get('saved');
 const errorMessage = Astro.url.searchParams.get('error');
+
+const RATE_LEVELS = ['A', 'B', 'C', 'D', 'E', 'F'];
+const rateLevelOrder = new Map(RATE_LEVELS.map((level, index) => [level, index + 1]));
 
 const asRecord = (value: unknown): Record<string, unknown> => {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -54,83 +99,136 @@ const entryTypeFrom = (data: Record<string, unknown>): 'program' | 'rate' => {
   return type === 'rate' ? 'rate' : 'program';
 };
 
-const sortedEntries = [...entries].sort((a, b) => {
-  const aData = asRecord(a.data);
-  const bData = asRecord(b.data);
-  const aType = entryTypeFrom(aData);
-  const bType = entryTypeFrom(bData);
-  if (aType !== bType) return aType.localeCompare(bType);
-  const aOrder = numberFrom(aData.display_order, 999);
-  const bOrder = numberFrom(bData.display_order, 999);
-  if (aOrder !== bOrder) return aOrder - bOrder;
-  return a.slug.localeCompare(b.slug);
-});
+const normalizeLevel = (label: string): string => {
+  const trimmed = label.trim();
+  if (!trimmed) return '';
 
-const programOptions = sortedEntries
+  const upper = trimmed.toUpperCase();
+  if (rateLevelOrder.has(upper)) return upper;
+
+  const simpleMatch = upper.match(/\b([A-F])\b/);
+  if (simpleMatch && rateLevelOrder.has(simpleMatch[1])) {
+    return simpleMatch[1];
+  }
+
+  return upper;
+};
+
+const levelOptionsFor = (current: string): string[] => {
+  const normalized = normalizeLevel(current);
+  if (!normalized) return RATE_LEVELS;
+  if (RATE_LEVELS.includes(normalized)) return RATE_LEVELS;
+  return [...RATE_LEVELS, current.trim()];
+};
+
+const nextLevelForRates = (rates: RateModel[]): string => {
+  const used = new Set(rates.map((rate) => normalizeLevel(rate.rateLabel)));
+  for (const level of RATE_LEVELS) {
+    if (!used.has(level)) {
+      return level;
+    }
+  }
+  return RATE_LEVELS[Math.min(rates.length, RATE_LEVELS.length - 1)];
+};
+
+const allPrograms = entries
   .filter((entry) => entryTypeFrom(asRecord(entry.data)) === 'program')
   .map((entry) => {
     const data = asRecord(entry.data);
+    const slug = entry.slug;
+    const name = stringFrom(data.name, slug);
+    const programId = stringFrom(data.program_id, slug);
+
     return {
-      id: stringFrom(data.program_id, entry.slug),
-      label: stringFrom(data.name, entry.slug)
-    };
+      entry,
+      data,
+      slug,
+      title: stringFrom(data.title, slug),
+      status: stringFrom(data.status, 'published'),
+      active: data.active === undefined ? true : boolFrom(data.active),
+      displayOrder: numberFrom(data.display_order, 999),
+      name,
+      programId,
+      programType: stringFrom(data.program_type, 'Full Day'),
+      daysPerWeek: numberInputValue(data.days_per_week, '5'),
+      dailyHours: numberInputValue(data.daily_hours, '6.5'),
+      description: stringFrom(data.description, ''),
+      rates: [] as RateModel[]
+    } satisfies ProgramModel;
+  })
+  .sort((a, b) => a.displayOrder - b.displayOrder || a.name.localeCompare(b.name));
+
+const programById = new Map(allPrograms.map((program) => [program.programId, program]));
+
+const allRates = entries
+  .filter((entry) => entryTypeFrom(asRecord(entry.data)) === 'rate')
+  .map((entry) => {
+    const data = asRecord(entry.data);
+    const rateLabel = stringFrom(data.rate_label, entry.slug.replace(/-/g, ' '));
+    const normalizedLevel = normalizeLevel(rateLabel);
+    const levelOrder = rateLevelOrder.get(normalizedLevel) ?? 999;
+
+    return {
+      entry,
+      data,
+      slug: entry.slug,
+      title: stringFrom(data.title, entry.slug),
+      status: stringFrom(data.status, 'published'),
+      active: data.active === undefined ? true : boolFrom(data.active),
+      programId: stringFrom(data.program_id, ''),
+      rateLabel,
+      tuitionPrice: numberInputValue(data.tuition_price, ''),
+      schoolYear: stringFrom(data.school_year, '2025-2026'),
+      displayOrder: numberFrom(data.display_order, levelOrder),
+      extendedCareAvailable: data.extended_care_available === undefined ? true : boolFrom(data.extended_care_available),
+      extendedCarePrice: numberInputValue(data.extended_care_price, ''),
+      isConstantRate: boolFrom(data.is_constant_rate),
+      incomeThresholdType: stringFrom(data.income_threshold_type, 'Greater Than or Equal To'),
+      threshold2: numberInputValue(data.income_threshold_family_2),
+      threshold3: numberInputValue(data.income_threshold_family_3),
+      threshold4: numberInputValue(data.income_threshold_family_4),
+      threshold5: numberInputValue(data.income_threshold_family_5),
+      threshold6: numberInputValue(data.income_threshold_family_6),
+      threshold7: numberInputValue(data.income_threshold_family_7),
+      threshold8Plus: numberInputValue(data.income_threshold_family_8_plus)
+    } satisfies RateModel;
   });
 
-const getProgramChoices = (selectedProgramId: string) => {
-  const choices = [...programOptions];
-  if (
-    selectedProgramId
-    && !choices.some((choice) => choice.id === selectedProgramId)
-  ) {
-    choices.push({
-      id: selectedProgramId,
-      label: `Unknown (${selectedProgramId})`
-    });
+const unlinkedRates: RateModel[] = [];
+
+for (const rate of allRates) {
+  const program = programById.get(rate.programId);
+  if (program) {
+    program.rates.push(rate);
+  } else {
+    unlinkedRates.push(rate);
   }
-  return choices;
-};
+}
 
-const editableEntries = sortedEntries.map((entry) => {
-  const data = asRecord(entry.data);
-  const entryType = entryTypeFrom(data);
-  const isRate = entryType === 'rate';
-  const slugFallbackTitle = entry.slug.replace(/-/g, ' ');
-  const programId = stringFrom(data.program_id, entryType === 'program' ? entry.slug : '');
+for (const program of allPrograms) {
+  program.rates.sort((a, b) => {
+    const aLevel = rateLevelOrder.get(normalizeLevel(a.rateLabel)) ?? 999;
+    const bLevel = rateLevelOrder.get(normalizeLevel(b.rateLabel)) ?? 999;
+    if (aLevel !== bLevel) return aLevel - bLevel;
+    if (a.displayOrder !== b.displayOrder) return a.displayOrder - b.displayOrder;
+    return a.rateLabel.localeCompare(b.rateLabel);
+  });
+}
 
-  return {
-    entry,
-    data,
-    entryType,
-    isRate,
-    title: stringFrom(data.title, entry.slug),
-    status: stringFrom(data.status, 'published'),
-    active: data.active === undefined ? true : boolFrom(data.active),
-    displayOrder: numberFrom(data.display_order, 0),
-    name: stringFrom(data.name, entry.slug),
-    programId,
-    programType: stringFrom(data.program_type, 'Full Day'),
-    daysPerWeek: numberInputValue(data.days_per_week, '5'),
-    dailyHours: numberInputValue(data.daily_hours, '6.5'),
-    description: stringFrom(data.description, ''),
-    rateLabel: stringFrom(data.rate_label, slugFallbackTitle),
-    tuitionPrice: numberInputValue(data.tuition_price, ''),
-    extendedCareAvailable: data.extended_care_available === undefined ? true : boolFrom(data.extended_care_available),
-    extendedCarePrice: numberInputValue(data.extended_care_price, ''),
-    isConstantRate: boolFrom(data.is_constant_rate),
-    incomeThresholdType: stringFrom(data.income_threshold_type, 'Greater Than or Equal To'),
-    schoolYear: stringFrom(data.school_year, '2025-2026'),
-    threshold2: numberInputValue(data.income_threshold_family_2),
-    threshold3: numberInputValue(data.income_threshold_family_3),
-    threshold4: numberInputValue(data.income_threshold_family_4),
-    threshold5: numberInputValue(data.income_threshold_family_5),
-    threshold6: numberInputValue(data.income_threshold_family_6),
-    threshold7: numberInputValue(data.income_threshold_family_7),
-    threshold8Plus: numberInputValue(data.income_threshold_family_8_plus)
-  };
+unlinkedRates.sort((a, b) => {
+  if (a.programId !== b.programId) return a.programId.localeCompare(b.programId);
+  const aLevel = rateLevelOrder.get(normalizeLevel(a.rateLabel)) ?? 999;
+  const bLevel = rateLevelOrder.get(normalizeLevel(b.rateLabel)) ?? 999;
+  if (aLevel !== bLevel) return aLevel - bLevel;
+  return a.rateLabel.localeCompare(b.rateLabel);
 });
 
-const programsCount = editableEntries.filter((entry) => !entry.isRate).length;
-const ratesCount = editableEntries.filter((entry) => entry.isRate).length;
+const programOptions = allPrograms.map((program) => ({
+  id: program.programId,
+  label: program.name
+}));
+
+const totalRates = allPrograms.reduce((count, program) => count + program.rates.length, 0) + unlinkedRates.length;
 ---
 
 <AdminLayout title="Manage Tuition">
@@ -148,33 +246,31 @@ const ratesCount = editableEntries.filter((entry) => entry.isRate).length;
 
   <div class="space-y-6">
     <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 class="mb-2 text-lg font-semibold">Tuition & Program Manager</h2>
+      <h2 class="mb-2 text-lg font-semibold">Program-Centric Tuition Manager</h2>
       <p class="mb-4 text-sm text-earth-brown/80">
-        Start with quick fields first, then open Advanced Options only when needed. This keeps updates simpler for day-to-day edits.
+        Each program contains its own tuition levels (A/B/C/D and beyond). Edit levels directly inside the program card.
       </p>
       <div class="grid gap-3 md:grid-cols-3">
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
           <p class="text-xs uppercase tracking-wide text-earth-brown/70">Programs</p>
-          <p class="text-2xl font-semibold text-earth-brown">{programsCount}</p>
+          <p class="text-2xl font-semibold text-earth-brown">{allPrograms.length}</p>
         </div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Rates</p>
-          <p class="text-2xl font-semibold text-earth-brown">{ratesCount}</p>
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Total Rates</p>
+          <p class="text-2xl font-semibold text-earth-brown">{totalRates}</p>
         </div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Tip</p>
-          <p class="text-sm text-earth-brown/80">Use display order to control list order on the public calculator.</p>
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Level Tip</p>
+          <p class="text-sm text-earth-brown/80">Use A, B, C, D labels to keep tiers clear for families and staff.</p>
         </div>
       </div>
     </section>
 
-    <section class="space-y-4">
+    <section>
       <details class="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <summary class="cursor-pointer px-5 py-4 text-base font-semibold text-earth-brown">Add Program</summary>
+        <summary class="cursor-pointer px-5 py-4 text-base font-semibold text-earth-brown">Add New Program</summary>
         <div class="space-y-4 border-t border-gray-200 p-5">
-          <p class="text-sm text-earth-brown/80">
-            Programs describe schedule options families choose (for example Full Day, 5 days).
-          </p>
+          <p class="text-sm text-earth-brown/80">Create the program first, then add its tuition levels below.</p>
           <form method="post" action="/api/admin/content" class="space-y-4">
             <input type="hidden" name="collection" value={collection} />
             <input type="hidden" name="redirectTo" value="/admin/tuition?saved=new-program" />
@@ -248,7 +344,7 @@ const ratesCount = editableEntries.filter((entry) => entry.isRate).length;
               <summary class="cursor-pointer text-sm font-semibold text-earth-brown">Advanced Options</summary>
               <div class="mt-3 grid gap-3 md:grid-cols-2">
                 <label class="block text-sm font-medium">
-                  Program ID (used by rates)
+                  Program ID (used for linking rates)
                   <input
                     type="text"
                     name="data.program_id"
@@ -301,410 +397,135 @@ const ratesCount = editableEntries.filter((entry) => entry.isRate).length;
           </form>
         </div>
       </details>
-
-      <details class="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <summary class="cursor-pointer px-5 py-4 text-base font-semibold text-earth-brown">Add Tuition Rate</summary>
-        <div class="space-y-4 border-t border-gray-200 p-5">
-          <p class="text-sm text-earth-brown/80">
-            Rates connect to a program and control tuition tiers for the calculator.
-          </p>
-          <form method="post" action="/api/admin/content" class="space-y-4">
-            <input type="hidden" name="collection" value={collection} />
-            <input type="hidden" name="redirectTo" value="/admin/tuition?saved=new-rate" />
-            <input type="hidden" name="data.type" value="rate" />
-
-            <div class="grid gap-3 md:grid-cols-2">
-              <label class="block text-sm font-medium">
-                Rate Label
-                <input
-                  type="text"
-                  name="data.rate_label"
-                  placeholder="Tier 1"
-                  required
-                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                />
-              </label>
-              <label class="block text-sm font-medium">
-                URL Slug
-                <input
-                  type="text"
-                  name="slug"
-                  placeholder="full-day-5-days-tier-1"
-                  required
-                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                />
-              </label>
-              {programOptions.length > 0 ? (
-                <label class="block text-sm font-medium">
-                  Linked Program
-                  <select name="data.program_id" required class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                    <option value="">Select Program</option>
-                    {programOptions.map((program) => (
-                      <option value={program.id}>{program.label} ({program.id})</option>
-                    ))}
-                  </select>
-                </label>
-              ) : (
-                <label class="block text-sm font-medium">
-                  Linked Program ID
-                  <input
-                    type="text"
-                    name="data.program_id"
-                    placeholder="full-day-5-days"
-                    required
-                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                  />
-                </label>
-              )}
-              <label class="block text-sm font-medium">
-                Tuition Price (annual)
-                <input
-                  type="number"
-                  name="data.tuition_price"
-                  min="0"
-                  step="1"
-                  required
-                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                />
-              </label>
-              <label class="block text-sm font-medium">
-                School Year
-                <input
-                  type="text"
-                  name="data.school_year"
-                  value="2025-2026"
-                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                />
-              </label>
-              <label class="block text-sm font-medium">
-                Active in Calculator
-                <select name="data.active" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                  <option value="true">Yes</option>
-                  <option value="false">No</option>
-                </select>
-              </label>
-            </div>
-
-            <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-              <summary class="cursor-pointer text-sm font-semibold text-earth-brown">Advanced Options</summary>
-              <div class="mt-3 space-y-3">
-                <div class="grid gap-3 md:grid-cols-2">
-                  <label class="block text-sm font-medium">
-                    Extended Care Available
-                    <select name="data.extended_care_available" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                      <option value="true">Yes</option>
-                      <option value="false">No</option>
-                    </select>
-                  </label>
-                  <label class="block text-sm font-medium">
-                    Extended Care Price (annual, optional)
-                    <input
-                      type="number"
-                      name="data.extended_care_price"
-                      min="0"
-                      step="1"
-                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                    />
-                  </label>
-                  <label class="block text-sm font-medium">
-                    Constant Rate (ignore income thresholds)
-                    <select name="data.is_constant_rate" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                      <option value="false">No</option>
-                      <option value="true">Yes</option>
-                    </select>
-                  </label>
-                  <label class="block text-sm font-medium">
-                    Threshold Type
-                    <select name="data.income_threshold_type" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                      <option value="Greater Than or Equal To">Greater Than or Equal To</option>
-                      <option value="Less Than">Less Than</option>
-                    </select>
-                  </label>
-                  <label class="block text-sm font-medium">
-                    Display Order
-                    <input
-                      type="number"
-                      name="data.display_order"
-                      min="0"
-                      step="1"
-                      value="0"
-                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                    />
-                  </label>
-                  <label class="block text-sm font-medium">
-                    Publish Status
-                    <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                      <option value="published">Published</option>
-                      <option value="draft">Draft</option>
-                    </select>
-                  </label>
-                  <label class="block text-sm font-medium md:col-span-2">
-                    Internal Title (optional)
-                    <input
-                      type="text"
-                      name="title"
-                      placeholder="Full Day Tier 1"
-                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                    />
-                  </label>
-                </div>
-
-                <div class="space-y-2">
-                  <h3 class="text-sm font-semibold uppercase tracking-wide text-earth-brown/80">Income Thresholds (optional)</h3>
-                  <p class="text-xs text-earth-brown/70">Leave blank for tiers that do not apply.</p>
-                  <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                    <label class="block text-sm font-medium">
-                      Family 2
-                      <input type="number" name="data.income_threshold_family_2" min="0" step="1" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
-                    </label>
-                    <label class="block text-sm font-medium">
-                      Family 3
-                      <input type="number" name="data.income_threshold_family_3" min="0" step="1" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
-                    </label>
-                    <label class="block text-sm font-medium">
-                      Family 4
-                      <input type="number" name="data.income_threshold_family_4" min="0" step="1" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
-                    </label>
-                    <label class="block text-sm font-medium">
-                      Family 5
-                      <input type="number" name="data.income_threshold_family_5" min="0" step="1" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
-                    </label>
-                    <label class="block text-sm font-medium">
-                      Family 6
-                      <input type="number" name="data.income_threshold_family_6" min="0" step="1" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
-                    </label>
-                    <label class="block text-sm font-medium">
-                      Family 7
-                      <input type="number" name="data.income_threshold_family_7" min="0" step="1" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
-                    </label>
-                    <label class="block text-sm font-medium">
-                      Family 8+
-                      <input type="number" name="data.income_threshold_family_8_plus" min="0" step="1" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </details>
-
-            <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
-              Add Tuition Rate
-            </button>
-          </form>
-        </div>
-      </details>
     </section>
 
     <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 class="mb-2 text-lg font-semibold">Existing Entries</h2>
-      <p class="mb-4 text-sm text-earth-brown/80">Open any entry card to edit. Save to apply changes.</p>
+      <h2 class="mb-2 text-lg font-semibold">Programs & Tuition Levels</h2>
+      <p class="mb-4 text-sm text-earth-brown/80">Open a program card to manage all of its levels in one place.</p>
 
-      {editableEntries.length === 0 ? (
-        <p class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-earth-brown/80">No tuition entries found yet.</p>
+      {allPrograms.length === 0 ? (
+        <p class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-earth-brown/80">No programs found yet. Add a program to get started.</p>
       ) : (
-        <div class="space-y-3">
-          {editableEntries.map((model) => {
-            const {
-              entry,
-              data,
-              entryType,
-              isRate,
-              title,
-              status,
-              active,
-              displayOrder,
-              name,
-              programId,
-              programType,
-              daysPerWeek,
-              dailyHours,
-              description,
-              rateLabel,
-              tuitionPrice,
-              extendedCareAvailable,
-              extendedCarePrice,
-              isConstantRate,
-              incomeThresholdType,
-              schoolYear,
-              threshold2,
-              threshold3,
-              threshold4,
-              threshold5,
-              threshold6,
-              threshold7,
-              threshold8Plus
-            } = model;
-            const programChoices = getProgramChoices(programId);
-            const heading = isRate ? rateLabel : name;
+        <div class="space-y-4">
+          {allPrograms.map((program) => {
+            const nextLevel = nextLevelForRates(program.rates);
+            const nextLevelOrder = rateLevelOrder.get(nextLevel) ?? 1;
+            const defaultYear = program.rates[0]?.schoolYear || '2025-2026';
 
             return (
               <details class="rounded-lg border border-gray-200 bg-gray-50">
                 <summary class="cursor-pointer px-4 py-3">
                   <div class="flex flex-wrap items-start justify-between gap-2">
                     <div>
-                      <p class="font-semibold text-earth-brown">{heading}</p>
-                      <p class="text-xs text-earth-brown/70">Slug: {entry.slug}</p>
+                      <p class="font-semibold text-earth-brown">{program.name}</p>
+                      <p class="text-xs text-earth-brown/70">
+                        {program.programType} | {program.daysPerWeek} days | {program.dailyHours} hours/day
+                      </p>
                     </div>
                     <div class="flex flex-wrap gap-2 text-xs">
-                      <span class="rounded-full bg-white px-2 py-1 text-earth-brown border border-gray-200">{entryType}</span>
-                      <span class="rounded-full bg-white px-2 py-1 text-earth-brown border border-gray-200">{active ? 'active' : 'inactive'}</span>
-                      <span class="rounded-full bg-white px-2 py-1 text-earth-brown border border-gray-200">{status === 'draft' ? 'draft' : 'published'}</span>
+                      <span class="rounded-full border border-gray-200 bg-white px-2 py-1 text-earth-brown">
+                        {program.rates.length} level{program.rates.length === 1 ? '' : 's'}
+                      </span>
+                      <span class="rounded-full border border-gray-200 bg-white px-2 py-1 text-earth-brown">
+                        {program.active ? 'active' : 'inactive'}
+                      </span>
+                      <span class="rounded-full border border-gray-200 bg-white px-2 py-1 text-earth-brown">
+                        {program.status === 'draft' ? 'draft' : 'published'}
+                      </span>
                     </div>
                   </div>
                 </summary>
 
-                <div class="border-t border-gray-200 bg-white p-4">
-                  <form method="post" action="/api/admin/content" class="space-y-4">
-                    <input type="hidden" name="collection" value={collection} />
-                    <input type="hidden" name="redirectTo" value={`/admin/tuition?saved=${encodeURIComponent(entry.slug)}`} />
-                    <input type="hidden" name="baseDataJson" value={JSON.stringify(data ?? {})} />
-                    <input type="hidden" name="data.type" value={entryType} />
+                <div class="space-y-4 border-t border-gray-200 bg-white p-4">
+                  <section class="space-y-3">
+                    <h3 class="text-sm font-semibold uppercase tracking-wide text-earth-brown/80">Program Details</h3>
+                    <form method="post" action="/api/admin/content" class="space-y-4">
+                      <input type="hidden" name="collection" value={collection} />
+                      <input type="hidden" name="redirectTo" value={`/admin/tuition?saved=${encodeURIComponent(program.slug)}`} />
+                      <input type="hidden" name="baseDataJson" value={JSON.stringify(program.data ?? {})} />
+                      <input type="hidden" name="data.type" value="program" />
 
-                    <div class="grid gap-3 md:grid-cols-2">
-                      <label class="block text-sm font-medium">
-                        URL Slug
-                        <input
-                          type="text"
-                          name="slug"
-                          value={entry.slug}
-                          required
-                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                        />
-                      </label>
-                      <label class="block text-sm font-medium">
-                        Active in Calculator
-                        <select name="data.active" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                          <option value="true" selected={active}>Yes</option>
-                          <option value="false" selected={!active}>No</option>
-                        </select>
-                      </label>
+                      <div class="grid gap-3 md:grid-cols-2">
+                        <label class="block text-sm font-medium">
+                          Program Name
+                          <input
+                            type="text"
+                            name="data.name"
+                            value={program.name}
+                            required
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                          />
+                        </label>
+                        <label class="block text-sm font-medium">
+                          Program Type
+                          <select name="data.program_type" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                            <option value="Full Day" selected={program.programType === 'Full Day'}>Full Day</option>
+                            <option value="Half Day" selected={program.programType === 'Half Day'}>Half Day</option>
+                            <option value="Extended Care" selected={program.programType === 'Extended Care'}>Extended Care</option>
+                          </select>
+                        </label>
+                        <label class="block text-sm font-medium">
+                          Days Per Week
+                          <input
+                            type="number"
+                            name="data.days_per_week"
+                            min="1"
+                            max="7"
+                            step="1"
+                            value={program.daysPerWeek}
+                            required
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                          />
+                        </label>
+                        <label class="block text-sm font-medium">
+                          Daily Hours
+                          <input
+                            type="number"
+                            name="data.daily_hours"
+                            min="1"
+                            max="12"
+                            step="0.25"
+                            value={program.dailyHours}
+                            required
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                          />
+                        </label>
+                        <label class="block text-sm font-medium">
+                          Active in Calculator
+                          <select name="data.active" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                            <option value="true" selected={program.active}>Yes</option>
+                            <option value="false" selected={!program.active}>No</option>
+                          </select>
+                        </label>
+                      </div>
 
-                      {isRate ? (
-                        <>
+                      <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                        <summary class="cursor-pointer text-sm font-semibold text-earth-brown">Advanced Program Options</summary>
+                        <div class="mt-3 grid gap-3 md:grid-cols-2">
                           <label class="block text-sm font-medium">
-                            Rate Label
+                            URL Slug
                             <input
                               type="text"
-                              name="data.rate_label"
-                              value={rateLabel}
-                              required
-                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                            />
-                          </label>
-                          {programChoices.length > 0 ? (
-                            <label class="block text-sm font-medium">
-                              Linked Program
-                              <select name="data.program_id" required class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                                <option value="">Select Program</option>
-                                {programChoices.map((program) => (
-                                  <option value={program.id} selected={program.id === programId}>
-                                    {program.label} ({program.id})
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
-                          ) : (
-                            <label class="block text-sm font-medium">
-                              Linked Program ID
-                              <input
-                                type="text"
-                                name="data.program_id"
-                                value={programId}
-                                required
-                                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                              />
-                            </label>
-                          )}
-                          <label class="block text-sm font-medium">
-                            Tuition Price (annual)
-                            <input
-                              type="number"
-                              name="data.tuition_price"
-                              min="0"
-                              step="1"
-                              value={tuitionPrice}
+                              name="slug"
+                              value={program.slug}
                               required
                               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                             />
                           </label>
                           <label class="block text-sm font-medium">
-                            School Year
+                            Program ID
                             <input
                               type="text"
-                              name="data.school_year"
-                              value={schoolYear}
-                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                            />
-                          </label>
-                        </>
-                      ) : (
-                        <>
-                          <label class="block text-sm font-medium">
-                            Program Name
-                            <input
-                              type="text"
-                              name="data.name"
-                              value={name}
-                              required
-                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                            />
-                          </label>
-                          <label class="block text-sm font-medium">
-                            Program Type
-                            <select name="data.program_type" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                              <option value="Full Day" selected={programType === 'Full Day'}>Full Day</option>
-                              <option value="Half Day" selected={programType === 'Half Day'}>Half Day</option>
-                              <option value="Extended Care" selected={programType === 'Extended Care'}>Extended Care</option>
-                            </select>
-                          </label>
-                          <label class="block text-sm font-medium">
-                            Days Per Week
-                            <input
-                              type="number"
-                              name="data.days_per_week"
-                              min="1"
-                              max="7"
-                              step="1"
-                              value={daysPerWeek}
-                              required
-                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                            />
-                          </label>
-                          <label class="block text-sm font-medium">
-                            Daily Hours
-                            <input
-                              type="number"
-                              name="data.daily_hours"
-                              min="1"
-                              max="12"
-                              step="0.25"
-                              value={dailyHours}
-                              required
-                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                            />
-                          </label>
-                        </>
-                      )}
-                    </div>
-
-                    <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                      <summary class="cursor-pointer text-sm font-semibold text-earth-brown">Advanced Options</summary>
-
-                      <div class="mt-3 space-y-3">
-                        <div class="grid gap-3 md:grid-cols-2">
-                          <label class="block text-sm font-medium">
-                            Internal Title (optional)
-                            <input
-                              type="text"
-                              name="title"
-                              value={title}
+                              name="data.program_id"
+                              value={program.programId}
                               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                             />
                           </label>
                           <label class="block text-sm font-medium">
                             Publish Status
                             <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                              <option value="published" selected={status !== 'draft'}>Published</option>
-                              <option value="draft" selected={status === 'draft'}>Draft</option>
+                              <option value="published" selected={program.status !== 'draft'}>Published</option>
+                              <option value="draft" selected={program.status === 'draft'}>Draft</option>
                             </select>
                           </label>
                           <label class="block text-sm font-medium">
@@ -714,18 +535,326 @@ const ratesCount = editableEntries.filter((entry) => entry.isRate).length;
                               name="data.display_order"
                               min="0"
                               step="1"
-                              value={String(displayOrder)}
+                              value={String(program.displayOrder)}
                               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                             />
                           </label>
+                          <label class="block text-sm font-medium md:col-span-2">
+                            Internal Title (optional)
+                            <input
+                              type="text"
+                              name="title"
+                              value={program.title}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+                          <label class="block text-sm font-medium md:col-span-2">
+                            Program Description
+                            <textarea
+                              name="data.description"
+                              rows="3"
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            >{program.description}</textarea>
+                          </label>
+                        </div>
+                      </details>
 
-                          {isRate ? (
-                            <>
+                      <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+                        Save Program
+                      </button>
+                    </form>
+                  </section>
+
+                  <section class="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                    <h3 class="text-sm font-semibold uppercase tracking-wide text-earth-brown/80">Tuition Levels</h3>
+
+                    {program.rates.length === 0 ? (
+                      <p class="text-sm text-earth-brown/80">No levels yet. Add one below.</p>
+                    ) : (
+                      <div class="space-y-2">
+                        {program.rates.map((rate) => (
+                          <details class="rounded-lg border border-gray-200 bg-white">
+                            <summary class="cursor-pointer px-3 py-2">
+                              <div class="flex flex-wrap items-start justify-between gap-2">
+                                <div>
+                                  <p class="font-medium text-earth-brown">Level {rate.rateLabel}</p>
+                                  <p class="text-xs text-earth-brown/70">
+                                    {rate.tuitionPrice ? `$${rate.tuitionPrice}/year` : 'Tuition not set'}
+                                  </p>
+                                </div>
+                                <div class="flex flex-wrap gap-2 text-xs">
+                                  <span class="rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-earth-brown">
+                                    {rate.active ? 'active' : 'inactive'}
+                                  </span>
+                                  <span class="rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-earth-brown">
+                                    {rate.status === 'draft' ? 'draft' : 'published'}
+                                  </span>
+                                </div>
+                              </div>
+                            </summary>
+
+                            <div class="border-t border-gray-200 p-3">
+                              <form method="post" action="/api/admin/content" class="space-y-4">
+                                <input type="hidden" name="collection" value={collection} />
+                                <input type="hidden" name="redirectTo" value={`/admin/tuition?saved=${encodeURIComponent(rate.slug)}`} />
+                                <input type="hidden" name="baseDataJson" value={JSON.stringify(rate.data ?? {})} />
+                                <input type="hidden" name="data.type" value="rate" />
+                                <input type="hidden" name="data.program_id" value={program.programId} />
+
+                                <div class="grid gap-3 md:grid-cols-2">
+                                  <label class="block text-sm font-medium">
+                                    Tuition Level
+                                    <select name="data.rate_label" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                      {levelOptionsFor(rate.rateLabel).map((level) => (
+                                        <option value={level} selected={level === normalizeLevel(rate.rateLabel) || level === rate.rateLabel}>{level}</option>
+                                      ))}
+                                    </select>
+                                  </label>
+                                  <label class="block text-sm font-medium">
+                                    Tuition Price (annual)
+                                    <input
+                                      type="number"
+                                      name="data.tuition_price"
+                                      min="0"
+                                      step="1"
+                                      value={rate.tuitionPrice}
+                                      required
+                                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                                    />
+                                  </label>
+                                  <label class="block text-sm font-medium">
+                                    Active in Calculator
+                                    <select name="data.active" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                      <option value="true" selected={rate.active}>Yes</option>
+                                      <option value="false" selected={!rate.active}>No</option>
+                                    </select>
+                                  </label>
+                                  <label class="block text-sm font-medium">
+                                    School Year
+                                    <input
+                                      type="text"
+                                      name="data.school_year"
+                                      value={rate.schoolYear}
+                                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                                    />
+                                  </label>
+                                </div>
+
+                                <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                  <summary class="cursor-pointer text-sm font-semibold text-earth-brown">Advanced Level Options</summary>
+                                  <div class="mt-3 space-y-3">
+                                    <div class="grid gap-3 md:grid-cols-2">
+                                      <label class="block text-sm font-medium">
+                                        URL Slug
+                                        <input
+                                          type="text"
+                                          name="slug"
+                                          value={rate.slug}
+                                          required
+                                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                                        />
+                                      </label>
+                                      <label class="block text-sm font-medium">
+                                        Internal Title (optional)
+                                        <input
+                                          type="text"
+                                          name="title"
+                                          value={rate.title}
+                                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                                        />
+                                      </label>
+                                      <label class="block text-sm font-medium">
+                                        Publish Status
+                                        <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                          <option value="published" selected={rate.status !== 'draft'}>Published</option>
+                                          <option value="draft" selected={rate.status === 'draft'}>Draft</option>
+                                        </select>
+                                      </label>
+                                      <label class="block text-sm font-medium">
+                                        Display Order
+                                        <input
+                                          type="number"
+                                          name="data.display_order"
+                                          min="0"
+                                          step="1"
+                                          value={String(rate.displayOrder)}
+                                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                                        />
+                                      </label>
+                                      <label class="block text-sm font-medium">
+                                        Extended Care Available
+                                        <select name="data.extended_care_available" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                          <option value="true" selected={rate.extendedCareAvailable}>Yes</option>
+                                          <option value="false" selected={!rate.extendedCareAvailable}>No</option>
+                                        </select>
+                                      </label>
+                                      <label class="block text-sm font-medium">
+                                        Extended Care Price (annual, optional)
+                                        <input
+                                          type="number"
+                                          name="data.extended_care_price"
+                                          min="0"
+                                          step="1"
+                                          value={rate.extendedCarePrice}
+                                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                                        />
+                                      </label>
+                                      <label class="block text-sm font-medium">
+                                        Constant Rate (ignore thresholds)
+                                        <select name="data.is_constant_rate" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                          <option value="false" selected={!rate.isConstantRate}>No</option>
+                                          <option value="true" selected={rate.isConstantRate}>Yes</option>
+                                        </select>
+                                      </label>
+                                      <label class="block text-sm font-medium">
+                                        Threshold Type
+                                        <select name="data.income_threshold_type" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                          <option value="Greater Than or Equal To" selected={rate.incomeThresholdType !== 'Less Than'}>
+                                            Greater Than or Equal To
+                                          </option>
+                                          <option value="Less Than" selected={rate.incomeThresholdType === 'Less Than'}>Less Than</option>
+                                        </select>
+                                      </label>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                      <h4 class="text-xs uppercase tracking-wide text-earth-brown/70">Income Thresholds (optional)</h4>
+                                      <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                                        <label class="block text-sm font-medium">
+                                          Family 2
+                                          <input type="number" name="data.income_threshold_family_2" min="0" step="1" value={rate.threshold2} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+                                        </label>
+                                        <label class="block text-sm font-medium">
+                                          Family 3
+                                          <input type="number" name="data.income_threshold_family_3" min="0" step="1" value={rate.threshold3} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+                                        </label>
+                                        <label class="block text-sm font-medium">
+                                          Family 4
+                                          <input type="number" name="data.income_threshold_family_4" min="0" step="1" value={rate.threshold4} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+                                        </label>
+                                        <label class="block text-sm font-medium">
+                                          Family 5
+                                          <input type="number" name="data.income_threshold_family_5" min="0" step="1" value={rate.threshold5} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+                                        </label>
+                                        <label class="block text-sm font-medium">
+                                          Family 6
+                                          <input type="number" name="data.income_threshold_family_6" min="0" step="1" value={rate.threshold6} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+                                        </label>
+                                        <label class="block text-sm font-medium">
+                                          Family 7
+                                          <input type="number" name="data.income_threshold_family_7" min="0" step="1" value={rate.threshold7} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+                                        </label>
+                                        <label class="block text-sm font-medium">
+                                          Family 8+
+                                          <input type="number" name="data.income_threshold_family_8_plus" min="0" step="1" value={rate.threshold8Plus} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+                                        </label>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </details>
+
+                                <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+                                  Save Level
+                                </button>
+                              </form>
+                            </div>
+                          </details>
+                        ))}
+                      </div>
+                    )}
+
+                    <details class="rounded-lg border border-dashed border-gray-300 bg-white">
+                      <summary class="cursor-pointer px-3 py-2 text-sm font-semibold text-earth-brown">Add Level To {program.name}</summary>
+                      <div class="border-t border-gray-200 p-3">
+                        <form method="post" action="/api/admin/content" class="space-y-4">
+                          <input type="hidden" name="collection" value={collection} />
+                          <input type="hidden" name="redirectTo" value={`/admin/tuition?saved=${encodeURIComponent(program.slug)}-new-level`} />
+                          <input type="hidden" name="data.type" value="rate" />
+                          <input type="hidden" name="data.program_id" value={program.programId} />
+
+                          <div class="grid gap-3 md:grid-cols-2">
+                            <label class="block text-sm font-medium">
+                              Tuition Level
+                              <select name="data.rate_label" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                {RATE_LEVELS.map((level) => (
+                                  <option value={level} selected={level === nextLevel}>{level}</option>
+                                ))}
+                              </select>
+                            </label>
+                            <label class="block text-sm font-medium">
+                              URL Slug
+                              <input
+                                type="text"
+                                name="slug"
+                                placeholder={`${program.slug}-level-${nextLevel.toLowerCase()}`}
+                                required
+                                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                              />
+                            </label>
+                            <label class="block text-sm font-medium">
+                              Tuition Price (annual)
+                              <input
+                                type="number"
+                                name="data.tuition_price"
+                                min="0"
+                                step="1"
+                                required
+                                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                              />
+                            </label>
+                            <label class="block text-sm font-medium">
+                              School Year
+                              <input
+                                type="text"
+                                name="data.school_year"
+                                value={defaultYear}
+                                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                              />
+                            </label>
+                            <label class="block text-sm font-medium">
+                              Active in Calculator
+                              <select name="data.active" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                              </select>
+                            </label>
+                          </div>
+
+                          <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                            <summary class="cursor-pointer text-sm font-semibold text-earth-brown">Advanced Level Options</summary>
+                            <div class="mt-3 grid gap-3 md:grid-cols-2">
+                              <label class="block text-sm font-medium">
+                                Display Order
+                                <input
+                                  type="number"
+                                  name="data.display_order"
+                                  min="0"
+                                  step="1"
+                                  value={String(nextLevelOrder)}
+                                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                                />
+                              </label>
+                              <label class="block text-sm font-medium">
+                                Publish Status
+                                <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                  <option value="published">Published</option>
+                                  <option value="draft">Draft</option>
+                                </select>
+                              </label>
+                              <label class="block text-sm font-medium">
+                                Internal Title (optional)
+                                <input
+                                  type="text"
+                                  name="title"
+                                  placeholder={`Level ${nextLevel}`}
+                                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                                />
+                              </label>
                               <label class="block text-sm font-medium">
                                 Extended Care Available
                                 <select name="data.extended_care_available" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                                  <option value="true" selected={extendedCareAvailable}>Yes</option>
-                                  <option value="false" selected={!extendedCareAvailable}>No</option>
+                                  <option value="true">Yes</option>
+                                  <option value="false">No</option>
                                 </select>
                               </label>
                               <label class="block text-sm font-medium">
@@ -735,94 +864,26 @@ const ratesCount = editableEntries.filter((entry) => entry.isRate).length;
                                   name="data.extended_care_price"
                                   min="0"
                                   step="1"
-                                  value={extendedCarePrice}
                                   class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                                 />
                               </label>
                               <label class="block text-sm font-medium">
-                                Constant Rate (ignore income thresholds)
+                                Constant Rate (ignore thresholds)
                                 <select name="data.is_constant_rate" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                                  <option value="false" selected={!isConstantRate}>No</option>
-                                  <option value="true" selected={isConstantRate}>Yes</option>
+                                  <option value="false">No</option>
+                                  <option value="true">Yes</option>
                                 </select>
-                              </label>
-                              <label class="block text-sm font-medium">
-                                Threshold Type
-                                <select name="data.income_threshold_type" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                                  <option value="Greater Than or Equal To" selected={incomeThresholdType !== 'Less Than'}>
-                                    Greater Than or Equal To
-                                  </option>
-                                  <option value="Less Than" selected={incomeThresholdType === 'Less Than'}>
-                                    Less Than
-                                  </option>
-                                </select>
-                              </label>
-                            </>
-                          ) : (
-                            <>
-                              <label class="block text-sm font-medium">
-                                Program ID (used by rates)
-                                <input
-                                  type="text"
-                                  name="data.program_id"
-                                  value={programId}
-                                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                                />
-                              </label>
-                              <label class="block text-sm font-medium md:col-span-2">
-                                Program Description
-                                <textarea
-                                  name="data.description"
-                                  rows="3"
-                                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                                >{description}</textarea>
-                              </label>
-                            </>
-                          )}
-                        </div>
-
-                        {isRate && (
-                          <div class="space-y-2">
-                            <h4 class="text-sm font-semibold uppercase tracking-wide text-earth-brown/80">Income Thresholds (optional)</h4>
-                            <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                              <label class="block text-sm font-medium">
-                                Family 2
-                                <input type="number" name="data.income_threshold_family_2" min="0" step="1" value={threshold2} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
-                              </label>
-                              <label class="block text-sm font-medium">
-                                Family 3
-                                <input type="number" name="data.income_threshold_family_3" min="0" step="1" value={threshold3} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
-                              </label>
-                              <label class="block text-sm font-medium">
-                                Family 4
-                                <input type="number" name="data.income_threshold_family_4" min="0" step="1" value={threshold4} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
-                              </label>
-                              <label class="block text-sm font-medium">
-                                Family 5
-                                <input type="number" name="data.income_threshold_family_5" min="0" step="1" value={threshold5} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
-                              </label>
-                              <label class="block text-sm font-medium">
-                                Family 6
-                                <input type="number" name="data.income_threshold_family_6" min="0" step="1" value={threshold6} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
-                              </label>
-                              <label class="block text-sm font-medium">
-                                Family 7
-                                <input type="number" name="data.income_threshold_family_7" min="0" step="1" value={threshold7} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
-                              </label>
-                              <label class="block text-sm font-medium">
-                                Family 8+
-                                <input type="number" name="data.income_threshold_family_8_plus" min="0" step="1" value={threshold8Plus} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
                               </label>
                             </div>
-                          </div>
-                        )}
+                          </details>
+
+                          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+                            Add Level
+                          </button>
+                        </form>
                       </div>
                     </details>
-
-                    <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
-                      Save {isRate ? 'Tuition Rate' : 'Program'}
-                    </button>
-                  </form>
+                  </section>
                 </div>
               </details>
             );
@@ -830,5 +891,84 @@ const ratesCount = editableEntries.filter((entry) => entry.isRate).length;
         </div>
       )}
     </section>
+
+    {unlinkedRates.length > 0 && (
+      <section class="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+        <h2 class="mb-2 text-lg font-semibold text-amber-900">Unlinked Tuition Levels</h2>
+        <p class="mb-4 text-sm text-amber-800">
+          These rates are not currently linked to a program. Reassign them below to keep the interface clean.
+        </p>
+
+        <div class="space-y-3">
+          {unlinkedRates.map((rate) => (
+            <details class="rounded-lg border border-amber-200 bg-white">
+              <summary class="cursor-pointer px-4 py-3">
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p class="font-semibold text-earth-brown">Level {rate.rateLabel}</p>
+                    <p class="text-xs text-earth-brown/70">Current program id: {rate.programId || 'none'}</p>
+                  </div>
+                  <span class="rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-900">needs link</span>
+                </div>
+              </summary>
+              <div class="border-t border-amber-200 p-4">
+                <form method="post" action="/api/admin/content" class="space-y-4">
+                  <input type="hidden" name="collection" value={collection} />
+                  <input type="hidden" name="redirectTo" value={`/admin/tuition?saved=${encodeURIComponent(rate.slug)}`} />
+                  <input type="hidden" name="baseDataJson" value={JSON.stringify(rate.data ?? {})} />
+                  <input type="hidden" name="data.type" value="rate" />
+
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <label class="block text-sm font-medium">
+                      Link To Program
+                      <select name="data.program_id" required class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                        <option value="">Select Program</option>
+                        {programOptions.map((program) => (
+                          <option value={program.id} selected={program.id === rate.programId}>{program.label} ({program.id})</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label class="block text-sm font-medium">
+                      Tuition Level
+                      <select name="data.rate_label" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                        {levelOptionsFor(rate.rateLabel).map((level) => (
+                          <option value={level} selected={level === normalizeLevel(rate.rateLabel) || level === rate.rateLabel}>{level}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label class="block text-sm font-medium">
+                      Tuition Price (annual)
+                      <input
+                        type="number"
+                        name="data.tuition_price"
+                        min="0"
+                        step="1"
+                        value={rate.tuitionPrice}
+                        required
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium">
+                      URL Slug
+                      <input
+                        type="text"
+                        name="slug"
+                        value={rate.slug}
+                        required
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                  </div>
+
+                  <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+                    Save & Link Level
+                  </button>
+                </form>
+              </div>
+            </details>
+          ))}
+        </div>
+      </section>
+    )}
   </div>
 </AdminLayout>
