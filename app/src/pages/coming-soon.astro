@@ -2084,7 +2084,6 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
               successMessage.style.display = 'none';
             }, 10000);
           } catch (err) {
-            console.error(err);
             errorMessage.style.display = 'block';
             errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           } finally {
