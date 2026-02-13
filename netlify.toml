@@ -21,8 +21,6 @@
   [build.environment]
     NODE_VERSION = "20"
     NODE_OPTIONS = "--max_old_space_size=4096"
-    # Admin auth mode
-    AUTH_PROVIDER = "auth0"
 
 # Testing branch context - ensures proper environment setup
 [context.testing]
