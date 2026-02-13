@@ -6,6 +6,7 @@
 import type { Handler } from '@netlify/functions';
 import { requestAdminMagicLink } from '../../src/lib/auth/admin-session';
 import { isAllowedAdminLoginEmail } from '../../src/lib/admin-config';
+import { isAuth0Provider } from '../../src/lib/auth/provider';
 
 const getRequestUrl = (event: Parameters<Handler>[0]): string | undefined => {
   if (event.rawUrl) return event.rawUrl;
@@ -26,6 +27,18 @@ export const handler: Handler = async (event) => {
   }
 
   try {
+    if (isAuth0Provider()) {
+      return {
+        statusCode: 400,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          error: 'Magic-link login is disabled while Auth0 is enabled'
+        })
+      };
+    }
+
     const { email } = JSON.parse(event.body || '{}') as { email?: string };
 
     if (typeof email !== 'string' || !email.trim()) {
@@ -65,7 +78,6 @@ export const handler: Handler = async (event) => {
       })
     };
   } catch (error) {
-    console.error('Magic link error:', error);
     return {
       statusCode: 500,
       headers: {

@@ -1,0 +1,86 @@
+---
+import {
+  AUTH0_NONCE_COOKIE_NAME,
+  AUTH0_NEXT_PATH_COOKIE_NAME,
+  AUTH0_STATE_COOKIE_NAME,
+  exchangeAuth0CodeForEmail
+} from '@lib/auth/auth0';
+import {
+  ADMIN_SESSION_COOKIE_NAME,
+  ADMIN_SESSION_MAX_AGE_SECONDS,
+  createAdminSession
+} from '@lib/auth/admin-session';
+import { isAuth0Provider } from '@lib/auth/provider';
+
+const DEFAULT_AFTER_LOGIN_PATH = '/admin';
+
+const normalizeInternalPath = (value: string | null): string => {
+  if (!value) return DEFAULT_AFTER_LOGIN_PATH;
+  if (!value.startsWith('/')) return DEFAULT_AFTER_LOGIN_PATH;
+  if (value.startsWith('//')) return DEFAULT_AFTER_LOGIN_PATH;
+  return value;
+};
+
+if (!isAuth0Provider()) {
+  return Astro.redirect('/auth/sign-in');
+}
+
+const code = Astro.url.searchParams.get('code');
+const callbackState = Astro.url.searchParams.get('state');
+const storedState = Astro.cookies.get(AUTH0_STATE_COOKIE_NAME)?.value ?? null;
+const storedNonce = Astro.cookies.get(AUTH0_NONCE_COOKIE_NAME)?.value ?? null;
+const storedNextPath = Astro.cookies.get(AUTH0_NEXT_PATH_COOKIE_NAME)?.value ?? null;
+
+Astro.cookies.delete(AUTH0_STATE_COOKIE_NAME, { path: '/auth' });
+Astro.cookies.delete(AUTH0_NONCE_COOKIE_NAME, { path: '/auth' });
+Astro.cookies.delete(AUTH0_NEXT_PATH_COOKIE_NAME, { path: '/auth' });
+
+if (!code || !callbackState || !storedState || callbackState !== storedState || !storedNonce) {
+  return Astro.redirect('/auth/sign-in?error=auth0-state');
+}
+
+let email: string | null = null;
+try {
+  email = await exchangeAuth0CodeForEmail({
+    code,
+    expectedNonce: storedNonce,
+    requestUrl: Astro.request.url
+  });
+} catch {
+  return Astro.redirect('/auth/sign-in?error=auth0-callback');
+}
+
+if (!email) {
+  return Astro.redirect('/auth/sign-in?error=auth0-callback');
+}
+
+const locals = Astro.locals as unknown as Record<string, unknown>;
+const netlify = locals.netlify as { context?: { ip?: string } } | undefined;
+const forwarded = Astro.request.headers.get('x-forwarded-for');
+const requestedIp = netlify?.context?.ip ?? forwarded?.split(',')[0]?.trim() ?? null;
+
+const session = await createAdminSession({
+  email,
+  requestedIp,
+  userAgent: Astro.request.headers.get('user-agent')
+});
+
+if (!session) {
+  return Astro.redirect('/auth/sign-in?error=not-authorized');
+}
+
+Astro.cookies.set(ADMIN_SESSION_COOKIE_NAME, session.sessionToken, {
+  path: '/',
+  httpOnly: true,
+  sameSite: 'strict',
+  secure: Astro.url.protocol === 'https:',
+  maxAge: ADMIN_SESSION_MAX_AGE_SECONDS
+});
+
+const safeNextPath = normalizeInternalPath(storedNextPath);
+if (safeNextPath === '/admin') {
+  return Astro.redirect('/admin');
+}
+
+return Astro.redirect(safeNextPath);
+---

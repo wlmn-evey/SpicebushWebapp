@@ -177,7 +177,10 @@ async function configureEnvironmentVariables() {
     { name: 'NETLIFY_DATABASE_URL', description: 'Netlify DB / Neon PostgreSQL connection string' },
     { name: 'DATABASE_URL', description: 'Optional local fallback PostgreSQL connection string' },
     { name: 'PUBLIC_SITE_URL', description: 'Public site origin (for auth links)' },
-    { name: 'AUTH_PROVIDER', description: 'Set to netlify-magic-link' },
+    { name: 'AUTH_PROVIDER', description: 'Set to auth0 or netlify-magic-link' },
+    { name: 'AUTH0_DOMAIN', description: 'Required when AUTH_PROVIDER=auth0' },
+    { name: 'AUTH0_CLIENT_ID', description: 'Required when AUTH_PROVIDER=auth0' },
+    { name: 'AUTH0_CLIENT_SECRET', description: 'Required when AUTH_PROVIDER=auth0' },
     { name: 'ADMIN_EMAILS', description: 'Optional comma-separated explicit admin allow-list' },
     { name: 'ADMIN_DOMAINS', description: 'Optional comma-separated admin domain allow-list' },
     { name: 'EMAIL_SERVICE', description: 'Optional provider: unione, sendgrid, postmark, resend' },
@@ -201,7 +204,15 @@ DATABASE_URL=
 PUBLIC_SITE_URL=https://spicebushmontessori.org
 
 # Admin Configuration
-AUTH_PROVIDER=netlify-magic-link
+AUTH_PROVIDER=auth0
+# AUTH0_DOMAIN=your-tenant.us.auth0.com
+# AUTH0_CLIENT_ID=your-client-id
+# AUTH0_CLIENT_SECRET=your-client-secret
+# AUTH0_CALLBACK_URL=https://spicebushmontessori.org/auth/callback
+# AUTH0_LOGOUT_RETURN_TO=https://spicebushmontessori.org/auth/sign-in?notice=signed-out
+
+# Magic-link fallback
+# AUTH_PROVIDER=netlify-magic-link
 ADMIN_EMAILS=admin@spicebushmontessori.org
 ADMIN_DOMAINS=@spicebushmontessori.org
 

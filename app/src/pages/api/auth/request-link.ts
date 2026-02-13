@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { requestAdminMagicLink } from '@lib/auth/admin-session';
 import { isAllowedAdminLoginEmail } from '@lib/admin-config';
+import { isAuth0Provider } from '@lib/auth/provider';
 import { logServerError } from '@lib/server-logger';
 
 const DEFAULT_REDIRECT = '/auth/sign-in';
@@ -87,6 +88,14 @@ const handleRequest: APIRoute = async (context) => {
   try {
     const { email, redirectTo, nextPath, isForm } = await parseEmail(context.request);
     const locals = context.locals as unknown as Record<string, unknown>;
+
+    if (isAuth0Provider()) {
+      if (isForm) {
+        return context.redirect(appendPathParam(redirectTo, 'error', 'provider-disabled'));
+      }
+
+      return toJsonResponse(400, { error: 'Magic-link login is disabled while Auth0 is enabled.' });
+    }
 
     if (!isAllowedAdminLoginEmail(email)) {
       if (isForm) {

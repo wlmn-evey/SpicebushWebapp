@@ -1,0 +1,46 @@
+---
+import {
+  AUTH0_NONCE_COOKIE_NAME,
+  AUTH0_NEXT_PATH_COOKIE_NAME,
+  AUTH0_STATE_COOKIE_NAME,
+  createAuth0LoginRequest,
+  getAuth0StateCookieTtlSeconds
+} from '@lib/auth/auth0';
+import { isAuth0Provider } from '@lib/auth/provider';
+
+const DEFAULT_AFTER_LOGIN_PATH = '/admin';
+
+const normalizeInternalPath = (value: string | null): string => {
+  if (!value) return DEFAULT_AFTER_LOGIN_PATH;
+  if (!value.startsWith('/')) return DEFAULT_AFTER_LOGIN_PATH;
+  if (value.startsWith('//')) return DEFAULT_AFTER_LOGIN_PATH;
+  return value;
+};
+
+if (!isAuth0Provider()) {
+  return Astro.redirect('/auth/sign-in');
+}
+
+const loginRequest = createAuth0LoginRequest({
+  requestUrl: Astro.request.url,
+  nextPath: Astro.url.searchParams.get('next')
+});
+
+if (!loginRequest) {
+  return Astro.redirect('/auth/sign-in?error=auth0-config');
+}
+
+const cookieOptions = {
+  path: '/auth',
+  httpOnly: true,
+  sameSite: 'lax' as const,
+  secure: Astro.url.protocol === 'https:',
+  maxAge: getAuth0StateCookieTtlSeconds()
+};
+
+Astro.cookies.set(AUTH0_STATE_COOKIE_NAME, loginRequest.state, cookieOptions);
+Astro.cookies.set(AUTH0_NONCE_COOKIE_NAME, loginRequest.nonce, cookieOptions);
+Astro.cookies.set(AUTH0_NEXT_PATH_COOKIE_NAME, normalizeInternalPath(loginRequest.nextPath), cookieOptions);
+
+return Astro.redirect(loginRequest.authorizeUrl);
+---

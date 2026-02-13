@@ -1,9 +1,22 @@
 ---
+import { buildAuth0LogoutUrl } from '@lib/auth/auth0';
 import { ADMIN_SESSION_COOKIE_NAME, revokeAdminSession } from '@lib/auth/admin-session';
+import { isAuth0Provider } from '@lib/auth/provider';
 
 const sessionToken = Astro.cookies.get(ADMIN_SESSION_COOKIE_NAME)?.value;
 await revokeAdminSession(sessionToken);
 Astro.cookies.delete(ADMIN_SESSION_COOKIE_NAME, { path: '/' });
 
-return Astro.redirect('/auth/sign-in?notice=signed-out');
+const signedOutPath = '/auth/sign-in?notice=signed-out';
+if (isAuth0Provider()) {
+  const auth0LogoutUrl = buildAuth0LogoutUrl({
+    requestUrl: Astro.request.url,
+    returnPath: signedOutPath
+  });
+  if (auth0LogoutUrl) {
+    return Astro.redirect(auth0LogoutUrl);
+  }
+}
+
+return Astro.redirect(signedOutPath);
 ---

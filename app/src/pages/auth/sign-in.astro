@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { isAuth0Provider } from '@lib/auth/provider';
 
 const DEFAULT_AFTER_LOGIN_PATH = '/admin';
 const parseNextPath = (value: string | null): string => {
@@ -13,6 +14,8 @@ const notice = Astro.url.searchParams.get('notice');
 const error = Astro.url.searchParams.get('error');
 const nextPath = parseNextPath(Astro.url.searchParams.get('next'));
 const redirectToValue = `/auth/sign-in?next=${encodeURIComponent(nextPath)}`;
+const auth0SignInPath = `/auth/start?next=${encodeURIComponent(nextPath)}`;
+const auth0ProviderEnabled = isAuth0Provider();
 
 const noticeMessageMap: Record<string, string> = {
   'check-email': 'Check your inbox for a secure admin sign-in link.',
@@ -22,7 +25,12 @@ const noticeMessageMap: Record<string, string> = {
 const errorMessageMap: Record<string, string> = {
   'invalid-link': 'That sign-in link is invalid or expired. Request a new one.',
   'invalid-domain': 'Please use a @spicebushmontessori.org or @eveywinters.com email address.',
-  'request-failed': 'Unable to send a sign-in link right now. Please try again.'
+  'request-failed': 'Unable to send a sign-in link right now. Please try again.',
+  'provider-disabled': 'Magic-link login is currently disabled. Use Auth0 sign-in.',
+  'auth0-config': 'Auth0 is not configured yet. Add Auth0 environment variables and try again.',
+  'auth0-state': 'Your Auth0 login session expired. Please try signing in again.',
+  'auth0-callback': 'Auth0 sign-in could not be completed. Please try again.',
+  'not-authorized': 'Your account is not authorized for admin access.'
 };
 
 const noticeMessage = notice ? noticeMessageMap[notice] : undefined;
@@ -38,7 +46,11 @@ const errorMessage = error ? errorMessageMap[error] : undefined;
     <div class="max-w-md w-full space-y-5">
       <div class="text-center mb-8">
         <h1 class="text-3xl font-heading font-bold text-earth-brown">Administrator Login</h1>
-        <p class="mt-2 text-gray-600">Enter your admin email to receive a one-time sign-in link.</p>
+        <p class="mt-2 text-gray-600">
+          {auth0ProviderEnabled
+            ? 'Use your authorized Auth0 account to access the admin dashboard.'
+            : 'Enter your admin email to receive a one-time sign-in link.'}
+        </p>
       </div>
 
       <div class="bg-white rounded-xl shadow-lg p-8">
@@ -54,28 +66,37 @@ const errorMessage = error ? errorMessageMap[error] : undefined;
           </p>
         )}
 
-        <form method="POST" action="/api/auth/request-link" class="space-y-4">
-          <input type="hidden" name="redirectTo" value={redirectToValue} />
-          <input type="hidden" name="next" value={nextPath} />
-
-          <label for="email" class="block text-sm font-semibold text-earth-brown">Admin Email</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            autocomplete="email"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-earth-brown focus:border-moss-green focus:outline-none focus:ring-2 focus:ring-moss-green/40"
-            placeholder="you@spicebushmontessori.org"
-          />
-
-          <button
-            type="submit"
-            class="w-full rounded-lg bg-moss-green px-4 py-2 text-white font-semibold transition-colors hover:bg-forest-canopy"
+        {auth0ProviderEnabled ? (
+          <a
+            href={auth0SignInPath}
+            class="block w-full rounded-lg bg-moss-green px-4 py-2 text-center text-white font-semibold transition-colors hover:bg-forest-canopy"
           >
-            Send Secure Sign-In Link
-          </button>
-        </form>
+            Continue with Auth0
+          </a>
+        ) : (
+          <form method="POST" action="/api/auth/request-link" class="space-y-4">
+            <input type="hidden" name="redirectTo" value={redirectToValue} />
+            <input type="hidden" name="next" value={nextPath} />
+
+            <label for="email" class="block text-sm font-semibold text-earth-brown">Admin Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autocomplete="email"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-earth-brown focus:border-moss-green focus:outline-none focus:ring-2 focus:ring-moss-green/40"
+              placeholder="you@spicebushmontessori.org"
+            />
+
+            <button
+              type="submit"
+              class="w-full rounded-lg bg-moss-green px-4 py-2 text-white font-semibold transition-colors hover:bg-forest-canopy"
+            >
+              Send Secure Sign-In Link
+            </button>
+          </form>
+        )}
       </div>
     </div>
   </div>

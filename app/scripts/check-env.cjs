@@ -14,6 +14,12 @@ const optional = [
   'UNIONE_REGION',
   'EMAIL_SERVICE',
   'AUTH_PROVIDER',
+  'AUTH0_DOMAIN',
+  'AUTH0_CLIENT_ID',
+  'AUTH0_CLIENT_SECRET',
+  'AUTH0_CALLBACK_URL',
+  'AUTH0_AUDIENCE',
+  'AUTH0_LOGOUT_RETURN_TO',
   'ADMIN_EMAILS',
   'ADMIN_DOMAINS',
   'COMING_SOON_MODE'
@@ -59,8 +65,27 @@ if (!process.env.NETLIFY_DATABASE_URL?.includes('sslmode=require')) {
   console.log('⚠️  NETLIFY_DATABASE_URL should include sslmode=require for production');
 }
 
-if (process.env.AUTH_PROVIDER && process.env.AUTH_PROVIDER !== 'netlify-magic-link') {
-  console.log('⚠️  AUTH_PROVIDER is not set to netlify-magic-link');
+const authProvider = (process.env.AUTH_PROVIDER || 'netlify-magic-link').trim().toLowerCase();
+if (!['netlify-magic-link', 'auth0'].includes(authProvider)) {
+  console.log('❌ AUTH_PROVIDER must be either "auth0" or "netlify-magic-link"');
+  hasErrors = true;
+}
+
+if (authProvider === 'auth0') {
+  const auth0Required = ['AUTH0_DOMAIN', 'AUTH0_CLIENT_ID', 'AUTH0_CLIENT_SECRET'];
+  const missingAuth0 = auth0Required.filter((key) => !process.env[key]);
+  if (missingAuth0.length > 0) {
+    console.log(`❌ Missing Auth0 variables: ${missingAuth0.join(', ')}`);
+    hasErrors = true;
+  }
+}
+
+if (authProvider === 'netlify-magic-link') {
+  const emailKeys = ['UNIONE_API_KEY', 'RESEND_API_KEY', 'SENDGRID_API_KEY', 'POSTMARK_SERVER_TOKEN'];
+  const hasEmailKey = emailKeys.some((key) => !!process.env[key]);
+  if (!hasEmailKey) {
+    console.log('⚠️  No email provider API key configured; magic-link delivery will fail');
+  }
 }
 
 // Final result
@@ -78,6 +103,6 @@ if (hasErrors) {
   console.log(`📋 ${configuredOptional}/${optional.length} optional variables configured`);
   
   if (configuredOptional < optional.length / 2) {
-    console.log('\n💡 Tip: Configure an email provider API key for admin magic-link delivery');
+    console.log('\n💡 Tip: Configure provider-specific auth vars (Auth0 or email provider) before deploy');
   }
 }

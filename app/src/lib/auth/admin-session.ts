@@ -41,6 +41,12 @@ export interface ConsumeMagicLinkParams {
   userAgent?: string | null;
 }
 
+export interface CreateAdminSessionParams {
+  email: string;
+  requestedIp?: string | null;
+  userAgent?: string | null;
+}
+
 const normalizeEmail = (value: string): string => value.trim().toLowerCase();
 const DEFAULT_AFTER_LOGIN_PATH = '/admin';
 
@@ -203,6 +209,33 @@ export async function consumeAdminMagicLink({
 
     return { sessionToken, email };
   });
+}
+
+export async function createAdminSession({
+  email,
+  requestedIp = null,
+  userAgent = null
+}: CreateAdminSessionParams): Promise<{ sessionToken: string; email: string } | null> {
+  const normalizedEmail = normalizeEmail(email);
+  if (!isAdminEmail(normalizedEmail)) {
+    return null;
+  }
+
+  const sessionToken = createRawToken();
+  const sessionHash = hashToken(sessionToken);
+
+  await query(
+    `
+      INSERT INTO admin_auth_sessions (session_hash, email, ip_address, user_agent, expires_at)
+      VALUES ($1, $2, $3, $4, now() + $5::interval)
+    `,
+    [sessionHash, normalizedEmail, requestedIp, userAgent, `${SESSION_TTL_HOURS} hours`]
+  );
+
+  return {
+    sessionToken,
+    email: normalizedEmail
+  };
 }
 
 export async function validateAdminSession(token: string | null | undefined): Promise<AdminSessionIdentity | null> {
