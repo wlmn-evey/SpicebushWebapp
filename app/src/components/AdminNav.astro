@@ -1,5 +1,5 @@
 ---
-import { Home, Clock, DollarSign, Users, Settings } from 'lucide-astro';
+import { Home, Clock, DollarSign, Users, Settings, Image as ImageIcon, CircleHelp } from 'lucide-astro';
 
 const currentPath = Astro.url.pathname;
 ---
@@ -68,6 +68,24 @@ const currentPath = Astro.url.pathname;
         >
           <Settings className="w-5 h-5 mr-3" />
           System Settings
+        </a>
+
+        <a
+          href="/admin/media"
+          aria-current={currentPath === '/admin/media' ? 'page' : undefined}
+          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+        >
+          <ImageIcon className="w-5 h-5 mr-3" />
+          Media
+        </a>
+
+        <a
+          href="/admin/faq"
+          aria-current={currentPath === '/admin/faq' ? 'page' : undefined}
+          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+        >
+          <CircleHelp className="w-5 h-5 mr-3" />
+          FAQs
         </a>
       </div>
     </div>

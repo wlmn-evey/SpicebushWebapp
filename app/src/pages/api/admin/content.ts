@@ -1,8 +1,9 @@
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
+import { db } from '@lib/db';
 import { query } from '@lib/db/client';
 
-const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info']);
+const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info', 'photos', 'faq']);
 
 type ContentPayload = {
   collection: string;
@@ -62,6 +63,14 @@ const parseCsvList = (value: FormDataEntryValue): string[] => {
     .filter((item) => item.length > 0);
 };
 
+const parseLineList = (value: FormDataEntryValue): string[] => {
+  if (typeof value !== 'string') return [];
+  return value
+    .split(/\n/)
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+};
+
 const parseFormDataPayload = (formData: FormData): ContentPayload => {
   const data: Record<string, unknown> = {};
 
@@ -73,9 +82,15 @@ const parseFormDataPayload = (formData: FormData): ContentPayload => {
 
     if (dataKey.endsWith('_csv')) {
       data[dataKey.slice(0, -4)] = parseCsvList(value);
-    } else {
-      data[dataKey] = parseFormValue(value);
+      continue;
     }
+
+    if (dataKey.endsWith('_lines')) {
+      data[dataKey.slice(0, -6)] = parseLineList(value);
+      continue;
+    }
+
+    data[dataKey] = parseFormValue(value);
   }
 
   return {
@@ -163,6 +178,66 @@ const parseDataPayload = (payload: ContentPayload): Record<string, unknown> | nu
   return merged;
 };
 
+const parseIntegerValue = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.trunc(value);
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value.trim(), 10);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return null;
+};
+
+const normalizeFaqData = (data: Record<string, unknown>): Record<string, unknown> => {
+  const normalized: Record<string, unknown> = { ...data };
+  const sectionValue = typeof normalized.section_title === 'string' ? normalized.section_title.trim() : '';
+  const customSectionValue = typeof normalized.section_title_custom === 'string'
+    ? normalized.section_title_custom.trim()
+    : '';
+
+  if (sectionValue === '__new__') {
+    if (customSectionValue.length > 0) {
+      normalized.section_title = customSectionValue;
+    } else {
+      delete normalized.section_title;
+    }
+  } else if (sectionValue.length > 0) {
+    normalized.section_title = sectionValue;
+  }
+
+  delete normalized.section_title_custom;
+
+  const listStyle = typeof normalized.list_style === 'string' ? normalized.list_style.trim().toLowerCase() : '';
+  if (listStyle === 'ordered' || listStyle === 'unordered' || listStyle === 'none') {
+    normalized.list_style = listStyle;
+  } else {
+    normalized.list_style = 'none';
+  }
+
+  if (Array.isArray(normalized.bullets)) {
+    normalized.bullets = normalized.bullets
+      .map((bullet) => (typeof bullet === 'string' ? bullet.trim() : ''))
+      .filter((bullet) => bullet.length > 0);
+  }
+
+  const sectionOrder = parseIntegerValue(normalized.section_order);
+  if (sectionOrder !== null) {
+    normalized.section_order = Math.max(1, sectionOrder);
+  }
+
+  const itemOrder = parseIntegerValue(normalized.item_order);
+  if (itemOrder !== null) {
+    normalized.item_order = Math.max(1, itemOrder);
+  }
+
+  return normalized;
+};
+
 const responseByFormat = (redirectTo: string | null, payload: Record<string, unknown>, status = 200) => {
   if (redirectTo) {
     if (status >= 400) {
@@ -222,9 +297,21 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return responseByFormat(redirectTo, { error: 'Slug must contain only lowercase letters, numbers, hyphen, or underscore' }, 400);
   }
 
-  const data = parseDataPayload(payload);
-  if (!data) {
+  const rawData = parseDataPayload(payload);
+  if (!rawData) {
     return responseByFormat(redirectTo, { error: 'Content data must be a JSON object' }, 400);
+  }
+
+  const data = collection === 'faq' ? normalizeFaqData(rawData) : rawData;
+
+  if (collection === 'faq') {
+    const sectionTitle = typeof data.section_title === 'string' ? data.section_title.trim() : '';
+    const question = typeof data.question === 'string' ? data.question.trim() : '';
+    const answer = typeof data.answer === 'string' ? data.answer.trim() : '';
+
+    if (!sectionTitle || !question || !answer) {
+      return responseByFormat(redirectTo, { error: 'FAQ entries require section, question, and answer' }, 400);
+    }
   }
 
   try {
@@ -250,6 +337,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
         new Date().toISOString()
       ]
     );
+
+    db.cache.invalidateCollection(collection);
 
     return responseByFormat(redirectTo, {
       success: true,
@@ -299,6 +388,8 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
       `,
       [collection, slug]
     );
+
+    db.cache.invalidateCollection(collection);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

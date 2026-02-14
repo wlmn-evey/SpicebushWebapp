@@ -8,6 +8,7 @@ const DATABASE_COLLECTIONS = new Set([
   'staff',
   'announcements',
   'events',
+  'faq',
   'tuition',
   'settings',
   'testimonials',
@@ -245,7 +246,7 @@ export async function getHomepageData() {
 
 export async function getAdminData() {
   const [collections, settings] = await Promise.all([
-    getBatchedPageData(['blog', 'staff', 'tuition', 'hours']),
+    getBatchedPageData(['blog', 'staff', 'tuition', 'hours', 'faq']),
     getAllSettings()
   ]);
 
@@ -286,6 +287,7 @@ export const cacheUtils = {
         getCollection('blog'),
         getCollection('staff'),
         getCollection('hours'),
+        getCollection('faq'),
         getAllSettings()
       ]);
     } catch (error) {
