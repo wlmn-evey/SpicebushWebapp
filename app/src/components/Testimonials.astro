@@ -1,114 +1,19 @@
 ---
 import { Star } from 'lucide-astro';
-import { db, type ContentEntry } from '@lib/db';
+import { getTestimonialsForPlacement } from '@lib/testimonials-content';
 
-interface TestimonialData {
-  featured?: unknown;
-  rating?: unknown;
-  author?: unknown;
-  authorPhoto?: unknown;
-  authorTitle?: unknown;
-  childAge?: unknown;
-  date?: unknown;
-}
+const displayTestimonials = await getTestimonialsForPlacement('homepage');
 
-interface TestimonialCard {
-  id: string;
-  rating: number;
-  author: string;
-  authorInitials: string;
-  authorTitle?: string;
-  childAgeLabel?: string;
-  authorPhoto?: string;
-  body?: string;
-  featured: boolean;
-  dateValue?: Date;
-}
-
-const normalizeString = (value: unknown): string | undefined => {
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    return trimmed.length > 0 ? trimmed : undefined;
-  }
-  return undefined;
-};
-
-const normalizeRating = (value: unknown): number => {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return Math.min(Math.max(Math.round(value), 1), 5);
-  }
-  if (typeof value === 'string') {
-    const parsed = Number.parseInt(value, 10);
-    if (!Number.isNaN(parsed)) {
-      return Math.min(Math.max(parsed, 1), 5);
-    }
-  }
-  return 5;
-};
-
-const normalizeDate = (value: unknown): Date | undefined => {
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value;
-  }
-  if (typeof value === 'string') {
-    const parsed = new Date(value);
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed;
-    }
-  }
-  return undefined;
-};
-
-const toCard = (entry: ContentEntry): TestimonialCard | null => {
-  const data = entry.data as TestimonialData;
-  const author = normalizeString(data.author);
-  if (!author) {
-    return null;
-  }
-
-  const body = typeof entry.body === 'string' ? entry.body.trim() : undefined;
-  const rating = normalizeRating(data.rating);
-  const authorPhoto = normalizeString(data.authorPhoto);
-  const authorTitle = normalizeString(data.authorTitle);
-  const childAgeLabel = normalizeString(data.childAge);
-  const featured = data.featured === true;
-  const dateValue = normalizeDate(data.date);
-
+const initialsFromAuthor = (author: string): string => {
   const initials = author
     .split(' ')
     .filter(Boolean)
     .map((segment) => segment.charAt(0).toUpperCase())
     .join('')
-    .slice(0, 3) || author.charAt(0).toUpperCase();
+    .slice(0, 3);
 
-  return {
-    id: entry.id,
-    rating,
-    author,
-    authorInitials: initials,
-    authorTitle,
-    childAgeLabel,
-    authorPhoto,
-    body,
-    featured,
-    dateValue
-  };
+  return initials || author.charAt(0).toUpperCase();
 };
-
-const testimonials = (await db.content.getCollection('testimonials'))
-  .map(toCard)
-  .filter((testimonial): testimonial is TestimonialCard => testimonial !== null)
-  .sort((a, b) => {
-    if (a.dateValue && b.dateValue) {
-      return b.dateValue.getTime() - a.dateValue.getTime();
-    }
-    if (a.dateValue) return -1;
-    if (b.dateValue) return 1;
-    return 0;
-  });
-
-const featuredTestimonials = testimonials.filter((testimonial) => testimonial.featured).slice(0, 3);
-const displayTestimonials = featuredTestimonials.length > 0 ? featuredTestimonials : testimonials.slice(0, 3);
 ---
 
 <!-- Social Proof Section -->
@@ -151,7 +56,7 @@ const displayTestimonials = featuredTestimonials.length > 0 ? featuredTestimonia
               />
             ) : (
               <div class="w-10 h-10 rounded-full bg-forest-canopy text-white flex items-center justify-center text-sm font-semibold">
-                {testimonial.authorInitials}
+                {initialsFromAuthor(testimonial.author)}
               </div>
             )}
             <div>
@@ -159,8 +64,8 @@ const displayTestimonials = featuredTestimonials.length > 0 ? featuredTestimonia
                 {testimonial.author}
               </div>
               <div class="text-sm text-earth-brown">
-                {testimonial.authorTitle ?? 'Parent'}
-                {testimonial.childAgeLabel && ` of ${testimonial.childAgeLabel}`}
+                {testimonial.relationship || 'Parent'}
+                {testimonial.childAge && ` of ${testimonial.childAge}`}
               </div>
             </div>
           </div>

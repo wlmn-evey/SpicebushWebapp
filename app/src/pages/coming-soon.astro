@@ -2,13 +2,13 @@
 export const prerender = false;
 
 import { getCollection, getEntries, getAllSettings, type ContentEntry } from '@lib/content-db';
+import { getTestimonialsForPlacement, type ManagedTestimonial } from '@lib/testimonials-content';
 
 const DEFAULT_APPLICATION_SCHOOL_YEAR = '2026-2027 School Year';
 const DEFAULT_UPDATE_MESSAGE = 'Enrollment is open for the 2026-2027 school year while we work on bringing you an improved website experience.';
 const DEFAULT_TOUR_EXTERNAL_LINK = 'https://calendly.com/spicebushmontessori/tour-of-spicebush-montessori-school?month=2026-02';
 const DEFAULT_PHONE = '(484) 202-0712';
 const DEFAULT_EMAIL = 'information@spicebushmontessori.org';
-const SHOW_TESTIMONIALS = false; // Temporarily hidden.
 const DEFAULT_ADDRESS = {
   street: '827 Concord Road',
   city: 'Glen Mills',
@@ -22,7 +22,7 @@ type GenericContentEntry = ContentEntry<GenericEntryData>;
 
 let hoursCollection: GenericContentEntry[] = [];
 let tuitionRates: GenericContentEntry[] = [];
-let testimonials: GenericContentEntry[] = [];
+let testimonials: ManagedTestimonial[] = [];
 
 try {
   settings = await getAllSettings();
@@ -31,12 +31,7 @@ try {
     const data = (entry.data ?? {}) as GenericEntryData;
     return data.type === 'rate';
   });
-  testimonials = SHOW_TESTIMONIALS
-    ? await getEntries('testimonials', (entry) => {
-      const data = (entry.data ?? {}) as Record<string, unknown>;
-      return Boolean(data.featured);
-    })
-    : [];
+  testimonials = await getTestimonialsForPlacement('coming-soon', settings as Record<string, unknown>);
 } catch (e) {
   settings = {};
   hoursCollection = [];
@@ -1636,7 +1631,7 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
       </div>
     </section>
 
-    {SHOW_TESTIMONIALS && (
+    {testimonials.length > 0 && (
       <section class="testimonials-section" aria-labelledby="testimonials-heading">
         <div class="section-header">
           <h2 id="testimonials-heading">What Parents Are Saying</h2>
@@ -1644,11 +1639,13 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
         </div>
           
         <div class="testimonials-grid">
-          {testimonials.length > 0 ? testimonials.slice(0, 3).map((testimonial) => {
-            const testimonialData = (testimonial.data ?? {}) as GenericEntryData;
-            const rating = Math.max(1, Math.round(Number(testimonialData.rating) || 5));
-            const author = coerceString(testimonialData.author, 'Spicebush Family');
-            const yearsAtSpicebush = coerceString(testimonialData.yearsAtSpicebush, '');
+          {testimonials.map((testimonial) => {
+            const rating = Math.max(1, testimonial.rating || 5);
+            const yearsAtSpicebush = typeof testimonial.yearsAtSpicebush === 'number'
+              ? String(testimonial.yearsAtSpicebush)
+              : '';
+            const roleLabel = coerceString(testimonial.relationship, coerceString(testimonial.authorTitle, 'Parent'));
+            const childAgeLabel = coerceString(testimonial.childAge, '');
   
             return (
               <div class="testimonial-card">
@@ -1658,40 +1655,16 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
                   ))}
                 </div>
                 <p class="testimonial-quote">{testimonial.body}</p>
-                <div class="testimonial-author">{author}</div>
+                <div class="testimonial-author">{testimonial.author}</div>
                 <div class="testimonial-role">
-                  {yearsAtSpicebush && `Parent for ${yearsAtSpicebush} years`}
+                  {yearsAtSpicebush
+                    ? `${roleLabel} for ${yearsAtSpicebush} year${yearsAtSpicebush === '1' ? '' : 's'}`
+                    : `${roleLabel}${childAgeLabel ? ` of ${childAgeLabel}` : ''}`
+                  }
                 </div>
               </div>
             );
-          }) : (
-            <div style="display: contents;">
-              <div class="testimonial-card">
-                <div class="testimonial-rating">
-                  <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-                </div>
-                <p class="testimonial-quote">The teachers at Spicebush truly understand each child's individual needs. My daughter has flourished here in ways I never imagined possible.</p>
-                <div class="testimonial-author">Sarah M.</div>
-                <div class="testimonial-role">Parent of 4-year-old</div>
-              </div>
-              <div class="testimonial-card">
-                <div class="testimonial-rating">
-                  <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-                </div>
-                <p class="testimonial-quote">The FIT tuition model made quality Montessori education possible for our family. We're so grateful for this inclusive approach.</p>
-                <div class="testimonial-author">Michael & Jennifer P.</div>
-                <div class="testimonial-role">Parents of two students</div>
-              </div>
-              <div class="testimonial-card">
-                <div class="testimonial-rating">
-                  <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-                </div>
-                <p class="testimonial-quote">The outdoor learning environment and focus on nature connection has been perfect for my active son. He comes home excited about learning every day!</p>
-                <div class="testimonial-author">David L.</div>
-                <div class="testimonial-role">Parent of 5-year-old</div>
-              </div>
-            </div>
-          )}
+          })}
         </div>
       </section>
     )}

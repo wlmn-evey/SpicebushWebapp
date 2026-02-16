@@ -1,5 +1,5 @@
 ---
-import { Home, Clock, DollarSign, Users, Settings, Image as ImageIcon, CircleHelp } from 'lucide-astro';
+import { Home, Clock, DollarSign, Users, Settings, Image as ImageIcon, CircleHelp, MessageSquare } from 'lucide-astro';
 
 const currentPath = Astro.url.pathname;
 ---
@@ -59,6 +59,15 @@ const currentPath = Astro.url.pathname;
         >
           <Users className="w-5 h-5 mr-3" />
           Staff
+        </a>
+
+        <a
+          href="/admin/testimonials"
+          aria-current={currentPath === '/admin/testimonials' ? 'page' : undefined}
+          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+        >
+          <MessageSquare className="w-5 h-5 mr-3" />
+          Testimonials
         </a>
         
         <a 

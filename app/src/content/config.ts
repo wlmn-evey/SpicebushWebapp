@@ -88,11 +88,17 @@ const testimonialsCollection = defineCollection({
   type: 'content',
   schema: z.object({
     author: z.string(),
+    name: z.string().optional(),
     authorTitle: z.string().optional(),
+    relationship: z.string().optional(),
     authorPhoto: z.string().optional(),
     rating: z.number().min(1).max(5).default(5),
     featured: z.boolean().default(false),
-    date: z.date(),
+    active: z.boolean().default(true),
+    show_on_homepage: z.boolean().default(true),
+    show_on_coming_soon: z.boolean().default(false),
+    display_order: z.number().int().min(1).default(999),
+    date: z.date().or(z.string()),
     category: z.enum(['general', 'teachers', 'programs', 'admissions', 'values']).default('general'),
     childAge: z.string().optional(),
     yearsAtSpicebush: z.number().optional()

@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
+import { db } from '@lib/db';
 import { queryRows, query } from '@lib/db/client';
 
 const jsonResponse = (payload: Record<string, unknown>, status = 200) =>
@@ -124,6 +125,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
         ]
       );
     }
+
+    db.cache.invalidateSettings();
 
     if (redirectTo) {
       return new Response(null, {

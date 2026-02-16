@@ -14,6 +14,7 @@ import TrustIndicators from '../components/TrustIndicators.astro';
 import { CheckCircle, ArrowRight } from 'lucide-astro';
 import { db, type ContentEntry } from '@lib/db';
 import { logServerError } from '@lib/server-logger';
+import { getTestimonialsForPlacement, type ManagedTestimonial } from '@lib/testimonials-content';
 
 // Batch load homepage data needed for active sections.
 type StaffEntryData = {
@@ -25,24 +26,23 @@ type StaffEntryData = {
   certificationBadge?: string;
 };
 
-type TestimonialEntryData = {
-  name?: string;
-  relationship?: string;
-};
-
 type HomepageData = {
   staff: ContentEntry<StaffEntryData>[];
-  testimonials: ContentEntry<TestimonialEntryData>[];
+  testimonials: ManagedTestimonial[];
 };
 
 let pageData: HomepageData = { staff: [], testimonials: [] };
 let error = null;
 
 try {
-  const data = await db.content.getBatchedPageData(['staff', 'testimonials']);
+  const [staffEntries, homepageTestimonials] = await Promise.all([
+    db.content.getCollection('staff'),
+    getTestimonialsForPlacement('homepage')
+  ]);
+
   pageData = {
-    staff: (data.staff ?? []) as ContentEntry<StaffEntryData>[],
-    testimonials: (data.testimonials ?? []) as ContentEntry<TestimonialEntryData>[]
+    staff: (staffEntries ?? []) as ContentEntry<StaffEntryData>[],
+    testimonials: homepageTestimonials
   };
 } catch (e) {
   logServerError('Failed to load homepage data', e, { page: '/' });
@@ -55,7 +55,7 @@ const featuredStaff = pageData.staff
   .slice(0, 3);
 
 // Process testimonials
-const testimonials = pageData.testimonials.slice(0, 3);
+const testimonials = pageData.testimonials;
 ---
 
 <Layout 
@@ -117,7 +117,7 @@ const testimonials = pageData.testimonials.slice(0, 3);
             {testimonials.map((testimonial) => (
               <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-beige/50">
                 <div class="flex items-center mb-4">
-                  {Array.from({ length: 5 }).map(() => (
+                  {Array.from({ length: testimonial.rating }).map(() => (
                     <CheckCircle className="w-5 h-5 text-sunlight-gold" />
                   ))}
                 </div>
@@ -125,10 +125,10 @@ const testimonials = pageData.testimonials.slice(0, 3);
                   "{testimonial.body}"
                 </blockquote>
                 <cite class="text-forest-canopy font-semibold not-italic">
-                  {testimonial.data.name}
+                  {testimonial.author}
                 </cite>
                 <p class="text-earth-brown/70 text-sm">
-                  {testimonial.data.relationship}
+                  {testimonial.relationship}
                 </p>
               </div>
             ))}

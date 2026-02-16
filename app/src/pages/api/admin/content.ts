@@ -3,7 +3,7 @@ import { checkAdminAuth } from '@lib/admin-auth-check';
 import { db } from '@lib/db';
 import { query } from '@lib/db/client';
 
-const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info', 'photos', 'faq']);
+const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info', 'photos', 'faq', 'testimonials']);
 
 type ContentPayload = {
   collection: string;
@@ -193,6 +193,17 @@ const parseIntegerValue = (value: unknown): number | null => {
   return null;
 };
 
+const parseBooleanValue = (value: unknown, fallback: boolean): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', '1', 'yes', 'on'].includes(normalized)) return true;
+    if (['false', '0', 'no', 'off'].includes(normalized)) return false;
+  }
+  return fallback;
+};
+
 const normalizeFaqData = (data: Record<string, unknown>): Record<string, unknown> => {
   const normalized: Record<string, unknown> = { ...data };
   const sectionValue = typeof normalized.section_title === 'string' ? normalized.section_title.trim() : '';
@@ -233,6 +244,73 @@ const normalizeFaqData = (data: Record<string, unknown>): Record<string, unknown
   const itemOrder = parseIntegerValue(normalized.item_order);
   if (itemOrder !== null) {
     normalized.item_order = Math.max(1, itemOrder);
+  }
+
+  return normalized;
+};
+
+const normalizeTestimonialsData = (data: Record<string, unknown>): Record<string, unknown> => {
+  const normalized: Record<string, unknown> = { ...data };
+
+  const rating = parseIntegerValue(normalized.rating);
+  normalized.rating = rating === null ? 5 : Math.min(Math.max(rating, 1), 5);
+
+  const displayOrder = parseIntegerValue(normalized.display_order);
+  if (displayOrder !== null) {
+    normalized.display_order = Math.max(1, displayOrder);
+  } else if (normalized.display_order === undefined) {
+    normalized.display_order = 999;
+  }
+
+  normalized.featured = parseBooleanValue(normalized.featured, false);
+  normalized.active = parseBooleanValue(normalized.active, true);
+  normalized.show_on_homepage = parseBooleanValue(normalized.show_on_homepage, true);
+  normalized.show_on_coming_soon = parseBooleanValue(
+    normalized.show_on_coming_soon,
+    parseBooleanValue(normalized.featured, false)
+  );
+
+  if (typeof normalized.category === 'string') {
+    const normalizedCategory = normalized.category
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-{2,}/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    normalized.category = normalizedCategory || 'general';
+  } else {
+    normalized.category = 'general';
+  }
+
+  const yearsAtSpicebush = parseIntegerValue(normalized.yearsAtSpicebush);
+  if (yearsAtSpicebush !== null) {
+    normalized.yearsAtSpicebush = Math.max(0, yearsAtSpicebush);
+  }
+
+  if (typeof normalized.body === 'string') {
+    normalized.body = normalized.body.trim();
+  }
+
+  if (typeof normalized.author === 'string') {
+    normalized.author = normalized.author.trim();
+  }
+
+  if (typeof normalized.authorTitle === 'string') {
+    normalized.authorTitle = normalized.authorTitle.trim();
+  }
+
+  if (typeof normalized.relationship === 'string') {
+    normalized.relationship = normalized.relationship.trim();
+  }
+
+  if (typeof normalized.childAge === 'string') {
+    normalized.childAge = normalized.childAge.trim();
+  }
+
+  if (typeof normalized.date === 'string') {
+    normalized.date = normalized.date.trim();
   }
 
   return normalized;
@@ -302,7 +380,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return responseByFormat(redirectTo, { error: 'Content data must be a JSON object' }, 400);
   }
 
-  const data = collection === 'faq' ? normalizeFaqData(rawData) : rawData;
+  let data = rawData;
+  if (collection === 'faq') {
+    data = normalizeFaqData(rawData);
+  } else if (collection === 'testimonials') {
+    data = normalizeTestimonialsData(rawData);
+  }
 
   if (collection === 'faq') {
     const sectionTitle = typeof data.section_title === 'string' ? data.section_title.trim() : '';
@@ -311,6 +394,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     if (!sectionTitle || !question || !answer) {
       return responseByFormat(redirectTo, { error: 'FAQ entries require section, question, and answer' }, 400);
+    }
+  }
+
+  if (collection === 'testimonials') {
+    const author = typeof data.author === 'string' ? data.author.trim() : '';
+    const body = typeof data.body === 'string' ? data.body.trim() : '';
+
+    if (!author || !body) {
+      return responseByFormat(redirectTo, { error: 'Testimonial entries require an author and quote' }, 400);
     }
   }
 

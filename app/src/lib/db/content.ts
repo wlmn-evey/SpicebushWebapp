@@ -246,7 +246,7 @@ export async function getHomepageData() {
 
 export async function getAdminData() {
   const [collections, settings] = await Promise.all([
-    getBatchedPageData(['blog', 'staff', 'tuition', 'hours', 'faq']),
+    getBatchedPageData(['blog', 'staff', 'tuition', 'hours', 'faq', 'testimonials']),
     getAllSettings()
   ]);
 
@@ -261,6 +261,12 @@ export const cacheUtils = {
   invalidateCollection(collection: string) {
     cache.clear(`collection:${collection}`);
     cache.clear(`entry:${collection}`);
+    if (collection === 'settings') {
+      cache.clear('setting:');
+    }
+  },
+  invalidateSettings() {
+    cache.clear('setting:');
   },
   clearAll() {
     cache.clear();
@@ -288,6 +294,7 @@ export const cacheUtils = {
         getCollection('staff'),
         getCollection('hours'),
         getCollection('faq'),
+        getCollection('testimonials'),
         getAllSettings()
       ]);
     } catch (error) {

@@ -101,6 +101,70 @@ function resolveContentTitle(collection, slug, data) {
   return toTitleCaseFromSlug(slug);
 }
 
+function normalizeCategoryValue(value) {
+  if (typeof value !== 'string') return 'general';
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return normalized || 'general';
+}
+
+function applyCollectionDefaults(collection, payload) {
+  if (collection !== 'testimonials') {
+    return payload;
+  }
+
+  const normalized = { ...payload };
+  const fallbackAuthor = typeof normalized.author === 'string'
+    ? normalized.author.trim()
+    : (typeof normalized.name === 'string' ? normalized.name.trim() : '');
+
+  if (fallbackAuthor) {
+    normalized.author = fallbackAuthor;
+    if (typeof normalized.name !== 'string' || !normalized.name.trim()) {
+      normalized.name = fallbackAuthor;
+    }
+  }
+
+  const authorTitle = typeof normalized.authorTitle === 'string' && normalized.authorTitle.trim()
+    ? normalized.authorTitle.trim()
+    : (typeof normalized.relationship === 'string' && normalized.relationship.trim()
+      ? normalized.relationship.trim()
+      : 'Parent');
+
+  normalized.authorTitle = authorTitle;
+  normalized.relationship = authorTitle;
+  normalized.featured = parseBoolean(normalized.featured);
+  normalized.active = normalized.active === undefined ? true : parseBoolean(normalized.active);
+  normalized.show_on_homepage = normalized.show_on_homepage === undefined
+    ? true
+    : parseBoolean(normalized.show_on_homepage);
+  normalized.show_on_coming_soon = normalized.show_on_coming_soon === undefined
+    ? false
+    : parseBoolean(normalized.show_on_coming_soon);
+  normalized.display_order = Number.isFinite(Number(normalized.display_order))
+    ? Math.max(1, Math.trunc(Number(normalized.display_order)))
+    : 999;
+  normalized.rating = Number.isFinite(Number(normalized.rating))
+    ? Math.min(Math.max(Math.round(Number(normalized.rating)), 1), 5)
+    : 5;
+  normalized.category = normalizeCategoryValue(normalized.category);
+
+  if (normalized.yearsAtSpicebush !== undefined && normalized.yearsAtSpicebush !== null && normalized.yearsAtSpicebush !== '') {
+    const parsedYears = Number(normalized.yearsAtSpicebush);
+    normalized.yearsAtSpicebush = Number.isFinite(parsedYears)
+      ? Math.max(0, Math.trunc(parsedYears))
+      : normalized.yearsAtSpicebush;
+  }
+
+  return normalized;
+}
+
 function parseSettingValue(rawValue, typeHint) {
   const normalizedType = typeof typeHint === 'string' ? typeHint.toLowerCase() : 'string';
   const normalizedRaw = normalizeValue(rawValue);
@@ -152,13 +216,14 @@ async function loadCollectionEntries(collection) {
     const filePath = join(collectionDir, fileName);
     const { data, body } = await loadMarkdownFile(filePath);
     const payload = body ? { ...data, body } : data;
-    const title = resolveContentTitle(collection, slug, payload);
+    const payloadWithDefaults = applyCollectionDefaults(collection, payload);
+    const title = resolveContentTitle(collection, slug, payloadWithDefaults);
 
     entries.push({
       type: collection,
       slug,
       title,
-      data: payload
+      data: payloadWithDefaults
     });
   }
 
