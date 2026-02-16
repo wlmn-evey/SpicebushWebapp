@@ -270,19 +270,43 @@ const normalizeTestimonialsData = (data: Record<string, unknown>): Record<string
     parseBooleanValue(normalized.featured, false)
   );
 
-  if (typeof normalized.category === 'string') {
-    const normalizedCategory = normalized.category
+  const normalizeCategoryToken = (value: unknown): string => {
+    if (typeof value !== 'string') return '';
+    const normalizedCategory = value
       .trim()
       .toLowerCase()
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '')
       .replace(/-{2,}/g, '-')
       .replace(/^-+|-+$/g, '');
+    return normalizedCategory;
+  };
 
-    normalized.category = normalizedCategory || 'general';
-  } else {
-    normalized.category = 'general';
-  }
+  const normalizedCategoryList = (() => {
+    const categories: string[] = [];
+    const pushCategory = (value: unknown) => {
+      const token = normalizeCategoryToken(value);
+      if (token.length > 0 && !categories.includes(token)) {
+        categories.push(token);
+      }
+    };
+
+    if (Array.isArray(normalized.categories)) {
+      normalized.categories.forEach((value) => pushCategory(value));
+    } else if (typeof normalized.categories === 'string') {
+      normalized.categories
+        .split(/[\n,]/)
+        .map((value) => value.trim())
+        .forEach((value) => pushCategory(value));
+    }
+
+    pushCategory(normalized.category);
+
+    return categories.length > 0 ? categories : ['general'];
+  })();
+
+  normalized.categories = normalizedCategoryList;
+  normalized.category = normalizedCategoryList[0];
 
   const yearsAtSpicebush = parseIntegerValue(normalized.yearsAtSpicebush);
   if (yearsAtSpicebush !== null) {
@@ -311,6 +335,14 @@ const normalizeTestimonialsData = (data: Record<string, unknown>): Record<string
 
   if (typeof normalized.date === 'string') {
     normalized.date = normalized.date.trim();
+  }
+
+  if (typeof normalized.authorPhoto === 'string') {
+    normalized.authorPhoto = normalized.authorPhoto.trim();
+  }
+
+  if (typeof normalized.authorPhotoSlug === 'string') {
+    normalized.authorPhotoSlug = normalized.authorPhotoSlug.trim();
   }
 
   return normalized;

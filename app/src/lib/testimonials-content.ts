@@ -27,6 +27,7 @@ interface TestimonialSeedItem {
   showOnComingSoon: boolean;
   displayOrder: number;
   category: string;
+  categories?: string[];
   date: string;
   childAge?: string;
   yearsAtSpicebush?: number;
@@ -41,6 +42,7 @@ export interface ManagedTestimonial {
   authorTitle: string;
   relationship: string;
   authorPhoto?: string;
+  authorPhotoSlug?: string;
   rating: number;
   featured: boolean;
   active: boolean;
@@ -48,6 +50,7 @@ export interface ManagedTestimonial {
   showOnComingSoon: boolean;
   displayOrder: number;
   category: string;
+  categories: string[];
   childAge?: string;
   yearsAtSpicebush?: number;
   dateLabel?: string;
@@ -279,7 +282,25 @@ const asRecord = (value: unknown): Record<string, unknown> => {
   return {};
 };
 
+const getNormalizedCategories = (
+  categoriesValue: unknown,
+  categoryValue: unknown,
+  fallback = 'general'
+): string[] => {
+  const combined = uniqueList([
+    ...parseCategoryList(categoriesValue),
+    ...parseCategoryList(categoryValue)
+  ]);
+
+  if (combined.length > 0) {
+    return combined;
+  }
+
+  return [normalizeCategory(fallback)];
+};
+
 const toContentDataFromSeed = (seed: TestimonialSeedItem): Record<string, unknown> => ({
+  categories: getNormalizedCategories(seed.categories, seed.category),
   title: seed.title,
   body: seed.body,
   author: seed.author,
@@ -291,7 +312,7 @@ const toContentDataFromSeed = (seed: TestimonialSeedItem): Record<string, unknow
   show_on_homepage: seed.showOnHomepage,
   show_on_coming_soon: seed.showOnComingSoon,
   display_order: seed.displayOrder,
-  category: normalizeCategory(seed.category),
+  category: getNormalizedCategories(seed.categories, seed.category)[0] ?? normalizeCategory(seed.category),
   date: seed.date,
   childAge: seed.childAge ?? '',
   yearsAtSpicebush: seed.yearsAtSpicebush ?? null
@@ -299,6 +320,7 @@ const toContentDataFromSeed = (seed: TestimonialSeedItem): Record<string, unknow
 
 const toManagedFromSeed = (seed: TestimonialSeedItem): ManagedTestimonial => {
   const dateValue = parseDate(seed.date);
+  const categories = getNormalizedCategories(seed.categories, seed.category);
 
   return {
     id: seed.slug,
@@ -309,13 +331,15 @@ const toManagedFromSeed = (seed: TestimonialSeedItem): ManagedTestimonial => {
     authorTitle: seed.authorTitle,
     relationship: seed.relationship,
     authorPhoto: undefined,
+    authorPhotoSlug: undefined,
     rating: clamp(Math.round(seed.rating), 1, 5),
     featured: seed.featured,
     active: seed.active,
     showOnHomepage: seed.showOnHomepage,
     showOnComingSoon: seed.showOnComingSoon,
     displayOrder: seed.displayOrder,
-    category: normalizeCategory(seed.category),
+    category: categories[0] ?? normalizeCategory(seed.category),
+    categories,
     childAge: seed.childAge,
     yearsAtSpicebush: seed.yearsAtSpicebush,
     dateLabel: stringFrom(seed.date, ''),
@@ -334,13 +358,15 @@ export const normalizeTestimonialEntry = (entry: ContentEntry<Record<string, unk
 
   const featured = boolFrom(data.featured, false);
   const dateValue = parseDate(data.date);
-  const category = normalizeCategory(data.category, 'general');
+  const categories = getNormalizedCategories(data.categories, data.category);
+  const category = categories[0] ?? 'general';
 
   const rating = clamp(Math.round(numberFrom(data.rating, 5)), 1, 5);
 
   const authorTitle = stringFrom(data.authorTitle, stringFrom(data.relationship, 'Parent'));
   const relationship = stringFrom(data.relationship, authorTitle);
   const authorPhoto = stringFrom(data.authorPhoto, '');
+  const authorPhotoSlug = stringFrom(data.authorPhotoSlug, '');
   const active = boolFrom(data.active, true);
   const showOnHomepage = boolFrom(data.show_on_homepage, true);
   const showOnComingSoon = boolFrom(data.show_on_coming_soon, featured);
@@ -358,6 +384,7 @@ export const normalizeTestimonialEntry = (entry: ContentEntry<Record<string, unk
     authorTitle,
     relationship,
     authorPhoto: authorPhoto || undefined,
+    authorPhotoSlug: authorPhotoSlug || undefined,
     rating,
     featured,
     active,
@@ -365,6 +392,7 @@ export const normalizeTestimonialEntry = (entry: ContentEntry<Record<string, unk
     showOnComingSoon,
     displayOrder,
     category,
+    categories,
     childAge: childAge || undefined,
     yearsAtSpicebush: Number.isFinite(yearsAtSpicebushValue) ? yearsAtSpicebushValue : undefined,
     dateLabel: stringFrom(data.date, ''),
@@ -426,7 +454,10 @@ export const filterTestimonialsForPlacement = (
 
     if (rule.requireFeatured && !item.featured) return false;
 
-    if (rule.allowedCategories.length > 0 && !rule.allowedCategories.includes(item.category)) {
+    if (
+      rule.allowedCategories.length > 0
+      && !item.categories.some((category) => rule.allowedCategories.includes(category))
+    ) {
       return false;
     }
 

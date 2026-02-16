@@ -92,6 +92,7 @@ const testimonialsCollection = defineCollection({
     authorTitle: z.string().optional(),
     relationship: z.string().optional(),
     authorPhoto: z.string().optional(),
+    authorPhotoSlug: z.string().optional(),
     rating: z.number().min(1).max(5).default(5),
     featured: z.boolean().default(false),
     active: z.boolean().default(true),
@@ -99,7 +100,8 @@ const testimonialsCollection = defineCollection({
     show_on_coming_soon: z.boolean().default(false),
     display_order: z.number().int().min(1).default(999),
     date: z.date().or(z.string()),
-    category: z.enum(['general', 'teachers', 'programs', 'admissions', 'values']).default('general'),
+    category: z.string().default('general'),
+    categories: z.array(z.string()).optional(),
     childAge: z.string().optional(),
     yearsAtSpicebush: z.number().optional()
   })

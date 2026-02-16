@@ -114,6 +114,10 @@ function normalizeCategoryValue(value) {
   return normalized || 'general';
 }
 
+function unique(values) {
+  return [...new Set(values)];
+}
+
 function applyCollectionDefaults(collection, payload) {
   if (collection !== 'testimonials') {
     return payload;
@@ -153,7 +157,15 @@ function applyCollectionDefaults(collection, payload) {
   normalized.rating = Number.isFinite(Number(normalized.rating))
     ? Math.min(Math.max(Math.round(Number(normalized.rating)), 1), 5)
     : 5;
-  normalized.category = normalizeCategoryValue(normalized.category);
+  const categoriesFromArray = Array.isArray(normalized.categories)
+    ? normalized.categories
+      .map((value) => normalizeCategoryValue(value))
+      .filter((value) => value.length > 0)
+    : [];
+  const categoryValue = normalizeCategoryValue(normalized.category);
+  const categories = unique([...categoriesFromArray, categoryValue]).filter((value) => value.length > 0);
+  normalized.categories = categories.length > 0 ? categories : ['general'];
+  normalized.category = normalized.categories[0];
 
   if (normalized.yearsAtSpicebush !== undefined && normalized.yearsAtSpicebush !== null && normalized.yearsAtSpicebush !== '') {
     const parsedYears = Number(normalized.yearsAtSpicebush);
