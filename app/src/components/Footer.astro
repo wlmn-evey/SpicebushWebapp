@@ -28,6 +28,10 @@ const toUrlOrNull = (value: unknown): string | null => {
 let socialMedia: SocialMediaLinks = { facebook: null, instagram: null };
 const copyrightYear = new Date().getFullYear();
 const tourLink = await getTourLink();
+const locals = Astro.locals as unknown as Record<string, unknown>;
+const isAdminUser = locals.isAdmin === true;
+const adminFooterHref = isAdminUser ? '/admin' : '/auth/sign-in?next=%2Fadmin';
+const adminFooterLabel = isAdminUser ? 'Admin Panel' : 'Admin Login';
 
 try {
   const [facebookSetting, instagramSetting] = await Promise.all([
@@ -58,8 +62,8 @@ try {
           <div class="space-y-4">
             <OptimizedImage
               photoSlug="homepage-spicebush-logo-brand-identity"
-              className="h-10 sm:h-12 md:h-14 w-auto mb-4 object-contain"
-              style="max-width: 180px;"
+              className="h-14 sm:h-16 md:h-20 w-auto mb-4 object-contain"
+              style="max-width: 260px;"
               loading="lazy"
               alt="Spicebush Montessori School"
             />
@@ -88,6 +92,7 @@ try {
               <li><a href="/our-principles" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Our Principles</a></li>
               <li><a href="/admissions" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Admissions</a></li>
               <li><a href="/admissions/tuition-calculator" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Tuition Calculator</a></li>
+              <li><a href={adminFooterHref} class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">{adminFooterLabel}</a></li>
             </ul>
           </div>
           
@@ -97,9 +102,7 @@ try {
               <h3 class="text-lg font-semibold text-sunlight-gold">Resources</h3>
               <ul class="space-y-2 text-sm">
                 <li><a href="/resources/faq" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">FAQ</a></li>
-                <li><a href="/resources/parent-resources" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Caregiver Resources</a></li>
-                <li><a href="/resources/events" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Community Events</a></li>
-                <li><a href="/policies" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Policies</a></li>
+                <li><a href="/blog" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Blog</a></li>
                 <li><a href="/contact" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Contact</a></li>
               </ul>
             </div>
@@ -146,7 +149,13 @@ try {
         <div class="text-light-stone text-sm text-center md:text-left">
           <p>&copy; {copyrightYear} Spicebush Montessori School. All rights reserved.</p>
         </div>
-        <div class="flex flex-wrap justify-center md:justify-end space-x-6 text-sm">
+        <div class="flex flex-wrap items-center justify-center md:justify-end gap-3 md:gap-6 text-sm">
+          <a
+            href={adminFooterHref}
+            class="inline-flex items-center rounded-lg border border-sunlight-gold/50 bg-sunlight-gold/15 px-3 py-1.5 font-semibold text-sunlight-gold transition-colors hover:bg-sunlight-gold hover:text-white"
+          >
+            {adminFooterLabel}
+          </a>
           <a href="/privacy-policy" class="text-light-stone hover:text-sunlight-gold transition-colors">Privacy Policy</a>
           <a href="/non-discrimination-policy" class="text-light-stone hover:text-sunlight-gold transition-colors">Non-Discrimination</a>
           <a href="/accessibility" class="text-light-stone hover:text-sunlight-gold transition-colors">Accessibility</a>

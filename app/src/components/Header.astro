@@ -48,7 +48,7 @@ const tourLink = await getTourLink();
 
 const HOURS_FALLBACK = {
   open: '8:30 AM',
-  close: '3:30 PM'
+  close: '3:00 PM'
 };
 
 let hoursEntries: ContentEntry[] = [];
@@ -110,6 +110,7 @@ const weekdayHours = {
         <!-- Navigation Links with reduced spacing -->
         <div class="flex items-center space-x-3 xl:space-x-5">
           <a href="/about" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">About</a>
+          <a href="/our-principles" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Principles</a>
           <a href="/programs" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Programs</a>
           <a href="/admissions" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Admissions</a>
           <a href="/contact" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Contact</a>
@@ -150,6 +151,7 @@ const weekdayHours = {
     <div class="lg:hidden hidden mt-4 pb-4 border-t border-gray-200" id="mobile-menu" role="menu" aria-labelledby="mobile-menu-toggle">
       <div class="flex flex-col space-y-3 pt-6">
         <a href="/about" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">About</a>
+        <a href="/our-principles" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Our Principles</a>
         <a href="/programs" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Programs</a>
         <a href="/admissions" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Admissions</a>
         <a href="/contact" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Contact</a>

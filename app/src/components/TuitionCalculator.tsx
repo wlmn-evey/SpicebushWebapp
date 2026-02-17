@@ -506,7 +506,7 @@ export default function TuitionCalculator({ programs, rates, settings }: Props) 
       <section className="bg-white border border-stone-beige rounded-3xl p-6 text-sm text-earth-brown/70 leading-relaxed shadow-sm">
         <h3 className="text-lg font-heading font-semibold text-earth-brown mb-3">Need a personalized quote?</h3>
         <p>
-          Our admissions team can walk through grants, tuition assistance, and payment plans tailored to your family. Call <a className="underline" href="tel:14842020712">(484) 202-0712</a> or email <a className="underline" href="mailto:hello@spicebushmontessori.org">hello@spicebushmontessori.org</a> for support.
+          Our admissions team can walk through grants, tuition assistance, and payment plans tailored to your family. Call <a className="underline" href="tel:14842020712">(484) 202-0712</a> or email <a className="underline" href="mailto:information@spicebushmontessori.org">information@spicebushmontessori.org</a> for support.
         </p>
       </section>
     </div>
