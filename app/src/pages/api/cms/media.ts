@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { query, queryRows, queryFirst } from '@lib/db/client';
+import { deleteStoredMediaAsset } from '@lib/media-storage';
 import { logServerError } from '@lib/server-logger';
 
 export const GET: APIRoute = async (context) => {
@@ -68,9 +69,15 @@ export const DELETE: APIRoute = async (context) => {
     }
 
     // Get the media record first to get file path for cleanup
-    const mediaRecord = await queryFirst<{ id: string; filename: string; url: string }>(
+    const mediaRecord = await queryFirst<{
+      id: string;
+      filename: string;
+      url: string;
+      storage_path: string | null;
+      metadata: Record<string, unknown> | null;
+    }>(
       `
-        SELECT id, filename, url
+        SELECT id, filename, url, storage_path, metadata
         FROM media
         WHERE id = $1
         LIMIT 1
@@ -94,9 +101,11 @@ export const DELETE: APIRoute = async (context) => {
       [id]
     );
 
-    // TODO: Delete physical file from storage
-    // This would be handled by the storage provider in production
-    // For now, we just remove the database record
+    await deleteStoredMediaAsset({
+      url: mediaRecord.url,
+      storagePath: mediaRecord.storage_path,
+      metadata: mediaRecord.metadata
+    });
 
     return new Response(JSON.stringify({
       success: true,

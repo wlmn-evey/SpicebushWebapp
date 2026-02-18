@@ -1,14 +1,18 @@
 ---
 import { Mail } from 'lucide-astro';
 import { db, type ContentEntry } from '@lib/db';
+import OptimizedImage from '@components/OptimizedImage.astro';
+import { buildPhotoSlugResolver, toPhotoLookupEntry } from '@lib/photo-slug-resolver';
 
 type StaffContentEntry = ContentEntry<Record<string, unknown>>;
+type PhotoContentEntry = ContentEntry<Record<string, unknown>>;
 
 interface StaffViewModel {
   id: string;
   name: string;
   role?: string;
   photo?: string;
+  photoSlug?: string;
   email?: string;
   certificationBadge?: string;
   credentials: string[];
@@ -49,8 +53,20 @@ const normalizeOrder = (value: unknown): number => {
   return 999;
 };
 
+const asRecord = (value: unknown): Record<string, unknown> => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+};
+
+const photoEntries = (await db.content.getCollection('photos')) as PhotoContentEntry[];
+const resolvePhotoSlug = buildPhotoSlugResolver(
+  photoEntries.map((entry) => toPhotoLookupEntry(entry.slug, asRecord(entry.data)))
+);
+
 const toViewModel = (entry: StaffContentEntry): StaffViewModel | null => {
-  const data = entry.data as Record<string, unknown>;
+  const data = asRecord(entry.data);
   const name = normalizeString(data.name);
   if (!name) {
     return null;
@@ -59,6 +75,7 @@ const toViewModel = (entry: StaffContentEntry): StaffViewModel | null => {
   const role = normalizeString(data.role);
   const email = normalizeString(data.email);
   const photo = normalizeString(data.photo);
+  const photoSlug = resolvePhotoSlug(photo) ?? undefined;
   const certificationBadge = normalizeString(data.certificationBadge);
   const credentials = normalizeStringArray(data.credentials);
   const languages = normalizeStringArray(data.languages);
@@ -83,6 +100,7 @@ const toViewModel = (entry: StaffContentEntry): StaffViewModel | null => {
     name,
     role,
     photo,
+    photoSlug,
     email,
     certificationBadge,
     credentials,
@@ -128,7 +146,15 @@ const sortedStaff = staffEntries
             >
               <div class={`flex flex-col ${layoutClass} lg:min-h-[400px]`}>
                 <div class="w-full lg:w-2/5 relative">
-                  {teacher.photo ? (
+                  {teacher.photoSlug ? (
+                    <div class="aspect-square lg:aspect-auto lg:h-full overflow-hidden">
+                      <OptimizedImage
+                        photoSlug={teacher.photoSlug}
+                        alt={`${teacher.name}${teacher.role ? `, ${teacher.role}` : ''} at Spicebush Montessori School`}
+                        className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                      />
+                    </div>
+                  ) : teacher.photo ? (
                     <div class="aspect-square lg:aspect-auto lg:h-full overflow-hidden">
                       <img 
                         src={teacher.photo}

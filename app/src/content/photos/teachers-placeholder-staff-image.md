@@ -9,29 +9,29 @@ originalHeight: 800
 aspectRatio: "1:1"
 format: "webp"
 
-# Primary focal point - Center
+# Primary focal point - Upper center
 primaryFocalX: 50
-primaryFocalY: 50
+primaryFocalY: 34
 primaryFocalWeight: 10
-primaryFocalDescription: "Generic placeholder for staff photos"
+primaryFocalDescription: "Upper-center framing for a staff portrait"
 
-# Secondary focal point - N/A
+# Secondary focal point - Supporting center anchor
 secondaryFocalX: 50
-secondaryFocalY: 50
-secondaryFocalWeight: 1
-secondaryFocalDescription: "Placeholder image center"
+secondaryFocalY: 58
+secondaryFocalWeight: 5
+secondaryFocalDescription: "Secondary body framing anchor"
 
-# Mobile crop zone (full image)
-mobileCropX: 0
-mobileCropY: 0
-mobileCropWidth: 100
-mobileCropHeight: 100
+# Mobile crop zone (portrait framing)
+mobileCropX: 18
+mobileCropY: 6
+mobileCropWidth: 64
+mobileCropHeight: 74
 
-# Tablet crop zone (full image)
-tabletCropX: 0
-tabletCropY: 0
-tabletCropWidth: 100
-tabletCropHeight: 100
+# Tablet crop zone (upper-body framing)
+tabletCropX: 10
+tabletCropY: 5
+tabletCropWidth: 80
+tabletCropHeight: 82
 
 # SEO and accessibility
 altText: "Placeholder image for staff member photo"

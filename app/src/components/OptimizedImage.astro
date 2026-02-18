@@ -8,18 +8,20 @@ interface Props {
   objectFit?: 'cover' | 'contain' | 'fill' | 'scale-down' | 'none';
   objectPosition?: string;
   loading?: 'lazy' | 'eager';
-  showFocalPoints?: boolean; // Debug mode
-  alt?: string; // Add alt prop
+  showFocalPoints?: boolean;
+  alt?: string;
 }
 
-import { getEntry } from 'astro:content';
+import { getEntry as getContentEntry } from 'astro:content';
+import { db } from '@lib/db';
 import { logServerError } from '@lib/server-logger';
+import { getPhotoFramingDefaults } from '@lib/photo-framing-defaults';
 
-const { 
-  photoSlug, 
-  className = '', 
+const {
+  photoSlug,
+  className = '',
   style = '',
-  priority = false, 
+  priority = false,
   sizes = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw',
   objectFit = 'cover',
   objectPosition,
@@ -28,91 +30,189 @@ const {
   alt
 } = Astro.props;
 
-// Get photo metadata from CMS
-let photo;
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const asRecord = (value: unknown): Record<string, unknown> => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+};
+
+const stringFrom = (value: unknown, fallback = ''): string => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.length > 0) return trimmed;
+  }
+  return fallback;
+};
+
+const numberFrom = (value: unknown, fallback: number): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number.parseFloat(value.trim());
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+};
+
+const optionalNumberFrom = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number.parseFloat(value.trim());
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+};
+
+const normalizeCrop = (
+  xInput: unknown,
+  yInput: unknown,
+  widthInput: unknown,
+  heightInput: unknown,
+  defaults: { x: number; y: number; width: number; height: number }
+) => {
+  const width = clamp(numberFrom(widthInput, defaults.width), 10, 100);
+  const height = clamp(numberFrom(heightInput, defaults.height), 10, 100);
+  const x = clamp(numberFrom(xInput, defaults.x), 0, 100 - width);
+  const y = clamp(numberFrom(yInput, defaults.y), 0, 100 - height);
+
+  return {
+    x: Math.round(x * 10) / 10,
+    y: Math.round(y * 10) / 10,
+    width: Math.round(width * 10) / 10,
+    height: Math.round(height * 10) / 10
+  };
+};
+
+const gallerySubcategories = new Set([
+  'art',
+  'classroom',
+  'events',
+  'group',
+  'individual',
+  'materials',
+  'outdoor',
+  'practical'
+]);
+
+let resolvedSlug = photoSlug;
+let photoData: Record<string, unknown> | null = null;
+
 try {
-  photo = await getEntry('photos', photoSlug);
+  const dbPhoto = await db.content.getEntry('photos', photoSlug);
+  if (dbPhoto?.data) {
+    photoData = asRecord(dbPhoto.data);
+    resolvedSlug = dbPhoto.slug;
+  }
 } catch (error) {
-  logServerError('Photo lookup failed', error, { component: 'OptimizedImage', photoSlug });
-  photo = null;
+  logServerError('Database photo lookup failed', error, { component: 'OptimizedImage', photoSlug });
 }
 
-if (!photo) {
-  // Fallback for missing photos
+if (!photoData) {
+  try {
+    const contentPhoto = await getContentEntry('photos', photoSlug);
+    if (contentPhoto?.data) {
+      photoData = asRecord(contentPhoto.data);
+      resolvedSlug = contentPhoto.slug;
+    }
+  } catch (error) {
+    logServerError('Photo content lookup failed', error, { component: 'OptimizedImage', photoSlug });
+  }
+}
+
+if (!photoData) {
   return null;
 }
 
-const {
-  optimizedFilename,
-  originalWidth,
-  originalHeight,
-  altText,
-  primaryFocalX,
-  primaryFocalY,
-  secondaryFocalX,
-  secondaryFocalY,
-  mobileCropX,
-  mobileCropY,
-  mobileCropWidth,
-  mobileCropHeight,
-  tabletCropX,
-  tabletCropY,
-  tabletCropWidth,
-  tabletCropHeight
-} = photo.data;
+const category = stringFrom(photoData.category, 'homepage');
+const sourceUrl = stringFrom(photoData.sourceUrl, '');
+const optimizedFilename = stringFrom(photoData.optimizedFilename, `${resolvedSlug}.webp`);
 
-// Calculate object-position based on focal points
+const originalWidth = Math.max(1, Math.round(numberFrom(photoData.originalWidth, 1280)));
+const originalHeight = Math.max(1, Math.round(numberFrom(photoData.originalHeight, 800)));
+const framingDefaults = getPhotoFramingDefaults({
+  category,
+  width: originalWidth,
+  height: originalHeight,
+  slug: resolvedSlug
+});
+
+const altText = stringFrom(photoData.altText, resolvedSlug);
+const primaryFocalX = clamp(numberFrom(photoData.primaryFocalX, framingDefaults.primaryFocalX), 0, 100);
+const primaryFocalY = clamp(numberFrom(photoData.primaryFocalY, framingDefaults.primaryFocalY), 0, 100);
+
+const secondaryFocalX = optionalNumberFrom(photoData.secondaryFocalX);
+const secondaryFocalY = optionalNumberFrom(photoData.secondaryFocalY);
+
+const mobileCrop = normalizeCrop(
+  photoData.mobileCropX,
+  photoData.mobileCropY,
+  photoData.mobileCropWidth,
+  photoData.mobileCropHeight,
+  {
+    x: framingDefaults.mobileCropX,
+    y: framingDefaults.mobileCropY,
+    width: framingDefaults.mobileCropWidth,
+    height: framingDefaults.mobileCropHeight
+  }
+);
+const tabletCrop = normalizeCrop(
+  photoData.tabletCropX,
+  photoData.tabletCropY,
+  photoData.tabletCropWidth,
+  photoData.tabletCropHeight,
+  {
+    x: framingDefaults.tabletCropX,
+    y: framingDefaults.tabletCropY,
+    width: framingDefaults.tabletCropWidth,
+    height: framingDefaults.tabletCropHeight
+  }
+);
+
 const objectPositionDesktop = `${primaryFocalX}% ${primaryFocalY}%`;
-const objectPositionTablet = `${tabletCropX + (tabletCropWidth / 2)}% ${tabletCropY + (tabletCropHeight / 2)}%`;
-const objectPositionMobile = `${mobileCropX + (mobileCropWidth / 2)}% ${mobileCropY + (mobileCropHeight / 2)}%`;
+const objectPositionTablet = `${tabletCrop.x + (tabletCrop.width / 2)}% ${tabletCrop.y + (tabletCrop.height / 2)}%`;
+const objectPositionMobile = `${mobileCrop.x + (mobileCrop.width / 2)}% ${mobileCrop.y + (mobileCrop.height / 2)}%`;
+const responsivePositionDesktop = objectPosition || objectPositionDesktop;
+const responsivePositionTablet = objectPosition || objectPositionTablet;
+const responsivePositionMobile = objectPosition || objectPositionMobile;
 
-// Generate srcset for different screen sizes
-// Gallery subcategories are stored in gallery/{category} subdirectories
-const gallerySubcategories = ['art', 'classroom', 'events', 'group', 'individual', 'materials', 'outdoor', 'practical'];
-const isGallerySubcategory = gallerySubcategories.includes(photo.data.category);
-const basePath = isGallerySubcategory 
-  ? `/images/optimized/gallery/${photo.data.category}`
-  : `/images/optimized/${photo.data.category}`;
+const basePath = sourceUrl
+  ? ''
+  : (gallerySubcategories.has(category)
+    ? `/images/optimized/gallery/${category}`
+    : `/images/optimized/${category}`);
 
-// Extract the base filename without dimensions from optimizedFilename
-// e.g., "gallery-montessori-watercolor-painting-artistic-expression-1200x800.webp" -> use slug instead
-const webpSrc = `${basePath}/${optimizedFilename}`;
-const jpgFallback = `${basePath}/${photo.slug}-640w.jpg`;
+const webpSrc = sourceUrl || `${basePath}/${optimizedFilename}`;
+const jpgFallback = sourceUrl || `${basePath}/${resolvedSlug}-640w.jpg`;
 
-// Create responsive srcset
-let srcSet = [
-  `${basePath}/${photo.slug}-320w.webp 320w`,
-  `${basePath}/${photo.slug}-640w.webp 640w`,
-  `${basePath}/${photo.slug}-960w.webp 960w`,
-  `${basePath}/${photo.slug}-1280w.webp 1280w`
-].filter(src => {
-  // Only include sizes that exist (smaller than original)
-  const width = parseInt(src.match(/(\d+)w/)?.[1] || '0');
-  return width <= originalWidth;
-}).join(', ');
+const responsiveSources = sourceUrl
+  ? [`${sourceUrl} ${originalWidth}w`]
+  : [320, 640, 960, 1280]
+    .filter((width) => width <= originalWidth)
+    .map((width) => `${basePath}/${resolvedSlug}-${width}w.webp ${width}w`);
 
-// Add primary image to srcset if it exists
-if (originalWidth > 1280) {
-  srcSet += `, ${webpSrc} ${originalWidth}w`;
+if (!sourceUrl && originalWidth > 1280) {
+  responsiveSources.push(`${webpSrc} ${originalWidth}w`);
 }
 
-// Determine loading strategy
-const loadingStrategy = loading || (priority ? 'eager' : 'lazy');
+if (responsiveSources.length === 0) {
+  responsiveSources.push(`${webpSrc} ${originalWidth}w`);
+}
 
-// Generate a simple data attribute for CSS targeting
+const srcSet = responsiveSources.join(', ');
+const loadingStrategy = loading || (priority ? 'eager' : 'lazy');
 const imageId = `img-${Math.random().toString(36).slice(2, 11)}`;
 ---
 
 <div class="optimized-image" data-photo-slug={photoSlug}>
   <picture>
-    <!-- WebP source with responsive sizing -->
     <source
       type="image/webp"
       srcset={srcSet}
       sizes={sizes}
     />
-    
-    <!-- Fallback JPG -->
+
     <img
       src={jpgFallback}
       alt={alt || altText}
@@ -122,38 +222,35 @@ const imageId = `img-${Math.random().toString(36).slice(2, 11)}`;
       decoding={priority ? 'sync' : 'async'}
       class={`optimized-image-element ${className}`}
       data-image-id={imageId}
-      data-position-mobile={objectPositionMobile}
-      data-position-tablet={objectPositionTablet}
-      data-position-desktop={objectPositionDesktop}
-      style={`object-fit: ${objectFit}; object-position: ${objectPosition || objectPositionDesktop}; ${style}`}
+      style={`object-fit: ${objectFit}; --sb-pos-mobile: ${responsivePositionMobile}; --sb-pos-tablet: ${responsivePositionTablet}; --sb-pos-desktop: ${responsivePositionDesktop}; object-position: var(--sb-pos-mobile); ${style}`}
     />
   </picture>
-  
+
   {showFocalPoints && (
     <div class="focal-points-debug">
-      <div 
+      <div
         class="focal-point focal-point-primary"
         style={`left: ${primaryFocalX}%; top: ${primaryFocalY}%;`}
         title={`Primary: ${primaryFocalX}%, ${primaryFocalY}%`}
       ></div>
-      
-      {secondaryFocalX && secondaryFocalY && (
-        <div 
+
+      {secondaryFocalX !== null && secondaryFocalY !== null && (
+        <div
           class="focal-point focal-point-secondary"
           style={`left: ${secondaryFocalX}%; top: ${secondaryFocalY}%;`}
           title={`Secondary: ${secondaryFocalX}%, ${secondaryFocalY}%`}
         ></div>
       )}
-      
-      <div 
+
+      <div
         class="crop-zone crop-zone-mobile"
-        style={`left: ${mobileCropX}%; top: ${mobileCropY}%; width: ${mobileCropWidth}%; height: ${mobileCropHeight}%;`}
+        style={`left: ${mobileCrop.x}%; top: ${mobileCrop.y}%; width: ${mobileCrop.width}%; height: ${mobileCrop.height}%;`}
         title="Mobile crop zone"
       ></div>
-      
-      <div 
+
+      <div
         class="crop-zone crop-zone-tablet"
-        style={`left: ${tabletCropX}%; top: ${tabletCropY}%; width: ${tabletCropWidth}%; height: ${tabletCropHeight}%;`}
+        style={`left: ${tabletCrop.x}%; top: ${tabletCrop.y}%; width: ${tabletCrop.width}%; height: ${tabletCrop.height}%;`}
         title="Tablet crop zone"
       ></div>
     </div>
@@ -164,52 +261,63 @@ const imageId = `img-${Math.random().toString(36).slice(2, 11)}`;
   .optimized-image {
     @apply block relative overflow-hidden;
   }
-  
+
   .optimized-image-element {
-    /* Removed w-full h-full to allow passed classes to control sizing */
+    object-position: var(--sb-pos-mobile, 50% 50%);
   }
-  
-  /* Debug styles */
+
+  @media (min-width: 768px) {
+    .optimized-image-element {
+      object-position: var(--sb-pos-tablet, var(--sb-pos-mobile, 50% 50%));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .optimized-image-element {
+      object-position: var(--sb-pos-desktop, var(--sb-pos-tablet, var(--sb-pos-mobile, 50% 50%)));
+    }
+  }
+
   .focal-points-debug {
     @apply absolute inset-0 pointer-events-none;
   }
-  
+
   .focal-point {
     @apply absolute w-4 h-4 rounded-full border-2 border-white transform -translate-x-2 -translate-y-2;
   }
-  
+
   .focal-point-primary {
     @apply bg-red-500;
   }
-  
+
   .focal-point-secondary {
     @apply bg-blue-500 w-3 h-3 -translate-x-1.5 -translate-y-1.5;
   }
-  
+
   .crop-zone {
     @apply absolute border-2;
   }
-  
+
   .crop-zone-mobile {
     @apply border-green-400 bg-green-400/20;
   }
-  
+
   @media (min-width: 768px) {
     .crop-zone-mobile {
       @apply hidden;
     }
   }
-  
+
   .crop-zone-tablet {
     @apply border-orange-400 bg-orange-400/20 hidden;
   }
-  
+
   @media (min-width: 768px) {
     .crop-zone-tablet {
       @apply block;
     }
   }
-  
+
   @media (min-width: 1024px) {
     .crop-zone-tablet {
       @apply hidden;

@@ -72,7 +72,8 @@ if (!session) {
 Astro.cookies.set(ADMIN_SESSION_COOKIE_NAME, session.sessionToken, {
   path: '/',
   httpOnly: true,
-  sameSite: 'strict',
+  // Auth0 returns from a cross-site redirect; lax ensures first hop to /admin keeps the session.
+  sameSite: 'lax',
   secure: Astro.url.protocol === 'https:',
   maxAge: ADMIN_SESSION_MAX_AGE_SECONDS
 });

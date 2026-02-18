@@ -1,11 +1,16 @@
 ---
 import AdminLayout from '@layouts/AdminLayout.astro';
 import { db, type ContentEntry } from '@lib/db';
+import { getCollection } from 'astro:content';
+import { buildPhotoSlugResolver, toPhotoLookupEntry } from '@lib/photo-slug-resolver';
 
 type StaffEntry = ContentEntry<Record<string, unknown>>;
+type PhotoEntry = ContentEntry<Record<string, unknown>>;
 
 const collection = 'staff';
 const entries = (await db.content.getCollection(collection)) as StaffEntry[];
+const dbPhotoEntries = (await db.content.getCollection('photos', 0)) as PhotoEntry[];
+const filePhotoEntries = await getCollection('photos');
 const sortedEntries = [...entries].sort((a, b) => {
   const aOrder = Number((a.data as Record<string, unknown>).order ?? 999);
   const bOrder = Number((b.data as Record<string, unknown>).order ?? 999);
@@ -22,6 +27,18 @@ const asRecord = (value: unknown): Record<string, unknown> => {
   }
   return {};
 };
+
+const photoLookupBySlug = new Map<string, ReturnType<typeof toPhotoLookupEntry>>();
+
+for (const entry of filePhotoEntries) {
+  photoLookupBySlug.set(entry.slug, toPhotoLookupEntry(entry.slug, asRecord(entry.data)));
+}
+
+for (const entry of dbPhotoEntries) {
+  photoLookupBySlug.set(entry.slug, toPhotoLookupEntry(entry.slug, asRecord(entry.data)));
+}
+
+const resolvePhotoSlug = buildPhotoSlugResolver([...photoLookupBySlug.values()]);
 
 const stringFrom = (value: unknown, fallback = ''): string => {
   if (typeof value === 'string') {
@@ -58,6 +75,7 @@ const csvFrom = (value: unknown, fallback = ''): string => {
 
 const editableEntries = sortedEntries.map((entry) => {
   const data = asRecord(entry.data);
+  const photo = stringFrom(data.photo, '');
   return {
     entry,
     data,
@@ -66,7 +84,8 @@ const editableEntries = sortedEntries.map((entry) => {
     name: stringFrom(data.name, stringFrom(data.title, entry.slug)),
     role: stringFrom(data.role, ''),
     email: stringFrom(data.email, ''),
-    photo: stringFrom(data.photo, ''),
+    photo,
+    photoEditorSlug: resolvePhotoSlug(photo),
     badge: stringFrom(data.certificationBadge, ''),
     credentials: csvFrom(data.credentials, ''),
     languages: csvFrom(data.languages, 'English'),
@@ -107,7 +126,7 @@ const editableEntries = sortedEntries.map((entry) => {
         </div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
           <p class="text-xs uppercase tracking-wide text-earth-brown/70">Photo Tip</p>
-          <p class="text-sm text-earth-brown/80">Use a full image URL or a site-relative path.</p>
+          <p class="text-sm text-earth-brown/80">Upload directly in each profile, then refine with crop and focal controls.</p>
         </div>
       </div>
     </section>
@@ -161,6 +180,9 @@ const editableEntries = sortedEntries.map((entry) => {
                 />
               </label>
             </div>
+            <p class="text-xs text-earth-brown/70">
+              Save first, then open that teacher from &quot;Existing Staff&quot; to launch the crop and focal editor for their image.
+            </p>
 
             <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
               <summary class="cursor-pointer text-sm font-semibold text-earth-brown">Advanced Options</summary>
@@ -270,7 +292,7 @@ const editableEntries = sortedEntries.map((entry) => {
         <p class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-earth-brown/80">No staff entries found yet.</p>
       ) : (
         <div class="space-y-3">
-          {editableEntries.map(({ entry, data, status, title, name, role, email, photo, badge, credentials, languages, startYear, order, bio }) => (
+          {editableEntries.map(({ entry, data, status, title, name, role, email, photo, photoEditorSlug, badge, credentials, languages, startYear, order, bio }) => (
             <details class="rounded-lg border border-gray-200 bg-gray-50">
               <summary class="cursor-pointer px-4 py-3">
                 <div class="flex flex-wrap items-start justify-between gap-2">
@@ -326,10 +348,61 @@ const editableEntries = sortedEntries.map((entry) => {
                       <input
                         type="text"
                         name="data.photo"
+                        data-photo-url-input
                         value={photo}
                         class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                       />
                     </label>
+                    <div
+                      class="rounded-lg border border-gray-200 bg-gray-50 p-3 md:col-span-2"
+                      data-staff-upload
+                      data-entry-slug={entry.slug}
+                    >
+                      <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-earth-brown/70">Upload Teacher Photo</p>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          data-upload-file
+                          class="max-w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs"
+                        />
+                        <button
+                          type="button"
+                          data-upload-button
+                          class="rounded-lg bg-forest-canopy px-3 py-2 text-xs font-semibold text-white hover:bg-moss-green"
+                        >
+                          Upload and Attach
+                        </button>
+                        <a
+                          href="/admin/media"
+                          data-upload-crop-link
+                          class="hidden rounded-lg border border-forest-canopy bg-white px-3 py-2 text-xs font-semibold text-forest-canopy hover:bg-forest-canopy hover:text-white"
+                        >
+                          Open Crop &amp; Focal Editor
+                        </a>
+                      </div>
+                      <p data-upload-status class="mt-2 hidden rounded-md border px-2 py-1 text-xs"></p>
+                    </div>
+                    <div class="flex flex-wrap items-end gap-2 md:col-span-2">
+                      {photoEditorSlug ? (
+                        <a
+                          href={`/admin/media?slug=${encodeURIComponent(photoEditorSlug)}`}
+                          class="rounded-lg border border-forest-canopy bg-white px-3 py-2 text-xs font-semibold text-forest-canopy hover:bg-forest-canopy hover:text-white"
+                        >
+                          Edit Crop &amp; Focal Point
+                        </a>
+                      ) : (
+                        <p class="text-xs text-earth-brown/70">
+                          No linked media entry found yet. Save a valid photo URL, then this button will appear.
+                        </p>
+                      )}
+                      <a
+                        href="/admin/media"
+                        class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-earth-brown hover:bg-gray-50"
+                      >
+                        Open Media Manager
+                      </a>
+                    </div>
                   </div>
 
                   <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -433,4 +506,121 @@ const editableEntries = sortedEntries.map((entry) => {
       )}
     </section>
   </div>
+
+  <script is:inline>
+    (() => {
+      const uploadCards = Array.from(document.querySelectorAll('[data-staff-upload]'));
+      if (!uploadCards.length) return;
+
+      const slugify = (value) => String(value || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9-_]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 80);
+
+      const setStatus = (node, message, isError = false) => {
+        if (!node) return;
+        node.textContent = message;
+        node.classList.remove(
+          'hidden',
+          'border-red-200',
+          'bg-red-50',
+          'text-red-800',
+          'border-green-200',
+          'bg-green-50',
+          'text-green-800'
+        );
+
+        if (isError) {
+          node.classList.add('border-red-200', 'bg-red-50', 'text-red-800');
+        } else {
+          node.classList.add('border-green-200', 'bg-green-50', 'text-green-800');
+        }
+      };
+
+      uploadCards.forEach((card) => {
+        const form = card.closest('form');
+        if (!form) return;
+
+        const fileInput = card.querySelector('[data-upload-file]');
+        const uploadButton = card.querySelector('[data-upload-button]');
+        const statusNode = card.querySelector('[data-upload-status]');
+        const cropLink = card.querySelector('[data-upload-crop-link]');
+
+        const nameInput = form.querySelector('input[name="data.name"]');
+        const slugInput = form.querySelector('input[name="slug"]');
+        const photoInput = form.querySelector('[data-photo-url-input]');
+        const entrySlug = card.getAttribute('data-entry-slug') || '';
+
+        if (!fileInput || !uploadButton || !statusNode || !photoInput) {
+          return;
+        }
+
+        uploadButton.addEventListener('click', async () => {
+          const selectedFile = fileInput.files && fileInput.files[0];
+          if (!selectedFile) {
+            setStatus(statusNode, 'Please select an image file first.', true);
+            return;
+          }
+
+          const nameValue = (nameInput && typeof nameInput.value === 'string')
+            ? nameInput.value.trim()
+            : '';
+          const slugValue = (slugInput && typeof slugInput.value === 'string')
+            ? slugInput.value.trim()
+            : entrySlug;
+
+          const teacherName = nameValue || slugValue || 'Teacher';
+          const requestedSlug = slugify(`teachers-${slugValue || teacherName}`);
+
+          const requestData = new FormData();
+          requestData.append('file', selectedFile);
+          requestData.append('createPhotoEntry', 'true');
+          requestData.append('category', 'teachers');
+          requestData.append('title', `${teacherName} Photo`);
+          if (requestedSlug) {
+            requestData.append('slug', requestedSlug);
+          }
+
+          uploadButton.setAttribute('disabled', 'disabled');
+          uploadButton.classList.add('opacity-60', 'cursor-not-allowed');
+          setStatus(statusNode, 'Uploading and attaching photo...');
+
+          try {
+            const response = await fetch('/api/media/upload', {
+              method: 'POST',
+              body: requestData
+            });
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload.success !== true) {
+              const message = typeof payload.error === 'string' ? payload.error : 'Upload failed';
+              setStatus(statusNode, message, true);
+              return;
+            }
+
+            const uploadedUrl = typeof payload.url === 'string' ? payload.url : '';
+            const photoSlug = typeof payload.photoSlug === 'string' ? payload.photoSlug : '';
+
+            if (uploadedUrl) {
+              photoInput.value = uploadedUrl;
+            }
+
+            if (cropLink && photoSlug) {
+              cropLink.href = `/admin/media?slug=${encodeURIComponent(photoSlug)}`;
+              cropLink.classList.remove('hidden');
+            }
+
+            setStatus(statusNode, 'Photo uploaded and attached. Save staff profile to keep this URL.');
+          } catch (error) {
+            const message = error instanceof Error ? error.message : 'Unexpected upload error';
+            setStatus(statusNode, message, true);
+          } finally {
+            uploadButton.removeAttribute('disabled');
+            uploadButton.classList.remove('opacity-60', 'cursor-not-allowed');
+          }
+        });
+      });
+    })();
+  </script>
 </AdminLayout>

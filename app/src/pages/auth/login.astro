@@ -29,7 +29,8 @@ if (!session) {
 Astro.cookies.set(ADMIN_SESSION_COOKIE_NAME, session.sessionToken, {
   path: '/',
   httpOnly: true,
-  sameSite: 'strict',
+  // Magic-link sign-in also arrives via cross-site navigation from email clients.
+  sameSite: 'lax',
   secure: Astro.url.protocol === 'https:',
   maxAge: ADMIN_SESSION_MAX_AGE_SECONDS
 });

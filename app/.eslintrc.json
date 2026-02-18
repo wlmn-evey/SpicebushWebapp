@@ -76,10 +76,12 @@
       }
     },
     {
-      "files": ["src/pages/admin/tuition.astro"],
+      "files": ["src/pages/admin/tuition.astro", "src/pages/admin/media.astro"],
       "rules": {
         // Work around ESLint indent recursion on deeply nested Astro templates
-        "indent": "off"
+        "indent": "off",
+        // Dynamic state selectors are toggled at runtime in admin editors
+        "astro/no-unused-css-selector": "off"
       }
     },
     {
