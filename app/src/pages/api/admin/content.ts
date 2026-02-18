@@ -3,7 +3,7 @@ import { checkAdminAuth } from '@lib/admin-auth-check';
 import { db } from '@lib/db';
 import { query } from '@lib/db/client';
 
-const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info', 'photos', 'faq', 'testimonials']);
+const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info', 'photos', 'faq', 'testimonials', 'media-slots']);
 
 type ContentPayload = {
   collection: string;

@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
 import { query, queryFirst } from '@lib/db/client';
 
-const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info', 'faq', 'testimonials']);
+const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info', 'faq', 'testimonials', 'photos', 'media-slots']);
 
 type EntryPayload = {
   collection?: string;

@@ -21,7 +21,8 @@ const DATABASE_COLLECTIONS = new Set([
   'cms_announcements',
   'cms_events',
   'cms_tuition',
-  'cms_testimonials'
+  'cms_testimonials',
+  'media-slots'
 ]);
 
 const DEFAULT_COLLECTION_TTL = 5 * 60 * 1000; // 5 minutes

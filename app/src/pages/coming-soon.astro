@@ -4,6 +4,7 @@ export const prerender = false;
 import { getCollection, getEntries, getAllSettings, type ContentEntry } from '@lib/content-db';
 import { getTestimonialsForPlacement, type ManagedTestimonial } from '@lib/testimonials-content';
 import ExternalLinkTargetBehavior from '@components/ExternalLinkTargetBehavior.astro';
+import OptimizedImage from '@components/OptimizedImage.astro';
 
 const DEFAULT_APPLICATION_SCHOOL_YEAR = '2026-2027 School Year';
 const DEFAULT_UPDATE_MESSAGE = 'Enrollment is open for the 2026-2027 school year while we work on bringing you an improved website experience.';
@@ -644,7 +645,7 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
       to { transform: rotate(360deg); }
     }
 
-    .logo {
+    .header :global(.logo) {
       width: 170px;
       height: 170px;
       margin: 0 auto 1.5rem;
@@ -979,7 +980,7 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
       gap: 1rem;
     }
 
-    .about-images img {
+    .about-images :global(.optimized-image-element) {
       width: 100%;
       border-radius: 15px;
       box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
@@ -1498,7 +1499,15 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
 
   <!-- Header Section -->
   <header class="header">
-    <img src="/images/optimized/homepage/homepage-spicebush-logo-brand-identity-800x800.webp" alt={siteName} class="logo">
+    <OptimizedImage
+      photoSlug="homepage-spicebush-logo-brand-identity"
+      className="logo"
+      objectFit="contain"
+      slotId="coming-soon-header-logo"
+      mediaCategory="homepage"
+      sizes="220px"
+      alt={siteName}
+    />
     <h1>{siteName}</h1>
     <p class="tagline">{tagline}</p>
     <div class="enrollment-notice" role="alert">🌟 Enrollment Open for {applicationSchoolYear} - Limited Spots Available!</div>
@@ -1624,10 +1633,34 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
         </div>
         
         <div class="about-images">
-          <img src="/images/homepage/montessori-numbers.png" alt="Child working with Montessori number materials" loading="lazy">
-          <img src="/images/homepage/pink-tower-concentration.png" alt="Child concentrating on pink tower activity" loading="lazy">
-          <img src="/images/about/mixed-age-learning.png" alt="Children of different ages learning together" loading="lazy">
-          <img src="/images/programs/cylinder-blocks-sensorial.png" alt="Hands working with cylinder blocks" loading="lazy">
+          <OptimizedImage
+            photoSlug="homepage-montessori-math-numbers-concentration-deep-learning"
+            slotId="coming-soon-about-image-1"
+            mediaCategory="homepage"
+            loading="lazy"
+            alt="Child working with Montessori number materials"
+          />
+          <OptimizedImage
+            photoSlug="homepage-montessori-pink-tower-concentration-building-skills"
+            slotId="coming-soon-about-image-2"
+            mediaCategory="homepage"
+            loading="lazy"
+            alt="Child concentrating on pink tower activity"
+          />
+          <OptimizedImage
+            photoSlug="about-montessori-mixed-age-collaborative-learning"
+            slotId="coming-soon-about-image-3"
+            mediaCategory="about"
+            loading="lazy"
+            alt="Children of different ages learning together"
+          />
+          <OptimizedImage
+            photoSlug="programs-montessori-cylinder-blocks-sensorial-refinement"
+            slotId="coming-soon-about-image-4"
+            mediaCategory="programs"
+            loading="lazy"
+            alt="Hands working with cylinder blocks"
+          />
         </div>
       </div>
     </section>
@@ -1882,7 +1915,14 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
             </div>
             
             <div style="margin-top: 2rem;">
-              <img src="/images/admissions/reading-together.png" alt="Children reading together at Spicebush" style="width: 100%; border-radius: 15px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);">
+              <OptimizedImage
+                photoSlug="admissions-montessori-reading-together-literacy-community"
+                slotId="coming-soon-contact-image"
+                mediaCategory="admissions"
+                loading="lazy"
+                alt="Children reading together at Spicebush"
+                style="width: 100%; border-radius: 15px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);"
+              />
             </div>
           </div>
           

@@ -10,6 +10,9 @@ interface Props {
   loading?: 'lazy' | 'eager';
   showFocalPoints?: boolean;
   alt?: string;
+  slotId?: string;
+  editable?: boolean;
+  mediaCategory?: string;
 }
 
 import { getEntry as getContentEntry } from 'astro:content';
@@ -27,7 +30,10 @@ const {
   objectPosition,
   loading,
   showFocalPoints = false,
-  alt
+  alt,
+  slotId,
+  editable = true,
+  mediaCategory
 } = Astro.props;
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -65,6 +71,14 @@ const optionalNumberFrom = (value: unknown): number | null => {
   return null;
 };
 
+const toSlotSlug = (value: string): string =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9-_]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+
 const normalizeCrop = (
   xInput: unknown,
   yInput: unknown,
@@ -96,34 +110,70 @@ const gallerySubcategories = new Set([
   'practical'
 ]);
 
-let resolvedSlug = photoSlug;
-let photoData: Record<string, unknown> | null = null;
+const locals = Astro.locals as unknown as Record<string, unknown>;
+const isAdmin = locals.isAdmin === true;
 
-try {
-  const dbPhoto = await db.content.getEntry('photos', photoSlug);
-  if (dbPhoto?.data) {
-    photoData = asRecord(dbPhoto.data);
-    resolvedSlug = dbPhoto.slug;
+const computedSlotId = toSlotSlug(stringFrom(slotId, photoSlug));
+const canInlineEdit = editable && isAdmin && computedSlotId.length > 0;
+
+let slotAltOverride = '';
+let requestedPhotoSlug = photoSlug;
+
+if (computedSlotId.length > 0) {
+  try {
+    const slotEntry = await db.content.getEntry('media-slots', computedSlotId);
+    const slotData = asRecord(slotEntry?.data);
+    const assignedPhotoSlug = stringFrom(slotData.photoSlug, '');
+    if (assignedPhotoSlug) {
+      requestedPhotoSlug = assignedPhotoSlug;
+    }
+    slotAltOverride = stringFrom(slotData.altText, '');
+  } catch (error) {
+    logServerError('Media slot lookup failed', error, { component: 'OptimizedImage', computedSlotId });
   }
-} catch (error) {
-  logServerError('Database photo lookup failed', error, { component: 'OptimizedImage', photoSlug });
 }
 
-if (!photoData) {
+const resolvePhotoData = async (
+  slugToLookup: string
+): Promise<{ resolvedSlug: string; photoData: Record<string, unknown> } | null> => {
   try {
-    const contentPhoto = await getContentEntry('photos', photoSlug);
-    if (contentPhoto?.data) {
-      photoData = asRecord(contentPhoto.data);
-      resolvedSlug = contentPhoto.slug;
+    const dbPhoto = await db.content.getEntry('photos', slugToLookup);
+    if (dbPhoto?.data) {
+      return {
+        resolvedSlug: dbPhoto.slug,
+        photoData: asRecord(dbPhoto.data)
+      };
     }
   } catch (error) {
-    logServerError('Photo content lookup failed', error, { component: 'OptimizedImage', photoSlug });
+    logServerError('Database photo lookup failed', error, { component: 'OptimizedImage', photoSlug: slugToLookup });
   }
+
+  try {
+    const contentPhoto = await getContentEntry('photos', slugToLookup);
+    if (contentPhoto?.data) {
+      return {
+        resolvedSlug: contentPhoto.slug,
+        photoData: asRecord(contentPhoto.data)
+      };
+    }
+  } catch (error) {
+    logServerError('Photo content lookup failed', error, { component: 'OptimizedImage', photoSlug: slugToLookup });
+  }
+
+  return null;
+};
+
+let photoLookup = await resolvePhotoData(requestedPhotoSlug);
+if (!photoLookup && requestedPhotoSlug !== photoSlug) {
+  photoLookup = await resolvePhotoData(photoSlug);
 }
 
-if (!photoData) {
+if (!photoLookup) {
   return null;
 }
+
+const resolvedSlug = photoLookup.resolvedSlug;
+const photoData = photoLookup.photoData;
 
 const category = stringFrom(photoData.category, 'homepage');
 const sourceUrl = stringFrom(photoData.sourceUrl, '');
@@ -139,6 +189,7 @@ const framingDefaults = getPhotoFramingDefaults({
 });
 
 const altText = stringFrom(photoData.altText, resolvedSlug);
+const effectiveAlt = alt || slotAltOverride || altText;
 const primaryFocalX = clamp(numberFrom(photoData.primaryFocalX, framingDefaults.primaryFocalX), 0, 100);
 const primaryFocalY = clamp(numberFrom(photoData.primaryFocalY, framingDefaults.primaryFocalY), 0, 100);
 
@@ -203,9 +254,15 @@ if (responsiveSources.length === 0) {
 const srcSet = responsiveSources.join(', ');
 const loadingStrategy = loading || (priority ? 'eager' : 'lazy');
 const imageId = `img-${Math.random().toString(36).slice(2, 11)}`;
+
+const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery')) || 'gallery';
 ---
 
-<div class="optimized-image" data-photo-slug={photoSlug}>
+<div
+  class="optimized-image"
+  data-photo-slug={resolvedSlug}
+  data-media-inline-slot={canInlineEdit ? computedSlotId : undefined}
+>
   <picture>
     <source
       type="image/webp"
@@ -215,7 +272,7 @@ const imageId = `img-${Math.random().toString(36).slice(2, 11)}`;
 
     <img
       src={jpgFallback}
-      alt={alt || altText}
+      alt={effectiveAlt}
       width={originalWidth}
       height={originalHeight}
       loading={loadingStrategy}
@@ -225,6 +282,22 @@ const imageId = `img-${Math.random().toString(36).slice(2, 11)}`;
       style={`object-fit: ${objectFit}; --sb-pos-mobile: ${responsivePositionMobile}; --sb-pos-tablet: ${responsivePositionTablet}; --sb-pos-desktop: ${responsivePositionDesktop}; object-position: var(--sb-pos-mobile); ${style}`}
     />
   </picture>
+
+  {canInlineEdit && (
+    <button
+      type="button"
+      class="media-inline-trigger"
+      data-media-inline-trigger
+      data-slot-id={computedSlotId}
+      data-photo-slug={resolvedSlug}
+      data-media-category={uploadCategory}
+      data-alt-text={effectiveAlt}
+      aria-label="Edit this image"
+      title="Edit this image"
+    >
+      Edit image
+    </button>
+  )}
 
   {showFocalPoints && (
     <div class="focal-points-debug">
@@ -257,6 +330,586 @@ const imageId = `img-${Math.random().toString(36).slice(2, 11)}`;
   )}
 </div>
 
+{canInlineEdit && (
+  <script>
+    (() => {
+      if ((window as Window & { __sbInlineMediaEditorInit?: boolean }).__sbInlineMediaEditorInit) return;
+      (window as Window & { __sbInlineMediaEditorInit?: boolean }).__sbInlineMediaEditorInit = true;
+
+      type PhotoEntry = {
+        slug: string;
+        title: string;
+        category: string;
+        sourceUrl: string;
+        updatedAt?: string;
+      };
+
+      const state: {
+        photos: PhotoEntry[];
+        loaded: boolean;
+        activeSlotId: string;
+        selectedSlug: string;
+        selectedCategory: string;
+      } = {
+        photos: [],
+        loaded: false,
+        activeSlotId: '',
+        selectedSlug: '',
+        selectedCategory: 'gallery'
+      };
+
+      const styleId = 'sb-inline-media-editor-style';
+      if (!document.getElementById(styleId)) {
+        const styleTag = document.createElement('style');
+        styleTag.id = styleId;
+        styleTag.textContent = `
+          .sb-inline-media-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            z-index: 12000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+          }
+
+          .sb-inline-media-modal-backdrop[data-open='true'] {
+            display: flex;
+          }
+
+          .sb-inline-media-modal {
+            width: min(960px, 100%);
+            max-height: min(88vh, 900px);
+            overflow: hidden;
+            border-radius: 16px;
+            background: #ffffff;
+            border: 1px solid #d6d3d1;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+            display: grid;
+            grid-template-rows: auto auto 1fr auto;
+          }
+
+          .sb-inline-media-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #e7e5e4;
+          }
+
+          .sb-inline-media-title {
+            margin: 0;
+            font-size: 1rem;
+            line-height: 1.3;
+            color: #1f2937;
+          }
+
+          .sb-inline-media-subtitle {
+            margin: 0.25rem 0 0;
+            font-size: 0.78rem;
+            color: #57534e;
+          }
+
+          .sb-inline-media-close {
+            border: 1px solid #d6d3d1;
+            background: #fafaf9;
+            color: #1f2937;
+            border-radius: 8px;
+            padding: 0.4rem 0.7rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+          }
+
+          .sb-inline-media-toolbar {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid #e7e5e4;
+            background: #fafaf9;
+          }
+
+          .sb-inline-media-toolbar input,
+          .sb-inline-media-toolbar select,
+          .sb-inline-media-toolbar button,
+          .sb-inline-media-toolbar a,
+          .sb-inline-media-footer button {
+            font: inherit;
+          }
+
+          .sb-inline-media-toolbar input,
+          .sb-inline-media-toolbar select {
+            width: 100%;
+            border: 1px solid #d6d3d1;
+            border-radius: 8px;
+            padding: 0.55rem 0.65rem;
+            font-size: 0.9rem;
+            color: #1f2937;
+            background: #fff;
+          }
+
+          .sb-inline-media-content {
+            min-height: 220px;
+            overflow: auto;
+            padding: 0.9rem 1rem;
+          }
+
+          .sb-inline-media-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.45rem;
+          }
+
+          .sb-inline-media-item {
+            border: 1px solid #d6d3d1;
+            border-radius: 10px;
+            background: #fff;
+            padding: 0.6rem 0.7rem;
+            text-align: left;
+            cursor: pointer;
+            display: grid;
+            gap: 0.2rem;
+            color: #1f2937;
+          }
+
+          .sb-inline-media-item[data-active='true'] {
+            border-color: #2f5e44;
+            box-shadow: inset 0 0 0 1px rgba(47, 94, 68, 0.25);
+            background: #f2f7f4;
+          }
+
+          .sb-inline-media-item-title {
+            font-size: 0.88rem;
+            font-weight: 600;
+          }
+
+          .sb-inline-media-item-meta {
+            font-size: 0.74rem;
+            color: #57534e;
+            overflow-wrap: anywhere;
+          }
+
+          .sb-inline-media-footer {
+            padding: 0.8rem 1rem;
+            border-top: 1px solid #e7e5e4;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.55rem;
+          }
+
+          .sb-inline-media-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+          }
+
+          .sb-inline-media-btn {
+            border: 1px solid #2f5e44;
+            background: #2f5e44;
+            color: #fff;
+            border-radius: 8px;
+            padding: 0.5rem 0.72rem;
+            cursor: pointer;
+            font-size: 0.84rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .sb-inline-media-btn.secondary {
+            background: #fff;
+            color: #2f5e44;
+          }
+
+          .sb-inline-media-upload-row {
+            display: grid;
+            gap: 0.5rem;
+          }
+
+          .sb-inline-media-status {
+            min-height: 1.2rem;
+            font-size: 0.8rem;
+            color: #44403c;
+          }
+
+          .sb-inline-media-status[data-kind='error'] {
+            color: #991b1b;
+          }
+
+          .sb-inline-media-status[data-kind='success'] {
+            color: #14532d;
+          }
+
+          @media (max-width: 768px) {
+            .sb-inline-media-modal-backdrop {
+              align-items: flex-end;
+              padding: 0;
+            }
+
+            .sb-inline-media-modal {
+              width: 100%;
+              max-height: 92vh;
+              border-radius: 14px 14px 0 0;
+            }
+
+            .sb-inline-media-content {
+              max-height: 40vh;
+            }
+          }
+        `;
+        document.head.appendChild(styleTag);
+      }
+
+      const backdrop = document.createElement('div');
+      backdrop.className = 'sb-inline-media-modal-backdrop';
+      backdrop.id = 'sb-inline-media-modal';
+      backdrop.setAttribute('data-open', 'false');
+      backdrop.innerHTML = `
+        <div class="sb-inline-media-modal" role="dialog" aria-modal="true" aria-labelledby="sb-inline-media-title">
+          <div class="sb-inline-media-header">
+            <div>
+              <h3 id="sb-inline-media-title" class="sb-inline-media-title">Edit Image</h3>
+              <p id="sb-inline-media-subtitle" class="sb-inline-media-subtitle"></p>
+            </div>
+            <button type="button" class="sb-inline-media-close" data-close>Close</button>
+          </div>
+
+          <div class="sb-inline-media-toolbar">
+            <input type="search" id="sb-inline-media-search" placeholder="Search media library" />
+            <input type="text" id="sb-inline-media-alt" placeholder="Alt text (optional override)" />
+          </div>
+
+          <div class="sb-inline-media-content">
+            <div id="sb-inline-media-list" class="sb-inline-media-list"></div>
+          </div>
+
+          <div class="sb-inline-media-footer">
+            <div class="sb-inline-media-upload-row">
+              <input id="sb-inline-media-file" type="file" accept="image/*" />
+              <div class="sb-inline-media-actions">
+                <button type="button" class="sb-inline-media-btn secondary" id="sb-inline-media-upload">Upload From Device</button>
+                <a id="sb-inline-media-focal-link" class="sb-inline-media-btn secondary" href="/admin/media" target="_blank" rel="noreferrer">Open Focal/Crop Editor</a>
+                <button type="button" class="sb-inline-media-btn" id="sb-inline-media-save">Save Selection</button>
+              </div>
+            </div>
+            <p id="sb-inline-media-status" class="sb-inline-media-status"></p>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(backdrop);
+
+      const searchInput = backdrop.querySelector<HTMLInputElement>('#sb-inline-media-search');
+      const altInput = backdrop.querySelector<HTMLInputElement>('#sb-inline-media-alt');
+      const listNode = backdrop.querySelector<HTMLDivElement>('#sb-inline-media-list');
+      const saveButton = backdrop.querySelector<HTMLButtonElement>('#sb-inline-media-save');
+      const uploadButton = backdrop.querySelector<HTMLButtonElement>('#sb-inline-media-upload');
+      const fileInput = backdrop.querySelector<HTMLInputElement>('#sb-inline-media-file');
+      const focalLink = backdrop.querySelector<HTMLAnchorElement>('#sb-inline-media-focal-link');
+      const statusNode = backdrop.querySelector<HTMLParagraphElement>('#sb-inline-media-status');
+      const subtitleNode = backdrop.querySelector<HTMLParagraphElement>('#sb-inline-media-subtitle');
+
+      if (
+        !searchInput
+        || !altInput
+        || !listNode
+        || !saveButton
+        || !uploadButton
+        || !fileInput
+        || !focalLink
+        || !statusNode
+        || !subtitleNode
+      ) {
+        return;
+      }
+
+      const setStatus = (message: string, kind: 'default' | 'error' | 'success' = 'default') => {
+        statusNode.textContent = message;
+        if (kind === 'default') {
+          statusNode.removeAttribute('data-kind');
+        } else {
+          statusNode.setAttribute('data-kind', kind);
+        }
+      };
+
+      const closeModal = () => {
+        backdrop.setAttribute('data-open', 'false');
+        document.body.style.removeProperty('overflow');
+        setStatus('');
+      };
+
+      const openModal = () => {
+        backdrop.setAttribute('data-open', 'true');
+        document.body.style.setProperty('overflow', 'hidden');
+      };
+
+      const normalizeSlug = (value: string): string =>
+        value
+          .toLowerCase()
+          .replace(/[^a-z0-9-_]+/g, '-')
+          .replace(/-{2,}/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 80);
+
+      const toEntry = (entry: Record<string, unknown>): PhotoEntry | null => {
+        const slug = typeof entry.slug === 'string' ? entry.slug : '';
+        const title = typeof entry.title === 'string' && entry.title.trim().length > 0 ? entry.title.trim() : slug;
+        const data = entry.data && typeof entry.data === 'object' ? entry.data as Record<string, unknown> : {};
+        const category = typeof data.category === 'string' ? data.category : 'gallery';
+        const sourceUrl = typeof data.sourceUrl === 'string' ? data.sourceUrl : '';
+        if (!slug) return null;
+        return { slug, title, category, sourceUrl };
+      };
+
+      const fetchPhotoLibrary = async () => {
+        if (state.loaded) return;
+        const response = await fetch('/api/cms/entries?collection=photos', {
+          method: 'GET',
+          credentials: 'same-origin'
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(typeof payload.error === 'string' ? payload.error : 'Failed to load media library');
+        }
+
+        const entries = Array.isArray(payload.entries) ? payload.entries : [];
+        state.photos = entries
+          .map((entry) => (entry && typeof entry === 'object' ? toEntry(entry as Record<string, unknown>) : null))
+          .filter((entry): entry is PhotoEntry => Boolean(entry));
+        state.loaded = true;
+      };
+
+      const updateFocalLink = () => {
+        const slug = state.selectedSlug;
+        focalLink.href = slug ? `/admin/media?slug=${encodeURIComponent(slug)}` : '/admin/media';
+      };
+
+      const renderList = () => {
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        const filtered = state.photos.filter((photo) => {
+          if (!searchTerm) return true;
+          return (
+            photo.slug.toLowerCase().includes(searchTerm)
+            || photo.title.toLowerCase().includes(searchTerm)
+            || photo.category.toLowerCase().includes(searchTerm)
+          );
+        });
+
+        listNode.innerHTML = '';
+
+        if (!filtered.length) {
+          const empty = document.createElement('p');
+          empty.className = 'sb-inline-media-status';
+          empty.textContent = 'No images match your search.';
+          listNode.appendChild(empty);
+          return;
+        }
+
+        filtered.forEach((photo) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'sb-inline-media-item';
+          button.setAttribute('data-active', photo.slug === state.selectedSlug ? 'true' : 'false');
+          button.innerHTML = `
+            <span class="sb-inline-media-item-title">${photo.title}</span>
+            <span class="sb-inline-media-item-meta">${photo.slug} | ${photo.category}${photo.sourceUrl ? ' | external source' : ''}</span>
+          `;
+          button.addEventListener('click', () => {
+            state.selectedSlug = photo.slug;
+            updateFocalLink();
+            renderList();
+          });
+          listNode.appendChild(button);
+        });
+      };
+
+      const saveSlot = async (slot: string, photoSlug: string, altText: string) => {
+        const response = await fetch('/api/admin/content', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            collection: 'media-slots',
+            slug: normalizeSlug(slot),
+            title: `Media Slot: ${normalizeSlug(slot)}`,
+            status: 'published',
+            data: {
+              slotId: normalizeSlug(slot),
+              photoSlug,
+              altText: altText.trim()
+            }
+          })
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(typeof payload.error === 'string' ? payload.error : 'Failed to save media slot');
+        }
+      };
+
+      const uploadAndAssign = async () => {
+        const selectedFile = fileInput.files?.[0];
+        if (!selectedFile) {
+          setStatus('Choose an image file to upload first.', 'error');
+          return;
+        }
+
+        setStatus('Uploading image...');
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('createPhotoEntry', 'true');
+        formData.append('category', state.selectedCategory || 'gallery');
+        formData.append('title', selectedFile.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' '));
+
+        const uploadResponse = await fetch('/api/media/upload', {
+          method: 'POST',
+          body: formData,
+          credentials: 'same-origin'
+        });
+
+        const uploadPayload = await uploadResponse.json().catch(() => ({}));
+        if (!uploadResponse.ok) {
+          throw new Error(typeof uploadPayload.error === 'string' ? uploadPayload.error : 'Upload failed');
+        }
+
+        const newSlug = typeof uploadPayload.photoSlug === 'string' ? uploadPayload.photoSlug : '';
+        if (!newSlug) {
+          throw new Error('Upload did not return a photo slug');
+        }
+
+        state.selectedSlug = newSlug;
+        state.loaded = false;
+        await fetchPhotoLibrary();
+        updateFocalLink();
+        renderList();
+
+        await saveSlot(state.activeSlotId, state.selectedSlug, altInput.value);
+      };
+
+      const openFromTrigger = async (trigger: HTMLElement) => {
+        const slot = trigger.dataset.slotId || '';
+        const photoSlug = trigger.dataset.photoSlug || '';
+        const category = trigger.dataset.mediaCategory || 'gallery';
+        const altText = trigger.dataset.altText || '';
+
+        state.activeSlotId = slot;
+        state.selectedSlug = photoSlug;
+        state.selectedCategory = category;
+
+        subtitleNode.textContent = `Slot: ${slot}`;
+        altInput.value = altText;
+        searchInput.value = '';
+        updateFocalLink();
+        setStatus('Loading media library...');
+        openModal();
+
+        try {
+          await fetchPhotoLibrary();
+          renderList();
+          setStatus('Choose an existing image or upload a new one.');
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to load media library';
+          setStatus(message, 'error');
+        }
+      };
+
+      document.addEventListener('click', (event) => {
+        const target = event.target as HTMLElement | null;
+        if (!target) return;
+
+        if (target.matches('[data-close]') || target.closest('[data-close]')) {
+          closeModal();
+          return;
+        }
+
+        if (target === backdrop) {
+          closeModal();
+          return;
+        }
+
+        const trigger = target.closest<HTMLElement>('[data-media-inline-trigger]');
+        if (trigger) {
+          event.preventDefault();
+          openFromTrigger(trigger).catch((error) => {
+            const message = error instanceof Error ? error.message : 'Failed to open image editor';
+            setStatus(message, 'error');
+          });
+          return;
+        }
+
+        const slotContainer = target.closest<HTMLElement>('[data-media-inline-slot]');
+        if (
+          slotContainer
+          && !target.closest('a, button, input, select, textarea, label, summary')
+        ) {
+          const fallbackTrigger = slotContainer.querySelector<HTMLElement>('[data-media-inline-trigger]');
+          if (fallbackTrigger) {
+            event.preventDefault();
+            openFromTrigger(fallbackTrigger).catch((error) => {
+              const message = error instanceof Error ? error.message : 'Failed to open image editor';
+              setStatus(message, 'error');
+            });
+          }
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && backdrop.getAttribute('data-open') === 'true') {
+          closeModal();
+        }
+      });
+
+      searchInput.addEventListener('input', () => {
+        renderList();
+      });
+
+      saveButton.addEventListener('click', async () => {
+        if (!state.activeSlotId) {
+          setStatus('No slot selected.', 'error');
+          return;
+        }
+
+        if (!state.selectedSlug) {
+          setStatus('Choose an image from the library first.', 'error');
+          return;
+        }
+
+        try {
+          setStatus('Saving image selection...');
+          await saveSlot(state.activeSlotId, state.selectedSlug, altInput.value);
+          setStatus('Saved. Refreshing page...', 'success');
+          window.location.reload();
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to save image selection';
+          setStatus(message, 'error');
+        }
+      });
+
+      uploadButton.addEventListener('click', async () => {
+        if (!state.activeSlotId) {
+          setStatus('No slot selected.', 'error');
+          return;
+        }
+
+        try {
+          await uploadAndAssign();
+          setStatus('Image uploaded and assigned. Refreshing page...', 'success');
+          window.location.reload();
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to upload and assign image';
+          setStatus(message, 'error');
+        }
+      });
+    })();
+  </script>
+)}
+
 <style>
   .optimized-image {
     @apply block relative overflow-hidden;
@@ -264,6 +917,38 @@ const imageId = `img-${Math.random().toString(36).slice(2, 11)}`;
 
   .optimized-image-element {
     object-position: var(--sb-pos-mobile, 50% 50%);
+  }
+
+  .media-inline-trigger {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 20;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    background: rgba(26, 77, 53, 0.9);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.3rem 0.58rem;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+  }
+
+  .optimized-image:hover .media-inline-trigger,
+  .optimized-image:focus-within .media-inline-trigger {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 1024px) {
+    .media-inline-trigger {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @media (min-width: 768px) {
