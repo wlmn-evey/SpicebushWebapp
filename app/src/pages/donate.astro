@@ -31,7 +31,9 @@ try {
   logServerError('Failed to load donation fallback link', error, { route: '/donate' });
 }
 
-const stripeEnabled = Boolean(process.env.STRIPE_SECRET_KEY?.trim());
+const stripeEnabled = Boolean(
+  process.env.STRIPE_RESTRICTED_KEY?.trim() || process.env.STRIPE_SECRET_KEY?.trim()
+);
 const canceled = Astro.url.searchParams.get('canceled') === '1';
 const errorCode = Astro.url.searchParams.get('error');
 

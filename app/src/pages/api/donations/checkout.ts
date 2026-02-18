@@ -145,8 +145,8 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResponse({ error: 'Please enter a valid donation amount.' }, 400);
   }
 
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
-  if (!stripeSecretKey) {
+  const stripeApiKey = process.env.STRIPE_RESTRICTED_KEY?.trim() || process.env.STRIPE_SECRET_KEY?.trim();
+  if (!stripeApiKey) {
     const fallbackUrl = await getFallbackDonationUrl();
     if (fallbackUrl) {
       return jsonResponse({ url: fallbackUrl, provider: 'fallback' });
@@ -172,7 +172,7 @@ export const POST: APIRoute = async ({ request }) => {
     const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${stripeSecretKey}`,
+        Authorization: `Bearer ${stripeApiKey}`,
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: stripeRequestBody.toString()
