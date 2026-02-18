@@ -113,7 +113,8 @@ const gallerySubcategories = new Set([
 const locals = Astro.locals as unknown as Record<string, unknown>;
 const isAdmin = locals.isAdmin === true;
 
-const computedSlotId = toSlotSlug(stringFrom(slotId, photoSlug));
+const routeScopedFallbackSlot = toSlotSlug(`${Astro.url.pathname}-${photoSlug}`);
+const computedSlotId = toSlotSlug(stringFrom(slotId, routeScopedFallbackSlot));
 const canInlineEdit = editable && isAdmin && computedSlotId.length > 0;
 
 let slotAltOverride = '';
