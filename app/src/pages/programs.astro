@@ -4,8 +4,113 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { Clock, Users, Calendar, Leaf } from 'lucide-astro';
 import { getTourLink } from '@lib/tour-settings';
+import { getManagedFaqItems } from '@lib/faq-content';
 
 const tourLink = await getTourLink();
+const faqItems = await getManagedFaqItems();
+
+interface DayScheduleEntry {
+  time: string;
+  title: string;
+  detail: string;
+}
+
+const normalizeForMatch = (value: string): string => value.trim().toLowerCase();
+
+const dailyScheduleFaqItems = faqItems.filter((item) => {
+  const sectionTitle = normalizeForMatch(item.sectionTitle);
+  const slug = normalizeForMatch(item.slug);
+  return sectionTitle.includes('daily life') || sectionTitle.includes('schedule') || slug.includes('daily-life-and-schedule');
+});
+
+const scheduleFaqItem =
+  dailyScheduleFaqItems.find(
+    (item) => item.bullets.length > 0 && item.bullets.some((bullet) => bullet.includes(':'))
+  ) ??
+  dailyScheduleFaqItems.find((item) => item.bullets.length > 0) ??
+  null;
+
+const parseScheduleBullet = (bullet: string): DayScheduleEntry | null => {
+  const trimmedBullet = bullet.trim();
+  if (!trimmedBullet) return null;
+
+  const [timePart, ...contentParts] = trimmedBullet.split(':');
+  if (contentParts.length === 0) return null;
+
+  const time = timePart.trim();
+  const content = contentParts.join(':').trim();
+  if (!time || !content) return null;
+
+  const contentMatch = content.match(/^(.+?)\s*\((.+)\)$/);
+  if (contentMatch) {
+    return {
+      time,
+      title: contentMatch[1].trim(),
+      detail: contentMatch[2].trim()
+    };
+  }
+
+  return {
+    time,
+    title: content,
+    detail: ''
+  };
+};
+
+const faqScheduleEntries = scheduleFaqItem
+  ? scheduleFaqItem.bullets.map(parseScheduleBullet).filter((entry): entry is DayScheduleEntry => entry !== null)
+  : [];
+
+const defaultScheduleEntries: DayScheduleEntry[] = [
+  {
+    time: '8:00-8:30 AM',
+    title: 'Arrival and Morning Greeting',
+    detail: ''
+  },
+  {
+    time: '8:30-11:30 AM',
+    title: 'Morning Work Cycle',
+    detail: 'Uninterrupted Montessori work time'
+  },
+  {
+    time: '11:30 AM-12:00 PM',
+    title: 'Lunch',
+    detail: ''
+  },
+  {
+    time: '12:00-1:00 PM',
+    title: 'Outdoor Play',
+    detail: ''
+  },
+  {
+    time: '1:00-3:00 PM',
+    title: 'Afternoon Work Cycle or Rest',
+    detail: 'Younger children may rest during this time'
+  },
+  {
+    time: '3:00-3:30 PM',
+    title: 'Snack and Story Time',
+    detail: ''
+  },
+  {
+    time: '3:30-4:00 PM',
+    title: 'Outdoor Play and Dismissal',
+    detail: ''
+  }
+];
+
+const dayScheduleEntries = faqScheduleEntries.length > 0 ? faqScheduleEntries : defaultScheduleEntries;
+
+const schoolHoursFaqItem =
+  dailyScheduleFaqItems.find((item) => {
+    const question = normalizeForMatch(item.question);
+    const title = normalizeForMatch(item.title);
+    return question.includes('school hours') || title.includes('school hours');
+  }) ?? null;
+
+const dayScheduleIntro =
+  schoolHoursFaqItem?.answer ||
+  'Our regular school day runs from 8:00 AM to 4:00 PM, Monday through Friday, with optional extended care until 5:30 PM.';
 ---
 
 <Layout 
@@ -84,65 +189,21 @@ const tourLink = await getTourLink();
       <div class="container mx-auto px-4">
         <div class="max-w-4xl mx-auto">
           <h2 class="text-3xl font-bold text-earth-brown mb-8 text-center">A Day at Spicebush</h2>
+          <p class="text-earth-brown/80 text-center mb-6">{dayScheduleIntro}</p>
           
           <div class="bg-white rounded-lg shadow-lg p-8">
             <div class="space-y-4">
-              <div class="flex items-start space-x-4">
-                <span class="font-semibold text-forest-canopy whitespace-nowrap">8:00 - 8:30 AM</span>
-                <div>
-                  <p class="font-semibold text-earth-brown">Optional Before Care & Arrival</p>
-                  <p class="text-sm text-earth-brown/80">Families needing early drop-off can use before care while children settle in for the school day</p>
+              {dayScheduleEntries.map((entry) => (
+                <div class="flex items-start space-x-4">
+                  <span class="font-semibold text-forest-canopy whitespace-nowrap">{entry.time}</span>
+                  <div>
+                    <p class="font-semibold text-earth-brown">{entry.title}</p>
+                    {entry.detail ? <p class="text-sm text-earth-brown/80">{entry.detail}</p> : null}
+                  </div>
                 </div>
-              </div>
-              
-              <div class="flex items-start space-x-4">
-                <span class="font-semibold text-forest-canopy whitespace-nowrap">8:30 - 11:30 AM</span>
-                <div>
-                  <p class="font-semibold text-earth-brown">Morning Work Cycle</p>
-                  <p class="text-sm text-earth-brown/80">Uninterrupted time for individual and small group lessons across all curriculum areas</p>
-                </div>
-              </div>
-              
-              <div class="flex items-start space-x-4">
-                <span class="font-semibold text-forest-canopy whitespace-nowrap">11:30 AM - 12:00 PM</span>
-                <div>
-                  <p class="font-semibold text-earth-brown">Lunch</p>
-                  <p class="text-sm text-earth-brown/80">Children set tables, serve themselves, and clean up together</p>
-                </div>
-              </div>
-              
-              <div class="flex items-start space-x-4">
-                <span class="font-semibold text-forest-canopy whitespace-nowrap">12:00 - 1:00 PM</span>
-                <div>
-                  <p class="font-semibold text-earth-brown">Outdoor Play</p>
-                  <p class="text-sm text-earth-brown/80">Free play, nature exploration, and gardening</p>
-                </div>
-              </div>
-              
-              <div class="flex items-start space-x-4">
-                <span class="font-semibold text-forest-canopy whitespace-nowrap">1:00 - 2:30 PM</span>
-                <div>
-                  <p class="font-semibold text-earth-brown">Afternoon Work/Rest</p>
-                  <p class="text-sm text-earth-brown/80">Continued work time or rest for younger children</p>
-                </div>
-              </div>
-              
-              <div class="flex items-start space-x-4">
-                <span class="font-semibold text-forest-canopy whitespace-nowrap">2:30 - 3:00 PM</span>
-                <div>
-                  <p class="font-semibold text-earth-brown">Snack & Circle Time</p>
-                  <p class="text-sm text-earth-brown/80">Community gathering with stories, songs, and sharing</p>
-                </div>
-              </div>
-              
-              <div class="flex items-start space-x-4">
-                <span class="font-semibold text-forest-canopy whitespace-nowrap">3:00 - 5:30 PM</span>
-                <div>
-                  <p class="font-semibold text-earth-brown">Extended Care (Optional)</p>
-                  <p class="text-sm text-earth-brown/80">Quiet activities, outdoor play, and snack</p>
-                </div>
-              </div>
+              ))}
             </div>
+            {scheduleFaqItem?.note ? <p class="mt-6 text-sm text-earth-brown/80">{scheduleFaqItem.note}</p> : null}
           </div>
         </div>
       </div>
