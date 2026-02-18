@@ -1889,8 +1889,10 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
           {tourSchedulingEnabled && (
             <div class="contact-form">
               <h3>Schedule a Tour or Ask a Question</h3>
-              <form name="coming-soon-contact" method="POST" action="/forms/coming-soon-contact/" data-netlify="true" netlify-honeypot="bot-field" id="contact-form">
+              <form name="coming-soon-contact" method="POST" action="/api/contact/submit" id="contact-form">
                 <input type="hidden" name="form-name" value="coming-soon-contact">
+                <input type="hidden" name="source" value="coming-soon">
+                <input type="hidden" name="redirectTo" value="/coming-soon?submitted=1">
                 <p style="display: none;">
                   <label>Don't fill this out: <input name="bot-field"></label>
                 </p>

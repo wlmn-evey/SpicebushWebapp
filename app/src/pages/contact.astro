@@ -142,11 +142,12 @@ import ErrorMessage from '../components/ErrorMessage.astro';
               id="contact-form" 
               name="contact-form"
               method="POST" 
-              data-netlify="true"
-              data-netlify-honeypot="bot-field"
-              action="/contact-success"
+              action="/api/contact/submit"
               class="space-y-6"
             >
+              <input type="hidden" name="form-name" value="contact-form" />
+              <input type="hidden" name="source" value="contact" />
+              <input type="hidden" name="redirectTo" value="/contact-success" />
               
               <!-- Honeypot field for spam protection -->
               <div style="display: none;" aria-hidden="true">
@@ -489,8 +490,8 @@ import ErrorMessage from '../components/ErrorMessage.astro';
         submitText.classList.add('hidden');
         submitLoading.classList.remove('hidden');
         
-        // Netlify Forms will handle the actual submission
-        // The loading state will persist until page redirect
+        // API route handles persistence and redirects to the success page.
+        // The loading state will persist until page redirect.
       });
     }
 
