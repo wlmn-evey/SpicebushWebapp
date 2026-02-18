@@ -676,10 +676,10 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
           throw new Error(typeof payload.error === 'string' ? payload.error : 'Failed to load media library');
         }
 
-        const entries = Array.isArray(payload.entries) ? payload.entries : [];
+        const entries: unknown[] = Array.isArray(payload.entries) ? payload.entries : [];
         state.photos = entries
-          .map((entry) => (entry && typeof entry === 'object' ? toEntry(entry as Record<string, unknown>) : null))
-          .filter((entry): entry is PhotoEntry => Boolean(entry));
+          .map((entry: unknown) => (entry && typeof entry === 'object' ? toEntry(entry as Record<string, unknown>) : null))
+          .filter((entry: PhotoEntry | null): entry is PhotoEntry => Boolean(entry));
         state.loaded = true;
       };
 
