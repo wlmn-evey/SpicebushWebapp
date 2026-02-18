@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import MobileBottomNav from '../components/MobileBottomNav.astro';
 import AdminPreviewBar from '../components/AdminPreviewBar.astro';
+import ExternalLinkTargetBehavior from '../components/ExternalLinkTargetBehavior.astro';
 import { CRITICAL_IMAGES, generatePreloadLinks } from '../lib/image-preloader';
 
 export interface Props {
@@ -93,6 +94,7 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
     <slot />
     <MobileBottomNav />
     <AdminPreviewBar />
+    <ExternalLinkTargetBehavior />
   </body>
 </html>
 

@@ -3,6 +3,7 @@ export const prerender = false;
 
 import { getCollection, getEntries, getAllSettings, type ContentEntry } from '@lib/content-db';
 import { getTestimonialsForPlacement, type ManagedTestimonial } from '@lib/testimonials-content';
+import ExternalLinkTargetBehavior from '@components/ExternalLinkTargetBehavior.astro';
 
 const DEFAULT_APPLICATION_SCHOOL_YEAR = '2026-2027 School Year';
 const DEFAULT_UPDATE_MESSAGE = 'Enrollment is open for the 2026-2027 school year while we work on bringing you an improved website experience.';
@@ -2091,5 +2092,6 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
       });
     });
   </script>
+  <ExternalLinkTargetBehavior />
   </body>
 </html>

@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import AdminNav from '@components/AdminNav.astro';
+import ExternalLinkTargetBehavior from '@components/ExternalLinkTargetBehavior.astro';
 
 interface Props {
   title: string;
@@ -34,5 +35,6 @@ const userEmail = typeof locals.userEmail === 'string' ? locals.userEmail : 'Adm
         <slot />
       </section>
     </main>
+    <ExternalLinkTargetBehavior />
   </body>
 </html>
