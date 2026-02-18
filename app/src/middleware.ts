@@ -33,6 +33,21 @@ const unauthorizedResponse = (status: 401 | 403, message: string) =>
     headers: { 'Content-Type': 'application/json' }
   });
 
+const requestPrefersHtml = (request: Request): boolean => {
+  const accept = request.headers.get('accept') ?? '';
+  return accept.includes('text/html');
+};
+
+const toSignInRedirect = (context: APIContext, errorCode?: string): Response => {
+  const nextPath = `${context.url.pathname}${context.url.search}`;
+  const target = new URL('/auth/sign-in', context.url);
+  target.searchParams.set('next', nextPath);
+  if (errorCode) {
+    target.searchParams.set('error', errorCode);
+  }
+  return context.redirect(`${target.pathname}${target.search}`);
+};
+
 async function getComingSoonEnabled(): Promise<boolean> {
   const runtimeEnv = (typeof process !== 'undefined' && typeof process.env !== 'undefined') ? process.env : undefined;
   const rawComingSoon = runtimeEnv?.COMING_SOON_MODE ?? import.meta.env.COMING_SOON_MODE;
@@ -74,6 +89,7 @@ const handleComingSoon = async (context: APIContext, next: MiddlewareNext) => {
   const bypassPaths = [
     '/coming-soon',
     '/coming-soon-comprehensive',
+    '/donate/thank-you',
     '/admin',
     '/auth',
     '/api',
@@ -130,6 +146,9 @@ export const onRequest = async (context: APIContext, next: MiddlewareNext) => {
   if (isProtectedRoute(context.url.pathname)) {
     if (!userId) {
       if (isApiRoute(context.url.pathname)) {
+        if (requestPrefersHtml(context.request)) {
+          return toSignInRedirect(context);
+        }
         return unauthorizedResponse(401, 'Authentication required');
       }
       return context.redirect('/auth/sign-in');
@@ -137,6 +156,9 @@ export const onRequest = async (context: APIContext, next: MiddlewareNext) => {
 
     if (!isAdmin) {
       if (isApiRoute(context.url.pathname)) {
+        if (requestPrefersHtml(context.request)) {
+          return toSignInRedirect(context, 'not-authorized');
+        }
         return unauthorizedResponse(403, 'Admin access required');
       }
       return context.redirect('/');
