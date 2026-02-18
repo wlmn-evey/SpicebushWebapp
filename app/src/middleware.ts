@@ -85,6 +85,11 @@ async function getComingSoonEnabled(): Promise<boolean> {
 const handleComingSoon = async (context: APIContext, next: MiddlewareNext) => {
   const isComingSoonEnabled = await getComingSoonEnabled();
   const pathname = context.url.pathname;
+  const comingSoonRoutes = new Set(['/coming-soon', '/coming-soon-comprehensive']);
+
+  if (!isComingSoonEnabled && comingSoonRoutes.has(pathname)) {
+    return context.redirect('/');
+  }
 
   const bypassPaths = [
     '/coming-soon',
