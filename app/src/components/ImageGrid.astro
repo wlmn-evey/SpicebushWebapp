@@ -11,13 +11,15 @@ export interface Props {
     caption?: string;
   }[];
   columns?: 2 | 3 | 4;
+  slotIdPrefix?: string;
 }
 
 const { 
   title, 
   subtitle,
   images,
-  columns = 3
+  columns = 3,
+  slotIdPrefix = 'image-grid'
 } = Astro.props;
 
 const gridClass = {
@@ -39,7 +41,7 @@ const gridClass = {
     )}
     
     <div class={`grid ${gridClass[columns]} gap-6`}>
-      {images.map((image, _index) => (
+      {images.map((image, index) => (
         <div class="group overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-xl relative aspect-[4/3] border-2 border-stone-beige">
           {image.photoSlug ? (
             <OptimizedImage
@@ -47,6 +49,7 @@ const gridClass = {
               className="w-full h-full transition-transform duration-500 group-hover:scale-105"
               objectFit="cover"
               loading="lazy"
+              slotId={`${slotIdPrefix}-${index + 1}`}
             />
           ) : (
             <img 

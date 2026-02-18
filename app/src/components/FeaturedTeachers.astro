@@ -145,6 +145,8 @@ try {
                     photoSlug={teacher.photoSlug}
                     alt={`${teacher.name}${teacher.role ? `, ${teacher.role}` : ''} at Spicebush Montessori School`}
                     className="w-48 h-48 rounded-full object-cover mx-auto shadow-lg"
+                    slotId={`featured-teachers-${teacher.id}`}
+                    mediaCategory="teachers"
                   />
                 ) : (
                   <img

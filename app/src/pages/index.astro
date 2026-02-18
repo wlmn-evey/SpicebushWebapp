@@ -5,6 +5,7 @@ import Footer from '../components/Footer.astro';
 import HeroSection from '../components/HeroSection.astro';
 import ImageGrid from '../components/ImageGrid.astro';
 import PhotoFeature from '../components/PhotoFeature.astro';
+import OptimizedImage from '../components/OptimizedImage.astro';
 import NonDiscriminationPolicy from '../components/NonDiscriminationPolicy.astro';
 import ValuePropositions from '../components/ValuePropositions.astro';
 import ProgramsOverview from '../components/ProgramsOverview.astro';
@@ -15,6 +16,7 @@ import { CheckCircle, ArrowRight } from 'lucide-astro';
 import { db, type ContentEntry } from '@lib/db';
 import { logServerError } from '@lib/server-logger';
 import { getTestimonialsForPlacement, type ManagedTestimonial } from '@lib/testimonials-content';
+import { buildPhotoSlugResolver, toPhotoLookupEntry } from '@lib/photo-slug-resolver';
 
 // Batch load homepage data needed for active sections.
 type StaffEntryData = {
@@ -29,6 +31,34 @@ type StaffEntryData = {
 type HomepageData = {
   staff: ContentEntry<StaffEntryData>[];
   testimonials: ManagedTestimonial[];
+};
+
+type FeaturedStaffViewModel = {
+  id: string;
+  name: string;
+  role?: string;
+  photo?: string;
+  photoSlug?: string;
+  startYearLabel?: string;
+  certificationBadge?: string;
+  bioSnippet?: string;
+  initials: string;
+  order: number;
+};
+
+const normalizeString = (value: unknown): string => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.length > 0) return trimmed;
+  }
+  return '';
+};
+
+const asRecord = (value: unknown): Record<string, unknown> => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
 };
 
 let pageData: HomepageData = { staff: [], testimonials: [] };
@@ -49,9 +79,61 @@ try {
   error = true;
 }
 
-// Process featured staff
+let resolvePhotoSlug = (_value: string | undefined): string | null => null;
+
+try {
+  const photoEntries = await db.content.getCollection('photos');
+  resolvePhotoSlug = buildPhotoSlugResolver(
+    photoEntries.map((entry) => toPhotoLookupEntry(entry.slug, asRecord(entry.data)))
+  );
+} catch (e) {
+  logServerError('Failed to load photo slug resolver on homepage', e, { page: '/' });
+}
+
 const featuredStaff = pageData.staff
-  .sort((a, b) => (a.data.order || 999) - (b.data.order || 999))
+  .map((entry): FeaturedStaffViewModel | null => {
+    const data = entry.data ?? {};
+    const name = normalizeString(data.name) || 'Spicebush Teacher';
+    const role = normalizeString(data.role) || undefined;
+    const photo = normalizeString(data.photo) || undefined;
+    const photoSlug = resolvePhotoSlug(photo) ?? undefined;
+    const certificationBadge = normalizeString(data.certificationBadge) || undefined;
+    const startYearRaw = data.startYear;
+    const startYear = typeof startYearRaw === 'number'
+      ? String(startYearRaw)
+      : normalizeString(startYearRaw);
+    const startYearLabel = startYear ? `Since ${startYear}` : undefined;
+    const order = typeof data.order === 'number' ? data.order : 999;
+
+    const bodyText = typeof entry.body === 'string' ? entry.body : '';
+    const firstSentence = bodyText
+      .split('.')
+      .map((sentence) => sentence.trim())
+      .filter(Boolean)[0];
+    const bioSnippet = firstSentence ? `${firstSentence}.` : undefined;
+
+    const initials = name
+      .split(' ')
+      .filter(Boolean)
+      .map((segment) => segment.charAt(0).toUpperCase())
+      .join('')
+      .slice(0, 3);
+
+    return {
+      id: entry.id,
+      name,
+      role,
+      photo,
+      photoSlug,
+      startYearLabel,
+      certificationBadge,
+      bioSnippet,
+      initials: initials || 'S',
+      order
+    };
+  })
+  .filter((entry): entry is FeaturedStaffViewModel => entry !== null)
+  .sort((a, b) => a.order - b.order)
   .slice(0, 3);
 
 // Process testimonials
@@ -92,6 +174,8 @@ const testimonials = pageData.testimonials;
       title="Learning the Montessori Way" 
       content="Dr. Montessori discovered something beautiful: when children are free to follow their interests in a thoughtfully prepared environment, they naturally develop concentration, independence, and a deep love of learning. We stay true to these discoveries while making sure every child—regardless of how they learn—can experience this magic."
       photoSlug="individual-montessori-concentration-img-7291-1770x1931"
+      slotId="home-photo-feature-learning"
+      mediaCategory="homepage"
       ctaLink="/our-principles"
       ctaText="Learn About Our Approach"
       imagePosition="right"
@@ -142,6 +226,7 @@ const testimonials = pageData.testimonials;
       title="Life at Spicebush Montessori"
       subtitle="Explore our vibrant community and see our Montessori philosophy in action"
       columns={3}
+      slotIdPrefix="home-gallery"
       images={[
         {
           photoSlug: 'individual-montessori-concentration-img-7293-1732x2057',
@@ -189,39 +274,53 @@ const testimonials = pageData.testimonials;
             {featuredStaff.map((teacher) => (
               <div class="text-center">
                 <div class="mb-6 relative inline-block">
-                  {teacher.data.photo ? (
-                    <img 
-                      src={teacher.data.photo}
-                      alt={`${teacher.data.name}, ${teacher.data.role} at Spicebush Montessori School`}
+                  {teacher.photoSlug ? (
+                    <OptimizedImage
+                      photoSlug={teacher.photoSlug}
+                      alt={`${teacher.name}${teacher.role ? `, ${teacher.role}` : ''} at Spicebush Montessori School`}
+                      className="w-48 h-48 rounded-full object-cover mx-auto shadow-lg"
+                      slotId={`home-featured-teacher-${teacher.id}`}
+                      mediaCategory="teachers"
+                    />
+                  ) : teacher.photo ? (
+                    <img
+                      src={teacher.photo}
+                      alt={`${teacher.name}${teacher.role ? `, ${teacher.role}` : ''} at Spicebush Montessori School`}
                       class="w-48 h-48 rounded-full object-cover mx-auto shadow-lg"
                       loading="lazy"
                     />
                   ) : (
                     <div class="w-48 h-48 rounded-full bg-gradient-to-br from-forest-canopy to-moss-green flex items-center justify-center mx-auto shadow-lg">
                       <span class="text-white text-4xl font-bold">
-                        {(teacher.data.name ?? 'Spicebush').split(' ').map((n: string) => n[0]).join('')}
+                        {teacher.initials}
                       </span>
                     </div>
                   )}
-                  {teacher.data.certificationBadge && (
+                  {teacher.certificationBadge && (
                     <div class="absolute -bottom-2 -right-2 bg-sunlight-gold text-white rounded-full w-12 h-12 flex items-center justify-center text-xs font-bold shadow-md">
-                      {teacher.data.certificationBadge}
+                      {teacher.certificationBadge}
                     </div>
                   )}
                 </div>
               
                 <h3 class="text-xl font-semibold text-earth-brown mb-1">
-                  {teacher.data.name}
+                  {teacher.name}
                 </h3>
-                <p class="text-forest-canopy font-medium mb-2">
-                  {teacher.data.role}
-                </p>
-                <p class="text-sm text-earth-brown/80 mb-3">
-                  {teacher.data.startYear && `Since ${teacher.data.startYear}`}
-                </p>
+                {teacher.role && (
+                  <p class="text-forest-canopy font-medium mb-2">
+                    {teacher.role}
+                  </p>
+                )}
+                {teacher.startYearLabel && (
+                  <p class="text-sm text-earth-brown/80 mb-3">
+                    {teacher.startYearLabel}
+                  </p>
+                )}
               
-                {teacher.body && (
-                  <div class="text-earth-brown leading-relaxed text-sm max-w-sm mx-auto" set:html={`${teacher.body.split('.')[0]}.`} />
+                {teacher.bioSnippet && (
+                  <div class="text-earth-brown leading-relaxed text-sm max-w-sm mx-auto">
+                    {teacher.bioSnippet}
+                  </div>
                 )}
               </div>
             ))}

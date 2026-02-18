@@ -152,6 +152,8 @@ const sortedStaff = staffEntries
                         photoSlug={teacher.photoSlug}
                         alt={`${teacher.name}${teacher.role ? `, ${teacher.role}` : ''} at Spicebush Montessori School`}
                         className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                        slotId={`about-teachers-${teacher.id}`}
+                        mediaCategory="teachers"
                       />
                     </div>
                   ) : teacher.photo ? (

@@ -1,6 +1,7 @@
 ---
 import { Star } from 'lucide-astro';
 import { getTestimonialsForPlacement } from '@lib/testimonials-content';
+import OptimizedImage from '@components/OptimizedImage.astro';
 
 const displayTestimonials = await getTestimonialsForPlacement('homepage');
 
@@ -47,7 +48,16 @@ const initialsFromAuthor = (author: string): string => {
             <div class="text-earth-brown mb-4 italic" set:html={testimonial.body} />
           )}
           <div class="flex items-center space-x-3">
-            {testimonial.authorPhoto ? (
+            {testimonial.authorPhotoSlug ? (
+              <OptimizedImage
+                photoSlug={testimonial.authorPhotoSlug}
+                alt={`Portrait of ${testimonial.author}`}
+                className="w-10 h-10 rounded-full object-cover"
+                slotId={`homepage-testimonial-author-${testimonial.slug}`}
+                mediaCategory="testimonials"
+                loading="lazy"
+              />
+            ) : testimonial.authorPhoto ? (
               <img 
                 src={testimonial.authorPhoto}
                 alt={`Portrait of ${testimonial.author}`}

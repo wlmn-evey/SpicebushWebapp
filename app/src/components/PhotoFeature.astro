@@ -8,6 +8,8 @@ export interface Props {
   imageSrc?: string;
   imageAlt?: string;
   photoSlug?: string;
+  slotId?: string;
+  mediaCategory?: string;
   ctaLink?: string;
   ctaText?: string;
   imagePosition?: 'left' | 'right';
@@ -20,6 +22,8 @@ const {
   imageSrc, 
   imageAlt, 
   photoSlug,
+  slotId,
+  mediaCategory,
   ctaLink, 
   ctaText = 'Learn More', 
   imagePosition = 'left',
@@ -39,6 +43,8 @@ const {
             className="w-full h-full"
             objectFit="cover"
             loading="lazy"
+            slotId={slotId}
+            mediaCategory={mediaCategory}
           />
         ) : (
           <img 
