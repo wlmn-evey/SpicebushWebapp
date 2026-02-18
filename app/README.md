@@ -17,7 +17,6 @@ Astro frontend and Netlify runtime for the Spicebush Montessori site.
 - Removed/deferred:
   - Blog UI (redirect behavior retained where configured)
   - On-site mailing list capture
-  - Stripe/payments
 
 ## Local Development
 From repository root:

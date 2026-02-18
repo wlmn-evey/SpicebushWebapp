@@ -106,7 +106,7 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
           <input type="hidden" name="key" value="donation_external_link" />
           <input type="hidden" name="redirectTo" value="/admin/settings?saved=donation_external_link" />
           <label class="block text-sm font-medium">
-            Donation External Link (future)
+            Donation Fallback Link (optional)
             <input type="text" name="value" value={donationLink} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
           </label>
           <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">

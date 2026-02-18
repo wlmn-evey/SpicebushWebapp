@@ -1,5 +1,440 @@
 ---
-// TODO: Must revisit. Replace this temporary redirect with the external donation link from DB settings.
-return Astro.redirect('/contact', 302);
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { Heart, HandHeart, DollarSign, CheckCircle, Mail, Phone } from 'lucide-astro';
+import { db } from '@lib/db';
+import { logServerError } from '@lib/server-logger';
+
+const presetAmounts = [25, 50, 100];
+
+const normalizeDonationLink = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+    return trimmed;
+  }
+
+  return null;
+};
+
+let donationExternalLink: string | null = null;
+try {
+  donationExternalLink = normalizeDonationLink(await db.content.getSetting('donation_external_link'));
+} catch (error) {
+  logServerError('Failed to load donation fallback link', error, { route: '/donate' });
+}
+
+const stripeEnabled = Boolean(process.env.STRIPE_SECRET_KEY?.trim());
+const canceled = Astro.url.searchParams.get('canceled') === '1';
+const errorCode = Astro.url.searchParams.get('error');
+
+const errorMessageMap: Record<string, string> = {
+  invalid: 'Please choose a valid donation amount and try again.',
+  unavailable: 'Donations are temporarily unavailable. Please try again shortly.',
+  request: 'We could not start checkout right now. Please try again.'
+};
+
+const checkoutErrorMessage = errorCode ? (errorMessageMap[errorCode] ?? errorMessageMap.request) : null;
 ---
 
+<Layout
+  title="Donate - Support Spicebush Montessori School"
+  description="Support accessible Montessori education at Spicebush Montessori. Your gift helps sustain sliding-scale tuition, classroom materials, and inclusive programs."
+  keywords="donate Spicebush Montessori, nonprofit school donation, support Montessori education"
+>
+  <Header />
+
+  <main id="main-content">
+    <section class="bg-gradient-to-br from-forest-canopy to-moss-green py-16 lg:py-20">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto text-center">
+          <div class="flex justify-center mb-6">
+            <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
+              <Heart className="w-8 h-8 text-white" aria-hidden="true" />
+            </div>
+          </div>
+          <h1 class="text-4xl lg:text-5xl font-heading font-bold text-white mb-6 tracking-tight">
+            Help Our Community Grow
+          </h1>
+          <p class="text-lg lg:text-xl text-green-100 max-w-3xl mx-auto leading-relaxed-plus font-light">
+            Spicebush Montessori is a small nonprofit school. Your support helps keep authentic Montessori education
+            accessible through sliding-scale tuition and inclusive programming.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-16 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="max-w-6xl mx-auto">
+          {(canceled || checkoutErrorMessage) && (
+            <div class="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900">
+              <p class="font-semibold">Your donation was not completed.</p>
+              <p class="text-sm mt-1">
+                {checkoutErrorMessage ?? 'No worries. You can try again whenever you are ready.'}
+              </p>
+            </div>
+          )}
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
+            <div class="space-y-5">
+              <h2 class="text-3xl font-heading font-bold text-earth-brown">What your gift supports</h2>
+              <p class="text-earth-brown/85 leading-relaxed">
+                We use donations to close the gap between true program costs and what families can pay. Every gift helps
+                protect the warm, child-centered environment our families count on.
+              </p>
+
+              <div class="space-y-4">
+                <div class="rounded-xl border border-gray-200 p-5 bg-stone-beige/40">
+                  <div class="flex items-start">
+                    <div class="w-10 h-10 bg-forest-canopy rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                      <DollarSign className="w-5 h-5 text-white" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p class="font-semibold text-earth-brown">$25 keeps classroom materials stocked.</p>
+                      <p class="text-sm text-earth-brown/80 mt-1">Supports art, practical life work, and daily essentials.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rounded-xl border border-gray-200 p-5 bg-stone-beige/40">
+                  <div class="flex items-start">
+                    <div class="w-10 h-10 bg-forest-canopy rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                      <HandHeart className="w-5 h-5 text-white" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p class="font-semibold text-earth-brown">$50 supports inclusive classroom supports.</p>
+                      <p class="text-sm text-earth-brown/80 mt-1">Helps us meet diverse learning needs with care and flexibility.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rounded-xl border border-gray-200 p-5 bg-stone-beige/40">
+                  <div class="flex items-start">
+                    <div class="w-10 h-10 bg-forest-canopy rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                      <CheckCircle className="w-5 h-5 text-white" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p class="font-semibold text-earth-brown">$100 strengthens tuition accessibility.</p>
+                      <p class="text-sm text-earth-brown/80 mt-1">Extends opportunity for families from a wider range of incomes.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-gray-200 bg-white shadow-sm p-6 lg:p-7">
+              <h2 class="text-2xl font-heading font-bold text-earth-brown mb-2">Make a Donation</h2>
+              <p class="text-sm text-earth-brown/75 mb-6">
+                Secure checkout is hosted by Stripe. Choose one-time or monthly support.
+              </p>
+
+              {stripeEnabled ? (
+                <form class="space-y-6" data-donation-form>
+                  <fieldset>
+                    <legend class="block text-sm font-semibold text-earth-brown mb-2">Donation frequency</legend>
+                    <div class="grid grid-cols-2 gap-2" data-frequency-group>
+                      <button
+                        type="button"
+                        class="rounded-lg border border-forest-canopy bg-forest-canopy text-white px-4 py-2.5 text-sm font-semibold transition-colors"
+                        data-frequency-button
+                        data-frequency-value="one-time"
+                        aria-pressed="true"
+                      >
+                        One-time
+                      </button>
+                      <button
+                        type="button"
+                        class="rounded-lg border border-gray-300 bg-white text-earth-brown px-4 py-2.5 text-sm font-semibold transition-colors hover:border-forest-canopy"
+                        data-frequency-button
+                        data-frequency-value="monthly"
+                        aria-pressed="false"
+                      >
+                        Monthly
+                      </button>
+                    </div>
+                    <input type="hidden" name="frequency" value="one-time" data-frequency-input />
+                  </fieldset>
+
+                  <fieldset>
+                    <legend class="block text-sm font-semibold text-earth-brown mb-2">Amount</legend>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" data-amount-group>
+                      {presetAmounts.map((amount, index) => (
+                        <button
+                          type="button"
+                          class={`rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors ${
+                            index === 0
+                              ? 'border-forest-canopy bg-forest-canopy text-white'
+                              : 'border-gray-300 bg-white text-earth-brown hover:border-forest-canopy'
+                          }`}
+                          data-amount-button
+                          data-amount={String(amount)}
+                          aria-pressed={index === 0 ? 'true' : 'false'}
+                        >
+                          ${amount}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        class="rounded-lg border border-gray-300 bg-white text-earth-brown px-4 py-2.5 text-sm font-semibold transition-colors hover:border-forest-canopy"
+                        data-amount-button
+                        data-amount="other"
+                        aria-pressed="false"
+                      >
+                        Other
+                      </button>
+                    </div>
+                    <input type="hidden" name="amount" value="25" data-amount-input />
+
+                    <div class="mt-3 hidden" data-custom-amount-wrap>
+                      <label for="custom-amount" class="block text-sm font-medium text-earth-brown mb-1">
+                        Custom amount (USD)
+                      </label>
+                      <input
+                        id="custom-amount"
+                        name="custom-amount"
+                        type="number"
+                        min="1"
+                        step="1"
+                        inputmode="decimal"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-forest-canopy focus:outline-none focus:ring-2 focus:ring-forest-canopy/30"
+                        placeholder="Enter amount"
+                      />
+                    </div>
+                  </fieldset>
+
+                  <p class="rounded-lg border border-moss-green/20 bg-moss-green/10 px-3 py-2 text-sm text-forest-canopy" data-donation-summary>
+                    You are making a one-time gift of $25.
+                  </p>
+
+                  <button
+                    type="submit"
+                    class="w-full rounded-lg bg-forest-canopy px-4 py-3 text-white font-semibold transition-colors hover:bg-moss-green disabled:cursor-not-allowed disabled:opacity-70"
+                    data-submit-button
+                  >
+                    Continue to secure checkout
+                  </button>
+
+                  <p class="hidden rounded-lg border px-3 py-2 text-sm" data-form-status role="status" aria-live="polite"></p>
+                </form>
+              ) : donationExternalLink ? (
+                <div class="space-y-4">
+                  <p class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                    Secure checkout is not available at the moment. You can still give through our donation portal.
+                  </p>
+                  <a
+                    href={donationExternalLink}
+                    class="block w-full rounded-lg bg-forest-canopy px-4 py-3 text-center text-white font-semibold transition-colors hover:bg-moss-green"
+                    target={donationExternalLink.startsWith('http') ? '_blank' : undefined}
+                    rel={donationExternalLink.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  >
+                    Open donation portal
+                  </a>
+                </div>
+              ) : (
+                <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+                  Donations are temporarily unavailable online. Please email or call us and we will help right away.
+                </div>
+              )}
+
+              <div class="mt-6 pt-6 border-t border-gray-200 space-y-2 text-sm text-earth-brown/80">
+                <p class="font-semibold text-earth-brown">Need help with your donation?</p>
+                <p class="flex items-center"><Mail className="w-4 h-4 mr-2 text-forest-canopy" /> information@spicebushmontessori.org</p>
+                <p class="flex items-center"><Phone className="w-4 h-4 mr-2 text-forest-canopy" /> (484) 202-0712</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
+
+<script is:inline>
+  (() => {
+    const form = document.querySelector('[data-donation-form]');
+    if (!form) return;
+
+    const frequencyInput = form.querySelector('[data-frequency-input]');
+    const amountInput = form.querySelector('[data-amount-input]');
+    const frequencyButtons = Array.from(form.querySelectorAll('[data-frequency-button]'));
+    const amountButtons = Array.from(form.querySelectorAll('[data-amount-button]'));
+    const customAmountWrap = form.querySelector('[data-custom-amount-wrap]');
+    const customAmountInput = form.querySelector('#custom-amount');
+    const summary = form.querySelector('[data-donation-summary]');
+    const status = form.querySelector('[data-form-status]');
+    const submitButton = form.querySelector('[data-submit-button]');
+
+    if (!frequencyInput || !amountInput || !summary || !status || !submitButton) return;
+
+    const statusClasses = {
+      error: ['border-red-200', 'bg-red-50', 'text-red-700'],
+      info: ['border-moss-green/20', 'bg-moss-green/10', 'text-forest-canopy']
+    };
+
+    const clearStatusClasses = () => {
+      status.classList.remove(...statusClasses.error, ...statusClasses.info);
+    };
+
+    const setStatus = (message, type) => {
+      status.textContent = message;
+      status.classList.remove('hidden');
+      clearStatusClasses();
+      const classes = type === 'error' ? statusClasses.error : statusClasses.info;
+      status.classList.add(...classes);
+    };
+
+    const clearStatus = () => {
+      status.textContent = '';
+      status.classList.add('hidden');
+      clearStatusClasses();
+    };
+
+    const setFrequency = (nextFrequency) => {
+      frequencyInput.value = nextFrequency;
+      frequencyButtons.forEach((button) => {
+        const isActive = button.getAttribute('data-frequency-value') === nextFrequency;
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        button.classList.toggle('border-forest-canopy', isActive);
+        button.classList.toggle('bg-forest-canopy', isActive);
+        button.classList.toggle('text-white', isActive);
+        button.classList.toggle('border-gray-300', !isActive);
+        button.classList.toggle('bg-white', !isActive);
+        button.classList.toggle('text-earth-brown', !isActive);
+      });
+      updateSummary();
+    };
+
+    const setAmountSelection = (value) => {
+      amountInput.value = value;
+      amountButtons.forEach((button) => {
+        const isActive = button.getAttribute('data-amount') === value;
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        button.classList.toggle('border-forest-canopy', isActive);
+        button.classList.toggle('bg-forest-canopy', isActive);
+        button.classList.toggle('text-white', isActive);
+        button.classList.toggle('border-gray-300', !isActive);
+        button.classList.toggle('bg-white', !isActive);
+        button.classList.toggle('text-earth-brown', !isActive);
+      });
+
+      if (value === 'other') {
+        customAmountWrap?.classList.remove('hidden');
+        customAmountInput?.focus();
+      } else {
+        customAmountWrap?.classList.add('hidden');
+        if (customAmountInput) customAmountInput.value = '';
+      }
+
+      updateSummary();
+    };
+
+    const resolveAmount = () => {
+      const selectedAmount = amountInput.value;
+      if (selectedAmount === 'other') {
+        const raw = String(customAmountInput?.value || '').trim().replace(/,/g, '');
+        const parsed = Number.parseFloat(raw);
+        if (!Number.isFinite(parsed)) return null;
+        return Math.round(parsed * 100) / 100;
+      }
+
+      const parsed = Number.parseFloat(selectedAmount);
+      if (!Number.isFinite(parsed)) return null;
+      return Math.round(parsed * 100) / 100;
+    };
+
+    const updateSummary = () => {
+      const amount = resolveAmount();
+      const frequencyLabel = frequencyInput.value === 'monthly' ? 'monthly' : 'one-time';
+      const amountLabel = Number.isFinite(amount)
+        ? `$${amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+        : '$0';
+      summary.textContent = `You are making a ${frequencyLabel} gift of ${amountLabel}${frequencyLabel === 'monthly' ? ' per month.' : '.'}`;
+    };
+
+    frequencyButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const value = button.getAttribute('data-frequency-value');
+        if (!value) return;
+        clearStatus();
+        setFrequency(value);
+      });
+    });
+
+    amountButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const value = button.getAttribute('data-amount');
+        if (!value) return;
+        clearStatus();
+        setAmountSelection(value);
+      });
+    });
+
+    customAmountInput?.addEventListener('input', () => {
+      clearStatus();
+      updateSummary();
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearStatus();
+
+      const amount = resolveAmount();
+      const frequency = frequencyInput.value === 'monthly' ? 'monthly' : 'one-time';
+
+      if (!Number.isFinite(amount) || amount < 1) {
+        setStatus('Please enter a valid donation amount of at least $1.', 'error');
+        return;
+      }
+
+      if (amount > 100000) {
+        setStatus('Please enter an amount below $100,000.', 'error');
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.textContent = 'Opening secure checkout...';
+
+      try {
+        const response = await fetch('/api/donations/checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json'
+          },
+          body: JSON.stringify({ amount, frequency })
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        const checkoutUrl = typeof payload.url === 'string' ? payload.url : '';
+        const errorMessage = typeof payload.error === 'string' ? payload.error : '';
+
+        if (!response.ok || !checkoutUrl) {
+          throw new Error(errorMessage || 'Unable to start checkout.');
+        }
+
+        setStatus('Redirecting to secure checkout...', 'info');
+        window.location.assign(checkoutUrl);
+      } catch (error) {
+        setStatus(
+          error instanceof Error && error.message
+            ? error.message
+            : 'We could not start secure checkout. Please try again.',
+          'error'
+        );
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Continue to secure checkout';
+      }
+    });
+  })();
+</script>
