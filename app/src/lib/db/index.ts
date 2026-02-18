@@ -12,6 +12,7 @@ import {
   cacheUtils
 } from './content';
 import { getRecentMessages, getCommunicationStats, getTemplates } from './communications';
+import { getContactSubmissions } from './contact-submissions';
 
 export const db = {
   content: {
@@ -30,6 +31,9 @@ export const db = {
     getRecentMessages,
     getCommunicationStats,
     getTemplates
+  },
+  contact: {
+    getContactSubmissions
   },
   raw: {
     getPublicClient,
@@ -57,4 +61,5 @@ export {
 } from './content';
 
 export { getRecentMessages, getCommunicationStats, getTemplates } from './communications';
+export { getContactSubmissions } from './contact-submissions';
 export { getPublicClient, getServiceClient, withServiceClient } from './client';

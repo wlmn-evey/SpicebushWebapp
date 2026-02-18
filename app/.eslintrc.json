@@ -76,7 +76,7 @@
       }
     },
     {
-      "files": ["src/pages/admin/tuition.astro", "src/pages/admin/media.astro"],
+      "files": ["src/pages/admin/tuition.astro", "src/pages/admin/media.astro", "src/pages/admin/contact-submissions.astro"],
       "rules": {
         // Work around ESLint indent recursion on deeply nested Astro templates
         "indent": "off",

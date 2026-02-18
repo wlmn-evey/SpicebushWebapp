@@ -46,6 +46,18 @@ export interface CommunicationTemplateRow {
   updated_at: string;
 }
 
+export interface ContactFormSubmissionRow {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string;
+  message: string;
+  child_age: string | null;
+  tour_interest: boolean;
+  submitted_at: string;
+}
+
 export interface MediaRow {
   id: string;
   filename: string;
@@ -70,6 +82,7 @@ export interface Database {
       settings: DatabaseTable<SettingRow>;
       communications_messages: DatabaseTable<CommunicationMessageRow>;
       communications_templates: DatabaseTable<CommunicationTemplateRow>;
+      contact_form_submissions: DatabaseTable<ContactFormSubmissionRow>;
       media: DatabaseTable<MediaRow>;
     };
     Views: Record<string, never>;
