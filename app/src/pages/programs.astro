@@ -34,11 +34,18 @@ const parseScheduleBullet = (bullet: string): DayScheduleEntry | null => {
   const trimmedBullet = bullet.trim();
   if (!trimmedBullet) return null;
 
-  const [timePart, ...contentParts] = trimmedBullet.split(':');
-  if (contentParts.length === 0) return null;
+  let separatorIndex = trimmedBullet.indexOf(': ');
+  if (separatorIndex === -1) {
+    const meridiemDelimiter = trimmedBullet.match(/\b(?:AM|PM)\b:/i);
+    if (meridiemDelimiter?.index !== undefined) {
+      separatorIndex = meridiemDelimiter.index + meridiemDelimiter[0].length - 1;
+    }
+  }
 
-  const time = timePart.trim();
-  const content = contentParts.join(':').trim();
+  if (separatorIndex === -1) return null;
+
+  const time = trimmedBullet.slice(0, separatorIndex).trim();
+  const content = trimmedBullet.slice(separatorIndex + 1).trim();
   if (!time || !content) return null;
 
   const contentMatch = content.match(/^(.+?)\s*\((.+)\)$/);
