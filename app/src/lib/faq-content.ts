@@ -225,7 +225,7 @@ export const DEFAULT_FAQ_ITEMS: readonly FaqSeedItem[] = [
       'All educational materials and supplies',
       'Morning and afternoon snacks (organic when possible)',
       'Enrichment activities (art, music, gardening)',
-      'Field trips within walking distance',
+      'On-campus enrichment experiences and special visitors',
       'Parent education workshops'
     ],
     note: 'Families provide lunch and any special dietary items. Extended care (4:00-5:30 PM) is available for an additional fee.'
@@ -399,7 +399,7 @@ export const DEFAULT_FAQ_ITEMS: readonly FaqSeedItem[] = [
     bullets: [
       'Classroom observations (after your child is settled)',
       'Parent education evenings on Montessori principles',
-      'Volunteering for special events and field trips',
+      'Volunteering for special events and classroom support',
       'Sharing your culture, skills, or profession with the class',
       'Participating in workdays to maintain our environment',
       'Joining committees (fundraising, events, diversity & inclusion)'
