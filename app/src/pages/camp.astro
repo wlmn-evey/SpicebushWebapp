@@ -956,11 +956,8 @@ const faqEntries: Array<{ question: string; answer: string }> = [
     )
   }
 
-  <script is:inline>
-    (() => {
-      if (window.__campMicroMotionInit) return;
-      window.__campMicroMotionInit = true;
-
+  <script>
+    function initCampAnimations() {
       const nodes = Array.from(document.querySelectorAll('[data-camp-animate]'));
       if (nodes.length === 0) return;
 
@@ -974,18 +971,28 @@ const faqEntries: Array<{ question: string; answer: string }> = [
         entries => {
           entries.forEach(entry => {
             if (!entry.isIntersecting) return;
-            entry.target.classList.add('is-visible');
+            // Add a small delay to ensure CSS transitions are ready
+            requestAnimationFrame(() => {
+              entry.target.classList.add('is-visible');
+            });
             observer.unobserve(entry.target);
           });
         },
         {
-          threshold: 0.16,
-          rootMargin: '0px 0px -8% 0px'
+          threshold: 0.1,
+          rootMargin: '0px 0px -50px 0px'
         }
       );
 
-      nodes.forEach(node => observer.observe(node));
-    })();
+      nodes.forEach(node => {
+        // Reset visibility if it was already set (useful for SPA navigation)
+        node.classList.remove('is-visible');
+        observer.observe(node);
+      });
+    }
+
+    // Run on initial load and after Astro View Transitions
+    document.addEventListener('astro:page-load', initCampAnimations);
   </script>
 
   <style>
