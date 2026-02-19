@@ -1,0 +1,1064 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import OptimizedImage from '../components/OptimizedImage.astro';
+import {
+  Calendar,
+  Clock,
+  Users,
+  Leaf,
+  ArrowRight,
+  CheckCircle,
+  Mail,
+  Phone,
+  CircleHelp,
+  Megaphone,
+  Sparkles
+} from 'lucide-astro';
+import { db } from '@lib/db';
+import type { CampWeekView } from '@lib/db/camp';
+
+interface WeekAction {
+  href: string;
+  label: string;
+  eventName: 'camp_enroll_click' | 'camp_waitlist_click' | 'camp_contact_click';
+  eventLabel: string;
+  external: boolean;
+}
+
+const settings = await db.content.getAllSettings();
+const campData = await db.camp.getCampAdminData();
+
+const asString = (value: unknown, fallback = ''): string => {
+  if (typeof value !== 'string') return fallback;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : fallback;
+};
+
+const formatDate = (value: string): string => {
+  const parsed = Date.parse(`${value}T00:00:00`);
+  if (!Number.isFinite(parsed)) return value;
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(
+    new Date(parsed)
+  );
+};
+
+const formatDateWithYear = (value: string): string => {
+  const parsed = Date.parse(`${value}T00:00:00`);
+  if (!Number.isFinite(parsed)) return value;
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }).format(new Date(parsed));
+};
+
+const formatDateTime = (value: string): string => {
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) return value;
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  }).format(new Date(parsed));
+};
+
+const statusLabel = (status: CampWeekView['status']): string => {
+  if (status === 'draft') return 'Draft';
+  if (status === 'open') return 'Open';
+  if (status === 'limited') return 'Limited';
+  if (status === 'full') return 'Full';
+  if (status === 'waitlist') return 'Waitlist';
+  return 'Closed';
+};
+
+const statusClass = (status: CampWeekView['status']): string => {
+  if (status === 'open') return 'bg-green-100 text-green-800 border-green-200';
+  if (status === 'limited') return 'bg-amber-100 text-amber-900 border-amber-200';
+  if (status === 'full') return 'bg-red-100 text-red-800 border-red-200';
+  if (status === 'waitlist') return 'bg-blue-100 text-blue-800 border-blue-200';
+  if (status === 'draft') return 'bg-purple-100 text-purple-800 border-purple-200';
+  return 'bg-gray-200 text-gray-800 border-gray-300';
+};
+
+const availabilityText = (week: CampWeekView, isAdmin: boolean): string => {
+  if (week.status === 'draft') {
+    return isAdmin ? 'Draft week (admin preview only).' : 'Not yet available.';
+  }
+  if (week.status === 'closed') return 'Registration is currently closed.';
+  if (week.status === 'waitlist' || week.status === 'full') return 'No open seats right now.';
+  return `${week.availableSeats} seat${week.availableSeats === 1 ? '' : 's'} remaining`;
+};
+
+const sanitizeExternalUrl = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+};
+
+const getWeekAction = (week: CampWeekView): WeekAction => {
+  const enrollmentUrl = sanitizeExternalUrl(week.enrollmentUrl);
+  const waitlistUrl = sanitizeExternalUrl(week.waitlistUrl);
+
+  if ((week.status === 'open' || week.status === 'limited') && enrollmentUrl) {
+    return {
+      href: enrollmentUrl,
+      label: 'Reserve This Week',
+      eventName: 'camp_enroll_click',
+      eventLabel: week.slug,
+      external: true
+    };
+  }
+
+  if ((week.status === 'waitlist' || week.status === 'full') && waitlistUrl) {
+    return {
+      href: waitlistUrl,
+      label: 'Join Waitlist',
+      eventName: 'camp_waitlist_click',
+      eventLabel: week.slug,
+      external: true
+    };
+  }
+
+  if (waitlistUrl) {
+    return {
+      href: waitlistUrl,
+      label: 'Join Waitlist',
+      eventName: 'camp_waitlist_click',
+      eventLabel: week.slug,
+      external: true
+    };
+  }
+
+  if (enrollmentUrl) {
+    return {
+      href: enrollmentUrl,
+      label: 'View Enrollment',
+      eventName: 'camp_enroll_click',
+      eventLabel: week.slug,
+      external: true
+    };
+  }
+
+  return {
+    href: '/contact',
+    label: 'Contact Admissions',
+    eventName: 'camp_contact_click',
+    eventLabel: week.slug,
+    external: false
+  };
+};
+
+const uniq = (values: string[]): string[] => {
+  const seen = new Set<string>();
+  const output: string[] = [];
+  for (const value of values) {
+    const trimmed = value.trim();
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    output.push(trimmed);
+  }
+  return output;
+};
+
+const summarizeValues = (values: string[], max: number, fallback: string): string => {
+  const cleaned = uniq(values.filter(value => value.trim().length > 0));
+  if (cleaned.length === 0) return fallback;
+  if (cleaned.length <= max) return cleaned.join(' • ');
+  return `${cleaned.slice(0, max).join(' • ')} +${cleaned.length - max} more`;
+};
+
+const extractHighlights = (text: string): string[] =>
+  text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.startsWith('-'))
+    .map(line => line.replace(/^-+/, '').trim())
+    .filter(Boolean)
+    .slice(0, 4);
+
+const extractLead = (text: string): string => {
+  const lines = text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
+  return lines.find(line => !line.startsWith('-') && !line.endsWith(':')) ?? '';
+};
+
+const locals = Astro.locals as Record<string, unknown>;
+const isAdmin = locals.isAdmin === true;
+const showPrepBanner = isAdmin && locals.campModePrep === true;
+const campModeReason =
+  typeof locals.campModeReason === 'string' && locals.campModeReason.length > 0
+    ? locals.campModeReason
+    : 'unknown';
+
+const allWeeks = [...campData.weeks].sort((a, b) => {
+  if (a.startDate === b.startDate) return a.displayOrder - b.displayOrder;
+  return a.startDate.localeCompare(b.startDate);
+});
+const publicWeeks = allWeeks.filter(week => week.isPublished);
+const visibleWeeks = isAdmin ? allWeeks : publicWeeks;
+
+const seasonLabel = asString(
+  settings.camp_current_season_label,
+  campData.seasons.find(season => season.isActive)?.name ?? 'Summer Camp'
+);
+
+const openCount = visibleWeeks.filter(week => week.status === 'open').length;
+const limitedCount = visibleWeeks.filter(week => week.status === 'limited').length;
+const waitlistCount = visibleWeeks.filter(week => week.status === 'waitlist').length;
+const fullCount = visibleWeeks.filter(week => week.status === 'full').length;
+const totalAvailableSeats = visibleWeeks.reduce((sum, week) => sum + week.availableSeats, 0);
+
+const latestUpdateTimestamp = visibleWeeks
+  .map(week => Date.parse(week.updatedAt))
+  .filter(value => Number.isFinite(value))
+  .sort((a, b) => b - a)[0];
+const latestUpdate =
+  typeof latestUpdateTimestamp === 'number'
+    ? formatDateTime(new Date(latestUpdateTimestamp).toISOString())
+    : null;
+
+const firstWeek = visibleWeeks[0] ?? null;
+const lastWeek = visibleWeeks.length > 0 ? visibleWeeks[visibleWeeks.length - 1] : null;
+const seasonDateRange =
+  firstWeek && lastWeek
+    ? `${formatDateWithYear(firstWeek.startDate)} - ${formatDateWithYear(lastWeek.endDate)}`
+    : 'Schedule updates coming soon';
+
+const ageRangeSummary = summarizeValues(
+  visibleWeeks.map(week => week.ageRangeLabel),
+  2,
+  'Ages vary by week'
+);
+const hoursSummary = summarizeValues(
+  visibleWeeks.map(week => week.hoursLabel),
+  2,
+  'Hours vary by week'
+);
+const priceSummary = summarizeValues(
+  visibleWeeks.map(week => week.priceLabel),
+  2,
+  'Pricing varies by week'
+);
+
+const contactEmail = asString(settings.main_email, 'information@spicebushmontessori.org');
+const contactPhone = asString(settings.main_phone, '(484) 202-0712');
+const contactPhoneHref = `tel:${contactPhone.replace(/[^+\d]/g, '')}`;
+
+const nextAvailableWeek =
+  visibleWeeks.find(week => week.status === 'open' || week.status === 'limited') ?? null;
+const heroWeek = nextAvailableWeek ?? visibleWeeks[0] ?? null;
+const heroAction = heroWeek ? getWeekAction(heroWeek) : null;
+
+const primaryWeek =
+  visibleWeeks.find(
+    week => week.status === 'open' || week.status === 'limited' || week.status === 'waitlist'
+  ) ??
+  visibleWeeks[0] ??
+  null;
+const primaryAction = primaryWeek ? getWeekAction(primaryWeek) : null;
+
+const spotlightWeeks = visibleWeeks.filter(week => Boolean(week.heroMediaSlug)).slice(0, 3);
+
+const enrollmentReadinessMessage = nextAvailableWeek
+  ? `${nextAvailableWeek.availableSeats} seats currently open in ${nextAvailableWeek.themeTitle}.`
+  : waitlistCount + fullCount > 0
+    ? `${waitlistCount + fullCount} week${waitlistCount + fullCount === 1 ? '' : 's'} are full or on waitlist right now.`
+    : 'New openings are posted here first.';
+
+const faqEntries: Array<{ question: string; answer: string }> = [
+  {
+    question: 'Can we enroll in more than one week?',
+    answer:
+      'Yes. Many families combine multiple weeks. Use each week card to reserve that specific session through Transparent Classroom.'
+  },
+  {
+    question: 'What if our preferred week is full?',
+    answer:
+      'Use the waitlist link when available. We monitor seat movement and contact families quickly if an opening appears.'
+  },
+  {
+    question: 'How quickly are seat updates reflected?',
+    answer:
+      'Seat counts are managed from our admin system and updates are published to this page as soon as staff records changes.'
+  },
+  {
+    question: 'Do you help families choose the right week?',
+    answer:
+      'Absolutely. Admissions can help match themes, age fit, and summer schedules so you can pick confidently.'
+  }
+];
+---
+
+<Layout
+  title={`${seasonLabel} | Spicebush Montessori School`}
+  description="Explore Spicebush Montessori camp themes, live seat availability, and quick enrollment links by week."
+  keywords="montessori camp, glen mills camp, spicebush camp, camp enrollment"
+>
+  <Header />
+
+  <main id="main-content" class="bg-[#f4f3ef] pb-28 md:pb-0">
+    {
+      showPrepBanner && (
+        <div class="border-b border-amber-200 bg-amber-50">
+          <div class="container mx-auto px-4 py-2 text-sm font-semibold text-amber-800">
+            Camp is in Prep mode. You are previewing the private camp page before public launch.
+            <span class="ml-2 font-normal text-amber-700">(reason: {campModeReason})</span>
+          </div>
+        </div>
+      )
+    }
+
+    <section
+      class="relative overflow-hidden bg-gradient-to-br from-forest-canopy via-moss-green to-[#274934] py-14 text-white lg:py-20"
+    >
+      <div class="pointer-events-none absolute inset-0">
+        <div class="absolute -left-20 top-6 h-56 w-56 rounded-full bg-sunlight-gold/20 blur-3xl">
+        </div>
+        <div class="absolute -right-10 bottom-0 h-72 w-72 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute right-1/3 top-1/3 h-52 w-52 rounded-full bg-[#9cc8a8]/20 blur-3xl">
+        </div>
+      </div>
+
+      <div class="container relative z-10 mx-auto px-4">
+        <div class="grid gap-8 xl:grid-cols-[1.2fr_0.9fr] xl:items-center">
+          <div data-camp-animate class="camp-reveal">
+            <p class="text-xs uppercase tracking-[0.24em] text-white/80">
+              Spicebush Montessori Summer Camp
+            </p>
+            <h1
+              class="mt-3 max-w-3xl text-3xl font-heading font-bold leading-tight md:text-4xl lg:text-5xl"
+            >
+              {seasonLabel}
+            </h1>
+            <p class="mt-4 max-w-2xl text-base text-white/90 md:text-lg">
+              A summer of outdoor play, hands-on discovery, and Montessori-led exploration. Explore our weekly themes and reserve your child's spot in minutes.
+            </p>
+
+            <div class="mt-5 flex flex-wrap gap-2 text-xs font-semibold">
+              <span
+                class="rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-white/95"
+              >
+                {seasonDateRange}
+              </span>
+              <span
+                class="rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-white/95"
+              >
+                {ageRangeSummary}
+              </span>
+              <span
+                class="rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-white/95"
+              >
+                {hoursSummary}
+              </span>
+            </div>
+
+            <div class="mt-6 flex flex-wrap gap-3">
+              {
+                primaryAction ? (
+                  <a
+                    href={primaryAction.href}
+                    target={primaryAction.external ? '_blank' : undefined}
+                    rel={primaryAction.external ? 'noopener noreferrer' : undefined}
+                    class="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-sunlight-gold px-5 py-2 text-sm font-semibold text-earth-brown transition hover:bg-orange-300"
+                    data-analytics-event={primaryAction.eventName}
+                    data-analytics-label={`hero-${primaryAction.eventLabel}`}
+                    data-analytics-location="camp-hero"
+                  >
+                    {primaryAction.label}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </a>
+                ) : (
+                  <a
+                    href="/contact"
+                    class="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-sunlight-gold px-5 py-2 text-sm font-semibold text-earth-brown transition hover:bg-orange-300"
+                    data-analytics-event="camp_contact_click"
+                    data-analytics-label="hero-contact"
+                    data-analytics-location="camp-hero"
+                  >
+                    Contact Admissions
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </a>
+                )
+              }
+              <a
+                href="#camp-weeks"
+                class="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-white/35 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                See All Themes
+              </a>
+            </div>
+
+            <div class="mt-6 grid gap-3 sm:grid-cols-3">
+              <div
+                class="camp-stat-card rounded-xl border border-white/20 bg-white/10 p-3 backdrop-blur"
+              >
+                <p class="text-xs uppercase tracking-wide text-white/70">Open Seats</p>
+                <p class="mt-1 text-2xl font-bold">{totalAvailableSeats}</p>
+              </div>
+              <div
+                class="camp-stat-card rounded-xl border border-white/20 bg-white/10 p-3 backdrop-blur"
+              >
+                <p class="text-xs uppercase tracking-wide text-white/70">Open Weeks</p>
+                <p class="mt-1 text-2xl font-bold">{openCount + limitedCount}</p>
+              </div>
+              <div
+                class="camp-stat-card rounded-xl border border-white/20 bg-white/10 p-3 backdrop-blur"
+              >
+                <p class="text-xs uppercase tracking-wide text-white/70">Waitlist / Full</p>
+                <p class="mt-1 text-2xl font-bold">{waitlistCount + fullCount}</p>
+              </div>
+            </div>
+          </div>
+
+          <aside
+            data-camp-animate
+            style="--camp-delay: 90ms;"
+            class="camp-card camp-reveal overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-xl backdrop-blur"
+          >
+            {
+              heroWeek?.heroMediaSlug ? (
+                <div class="aspect-[4/3] w-full md:aspect-[3/2]">
+                  <OptimizedImage
+                    photoSlug={heroWeek.heroMediaSlug}
+                    alt={`${heroWeek.themeTitle} camp image`}
+                    className="h-full w-full object-cover"
+                    slotId={`camp-hero-${heroWeek.slug}`}
+                    mediaCategory="events"
+                  />
+                </div>
+              ) : (
+                <div class="flex aspect-[4/3] items-center justify-center bg-white/10 px-6 text-center md:aspect-[3/2]">
+                  <p class="text-xl font-semibold">Discover our weekly camp themes</p>
+                </div>
+              )
+            }
+            <div class="p-5">
+              <p class="text-xs uppercase tracking-[0.2em] text-white/75">Featured Week</p>
+              <h2 class="mt-1 text-2xl font-heading font-bold">
+                {heroWeek?.themeTitle ?? 'Camp Overview'}
+              </h2>
+              {
+                heroWeek && (
+                  <p class="mt-1 text-sm text-white/85">
+                    {formatDate(heroWeek.startDate)} - {formatDate(heroWeek.endDate)}
+                  </p>
+                )
+              }
+              <p class="mt-3 text-sm font-semibold text-white">{enrollmentReadinessMessage}</p>
+              <p class="mt-2 text-sm text-white/90">
+                {heroWeek?.summary || extractLead(heroWeek?.description ?? '')}
+              </p>
+
+              {
+                heroAction && (
+                  <a
+                    href={heroAction.href}
+                    target={heroAction.external ? '_blank' : undefined}
+                    rel={heroAction.external ? 'noopener noreferrer' : undefined}
+                    class="mt-4 inline-flex min-h-[46px] w-full items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-forest-canopy transition hover:bg-stone-beige"
+                    data-analytics-event={heroAction.eventName}
+                    data-analytics-label={`hero-side-${heroAction.eventLabel}`}
+                    data-analytics-location="camp-hero-side"
+                  >
+                    {heroAction.label}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </a>
+                )
+              }
+
+              {
+                latestUpdate && (
+                  <p class="mt-3 text-xs text-white/75">Last updated {latestUpdate}</p>
+                )
+              }
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    {
+      spotlightWeeks.length > 0 && (
+        <section class="-mt-7 pb-6">
+          <div class="container mx-auto px-4">
+            <div class="grid gap-3 md:grid-cols-3">
+              {spotlightWeeks.map((week, index) => (
+                <article
+                  data-camp-animate
+                  style={`--camp-delay: ${index * 75}ms;`}
+                  class="camp-card camp-reveal overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+                >
+                  <div class="aspect-[4/3] w-full">
+                    {week.heroMediaSlug && (
+                      <OptimizedImage
+                        photoSlug={week.heroMediaSlug}
+                        alt={`${week.themeTitle} spotlight image`}
+                        className="h-full w-full object-cover"
+                        slotId={`camp-spotlight-${week.slug}`}
+                        mediaCategory="events"
+                      />
+                    )}
+                  </div>
+                  <div class="p-3">
+                    <p class="text-xs uppercase tracking-wide text-earth-brown/70">
+                      {formatDate(week.startDate)} - {formatDate(week.endDate)}
+                    </p>
+                    <p class="mt-1 text-sm font-semibold text-earth-brown">{week.themeTitle}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    <section data-camp-animate class="camp-reveal py-8">
+      <div class="container mx-auto px-4">
+        {
+          !campData.available && (
+            <div class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              {campData.errorMessage ??
+                'Camp data is not available yet. Apply the latest migration to enable camp management.'}
+            </div>
+          )
+        }
+
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <article class="camp-card rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div class="flex items-center gap-2 text-forest-canopy">
+              <Users className="h-4 w-4" />
+              <p class="text-xs uppercase tracking-wide text-earth-brown/70">Age Range</p>
+            </div>
+            <p class="mt-2 text-base font-semibold text-earth-brown">{ageRangeSummary}</p>
+          </article>
+
+          <article class="camp-card rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div class="flex items-center gap-2 text-forest-canopy">
+              <Clock className="h-4 w-4" />
+              <p class="text-xs uppercase tracking-wide text-earth-brown/70">Hours</p>
+            </div>
+            <p class="mt-2 text-base font-semibold text-earth-brown">{hoursSummary}</p>
+          </article>
+
+          <article class="camp-card rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div class="flex items-center gap-2 text-forest-canopy">
+              <Calendar className="h-4 w-4" />
+              <p class="text-xs uppercase tracking-wide text-earth-brown/70">Weekly Tuition</p>
+            </div>
+            <p class="mt-2 text-base font-semibold text-earth-brown">{priceSummary}</p>
+          </article>
+
+          <article class="camp-card rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div class="flex items-center gap-2 text-forest-canopy">
+              <Leaf className="h-4 w-4" />
+              <p class="text-xs uppercase tracking-wide text-earth-brown/70">Program Style</p>
+            </div>
+            <p class="mt-2 text-base font-semibold text-earth-brown">
+              Montessori-led exploration, outdoor play, and weekly themes
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section data-camp-animate class="camp-reveal py-6" style="--camp-delay: 60ms;">
+      <div class="container mx-auto px-4">
+        <div class="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <div class="camp-card rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-earth-brown/70">
+              Simple Enrollment Steps
+            </p>
+            <h2 class="mt-2 text-3xl font-heading font-bold text-earth-brown">
+              Easy for Busy Parents
+            </h2>
+            <p class="mt-2 max-w-2xl text-sm text-earth-brown/80">
+              Review the details quickly, choose the right week, and enroll with clear next steps.
+            </p>
+
+            <div class="mt-5 grid gap-3 md:grid-cols-3">
+              <article class="camp-card rounded-2xl border border-gray-200 bg-stone-beige/30 p-4">
+                <p class="text-xs uppercase tracking-wide text-earth-brown/70">Step 1</p>
+                <h3 class="mt-1 text-base font-semibold text-earth-brown">Compare Weeks</h3>
+                <p class="mt-1 text-sm text-earth-brown/85">
+                  Review themes, dates, and seat status to find your best-fit sessions.
+                </p>
+              </article>
+
+              <article class="camp-card rounded-2xl border border-gray-200 bg-stone-beige/30 p-4">
+                <p class="text-xs uppercase tracking-wide text-earth-brown/70">Step 2</p>
+                <h3 class="mt-1 text-base font-semibold text-earth-brown">Reserve Directly</h3>
+                <p class="mt-1 text-sm text-earth-brown/85">
+                  Click 'Reserve This Week' on any opening to secure your spot directly through Transparent Classroom.
+                </p>
+              </article>
+
+              <article class="camp-card rounded-2xl border border-gray-200 bg-stone-beige/30 p-4">
+                <p class="text-xs uppercase tracking-wide text-earth-brown/70">Step 3</p>
+                <h3 class="mt-1 text-base font-semibold text-earth-brown">Get Follow-Up</h3>
+                <p class="mt-1 text-sm text-earth-brown/85">
+                  Admissions confirms details and supports any questions right away.
+                </p>
+              </article>
+            </div>
+          </div>
+
+          <aside
+            class="camp-card rounded-3xl border border-gray-200 bg-gradient-to-br from-[#ecf4ee] via-white to-[#f7f3df] p-6 shadow-sm"
+          >
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-forest-canopy">
+              Helpful Highlights
+            </p>
+            <h3 class="mt-2 text-2xl font-heading font-bold text-earth-brown">
+              Booking made simple
+            </h3>
+            <ul class="mt-4 space-y-3 text-sm text-earth-brown/90">
+              <li class="flex items-start gap-2">
+                <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-forest-canopy" />
+                <span>Live seat updates help you plan with confidence.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-forest-canopy" />
+                <span>One-tap enrollment links make registration simple.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-forest-canopy" />
+                <span>Fast contact options are available if you need help.</span>
+              </li>
+            </ul>
+            <a
+              href="#camp-weeks"
+              class="mt-5 inline-flex min-h-[46px] w-full items-center justify-center rounded-xl bg-forest-canopy px-4 py-2 text-sm font-semibold text-white transition hover:bg-moss-green"
+            >
+              View Weekly Options
+            </a>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section
+      id="camp-weeks"
+      data-camp-animate
+      class="camp-reveal py-10 lg:py-12"
+      style="--camp-delay: 80ms;"
+    >
+      <div class="container mx-auto px-4">
+        <div class="mb-5 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-earth-brown/70">
+              Weekly Themes
+            </p>
+            <h2 class="mt-1 text-3xl font-heading font-bold text-earth-brown">
+              Choose Your Camp Weeks
+            </h2>
+            <p class="mt-2 max-w-2xl text-sm text-earth-brown/80">
+              Each card includes exact dates, seat status, and a direct enrollment or waitlist path.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2 text-xs font-semibold">
+            <span
+              class="rounded-full border border-green-200 bg-green-100 px-3 py-1 text-green-800"
+            >
+              Open: {openCount}
+            </span>
+            <span
+              class="rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-amber-800"
+            >
+              Limited: {limitedCount}
+            </span>
+            <span class="rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-blue-800">
+              Waitlist: {waitlistCount}
+            </span>
+            <span class="rounded-full border border-red-200 bg-red-100 px-3 py-1 text-red-800">
+              Full: {fullCount}
+            </span>
+          </div>
+        </div>
+
+        {
+          visibleWeeks.length === 0 ? (
+            <div class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+              <h3 class="text-xl font-semibold text-earth-brown">Camp Weeks Coming Soon</h3>
+              <p class="mt-2 text-sm text-earth-brown/80">
+                Weekly camp sessions have not been posted yet. Contact us and we will share details
+                as soon as they are available.
+              </p>
+              <div class="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                <a
+                  href="/contact"
+                  class="inline-flex min-h-[46px] items-center justify-center rounded-lg bg-forest-canopy px-5 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+                >
+                  Contact Admissions
+                </a>
+                <a
+                  href={`mailto:${contactEmail}`}
+                  class="inline-flex min-h-[46px] items-center justify-center rounded-lg border border-gray-300 px-5 py-2 text-sm font-semibold text-earth-brown hover:bg-gray-100"
+                >
+                  {contactEmail}
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div class="space-y-6">
+              {visibleWeeks.map((week, index) => {
+                const action = getWeekAction(week);
+                const highlights = extractHighlights(week.description);
+                const leadCopy = week.summary || extractLead(week.description);
+                return (
+                  <article
+                    data-camp-animate
+                    style={`--camp-delay: ${Math.min(index, 8) * 70}ms;`}
+                    class="camp-card camp-reveal overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm"
+                  >
+                    <div class="grid lg:grid-cols-[1.15fr_0.85fr]">
+                      <div>
+                        <div class="relative aspect-[5/4] w-full md:aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[24rem]">
+                          {week.heroMediaSlug ? (
+                            <OptimizedImage
+                              photoSlug={week.heroMediaSlug}
+                              alt={`${week.themeTitle} promotional image`}
+                              className="h-full w-full object-cover"
+                              slotId={`camp-week-${week.slug}`}
+                              mediaCategory="events"
+                            />
+                          ) : (
+                            <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-stone-beige to-moss-green/20 px-5 text-center text-earth-brown">
+                              <p class="text-lg font-semibold">{week.themeTitle}</p>
+                            </div>
+                          )}
+                          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
+                            <p class="text-xs uppercase tracking-[0.2em] text-white/80">
+                              {formatDate(week.startDate)} - {formatDate(week.endDate)}
+                            </p>
+                            <h3 class="mt-1 text-2xl font-heading font-bold md:text-3xl">
+                              {week.themeTitle}
+                            </h3>
+                          </div>
+                          <div class="absolute right-4 top-4">
+                            <span
+                              class={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold shadow ${statusClass(week.status)} ${week.status === 'open' || week.status === 'limited' ? 'camp-status-chip' : ''}`}
+                            >
+                              {statusLabel(week.status)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div class="p-5 lg:p-6">
+                          {leadCopy && (
+                            <p class="text-sm text-earth-brown/85 md:text-base">{leadCopy}</p>
+                          )}
+
+                          {highlights.length > 0 && (
+                            <ul class="mt-4 grid gap-2 text-sm text-earth-brown/85 sm:grid-cols-2">
+                              {highlights.map(item => (
+                                <li class="flex items-start gap-2">
+                                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-forest-canopy" />
+                                  <span>{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+
+                          {week.variants.length > 0 && (
+                            <div class="mt-4 rounded-xl border border-gray-200 bg-stone-beige/30 p-3">
+                              <p class="text-xs font-semibold uppercase tracking-wide text-earth-brown/75">
+                                Program Options
+                              </p>
+                              <div class="mt-2 flex flex-wrap gap-2">
+                                {week.variants.map(variant => (
+                                  <span class="rounded-full border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-earth-brown">
+                                    {variant.label}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <aside class="border-t border-gray-200 bg-[#fbfaf6] p-5 lg:border-l lg:border-t-0 lg:p-6">
+                        <p class="text-xs uppercase tracking-[0.2em] text-earth-brown/70">
+                          Planning Details
+                        </p>
+                        <p class="mt-2 text-sm font-semibold text-earth-brown">
+                          {availabilityText(week, isAdmin)}
+                        </p>
+
+                        <dl class="mt-4 space-y-3 text-sm text-earth-brown/90">
+                          <div>
+                            <dt class="font-semibold text-earth-brown">Ages</dt>
+                            <dd>{week.ageRangeLabel || 'See week details'}</dd>
+                          </div>
+                          <div>
+                            <dt class="font-semibold text-earth-brown">Hours</dt>
+                            <dd>{week.hoursLabel || 'See week details'}</dd>
+                          </div>
+                          <div>
+                            <dt class="font-semibold text-earth-brown">Price</dt>
+                            <dd>{week.priceLabel || 'See week details'}</dd>
+                          </div>
+                        </dl>
+
+                        <div class="mt-5 space-y-3">
+                          <a
+                            href={action.href}
+                            target={action.external ? '_blank' : undefined}
+                            rel={action.external ? 'noopener noreferrer' : undefined}
+                            class="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-forest-canopy px-4 py-2 text-sm font-semibold text-white transition hover:bg-moss-green"
+                            data-analytics-event={action.eventName}
+                            data-analytics-label={action.eventLabel}
+                            data-analytics-location="camp-week-card"
+                          >
+                            {action.label}
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </a>
+                          <a
+                            href="/contact"
+                            class="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-earth-brown transition hover:bg-gray-100"
+                            data-analytics-event="camp_contact_click"
+                            data-analytics-label={`question-${week.slug}`}
+                            data-analytics-location="camp-week-card"
+                          >
+                            Ask Admissions
+                          </a>
+                        </div>
+
+                        <div class="mt-4 rounded-xl border border-gray-200 bg-white p-3 text-xs text-earth-brown/80">
+                          <p class="font-semibold text-earth-brown">Enrollment partner</p>
+                          <p class="mt-1">Registration links open in Transparent Classroom.</p>
+                        </div>
+                      </aside>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )
+        }
+      </div>
+    </section>
+
+    <section data-camp-animate class="camp-reveal pb-12 pt-4" style="--camp-delay: 100ms;">
+      <div class="container mx-auto px-4">
+        <div class="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+          <div class="camp-card rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div class="flex items-center gap-2 text-forest-canopy">
+              <CircleHelp className="h-5 w-5" />
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-earth-brown/70">
+                Parent FAQ
+              </p>
+            </div>
+            <h2 class="mt-2 text-2xl font-heading font-bold text-earth-brown">
+              Quick Answers Before You Enroll
+            </h2>
+            <div class="mt-4 space-y-3">
+              {
+                faqEntries.map(item => (
+                  <details class="group camp-card rounded-xl border border-gray-200 bg-[#faf9f4] p-4">
+                    <summary class="cursor-pointer list-none pr-6 text-sm font-semibold text-earth-brown">
+                      {item.question}
+                    </summary>
+                    <p class="mt-2 text-sm text-earth-brown/85">{item.answer}</p>
+                  </details>
+                ))
+              }
+            </div>
+          </div>
+
+          <aside
+            class="camp-card rounded-3xl border border-gray-200 bg-gradient-to-br from-[#ffffff] via-[#f6f3e3] to-[#ecf4ee] p-6 shadow-sm"
+          >
+            <div class="flex items-center gap-2 text-forest-canopy">
+              <Megaphone className="h-5 w-5" />
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-earth-brown/70">
+                Questions?
+              </p>
+            </div>
+            <h3 class="mt-2 text-2xl font-heading font-bold text-earth-brown">
+              We can help you pick weeks
+            </h3>
+            <p class="mt-2 text-sm text-earth-brown/85">
+              If you are balancing work schedules, sibling plans, or age fit, our team can recommend
+              the best week combination.
+            </p>
+
+            <div class="mt-5 space-y-3">
+              <a
+                href="/contact"
+                class="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-forest-canopy px-4 py-2 text-sm font-semibold text-white transition hover:bg-moss-green"
+                data-analytics-event="camp_contact_click"
+                data-analytics-label="footer-contact"
+                data-analytics-location="camp-footer"
+              >
+                Contact Admissions
+              </a>
+              <a
+                href={`mailto:${contactEmail}`}
+                class="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-earth-brown transition hover:bg-gray-100"
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                {contactEmail}
+              </a>
+              <a
+                href={contactPhoneHref}
+                class="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-earth-brown transition hover:bg-gray-100"
+              >
+                <Phone className="mr-2 h-4 w-4" />
+                {contactPhone}
+              </a>
+            </div>
+
+            <div
+              class="mt-5 rounded-xl border border-gray-200 bg-white/80 p-3 text-xs text-earth-brown/80"
+            >
+              <div class="flex items-center gap-2 text-forest-canopy">
+                <Sparkles className="h-4 w-4" />
+                <p class="font-semibold text-earth-brown">Helpful tip</p>
+              </div>
+              <p class="mt-1">
+                Keep this page open while you compare weeks so you can move quickly when a preferred
+                session is open.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  {
+    primaryAction && (
+      <div class="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 p-3 backdrop-blur md:hidden">
+        <a
+          href={primaryAction.href}
+          target={primaryAction.external ? '_blank' : undefined}
+          rel={primaryAction.external ? 'noopener noreferrer' : undefined}
+          class="inline-flex min-h-[50px] w-full items-center justify-center rounded-xl bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+          data-analytics-event={primaryAction.eventName}
+          data-analytics-label={`sticky-${primaryAction.eventLabel}`}
+          data-analytics-location="camp-mobile-sticky-cta"
+        >
+          {primaryAction.label}
+        </a>
+      </div>
+    )
+  }
+
+  <script is:inline>
+    (() => {
+      if (window.__campMicroMotionInit) return;
+      window.__campMicroMotionInit = true;
+
+      const nodes = Array.from(document.querySelectorAll('[data-camp-animate]'));
+      if (nodes.length === 0) return;
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion || typeof IntersectionObserver === 'undefined') {
+        nodes.forEach(node => node.classList.add('is-visible'));
+        return;
+      }
+
+      const observer = new IntersectionObserver(
+        entries => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          });
+        },
+        {
+          threshold: 0.16,
+          rootMargin: '0px 0px -8% 0px'
+        }
+      );
+
+      nodes.forEach(node => observer.observe(node));
+    })();
+  </script>
+
+  <style>
+    .camp-reveal {
+      opacity: 0;
+      transform: translate3d(0, 18px, 0) scale(0.992);
+      transition-property: opacity, transform;
+      transition-duration: 560ms;
+      transition-timing-function: cubic-bezier(0.2, 0.74, 0.25, 1);
+      transition-delay: var(--camp-delay, 0ms);
+      will-change: opacity, transform;
+    }
+
+    .camp-reveal.is-visible {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    .camp-card {
+      transition:
+        transform 260ms cubic-bezier(0.2, 0.74, 0.25, 1),
+        box-shadow 260ms ease,
+        border-color 260ms ease;
+    }
+
+    .camp-stat-card {
+      transition:
+        transform 260ms ease,
+        background-color 260ms ease;
+    }
+
+    .camp-status-chip {
+      animation: campStatusPulse 2.8s ease-in-out infinite;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .camp-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 30px rgba(17, 24, 39, 0.14);
+        border-color: rgba(62, 109, 81, 0.28);
+      }
+
+      .camp-stat-card:hover {
+        transform: translateY(-2px);
+      }
+    }
+
+    @keyframes campStatusPulse {
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.03);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .camp-reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+
+      .camp-card,
+      .camp-stat-card,
+      .camp-status-chip {
+        transition: none;
+        animation: none;
+      }
+    }
+  </style>
+
+  <Footer />
+</Layout>
