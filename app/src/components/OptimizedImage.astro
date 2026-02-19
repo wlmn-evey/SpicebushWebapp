@@ -222,9 +222,14 @@ const tabletCrop = normalizeCrop(
   }
 );
 
+const mobileFocusX = Math.round((mobileCrop.x + (mobileCrop.width / 2)) * 10) / 10;
+const mobileFocusY = Math.round((mobileCrop.y + (mobileCrop.height / 2)) * 10) / 10;
+const tabletFocusX = Math.round((tabletCrop.x + (tabletCrop.width / 2)) * 10) / 10;
+const tabletFocusY = Math.round((tabletCrop.y + (tabletCrop.height / 2)) * 10) / 10;
+
 const objectPositionDesktop = `${primaryFocalX}% ${primaryFocalY}%`;
-const objectPositionTablet = `${tabletCrop.x + (tabletCrop.width / 2)}% ${tabletCrop.y + (tabletCrop.height / 2)}%`;
-const objectPositionMobile = `${mobileCrop.x + (mobileCrop.width / 2)}% ${mobileCrop.y + (mobileCrop.height / 2)}%`;
+const objectPositionTablet = `${tabletFocusX}% ${tabletFocusY}%`;
+const objectPositionMobile = `${mobileFocusX}% ${mobileFocusY}%`;
 const responsivePositionDesktop = objectPosition || objectPositionDesktop;
 const responsivePositionTablet = objectPosition || objectPositionTablet;
 const responsivePositionMobile = objectPosition || objectPositionMobile;
@@ -280,6 +285,14 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       decoding={priority ? 'sync' : 'async'}
       class={`optimized-image-element ${className}`}
       data-image-id={imageId}
+      data-sb-object-fit={objectFit}
+      data-sb-auto-focus={objectPosition ? 'false' : 'true'}
+      data-sb-focus-mobile-x={mobileFocusX}
+      data-sb-focus-mobile-y={mobileFocusY}
+      data-sb-focus-tablet-x={tabletFocusX}
+      data-sb-focus-tablet-y={tabletFocusY}
+      data-sb-focus-desktop-x={primaryFocalX}
+      data-sb-focus-desktop-y={primaryFocalY}
       style={`object-fit: ${objectFit}; --sb-pos-mobile: ${responsivePositionMobile}; --sb-pos-tablet: ${responsivePositionTablet}; --sb-pos-desktop: ${responsivePositionDesktop}; object-position: var(--sb-pos-mobile); ${style}`}
     />
   </picture>
@@ -330,6 +343,145 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
     </div>
   )}
 </div>
+
+<script>
+  (() => {
+    type SbFocalRuntimeWindow = Window & {
+      __sbFocalRuntimeInit?: boolean;
+      __sbFocalRuntimeApply?: () => void;
+    };
+
+    const runtimeWindow = window as SbFocalRuntimeWindow;
+    if (runtimeWindow.__sbFocalRuntimeInit) {
+      runtimeWindow.__sbFocalRuntimeApply?.();
+      return;
+    }
+
+    runtimeWindow.__sbFocalRuntimeInit = true;
+
+    const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+    const parseNumber = (value: string | undefined | null, fallback: number): number => {
+      if (typeof value !== 'string') return fallback;
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    const getBreakpoint = (): 'mobile' | 'tablet' | 'desktop' => {
+      if (window.matchMedia('(min-width: 1024px)').matches) return 'desktop';
+      if (window.matchMedia('(min-width: 768px)').matches) return 'tablet';
+      return 'mobile';
+    };
+
+    const getTargetPoint = (img: HTMLImageElement): { x: number; y: number } => {
+      const desktopX = parseNumber(img.dataset.sbFocusDesktopX, 50);
+      const desktopY = parseNumber(img.dataset.sbFocusDesktopY, 50);
+      const breakpoint = getBreakpoint();
+
+      if (breakpoint === 'mobile') {
+        return {
+          x: parseNumber(img.dataset.sbFocusMobileX, desktopX),
+          y: parseNumber(img.dataset.sbFocusMobileY, desktopY)
+        };
+      }
+
+      if (breakpoint === 'tablet') {
+        return {
+          x: parseNumber(img.dataset.sbFocusTabletX, desktopX),
+          y: parseNumber(img.dataset.sbFocusTabletY, desktopY)
+        };
+      }
+
+      return { x: desktopX, y: desktopY };
+    };
+
+    const computeAxisPosition = (containerSize: number, renderedSize: number, targetPercent: number): number => {
+      const overflow = renderedSize - containerSize;
+      if (!Number.isFinite(overflow) || overflow <= 0) {
+        return 50;
+      }
+
+      const targetPoint = (clamp(targetPercent, 0, 100) / 100) * renderedSize;
+      const preferredOffset = (containerSize / 2) - targetPoint;
+      const minOffset = containerSize - renderedSize;
+      const maxOffset = 0;
+      const clampedOffset = clamp(preferredOffset, minOffset, maxOffset);
+      const denominator = containerSize - renderedSize;
+
+      if (!Number.isFinite(denominator) || Math.abs(denominator) < 0.0001) {
+        return 50;
+      }
+
+      return clamp((clampedOffset / denominator) * 100, 0, 100);
+    };
+
+    const applyImagePosition = (img: HTMLImageElement) => {
+      if (!img.isConnected) return;
+      if ((img.dataset.sbAutoFocus || 'true') !== 'true') return;
+      if ((img.dataset.sbObjectFit || 'cover') !== 'cover') return;
+
+      const intrinsicWidth = parseNumber(img.getAttribute('width') || `${img.naturalWidth}`, img.naturalWidth || 0);
+      const intrinsicHeight = parseNumber(img.getAttribute('height') || `${img.naturalHeight}`, img.naturalHeight || 0);
+
+      if (intrinsicWidth <= 0 || intrinsicHeight <= 0) return;
+
+      const rect = img.getBoundingClientRect();
+      const containerWidth = rect.width;
+      const containerHeight = rect.height;
+
+      if (containerWidth <= 0 || containerHeight <= 0) return;
+
+      const scale = Math.max(containerWidth / intrinsicWidth, containerHeight / intrinsicHeight);
+      if (!Number.isFinite(scale) || scale <= 0) return;
+
+      const renderedWidth = intrinsicWidth * scale;
+      const renderedHeight = intrinsicHeight * scale;
+      const target = getTargetPoint(img);
+
+      const objectX = computeAxisPosition(containerWidth, renderedWidth, target.x);
+      const objectY = computeAxisPosition(containerHeight, renderedHeight, target.y);
+
+      img.style.objectPosition = `${objectX.toFixed(2)}% ${objectY.toFixed(2)}%`;
+    };
+
+    const getOptimizedImages = (): HTMLImageElement[] => {
+      const nodes = Array.from(document.querySelectorAll('.optimized-image-element[data-sb-focus-desktop-x]'));
+      return nodes.filter((node): node is HTMLImageElement => node instanceof HTMLImageElement);
+    };
+
+    const observedImages: WeakSet<HTMLImageElement> = new WeakSet();
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.target instanceof HTMLImageElement) {
+            applyImagePosition(entry.target);
+          }
+        });
+      })
+      : null;
+
+    const observeImage = (img: HTMLImageElement) => {
+      if (observedImages.has(img)) return;
+      observedImages.add(img);
+      resizeObserver?.observe(img);
+      img.addEventListener('load', () => applyImagePosition(img), { passive: true });
+    };
+
+    const applyAll = () => {
+      getOptimizedImages().forEach((img) => {
+        observeImage(img);
+        applyImagePosition(img);
+      });
+    };
+
+    runtimeWindow.__sbFocalRuntimeApply = applyAll;
+    applyAll();
+
+    window.addEventListener('load', applyAll, { once: true });
+    window.addEventListener('resize', applyAll, { passive: true });
+    window.addEventListener('orientationchange', applyAll, { passive: true });
+  })();
+</script>
 
 {canInlineEdit && (
   <script>
