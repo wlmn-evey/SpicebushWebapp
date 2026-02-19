@@ -119,6 +119,7 @@ const canInlineEdit = editable && isAdmin && computedSlotId.length > 0;
 
 let slotAltOverride = '';
 let requestedPhotoSlug = photoSlug;
+let slotPlacementOverrides: Record<string, unknown> = {};
 
 if (computedSlotId.length > 0) {
   try {
@@ -129,6 +130,7 @@ if (computedSlotId.length > 0) {
       requestedPhotoSlug = assignedPhotoSlug;
     }
     slotAltOverride = stringFrom(slotData.altText, '');
+    slotPlacementOverrides = slotData;
   } catch (error) {
     logServerError('Media slot lookup failed', error, { component: 'OptimizedImage', computedSlotId });
   }
@@ -193,17 +195,25 @@ const altText = stringFrom(photoData.altText, resolvedSlug);
 const effectiveAlt = alt || slotAltOverride || altText;
 const primaryFocalX = clamp(numberFrom(photoData.primaryFocalX, framingDefaults.primaryFocalX), 0, 100);
 const primaryFocalY = clamp(numberFrom(photoData.primaryFocalY, framingDefaults.primaryFocalY), 0, 100);
-const desktopFocalX = clamp(numberFrom(photoData.desktopFocalX, primaryFocalX), 0, 100);
-const desktopFocalY = clamp(numberFrom(photoData.desktopFocalY, primaryFocalY), 0, 100);
+const desktopFocalX = clamp(
+  numberFrom(slotPlacementOverrides.desktopFocalX, numberFrom(photoData.desktopFocalX, primaryFocalX)),
+  0,
+  100
+);
+const desktopFocalY = clamp(
+  numberFrom(slotPlacementOverrides.desktopFocalY, numberFrom(photoData.desktopFocalY, primaryFocalY)),
+  0,
+  100
+);
 
 const secondaryFocalX = optionalNumberFrom(photoData.secondaryFocalX);
 const secondaryFocalY = optionalNumberFrom(photoData.secondaryFocalY);
 
 const mobileCrop = normalizeCrop(
-  photoData.mobileCropX,
-  photoData.mobileCropY,
-  photoData.mobileCropWidth,
-  photoData.mobileCropHeight,
+  slotPlacementOverrides.mobileCropX ?? photoData.mobileCropX,
+  slotPlacementOverrides.mobileCropY ?? photoData.mobileCropY,
+  slotPlacementOverrides.mobileCropWidth ?? photoData.mobileCropWidth,
+  slotPlacementOverrides.mobileCropHeight ?? photoData.mobileCropHeight,
   {
     x: framingDefaults.mobileCropX,
     y: framingDefaults.mobileCropY,
@@ -212,10 +222,10 @@ const mobileCrop = normalizeCrop(
   }
 );
 const tabletCrop = normalizeCrop(
-  photoData.tabletCropX,
-  photoData.tabletCropY,
-  photoData.tabletCropWidth,
-  photoData.tabletCropHeight,
+  slotPlacementOverrides.tabletCropX ?? photoData.tabletCropX,
+  slotPlacementOverrides.tabletCropY ?? photoData.tabletCropY,
+  slotPlacementOverrides.tabletCropWidth ?? photoData.tabletCropWidth,
+  slotPlacementOverrides.tabletCropHeight ?? photoData.tabletCropHeight,
   {
     x: framingDefaults.tabletCropX,
     y: framingDefaults.tabletCropY,
@@ -505,12 +515,14 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
         activeSlotId: string;
         selectedSlug: string;
         selectedCategory: string;
+        activeTrigger: HTMLElement | null;
       } = {
         photos: [],
         loaded: false,
         activeSlotId: '',
         selectedSlug: '',
-        selectedCategory: 'gallery'
+        selectedCategory: 'gallery',
+        activeTrigger: null
       };
 
       const styleId = 'sb-inline-media-editor-style';
@@ -776,6 +788,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
               <input id="sb-inline-media-file" type="file" accept="image/*" />
               <div class="sb-inline-media-actions">
                 <button type="button" class="sb-inline-media-btn secondary" id="sb-inline-media-upload">Upload From Device</button>
+                <button type="button" class="sb-inline-media-btn secondary" id="sb-inline-media-smart">Smart Adjust</button>
                 <a id="sb-inline-media-focal-link" class="sb-inline-media-btn secondary" href="/admin/media" target="_blank" rel="noreferrer">Open Focal/Crop Editor</a>
                 <button type="button" class="sb-inline-media-btn" id="sb-inline-media-save">Save Selection</button>
               </div>
@@ -791,6 +804,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       const listNode = backdrop.querySelector<HTMLDivElement>('#sb-inline-media-list');
       const saveButton = backdrop.querySelector<HTMLButtonElement>('#sb-inline-media-save');
       const uploadButton = backdrop.querySelector<HTMLButtonElement>('#sb-inline-media-upload');
+      const smartAdjustButton = backdrop.querySelector<HTMLButtonElement>('#sb-inline-media-smart');
       const fileInput = backdrop.querySelector<HTMLInputElement>('#sb-inline-media-file');
       const focalLink = backdrop.querySelector<HTMLAnchorElement>('#sb-inline-media-focal-link');
       const statusNode = backdrop.querySelector<HTMLParagraphElement>('#sb-inline-media-status');
@@ -802,6 +816,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
         || !listNode
         || !saveButton
         || !uploadButton
+        || !smartAdjustButton
         || !fileInput
         || !focalLink
         || !statusNode
@@ -822,6 +837,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       const closeModal = () => {
         backdrop.setAttribute('data-open', 'false');
         document.body.style.removeProperty('overflow');
+        state.activeTrigger = null;
         setStatus('');
       };
 
@@ -981,7 +997,61 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
         });
       };
 
-      const saveSlot = async (slot: string, photoSlug: string, altText: string) => {
+      const saveSlot = async (
+        slot: string,
+        photoSlug: string,
+        altText: string,
+        placementOverrides?: Record<string, number>
+      ) => {
+        const normalizedSlotId = normalizeSlug(slot);
+        const placementKeys = [
+          'desktopFocalX',
+          'desktopFocalY',
+          'mobileCropX',
+          'mobileCropY',
+          'mobileCropWidth',
+          'mobileCropHeight',
+          'tabletCropX',
+          'tabletCropY',
+          'tabletCropWidth',
+          'tabletCropHeight'
+        ];
+
+        let existingData: Record<string, unknown> = {};
+        try {
+          const existingResponse = await fetch(
+            `/api/cms/entry?collection=media-slots&slug=${encodeURIComponent(normalizedSlotId)}`,
+            { method: 'GET', credentials: 'same-origin' }
+          );
+
+          const existingPayload = await existingResponse.json().catch(() => ({}));
+          if (existingResponse.ok) {
+            const existingEntry = existingPayload.entry && typeof existingPayload.entry === 'object'
+              ? existingPayload.entry as Record<string, unknown>
+              : null;
+            const existingEntryData = existingEntry && existingEntry.data && typeof existingEntry.data === 'object'
+              ? existingEntry.data as Record<string, unknown>
+              : {};
+            existingData = { ...existingEntryData };
+          }
+        } catch {
+          existingData = {};
+        }
+
+        if (!placementOverrides && typeof existingData.photoSlug === 'string' && existingData.photoSlug !== photoSlug) {
+          placementKeys.forEach((key) => {
+            delete existingData[key];
+          });
+        }
+
+        const mergedData: Record<string, unknown> = {
+          ...existingData,
+          slotId: normalizedSlotId,
+          photoSlug,
+          altText: altText.trim(),
+          ...(placementOverrides ?? {})
+        };
+
         const response = await fetch('/api/admin/content', {
           method: 'POST',
           credentials: 'same-origin',
@@ -990,20 +1060,315 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
           },
           body: JSON.stringify({
             collection: 'media-slots',
-            slug: normalizeSlug(slot),
-            title: `Media Slot: ${normalizeSlug(slot)}`,
+            slug: normalizedSlotId,
+            title: `Media Slot: ${normalizedSlotId}`,
             status: 'published',
-            data: {
-              slotId: normalizeSlug(slot),
-              photoSlug,
-              altText: altText.trim()
-            }
+            data: mergedData
           })
         });
 
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
           throw new Error(typeof payload.error === 'string' ? payload.error : 'Failed to save media slot');
+        }
+      };
+
+      const collectSmartAdjustContext = () => {
+        const computeImageDetailHint = (imageElement: HTMLImageElement) => {
+          if (!imageElement.complete || imageElement.naturalWidth < 8 || imageElement.naturalHeight < 8) {
+            return null;
+          }
+
+          try {
+            const sampleSize = 96;
+            const canvas = document.createElement('canvas');
+            canvas.width = sampleSize;
+            canvas.height = sampleSize;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            if (!ctx) return null;
+
+            ctx.drawImage(imageElement, 0, 0, sampleSize, sampleSize);
+            const imageData = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
+            const intensityAt = (x: number, y: number) => {
+              const idx = (y * sampleSize * 4) + (x * 4);
+              const r = imageData[idx] ?? 0;
+              const g = imageData[idx + 1] ?? 0;
+              const b = imageData[idx + 2] ?? 0;
+              return (0.299 * r) + (0.587 * g) + (0.114 * b);
+            };
+
+            let weightedX = 0;
+            let weightedY = 0;
+            let totalWeight = 0;
+            let peakWeight = 0;
+
+            for (let y = 1; y < sampleSize - 1; y += 1) {
+              for (let x = 1; x < sampleSize - 1; x += 1) {
+                const gx = (
+                  -intensityAt(x - 1, y - 1)
+                  + intensityAt(x + 1, y - 1)
+                  - (2 * intensityAt(x - 1, y))
+                  + (2 * intensityAt(x + 1, y))
+                  - intensityAt(x - 1, y + 1)
+                  + intensityAt(x + 1, y + 1)
+                );
+
+                const gy = (
+                  -intensityAt(x - 1, y - 1)
+                  - (2 * intensityAt(x, y - 1))
+                  - intensityAt(x + 1, y - 1)
+                  + intensityAt(x - 1, y + 1)
+                  + (2 * intensityAt(x, y + 1))
+                  + intensityAt(x + 1, y + 1)
+                );
+
+                const magnitude = Math.hypot(gx, gy);
+                if (!Number.isFinite(magnitude) || magnitude <= 0) continue;
+
+                const verticalBias = 0.85 + (0.35 * (y / (sampleSize - 1)));
+                const weight = magnitude * verticalBias;
+                totalWeight += weight;
+                weightedX += x * weight;
+                weightedY += y * weight;
+                if (weight > peakWeight) peakWeight = weight;
+              }
+            }
+
+            if (!Number.isFinite(totalWeight) || totalWeight <= 0) return null;
+
+            const centroidX = weightedX / totalWeight;
+            const centroidY = weightedY / totalWeight;
+            const avgWeight = totalWeight / ((sampleSize - 2) * (sampleSize - 2));
+            const confidenceRaw = avgWeight <= 0 ? 0 : peakWeight / (avgWeight * 12);
+            const round = (value: number) => Math.round(value * 10) / 10;
+            const clampValue = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+            return {
+              x: round(clampValue((centroidX / (sampleSize - 1)) * 100, 0, 100)),
+              y: round(clampValue((centroidY / (sampleSize - 1)) * 100, 0, 100)),
+              confidence: round(clampValue(confidenceRaw, 0.1, 1))
+            };
+          } catch {
+            return null;
+          }
+        };
+
+        const escapedSlot = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+          ? CSS.escape(state.activeSlotId)
+          : state.activeSlotId.replace(/"/g, '');
+
+        const slotContainer = state.activeTrigger?.closest<HTMLElement>('[data-media-inline-slot]')
+          ?? document.querySelector<HTMLElement>(`[data-media-inline-slot="${escapedSlot}"]`);
+        const imageElement = slotContainer?.querySelector<HTMLImageElement>('img.optimized-image-element') ?? null;
+        const viewport = {
+          width: window.innerWidth,
+          height: window.innerHeight
+        };
+
+        if (!slotContainer || !imageElement) {
+          return {
+            pagePath: window.location.pathname,
+            viewport,
+            overlapRegions: [],
+            imageDetailHint: null
+          };
+        }
+
+        const imageRect = imageElement.getBoundingClientRect();
+        if (imageRect.width < 1 || imageRect.height < 1) {
+          return {
+            pagePath: window.location.pathname,
+            viewport,
+            overlapRegions: [],
+            imageDetailHint: null
+          };
+        }
+
+        const sectionRoot = slotContainer.closest<HTMLElement>('section, header, main, article, [role="region"]') ?? document.body;
+        const imageArea = imageRect.width * imageRect.height;
+        const toPercent = (value: number) => Math.round(value * 10) / 10;
+        const overlapCandidates = Array.from(
+          sectionRoot.querySelectorAll<HTMLElement>(
+            'h1, h2, h3, h4, h5, h6, p, a, button, li, label, [class*="overlay"], [class*="caption"], [class*="hero-copy"], [class*="card"]'
+          )
+        );
+
+        const overlapRegions = overlapCandidates
+          .map((candidate) => {
+            if (slotContainer.contains(candidate) || candidate.closest('#sb-inline-media-modal')) return null;
+
+            const text = (candidate.textContent || '').replace(/\s+/g, ' ').trim();
+            const style = window.getComputedStyle(candidate);
+            if (style.display === 'none' || style.visibility === 'hidden' || Number.parseFloat(style.opacity || '1') < 0.05) {
+              return null;
+            }
+
+            const rect = candidate.getBoundingClientRect();
+            if (rect.width < 1 || rect.height < 1) return null;
+
+            const overlapLeft = Math.max(imageRect.left, rect.left);
+            const overlapTop = Math.max(imageRect.top, rect.top);
+            const overlapRight = Math.min(imageRect.right, rect.right);
+            const overlapBottom = Math.min(imageRect.bottom, rect.bottom);
+            const overlapWidth = overlapRight - overlapLeft;
+            const overlapHeight = overlapBottom - overlapTop;
+            if (overlapWidth <= 0 || overlapHeight <= 0) return null;
+
+            const overlapArea = overlapWidth * overlapHeight;
+            const overlapRatio = overlapArea / imageArea;
+            if (overlapRatio < 0.005 && text.length < 8) return null;
+
+            return {
+              text: text.slice(0, 120),
+              x: toPercent(((overlapLeft - imageRect.left) / imageRect.width) * 100),
+              y: toPercent(((overlapTop - imageRect.top) / imageRect.height) * 100),
+              width: toPercent((overlapWidth / imageRect.width) * 100),
+              height: toPercent((overlapHeight / imageRect.height) * 100),
+              overlapRatio: toPercent(overlapRatio * 100)
+            };
+          })
+          .filter((region): region is {
+            text: string;
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+            overlapRatio: number;
+          } => Boolean(region))
+          .sort((a, b) => b.overlapRatio - a.overlapRatio)
+          .slice(0, 12);
+
+        return {
+          pagePath: window.location.pathname,
+          viewport,
+          image: {
+            naturalWidth: imageElement.naturalWidth || Number.parseInt(imageElement.getAttribute('width') || '0', 10),
+            naturalHeight: imageElement.naturalHeight || Number.parseInt(imageElement.getAttribute('height') || '0', 10),
+            renderedWidth: imageRect.width,
+            renderedHeight: imageRect.height,
+            className: imageElement.className
+          },
+          sectionSummary: (sectionRoot.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 420),
+          overlapRegions,
+          imageDetailHint: computeImageDetailHint(imageElement)
+        };
+      };
+
+      const runSmartAdjust = async () => {
+        if (!state.activeSlotId) {
+          setStatus('No slot selected.', 'error');
+          return;
+        }
+
+        if (!state.selectedSlug) {
+          setStatus('Choose an image from the library first.', 'error');
+          return;
+        }
+
+        const escapedSlot = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+          ? CSS.escape(state.activeSlotId)
+          : state.activeSlotId.replace(/"/g, '');
+        const slotContainer = state.activeTrigger?.closest<HTMLElement>('[data-media-inline-slot]')
+          ?? document.querySelector<HTMLElement>(`[data-media-inline-slot="${escapedSlot}"]`);
+        const activeImage = slotContainer?.querySelector<HTMLImageElement>('img.optimized-image-element') ?? null;
+        if (activeImage && (activeImage.dataset.sbAutoFocus || 'true') !== 'true') {
+          setStatus(
+            'This image is using fixed template positioning, so Smart Adjust cannot move it yet.',
+            'error'
+          );
+          return;
+        }
+
+        smartAdjustButton.setAttribute('disabled', 'disabled');
+        saveButton.setAttribute('disabled', 'disabled');
+        uploadButton.setAttribute('disabled', 'disabled');
+
+        try {
+          setStatus('Smart Adjust is analyzing this page...');
+
+          const response = await fetch('/api/admin/smart-adjust', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              slotId: state.activeSlotId,
+              photoSlug: state.selectedSlug,
+              pagePath: window.location.pathname,
+              context: collectSmartAdjustContext()
+            })
+          });
+
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(typeof payload.error === 'string' ? payload.error : 'Smart Adjust failed');
+          }
+
+          const suggestion = payload.suggestion && typeof payload.suggestion === 'object'
+            ? payload.suggestion as Record<string, unknown>
+            : null;
+          if (!suggestion) {
+            throw new Error('Smart Adjust returned no placement suggestion');
+          }
+
+          const toNumber = (value: unknown, fallback: number) => {
+            const parsed = Number.parseFloat(String(value));
+            return Number.isFinite(parsed) ? parsed : fallback;
+          };
+          const clampValue = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+          const normalizeCropAxis = (value: number, size: number) => clampValue(value, 0, 100 - size);
+          const normalizeCropSize = (value: number) => clampValue(value, 10, 100);
+          const round = (value: number) => Math.round(value * 10) / 10;
+
+          const mobileWidth = normalizeCropSize(toNumber(suggestion.mobileCropWidth, 100));
+          const mobileHeight = normalizeCropSize(toNumber(suggestion.mobileCropHeight, 100));
+          const tabletWidth = normalizeCropSize(toNumber(suggestion.tabletCropWidth, 100));
+          const tabletHeight = normalizeCropSize(toNumber(suggestion.tabletCropHeight, 100));
+
+          const placementOverrides = {
+            desktopFocalX: round(clampValue(toNumber(suggestion.desktopFocalX, 50), 0, 100)),
+            desktopFocalY: round(clampValue(toNumber(suggestion.desktopFocalY, 50), 0, 100)),
+            mobileCropX: round(normalizeCropAxis(toNumber(suggestion.mobileCropX, 0), mobileWidth)),
+            mobileCropY: round(normalizeCropAxis(toNumber(suggestion.mobileCropY, 0), mobileHeight)),
+            mobileCropWidth: round(mobileWidth),
+            mobileCropHeight: round(mobileHeight),
+            tabletCropX: round(normalizeCropAxis(toNumber(suggestion.tabletCropX, 0), tabletWidth)),
+            tabletCropY: round(normalizeCropAxis(toNumber(suggestion.tabletCropY, 0), tabletHeight)),
+            tabletCropWidth: round(tabletWidth),
+            tabletCropHeight: round(tabletHeight)
+          };
+
+          await saveSlot(state.activeSlotId, state.selectedSlug, altInput.value, placementOverrides);
+
+          const sourceLabel = typeof payload.source === 'string' ? payload.source : 'smart';
+          const warningMessage = typeof payload.warning === 'string'
+            ? payload.warning.trim().slice(0, 260)
+            : '';
+          const changed = payload.changed !== false;
+
+          if (changed) {
+            const statusMessage = warningMessage.length > 0
+              ? `Smart Adjust applied (${sourceLabel}) at ${placementOverrides.desktopFocalX}%, ${placementOverrides.desktopFocalY}%. ${warningMessage} Refreshing page...`
+              : `Smart Adjust applied (${sourceLabel}) at ${placementOverrides.desktopFocalX}%, ${placementOverrides.desktopFocalY}%. Refreshing page...`;
+            setStatus(statusMessage, 'success');
+            window.setTimeout(() => {
+              window.location.reload();
+            }, 500);
+            return;
+          }
+
+          const noChangeMessage = warningMessage.length > 0
+            ? `Smart Adjust ran (${sourceLabel}) but returned the same framing. ${warningMessage}`
+            : `Smart Adjust ran (${sourceLabel}) but returned the same framing.`;
+          setStatus(noChangeMessage, 'default');
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Smart Adjust failed';
+          setStatus(message, 'error');
+        } finally {
+          smartAdjustButton.removeAttribute('disabled');
+          saveButton.removeAttribute('disabled');
+          uploadButton.removeAttribute('disabled');
         }
       };
 
@@ -1053,6 +1418,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
         const category = trigger.dataset.mediaCategory || 'gallery';
         const altText = trigger.dataset.altText || '';
 
+        state.activeTrigger = trigger;
         state.activeSlotId = slot;
         state.selectedSlug = photoSlug;
         state.selectedCategory = category;
@@ -1160,6 +1526,10 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
           const message = error instanceof Error ? error.message : 'Failed to upload and assign image';
           setStatus(message, 'error');
         }
+      });
+
+      smartAdjustButton.addEventListener('click', async () => {
+        await runSmartAdjust();
       });
     })();
   </script>
