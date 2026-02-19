@@ -344,36 +344,33 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
   )}
 </div>
 
-<script>
+<script is:inline>
   (() => {
-    type SbFocalRuntimeWindow = Window & {
-      __sbFocalRuntimeInit?: boolean;
-      __sbFocalRuntimeApply?: () => void;
-    };
-
-    const runtimeWindow = window as SbFocalRuntimeWindow;
+    const runtimeWindow = window;
     if (runtimeWindow.__sbFocalRuntimeInit) {
-      runtimeWindow.__sbFocalRuntimeApply?.();
+      if (typeof runtimeWindow.__sbFocalRuntimeApply === 'function') {
+        runtimeWindow.__sbFocalRuntimeApply();
+      }
       return;
     }
 
     runtimeWindow.__sbFocalRuntimeInit = true;
 
-    const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-    const parseNumber = (value: string | undefined | null, fallback: number): number => {
+    const parseNumber = (value, fallback) => {
       if (typeof value !== 'string') return fallback;
       const parsed = Number.parseFloat(value);
       return Number.isFinite(parsed) ? parsed : fallback;
     };
 
-    const getBreakpoint = (): 'mobile' | 'tablet' | 'desktop' => {
+    const getBreakpoint = () => {
       if (window.matchMedia('(min-width: 1024px)').matches) return 'desktop';
       if (window.matchMedia('(min-width: 768px)').matches) return 'tablet';
       return 'mobile';
     };
 
-    const getTargetPoint = (img: HTMLImageElement): { x: number; y: number } => {
+    const getTargetPoint = (img) => {
       const desktopX = parseNumber(img.dataset.sbFocusDesktopX, 50);
       const desktopY = parseNumber(img.dataset.sbFocusDesktopY, 50);
       const breakpoint = getBreakpoint();
@@ -395,7 +392,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       return { x: desktopX, y: desktopY };
     };
 
-    const computeAxisPosition = (containerSize: number, renderedSize: number, targetPercent: number): number => {
+    const computeAxisPosition = (containerSize, renderedSize, targetPercent) => {
       const overflow = renderedSize - containerSize;
       if (!Number.isFinite(overflow) || overflow <= 0) {
         return 50;
@@ -415,7 +412,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       return clamp((clampedOffset / denominator) * 100, 0, 100);
     };
 
-    const applyImagePosition = (img: HTMLImageElement) => {
+    const applyImagePosition = (img) => {
       if (!img.isConnected) return;
       if ((img.dataset.sbAutoFocus || 'true') !== 'true') return;
       if ((img.dataset.sbObjectFit || 'cover') !== 'cover') return;
@@ -444,12 +441,12 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       img.style.objectPosition = `${objectX.toFixed(2)}% ${objectY.toFixed(2)}%`;
     };
 
-    const getOptimizedImages = (): HTMLImageElement[] => {
+    const getOptimizedImages = () => {
       const nodes = Array.from(document.querySelectorAll('.optimized-image-element[data-sb-focus-desktop-x]'));
-      return nodes.filter((node): node is HTMLImageElement => node instanceof HTMLImageElement);
+      return nodes.filter((node) => node instanceof HTMLImageElement);
     };
 
-    const observedImages: WeakSet<HTMLImageElement> = new WeakSet();
+    const observedImages = new WeakSet();
     const resizeObserver = typeof ResizeObserver !== 'undefined'
       ? new ResizeObserver((entries) => {
         entries.forEach((entry) => {
@@ -460,10 +457,12 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       })
       : null;
 
-    const observeImage = (img: HTMLImageElement) => {
+    const observeImage = (img) => {
       if (observedImages.has(img)) return;
       observedImages.add(img);
-      resizeObserver?.observe(img);
+      if (resizeObserver) {
+        resizeObserver.observe(img);
+      }
       img.addEventListener('load', () => applyImagePosition(img), { passive: true });
     };
 
