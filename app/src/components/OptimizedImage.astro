@@ -237,6 +237,65 @@ const mobileFocusX = Math.round((mobileCrop.x + (mobileCrop.width / 2)) * 10) / 
 const mobileFocusY = Math.round((mobileCrop.y + (mobileCrop.height / 2)) * 10) / 10;
 const tabletFocusX = Math.round((tabletCrop.x + (tabletCrop.width / 2)) * 10) / 10;
 const tabletFocusY = Math.round((tabletCrop.y + (tabletCrop.height / 2)) * 10) / 10;
+const roundTenth = (value: number) => Math.round(value * 10) / 10;
+const sourceAspect = originalWidth / originalHeight;
+
+const resolveBreakpointSize = (
+  widthKey: string,
+  heightKey: string,
+  fallbackWidth: number,
+  fallbackHeight: number
+) => {
+  const width = Math.round(clamp(numberFrom(slotPlacementOverrides[widthKey], fallbackWidth), 180, 2200));
+  const height = Math.round(clamp(numberFrom(slotPlacementOverrides[heightKey], fallbackHeight), 120, 2200));
+  return { width, height };
+};
+
+const mobileTarget = resolveBreakpointSize('mobileTargetWidth', 'mobileTargetHeight', 640, 480);
+const tabletTarget = resolveBreakpointSize('tabletTargetWidth', 'tabletTargetHeight', 960, 640);
+const desktopTarget = resolveBreakpointSize('desktopTargetWidth', 'desktopTargetHeight', 1280, 853);
+
+const deriveAspectAwareCrop = (
+  focusX: number,
+  focusY: number,
+  targetWidth: number,
+  targetHeight: number
+) => {
+  const targetAspect = targetHeight > 0 ? targetWidth / targetHeight : sourceAspect;
+  if (!Number.isFinite(targetAspect) || targetAspect <= 0 || !Number.isFinite(sourceAspect) || sourceAspect <= 0) {
+    return {
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100
+    };
+  }
+
+  let cropWidth = 100;
+  let cropHeight = 100;
+  if (targetAspect > sourceAspect) {
+    cropHeight = clamp((sourceAspect / targetAspect) * 100, 10, 100);
+  } else if (targetAspect < sourceAspect) {
+    cropWidth = clamp((targetAspect / sourceAspect) * 100, 10, 100);
+  }
+
+  const x = clamp(focusX - (cropWidth / 2), 0, 100 - cropWidth);
+  const y = clamp(focusY - (cropHeight / 2), 0, 100 - cropHeight);
+
+  return {
+    x: roundTenth(x),
+    y: roundTenth(y),
+    width: roundTenth(cropWidth),
+    height: roundTenth(cropHeight)
+  };
+};
+
+const desktopCrop = deriveAspectAwareCrop(
+  desktopFocalX,
+  desktopFocalY,
+  desktopTarget.width,
+  desktopTarget.height
+);
 
 const objectPositionDesktop = `${desktopFocalX}% ${desktopFocalY}%`;
 const objectPositionTablet = `${tabletFocusX}% ${tabletFocusY}%`;
@@ -268,6 +327,88 @@ if (responsiveSources.length === 0) {
   responsiveSources.push(`${webpSrc} ${originalWidth}w`);
 }
 
+const hasNumericOverride = (key: string): boolean => {
+  const value = slotPlacementOverrides[key];
+  if (typeof value === 'number') {
+    return Number.isFinite(value);
+  }
+  if (typeof value === 'string') {
+    const parsed = Number.parseFloat(value.trim());
+    return Number.isFinite(parsed);
+  }
+  return false;
+};
+
+const hasCustomSlotFraming = [
+  'desktopFocalX',
+  'desktopFocalY',
+  'mobileCropX',
+  'mobileCropY',
+  'mobileCropWidth',
+  'mobileCropHeight',
+  'tabletCropX',
+  'tabletCropY',
+  'tabletCropWidth',
+  'tabletCropHeight'
+].some((key) => hasNumericOverride(key));
+
+const sourceForRenderer = sourceUrl || `${basePath}/${optimizedFilename}`;
+const canUseServerCropSource = !objectPosition
+  && hasCustomSlotFraming
+  && (
+    sourceForRenderer.startsWith('/')
+    || sourceForRenderer.startsWith('https://spicebushmontessori.org')
+    || sourceForRenderer.includes('.netlify.app')
+  );
+
+const buildRenderedUrl = (
+  crop: { x: number; y: number; width: number; height: number },
+  outputSize: { width: number; height: number },
+  format: 'webp' | 'jpg'
+): string => {
+  const params = new URLSearchParams();
+  params.set('src', sourceForRenderer);
+  params.set('x', `${crop.x}`);
+  params.set('y', `${crop.y}`);
+  params.set('w', `${crop.width}`);
+  params.set('h', `${crop.height}`);
+  params.set('ow', `${outputSize.width}`);
+  params.set('oh', `${outputSize.height}`);
+  params.set('fm', format);
+  return `/api/media/render?${params.toString()}`;
+};
+
+const mobileCropSrcSet = canUseServerCropSource
+  ? [360, 480, 640, 768]
+    .map((width) => {
+      const ratio = mobileTarget.width > 0 ? width / mobileTarget.width : 1;
+      const height = Math.max(120, Math.round(mobileTarget.height * ratio));
+      return `${buildRenderedUrl(mobileCrop, { width, height }, 'webp')} ${width}w`;
+    })
+    .join(', ')
+  : '';
+const tabletCropSrcSet = canUseServerCropSource
+  ? [768, 960, 1200]
+    .map((width) => {
+      const ratio = tabletTarget.width > 0 ? width / tabletTarget.width : 1;
+      const height = Math.max(120, Math.round(tabletTarget.height * ratio));
+      return `${buildRenderedUrl(tabletCrop, { width, height }, 'webp')} ${width}w`;
+    })
+    .join(', ')
+  : '';
+const desktopCropSrcSet = canUseServerCropSource
+  ? [1024, 1280, 1600]
+    .map((width) => {
+      const ratio = desktopTarget.width > 0 ? width / desktopTarget.width : 1;
+      const height = Math.max(120, Math.round(desktopTarget.height * ratio));
+      return `${buildRenderedUrl(desktopCrop, { width, height }, 'webp')} ${width}w`;
+    })
+    .join(', ')
+  : '';
+const renderedJpgFallback = canUseServerCropSource
+  ? buildRenderedUrl(desktopCrop, desktopTarget, 'jpg')
+  : jpgFallback;
+
 const srcSet = responsiveSources.join(', ');
 const loadingStrategy = loading || (priority ? 'eager' : 'lazy');
 const imageId = `img-${Math.random().toString(36).slice(2, 11)}`;
@@ -281,14 +422,37 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
   data-media-inline-slot={canInlineEdit ? computedSlotId : undefined}
 >
   <picture>
-    <source
-      type="image/webp"
-      srcset={srcSet}
-      sizes={sizes}
-    />
+    {canUseServerCropSource ? (
+      <>
+        <source
+          media="(max-width: 767px)"
+          type="image/webp"
+          srcset={mobileCropSrcSet}
+          sizes={sizes}
+        />
+        <source
+          media="(min-width: 768px) and (max-width: 1023px)"
+          type="image/webp"
+          srcset={tabletCropSrcSet}
+          sizes={sizes}
+        />
+        <source
+          media="(min-width: 1024px)"
+          type="image/webp"
+          srcset={desktopCropSrcSet}
+          sizes={sizes}
+        />
+      </>
+    ) : (
+      <source
+        type="image/webp"
+        srcset={srcSet}
+        sizes={sizes}
+      />
+    )}
 
     <img
-      src={jpgFallback}
+      src={renderedJpgFallback}
       alt={effectiveAlt}
       width={originalWidth}
       height={originalHeight}
@@ -297,7 +461,8 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       class={`optimized-image-element ${className}`}
       data-image-id={imageId}
       data-sb-object-fit={objectFit}
-      data-sb-auto-focus={objectPosition ? 'false' : 'true'}
+      data-sb-auto-focus={objectPosition || canUseServerCropSource ? 'false' : 'true'}
+      data-sb-server-crop={canUseServerCropSource ? 'true' : 'false'}
       data-sb-focus-mobile-x={mobileFocusX}
       data-sb-focus-mobile-y={mobileFocusY}
       data-sb-focus-tablet-x={tabletFocusX}
@@ -997,11 +1162,64 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
         });
       };
 
+      const getActiveSlotContainer = () => {
+        if (!state.activeSlotId) return null;
+        const escapedSlot = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+          ? CSS.escape(state.activeSlotId)
+          : state.activeSlotId.replace(/"/g, '');
+        return state.activeTrigger?.closest<HTMLElement>('[data-media-inline-slot]')
+          ?? document.querySelector<HTMLElement>(`[data-media-inline-slot="${escapedSlot}"]`);
+      };
+
+      const getActiveImageElement = () => {
+        const slotContainer = getActiveSlotContainer();
+        const imageElement = slotContainer?.querySelector<HTMLImageElement>('img.optimized-image-element') ?? null;
+        return { slotContainer, imageElement };
+      };
+
+      const getCurrentBreakpoint = (): 'mobile' | 'tablet' | 'desktop' => {
+        if (window.matchMedia('(min-width: 1024px)').matches) return 'desktop';
+        if (window.matchMedia('(min-width: 768px)').matches) return 'tablet';
+        return 'mobile';
+      };
+
+      const collectLayoutProfile = (): Record<string, number> => {
+        const { imageElement } = getActiveImageElement();
+        if (!imageElement) return {};
+
+        const rect = imageElement.getBoundingClientRect();
+        if (rect.width < 1 || rect.height < 1) return {};
+
+        const width = Math.max(1, Math.round(rect.width));
+        const height = Math.max(1, Math.round(rect.height));
+        const breakpoint = getCurrentBreakpoint();
+
+        if (breakpoint === 'mobile') {
+          return {
+            mobileTargetWidth: width,
+            mobileTargetHeight: height
+          };
+        }
+
+        if (breakpoint === 'tablet') {
+          return {
+            tabletTargetWidth: width,
+            tabletTargetHeight: height
+          };
+        }
+
+        return {
+          desktopTargetWidth: width,
+          desktopTargetHeight: height
+        };
+      };
+
       const saveSlot = async (
         slot: string,
         photoSlug: string,
         altText: string,
-        placementOverrides?: Record<string, number>
+        placementOverrides?: Record<string, number>,
+        layoutProfileOverrides?: Record<string, number>
       ) => {
         const normalizedSlotId = normalizeSlug(slot);
         const placementKeys = [
@@ -1049,7 +1267,8 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
           slotId: normalizedSlotId,
           photoSlug,
           altText: altText.trim(),
-          ...(placementOverrides ?? {})
+          ...(placementOverrides ?? {}),
+          ...(layoutProfileOverrides ?? {})
         };
 
         const response = await fetch('/api/admin/content', {
@@ -1153,13 +1372,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
           }
         };
 
-        const escapedSlot = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
-          ? CSS.escape(state.activeSlotId)
-          : state.activeSlotId.replace(/"/g, '');
-
-        const slotContainer = state.activeTrigger?.closest<HTMLElement>('[data-media-inline-slot]')
-          ?? document.querySelector<HTMLElement>(`[data-media-inline-slot="${escapedSlot}"]`);
-        const imageElement = slotContainer?.querySelector<HTMLImageElement>('img.optimized-image-element') ?? null;
+        const { slotContainer, imageElement } = getActiveImageElement();
         const viewport = {
           width: window.innerWidth,
           height: window.innerHeight
@@ -1265,13 +1478,9 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
           return;
         }
 
-        const escapedSlot = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
-          ? CSS.escape(state.activeSlotId)
-          : state.activeSlotId.replace(/"/g, '');
-        const slotContainer = state.activeTrigger?.closest<HTMLElement>('[data-media-inline-slot]')
-          ?? document.querySelector<HTMLElement>(`[data-media-inline-slot="${escapedSlot}"]`);
-        const activeImage = slotContainer?.querySelector<HTMLImageElement>('img.optimized-image-element') ?? null;
-        if (activeImage && (activeImage.dataset.sbAutoFocus || 'true') !== 'true') {
+        const { imageElement: activeImage } = getActiveImageElement();
+        const usesServerCrop = activeImage?.dataset.sbServerCrop === 'true';
+        if (activeImage && !usesServerCrop && (activeImage.dataset.sbAutoFocus || 'true') !== 'true') {
           setStatus(
             'This image is using fixed template positioning, so Smart Adjust cannot move it yet.',
             'error'
@@ -1338,8 +1547,9 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
             tabletCropWidth: round(tabletWidth),
             tabletCropHeight: round(tabletHeight)
           };
+          const layoutProfile = collectLayoutProfile();
 
-          await saveSlot(state.activeSlotId, state.selectedSlug, altInput.value, placementOverrides);
+          await saveSlot(state.activeSlotId, state.selectedSlug, altInput.value, placementOverrides, layoutProfile);
 
           const sourceLabel = typeof payload.source === 'string' ? payload.source : 'smart';
           const warningMessage = typeof payload.warning === 'string'
@@ -1409,7 +1619,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
         updateFocalLink();
         renderList();
 
-        await saveSlot(state.activeSlotId, state.selectedSlug, altInput.value);
+        await saveSlot(state.activeSlotId, state.selectedSlug, altInput.value, undefined, collectLayoutProfile());
       };
 
       const openFromTrigger = async (trigger: HTMLElement) => {
@@ -1503,7 +1713,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
 
         try {
           setStatus('Saving image selection...');
-          await saveSlot(state.activeSlotId, state.selectedSlug, altInput.value);
+          await saveSlot(state.activeSlotId, state.selectedSlug, altInput.value, undefined, collectLayoutProfile());
           setStatus('Saved. Refreshing page...', 'success');
           window.location.reload();
         } catch (error) {
