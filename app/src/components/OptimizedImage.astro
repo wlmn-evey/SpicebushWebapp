@@ -427,6 +427,16 @@ const renderedJpgFallback = aiFillDesktopUrl
   || aiFillMobileUrl
   || (canUseServerCropSource ? buildRenderedUrl(desktopCrop, desktopTarget, 'jpg') : jpgFallback);
 
+const mobileVariantMode = aiFillMobileUrl ? 'ai-fill' : (canUseServerCropSource ? 'crop' : 'focus');
+const tabletVariantMode = aiFillTabletUrl ? 'ai-fill' : (canUseServerCropSource ? 'crop' : 'focus');
+const desktopVariantMode = aiFillDesktopUrl ? 'ai-fill' : (canUseServerCropSource ? 'crop' : 'focus');
+const variantDebugLabel = `M:${mobileVariantMode} T:${tabletVariantMode} D:${desktopVariantMode}`;
+const variantDebugTitle = [
+  `Mobile: ${mobileVariantMode} (${mobileTarget.width}x${mobileTarget.height})`,
+  `Tablet: ${tabletVariantMode} (${tabletTarget.width}x${tabletTarget.height})`,
+  `Desktop: ${desktopVariantMode} (${desktopTarget.width}x${desktopTarget.height})`
+].join(' | ');
+
 const srcSet = responsiveSources.join(', ');
 const loadingStrategy = loading || (priority ? 'eager' : 'lazy');
 const imageId = `img-${Math.random().toString(36).slice(2, 11)}`;
@@ -493,6 +503,12 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       data-sb-auto-focus={objectPosition || canUseBreakpointSources ? 'false' : 'true'}
       data-sb-server-crop={canUseServerCropSource ? 'true' : 'false'}
       data-sb-ai-fill={hasAiFillVariant ? 'true' : 'false'}
+      data-sb-variant-mobile={mobileVariantMode}
+      data-sb-variant-tablet={tabletVariantMode}
+      data-sb-variant-desktop={desktopVariantMode}
+      data-sb-target-mobile={`${mobileTarget.width}x${mobileTarget.height}`}
+      data-sb-target-tablet={`${tabletTarget.width}x${tabletTarget.height}`}
+      data-sb-target-desktop={`${desktopTarget.width}x${desktopTarget.height}`}
       data-sb-focus-mobile-x={mobileFocusX}
       data-sb-focus-mobile-y={mobileFocusY}
       data-sb-focus-tablet-x={tabletFocusX}
@@ -502,6 +518,16 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       style={`object-fit: ${objectFit}; --sb-pos-mobile: ${responsivePositionMobile}; --sb-pos-tablet: ${responsivePositionTablet}; --sb-pos-desktop: ${responsivePositionDesktop}; object-position: var(--sb-pos-mobile); ${style}`}
     />
   </picture>
+
+  {canInlineEdit && (
+    <div
+      class="media-variant-debug"
+      title={variantDebugTitle}
+      aria-label={variantDebugTitle}
+    >
+      {variantDebugLabel}
+    </div>
+  )}
 
   {canInlineEdit && (
     <button
@@ -1861,6 +1887,30 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
     object-position: var(--sb-pos-mobile, 50% 50%);
   }
 
+  .media-variant-debug {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 20;
+    border-radius: 999px;
+    border: 1px solid rgba(31, 41, 55, 0.2);
+    background: rgba(255, 255, 255, 0.92);
+    color: #1f2937;
+    font-size: 0.63rem;
+    font-weight: 700;
+    padding: 0.22rem 0.5rem;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+    max-width: calc(100% - 7rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+  }
+
   .media-inline-trigger {
     position: absolute;
     top: 0.5rem;
@@ -1886,7 +1936,14 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
     transform: translateY(0);
   }
 
+  .optimized-image:hover .media-variant-debug,
+  .optimized-image:focus-within .media-variant-debug {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
   @media (max-width: 1024px) {
+    .media-variant-debug,
     .media-inline-trigger {
       opacity: 1;
       transform: translateY(0);
