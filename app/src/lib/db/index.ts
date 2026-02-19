@@ -14,6 +14,7 @@ import {
 import { getRecentMessages, getCommunicationStats, getTemplates } from './communications';
 import { getContactSubmissions } from './contact-submissions';
 import { recordAnalyticsEvent, getAnalyticsOverview, getRecentAnalyticsEvents } from './analytics';
+import { getAdSpendSummary, getRecentAdSpendEntries, insertAdSpendEntries, deleteAdSpendEntry, getCampaignValueRows } from './ad-spend';
 
 export const db = {
   content: {
@@ -40,6 +41,13 @@ export const db = {
     recordAnalyticsEvent,
     getAnalyticsOverview,
     getRecentAnalyticsEvents
+  },
+  adSpend: {
+    getAdSpendSummary,
+    getRecentAdSpendEntries,
+    insertAdSpendEntries,
+    deleteAdSpendEntry,
+    getCampaignValueRows
   },
   raw: {
     getPublicClient,
@@ -69,4 +77,5 @@ export {
 export { getRecentMessages, getCommunicationStats, getTemplates } from './communications';
 export { getContactSubmissions } from './contact-submissions';
 export { recordAnalyticsEvent, getAnalyticsOverview, getRecentAnalyticsEvents } from './analytics';
+export { getAdSpendSummary, getRecentAdSpendEntries, insertAdSpendEntries, deleteAdSpendEntry, getCampaignValueRows } from './ad-spend';
 export { getPublicClient, getServiceClient, withServiceClient } from './client';

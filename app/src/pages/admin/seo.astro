@@ -2,6 +2,7 @@
 import AdminLayout from '@layouts/AdminLayout.astro';
 import { db } from '@lib/db';
 import { getAnalyticsConfig } from '@lib/analytics-config';
+import { getGa4OverviewReport } from '@lib/ga4-reporting';
 
 const rawWindow = Astro.url.searchParams.get('window');
 const parsedWindow = rawWindow ? Number.parseInt(rawWindow, 10) : 30;
@@ -12,12 +13,16 @@ const errorMessage = Astro.url.searchParams.get('error');
 const redirectBase = `/admin/seo?window=${windowDays}`;
 
 const analyticsConfig = await getAnalyticsConfig();
-const [overview, recentEvents, ga4EnabledSetting, ga4MeasurementSetting, ga4PropertySetting] = await Promise.all([
+const [overview, recentEvents, ga4EnabledSetting, ga4MeasurementSetting, ga4PropertySetting, adSpendSummary, recentAdSpend, campaignValueRows, ga4Report] = await Promise.all([
   db.analytics.getAnalyticsOverview(windowDays),
   db.analytics.getRecentAnalyticsEvents(24),
   db.content.getSetting('ga4_enabled'),
   db.content.getSetting('ga4_measurement_id'),
-  db.content.getSetting('ga4_property_id')
+  db.content.getSetting('ga4_property_id'),
+  db.adSpend.getAdSpendSummary(windowDays),
+  db.adSpend.getRecentAdSpendEntries(24),
+  db.adSpend.getCampaignValueRows(windowDays),
+  getGa4OverviewReport(analyticsConfig.propertyId, windowDays)
 ]);
 
 const parseBoolean = (value: unknown): boolean => {
@@ -35,6 +40,8 @@ const toStringValue = (value: unknown): string => {
 };
 
 const formatNumber = (value: number): string => value.toLocaleString('en-US');
+const formatCurrency = (value: number): string =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(value);
 const formatDate = (value: string): string => {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
@@ -47,12 +54,30 @@ const configuredGaPropertyId = toStringValue(ga4PropertySetting);
 
 const isTrackingLive = analyticsConfig.enabled;
 const hasMeasurementId = analyticsConfig.measurementId.length > 0;
+const estimatedCostPerLead = overview.totals.attributedLeads > 0
+  ? adSpendSummary.totalSpend / overview.totals.attributedLeads
+  : null;
+
+const mapSavedMessage = (value: string | null): string | null => {
+  if (!value) return null;
+  if (value.startsWith('ad_spend_imported_')) {
+    const count = Number.parseInt(value.slice('ad_spend_imported_'.length), 10);
+    if (Number.isFinite(count)) {
+      return `Imported ${count} ad spend row${count === 1 ? '' : 's'}.`;
+    }
+  }
+  if (value === 'ad_spend_added') return 'Added ad spend entry.';
+  if (value === 'ad_spend_deleted') return 'Deleted ad spend entry.';
+  return `Saved setting: ${value}`;
+};
+
+const savedMessage = mapSavedMessage(savedKey);
 ---
 
 <AdminLayout title="SEO & Analytics">
-  {savedKey && (
+  {savedMessage && (
     <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
-      Saved setting: <strong>{savedKey}</strong>
+      {savedMessage}
     </p>
   )}
 
@@ -66,9 +91,9 @@ const hasMeasurementId = analyticsConfig.measurementId.length > 0;
     <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="text-lg font-semibold mb-2">Tracking Status</h2>
       <p class="text-sm text-earth-brown/80 mb-4">
-        This dashboard combines on-site event tracking with lead attribution from contact submissions.
+        Monitor traffic, campaigns, and lead value from one place. Window: last {windowDays} days.
       </p>
-      <div class="grid gap-3 md:grid-cols-3">
+      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
           <p class="text-xs uppercase tracking-wide text-earth-brown/70">Tracking Pipeline</p>
           <p class={`text-lg font-semibold ${isTrackingLive ? 'text-green-700' : 'text-amber-700'}`}>
@@ -82,9 +107,15 @@ const hasMeasurementId = analyticsConfig.measurementId.length > 0;
           </p>
         </div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <p class="text-xs uppercase tracking-wide text-earth-brown/70">GA4 Property ID</p>
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">GA4 Data API</p>
+          <p class={`text-lg font-semibold ${ga4Report.available ? 'text-green-700' : 'text-amber-700'}`}>
+            {ga4Report.available ? 'Connected' : 'Not connected'}
+          </p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Ad Spend (Window)</p>
           <p class="text-lg font-semibold text-earth-brown">
-            {analyticsConfig.propertyId || '(optional for later API reporting)'}
+            {formatCurrency(adSpendSummary.totalSpend)}
           </p>
         </div>
       </div>
@@ -93,7 +124,12 @@ const hasMeasurementId = analyticsConfig.measurementId.length > 0;
     <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="text-lg font-semibold mb-3">Google Analytics Configuration</h2>
       <p class="text-sm text-earth-brown/80 mb-4">
-        Set your GA4 values here. The measurement ID should look like <code>G-XXXXXXXXXX</code>.
+        Set your GA4 values here. For GA4 Data API reporting, also configure service account env vars in Netlify:
+        <code> GA4_SERVICE_ACCOUNT_JSON </code>
+        or
+        <code> GA4_SERVICE_ACCOUNT_EMAIL </code>
+        +
+        <code> GA4_SERVICE_ACCOUNT_PRIVATE_KEY</code>.
       </p>
 
       <div class="grid gap-4 xl:grid-cols-3">
@@ -134,7 +170,7 @@ const hasMeasurementId = analyticsConfig.measurementId.length > 0;
           <input type="hidden" name="key" value="ga4_property_id" />
           <input type="hidden" name="redirectTo" value={`${redirectBase}&saved=ga4_property_id`} />
           <label class="block text-sm font-medium">
-            GA4 Property ID (optional)
+            GA4 Property ID
             <input
               type="text"
               name="value"
@@ -148,6 +184,12 @@ const hasMeasurementId = analyticsConfig.measurementId.length > 0;
           </button>
         </form>
       </div>
+
+      {!ga4Report.available && (
+        <p class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          {ga4Report.message}
+        </p>
+      )}
     </section>
 
     <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -165,37 +207,50 @@ const hasMeasurementId = analyticsConfig.measurementId.length > 0;
         </div>
       </div>
 
-      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
           <p class="text-xs uppercase tracking-wide text-earth-brown/70">Tracked Events</p>
           <p class="text-2xl font-semibold text-earth-brown">{formatNumber(overview.totals.trackedEvents)}</p>
         </div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Page Views</p>
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Tracked Page Views</p>
           <p class="text-2xl font-semibold text-earth-brown">{formatNumber(overview.totals.pageViews)}</p>
-        </div>
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <p class="text-xs uppercase tracking-wide text-earth-brown/70">CTA Clicks</p>
-          <p class="text-2xl font-semibold text-earth-brown">{formatNumber(overview.totals.outboundClicks)}</p>
-        </div>
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Tracked Form Submits</p>
-          <p class="text-2xl font-semibold text-earth-brown">{formatNumber(overview.totals.formSubmissions)}</p>
-        </div>
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Leads Captured</p>
-          <p class="text-2xl font-semibold text-earth-brown">{formatNumber(overview.totals.leads)}</p>
         </div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
           <p class="text-xs uppercase tracking-wide text-earth-brown/70">Leads With Attribution</p>
           <p class="text-2xl font-semibold text-earth-brown">{formatNumber(overview.totals.attributedLeads)}</p>
         </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Estimated Cost Per Lead</p>
+          <p class="text-2xl font-semibold text-earth-brown">
+            {estimatedCostPerLead === null ? '—' : formatCurrency(estimatedCostPerLead)}
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">GA4 Sessions</p>
+          <p class="text-2xl font-semibold text-earth-brown">{formatNumber(ga4Report.summary.sessions)}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">GA4 Users</p>
+          <p class="text-2xl font-semibold text-earth-brown">{formatNumber(ga4Report.summary.totalUsers)}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">GA4 Page Views</p>
+          <p class="text-2xl font-semibold text-earth-brown">{formatNumber(ga4Report.summary.pageViews)}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Ad Spend Entries</p>
+          <p class="text-2xl font-semibold text-earth-brown">{formatNumber(adSpendSummary.entryCount)}</p>
+        </div>
       </div>
     </section>
 
-    <section class="grid gap-6 xl:grid-cols-3">
+    <section class="grid gap-6 xl:grid-cols-2">
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 class="mb-3 text-base font-semibold">Top Landing Pages</h3>
+        <h3 class="mb-3 text-base font-semibold">Top Landing Pages (On-site Tracker)</h3>
         {overview.topPages.length === 0 ? (
           <p class="text-sm text-earth-brown/70">No page-view data yet.</p>
         ) : (
@@ -211,36 +266,152 @@ const hasMeasurementId = analyticsConfig.measurementId.length > 0;
       </div>
 
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 class="mb-3 text-base font-semibold">Top Campaigns (Lead Attribution)</h3>
-        {overview.topCampaigns.length === 0 ? (
-          <p class="text-sm text-earth-brown/70">No campaign-attributed leads yet.</p>
+        <h3 class="mb-3 text-base font-semibold">Top Pages (GA4)</h3>
+        {ga4Report.topPages.length === 0 ? (
+          <p class="text-sm text-earth-brown/70">No GA4 page data available yet.</p>
         ) : (
           <ul class="space-y-2 text-sm">
-            {overview.topCampaigns.map((entry) => (
+            {ga4Report.topPages.map((entry) => (
               <li class="flex items-center justify-between gap-2 rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
-                <span class="truncate">{entry.campaign}</span>
-                <span class="font-semibold">{formatNumber(entry.leads)}</span>
+                <span class="truncate">{entry.pagePath}</span>
+                <span class="font-semibold">{formatNumber(entry.views)}</span>
               </li>
             ))}
           </ul>
         )}
+      </div>
+    </section>
+
+    <section class="grid gap-6 xl:grid-cols-2">
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="mb-3 text-base font-semibold">Add Ad Spend Entry</h3>
+        <form method="post" action="/api/admin/seo/ad-spend" class="space-y-3">
+          <input type="hidden" name="redirectTo" value={redirectBase} />
+          <div class="grid gap-3 md:grid-cols-2">
+            <label class="block text-sm font-medium">
+              Spend Date
+              <input type="date" name="spendDate" required class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+            </label>
+            <label class="block text-sm font-medium">
+              Channel
+              <input type="text" name="channel" required placeholder="Google Ads" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+            </label>
+            <label class="block text-sm font-medium">
+              Campaign
+              <input type="text" name="campaign" required placeholder="Spring Enrollment Search" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+            </label>
+            <label class="block text-sm font-medium">
+              Amount (USD)
+              <input type="number" name="amount" min="0" step="0.01" required class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+            </label>
+            <label class="block text-sm font-medium">
+              Currency
+              <input type="text" name="currency" value="USD" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+            </label>
+            <label class="block text-sm font-medium md:col-span-2">
+              Notes
+              <input type="text" name="notes" placeholder="Optional context" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+            </label>
+          </div>
+          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+            Save Ad Spend
+          </button>
+        </form>
       </div>
 
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 class="mb-3 text-base font-semibold">Most Common Events</h3>
-        {overview.topEvents.length === 0 ? (
-          <p class="text-sm text-earth-brown/70">No tracked events yet.</p>
-        ) : (
-          <ul class="space-y-2 text-sm">
-            {overview.topEvents.map((entry) => (
-              <li class="flex items-center justify-between gap-2 rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
-                <span class="truncate">{entry.eventName}</span>
-                <span class="font-semibold">{formatNumber(entry.count)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <h3 class="mb-3 text-base font-semibold">Import Ad Spend CSV</h3>
+        <p class="mb-2 text-sm text-earth-brown/75">
+          Headers supported: <code>spend_date</code>, <code>channel</code>, <code>campaign</code>, <code>amount</code>, <code>currency</code>, <code>notes</code>.
+        </p>
+        <form method="post" action="/api/admin/seo/ad-spend" class="space-y-3">
+          <input type="hidden" name="redirectTo" value={redirectBase} />
+          <textarea
+            name="csvData"
+            rows="8"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-xs"
+            placeholder={`spend_date,channel,campaign,amount,currency,notes\n2026-02-18,Google Ads,Spring Enrollment Search,145.23,USD,Daily budget\n2026-02-18,Meta,Open House Awareness,89.50,USD,Boosted post`}
+          ></textarea>
+          <button type="submit" class="rounded-lg border border-forest-canopy px-4 py-2 text-sm font-semibold text-forest-canopy hover:bg-forest-canopy hover:text-white">
+            Import CSV
+          </button>
+        </form>
       </div>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <h2 class="mb-3 text-lg font-semibold">Campaign Value (Spend vs Leads)</h2>
+      {campaignValueRows.length === 0 ? (
+        <p class="text-sm text-earth-brown/70">No campaign value data yet. Add spend or collect attributed leads first.</p>
+      ) : (
+        <div class="overflow-x-auto">
+          <table class="min-w-full border-collapse text-sm">
+            <thead>
+              <tr class="bg-gray-50 text-left text-xs uppercase tracking-wide text-earth-brown/70">
+                <th class="border border-gray-200 px-3 py-2">Campaign</th>
+                <th class="border border-gray-200 px-3 py-2">Spend</th>
+                <th class="border border-gray-200 px-3 py-2">Leads</th>
+                <th class="border border-gray-200 px-3 py-2">Cost / Lead</th>
+              </tr>
+            </thead>
+            <tbody>
+              {campaignValueRows.map((row) => (
+                <tr>
+                  <td class="border border-gray-200 px-3 py-2">{row.campaign}</td>
+                  <td class="border border-gray-200 px-3 py-2">{formatCurrency(row.spend)}</td>
+                  <td class="border border-gray-200 px-3 py-2">{formatNumber(row.leads)}</td>
+                  <td class="border border-gray-200 px-3 py-2">
+                    {row.costPerLead === null ? '—' : formatCurrency(row.costPerLead)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <h2 class="mb-3 text-lg font-semibold">Recent Ad Spend Entries</h2>
+      {recentAdSpend.length === 0 ? (
+        <p class="text-sm text-earth-brown/70">No ad spend entries saved yet.</p>
+      ) : (
+        <div class="overflow-x-auto">
+          <table class="min-w-full border-collapse text-sm">
+            <thead>
+              <tr class="bg-gray-50 text-left text-xs uppercase tracking-wide text-earth-brown/70">
+                <th class="border border-gray-200 px-3 py-2">Date</th>
+                <th class="border border-gray-200 px-3 py-2">Channel</th>
+                <th class="border border-gray-200 px-3 py-2">Campaign</th>
+                <th class="border border-gray-200 px-3 py-2">Amount</th>
+                <th class="border border-gray-200 px-3 py-2">Added</th>
+                <th class="border border-gray-200 px-3 py-2">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentAdSpend.map((entry) => (
+                <tr>
+                  <td class="border border-gray-200 px-3 py-2">{entry.spendDate}</td>
+                  <td class="border border-gray-200 px-3 py-2">{entry.channel}</td>
+                  <td class="border border-gray-200 px-3 py-2">{entry.campaign}</td>
+                  <td class="border border-gray-200 px-3 py-2">{formatCurrency(entry.amount)}</td>
+                  <td class="border border-gray-200 px-3 py-2 text-xs text-earth-brown/80">{formatDate(entry.createdAt)}</td>
+                  <td class="border border-gray-200 px-3 py-2">
+                    <form method="post" action="/api/admin/seo/ad-spend">
+                      <input type="hidden" name="action" value="delete" />
+                      <input type="hidden" name="entryId" value={entry.id} />
+                      <input type="hidden" name="redirectTo" value={redirectBase} />
+                      <button type="submit" class="rounded border border-red-300 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-50">
+                        Delete
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
 
     <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">

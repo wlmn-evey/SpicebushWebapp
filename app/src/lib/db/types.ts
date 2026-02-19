@@ -79,6 +79,20 @@ export interface AnalyticsEventRow {
   created_at: string;
 }
 
+export interface AdSpendEntryRow {
+  id: string;
+  spend_date: string;
+  channel: string;
+  campaign: string;
+  amount: number;
+  currency: string;
+  notes: string | null;
+  metadata: Record<string, unknown> | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MediaRow {
   id: string;
   filename: string;
@@ -105,6 +119,7 @@ export interface Database {
       communications_templates: DatabaseTable<CommunicationTemplateRow>;
       contact_form_submissions: DatabaseTable<ContactFormSubmissionRow>;
       analytics_events: DatabaseTable<AnalyticsEventRow>;
+      ad_spend_entries: DatabaseTable<AdSpendEntryRow>;
       media: DatabaseTable<MediaRow>;
     };
     Views: Record<string, never>;
