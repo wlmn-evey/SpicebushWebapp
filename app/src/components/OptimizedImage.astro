@@ -493,6 +493,8 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
         title: string;
         category: string;
         sourceUrl: string;
+        previewUrl: string;
+        fallbackPreviewUrl: string;
         updatedAt?: string;
       };
 
@@ -622,7 +624,9 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
             text-align: left;
             cursor: pointer;
             display: grid;
-            gap: 0.2rem;
+            grid-template-columns: 60px minmax(0, 1fr);
+            align-items: center;
+            gap: 0.6rem;
             color: #1f2937;
           }
 
@@ -632,9 +636,27 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
             background: #f2f7f4;
           }
 
+          .sb-inline-media-thumb {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            border: 1px solid #d6d3d1;
+            object-fit: cover;
+            background: #f5f5f4;
+          }
+
+          .sb-inline-media-item-copy {
+            min-width: 0;
+            display: grid;
+            gap: 0.2rem;
+          }
+
           .sb-inline-media-item-title {
             font-size: 0.88rem;
             font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
 
           .sb-inline-media-item-meta {
@@ -709,6 +731,16 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
 
             .sb-inline-media-content {
               max-height: 40vh;
+            }
+
+            .sb-inline-media-item {
+              grid-template-columns: 52px minmax(0, 1fr);
+              gap: 0.55rem;
+            }
+
+            .sb-inline-media-thumb {
+              width: 52px;
+              height: 52px;
             }
           }
         `;
@@ -805,14 +837,58 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
           .replace(/^-+|-+$/g, '')
           .slice(0, 80);
 
+      const gallerySubcategories = new Set([
+        'art',
+        'classroom',
+        'events',
+        'group',
+        'individual',
+        'materials',
+        'outdoor',
+        'practical'
+      ]);
+
+      const filenameFromUrl = (value: string): string => {
+        const withoutQuery = value.split('?')[0] ?? value;
+        const segments = withoutQuery.split('/');
+        return segments[segments.length - 1] ?? '';
+      };
+
+      const buildPreviewUrls = (
+        slug: string,
+        category: string,
+        sourceUrl: string,
+        optimizedFilename: string
+      ): { previewUrl: string; fallbackPreviewUrl: string } => {
+        if (sourceUrl) {
+          return {
+            previewUrl: sourceUrl,
+            fallbackPreviewUrl: sourceUrl
+          };
+        }
+
+        const basePath = gallerySubcategories.has(category)
+          ? `/images/optimized/gallery/${category}`
+          : `/images/optimized/${category}`;
+
+        return {
+          previewUrl: `${basePath}/${optimizedFilename}`,
+          fallbackPreviewUrl: `${basePath}/${slug}-640w.jpg`
+        };
+      };
+
       const toEntry = (entry: Record<string, unknown>): PhotoEntry | null => {
         const slug = typeof entry.slug === 'string' ? entry.slug : '';
         const title = typeof entry.title === 'string' && entry.title.trim().length > 0 ? entry.title.trim() : slug;
         const data = entry.data && typeof entry.data === 'object' ? entry.data as Record<string, unknown> : {};
         const category = typeof data.category === 'string' ? data.category : 'gallery';
         const sourceUrl = typeof data.sourceUrl === 'string' ? data.sourceUrl : '';
+        const optimizedFilename = typeof data.optimizedFilename === 'string' && data.optimizedFilename.trim().length > 0
+          ? data.optimizedFilename.trim()
+          : (filenameFromUrl(sourceUrl) || `${slug}.webp`);
         if (!slug) return null;
-        return { slug, title, category, sourceUrl };
+        const { previewUrl, fallbackPreviewUrl } = buildPreviewUrls(slug, category, sourceUrl, optimizedFilename);
+        return { slug, title, category, sourceUrl, previewUrl, fallbackPreviewUrl };
       };
 
       const fetchPhotoLibrary = async () => {
@@ -865,10 +941,36 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
           button.type = 'button';
           button.className = 'sb-inline-media-item';
           button.setAttribute('data-active', photo.slug === state.selectedSlug ? 'true' : 'false');
-          button.innerHTML = `
-            <span class="sb-inline-media-item-title">${photo.title}</span>
-            <span class="sb-inline-media-item-meta">${photo.slug} | ${photo.category}${photo.sourceUrl ? ' | external source' : ''}</span>
-          `;
+
+          const thumbnail = document.createElement('img');
+          thumbnail.className = 'sb-inline-media-thumb';
+          thumbnail.src = photo.previewUrl;
+          thumbnail.alt = '';
+          thumbnail.loading = 'lazy';
+          thumbnail.decoding = 'async';
+          thumbnail.referrerPolicy = 'no-referrer';
+          thumbnail.addEventListener('error', () => {
+            if (thumbnail.src !== photo.fallbackPreviewUrl) {
+              thumbnail.src = photo.fallbackPreviewUrl;
+            }
+          }, { once: true });
+
+          const copy = document.createElement('span');
+          copy.className = 'sb-inline-media-item-copy';
+
+          const title = document.createElement('span');
+          title.className = 'sb-inline-media-item-title';
+          title.textContent = photo.title;
+
+          const meta = document.createElement('span');
+          meta.className = 'sb-inline-media-item-meta';
+          meta.textContent = `${photo.slug} | ${photo.category}${photo.sourceUrl ? ' | external source' : ''}`;
+
+          copy.appendChild(title);
+          copy.appendChild(meta);
+          button.appendChild(thumbnail);
+          button.appendChild(copy);
+
           button.addEventListener('click', () => {
             state.selectedSlug = photo.slug;
             updateFocalLink();
