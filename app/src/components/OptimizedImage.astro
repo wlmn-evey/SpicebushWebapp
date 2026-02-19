@@ -352,6 +352,11 @@ const hasCustomSlotFraming = [
   'tabletCropHeight'
 ].some((key) => hasNumericOverride(key));
 
+const aiFillMobileUrl = stringFrom(slotPlacementOverrides.aiFillMobileUrl, '');
+const aiFillTabletUrl = stringFrom(slotPlacementOverrides.aiFillTabletUrl, '');
+const aiFillDesktopUrl = stringFrom(slotPlacementOverrides.aiFillDesktopUrl, '');
+const hasAiFillVariant = Boolean(aiFillMobileUrl || aiFillTabletUrl || aiFillDesktopUrl);
+
 const sourceForRenderer = sourceUrl || `${basePath}/${optimizedFilename}`;
 const canUseServerCropSource = !objectPosition
   && hasCustomSlotFraming
@@ -360,6 +365,7 @@ const canUseServerCropSource = !objectPosition
     || sourceForRenderer.startsWith('https://spicebushmontessori.org')
     || sourceForRenderer.includes('.netlify.app')
   );
+const canUseBreakpointSources = canUseServerCropSource || hasAiFillVariant;
 
 const buildRenderedUrl = (
   crop: { x: number; y: number; width: number; height: number },
@@ -405,9 +411,21 @@ const desktopCropSrcSet = canUseServerCropSource
     })
     .join(', ')
   : '';
-const renderedJpgFallback = canUseServerCropSource
-  ? buildRenderedUrl(desktopCrop, desktopTarget, 'jpg')
-  : jpgFallback;
+
+const mobileBreakpointSrcSet = aiFillMobileUrl
+  ? `${aiFillMobileUrl} ${mobileTarget.width}w`
+  : mobileCropSrcSet;
+const tabletBreakpointSrcSet = aiFillTabletUrl
+  ? `${aiFillTabletUrl} ${tabletTarget.width}w`
+  : tabletCropSrcSet;
+const desktopBreakpointSrcSet = aiFillDesktopUrl
+  ? `${aiFillDesktopUrl} ${desktopTarget.width}w`
+  : desktopCropSrcSet;
+
+const renderedJpgFallback = aiFillDesktopUrl
+  || aiFillTabletUrl
+  || aiFillMobileUrl
+  || (canUseServerCropSource ? buildRenderedUrl(desktopCrop, desktopTarget, 'jpg') : jpgFallback);
 
 const srcSet = responsiveSources.join(', ');
 const loadingStrategy = loading || (priority ? 'eager' : 'lazy');
@@ -422,24 +440,35 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
   data-media-inline-slot={canInlineEdit ? computedSlotId : undefined}
 >
   <picture>
-    {canUseServerCropSource ? (
+    {canUseBreakpointSources ? (
       <>
+        {mobileBreakpointSrcSet && (
+          <source
+            media="(max-width: 767px)"
+            type="image/webp"
+            srcset={mobileBreakpointSrcSet}
+            sizes={sizes}
+          />
+        )}
+        {tabletBreakpointSrcSet && (
+          <source
+            media="(min-width: 768px) and (max-width: 1023px)"
+            type="image/webp"
+            srcset={tabletBreakpointSrcSet}
+            sizes={sizes}
+          />
+        )}
+        {desktopBreakpointSrcSet && (
+          <source
+            media="(min-width: 1024px)"
+            type="image/webp"
+            srcset={desktopBreakpointSrcSet}
+            sizes={sizes}
+          />
+        )}
         <source
-          media="(max-width: 767px)"
           type="image/webp"
-          srcset={mobileCropSrcSet}
-          sizes={sizes}
-        />
-        <source
-          media="(min-width: 768px) and (max-width: 1023px)"
-          type="image/webp"
-          srcset={tabletCropSrcSet}
-          sizes={sizes}
-        />
-        <source
-          media="(min-width: 1024px)"
-          type="image/webp"
-          srcset={desktopCropSrcSet}
+          srcset={srcSet}
           sizes={sizes}
         />
       </>
@@ -461,8 +490,9 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       class={`optimized-image-element ${className}`}
       data-image-id={imageId}
       data-sb-object-fit={objectFit}
-      data-sb-auto-focus={objectPosition || canUseServerCropSource ? 'false' : 'true'}
+      data-sb-auto-focus={objectPosition || canUseBreakpointSources ? 'false' : 'true'}
       data-sb-server-crop={canUseServerCropSource ? 'true' : 'false'}
+      data-sb-ai-fill={hasAiFillVariant ? 'true' : 'false'}
       data-sb-focus-mobile-x={mobileFocusX}
       data-sb-focus-mobile-y={mobileFocusY}
       data-sb-focus-tablet-x={tabletFocusX}
@@ -954,6 +984,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
               <div class="sb-inline-media-actions">
                 <button type="button" class="sb-inline-media-btn secondary" id="sb-inline-media-upload">Upload From Device</button>
                 <button type="button" class="sb-inline-media-btn secondary" id="sb-inline-media-smart">Smart Adjust</button>
+                <button type="button" class="sb-inline-media-btn secondary" id="sb-inline-media-aifill">AI Fill Current View</button>
                 <a id="sb-inline-media-focal-link" class="sb-inline-media-btn secondary" href="/admin/media" target="_blank" rel="noreferrer">Open Focal/Crop Editor</a>
                 <button type="button" class="sb-inline-media-btn" id="sb-inline-media-save">Save Selection</button>
               </div>
@@ -970,6 +1001,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       const saveButton = backdrop.querySelector<HTMLButtonElement>('#sb-inline-media-save');
       const uploadButton = backdrop.querySelector<HTMLButtonElement>('#sb-inline-media-upload');
       const smartAdjustButton = backdrop.querySelector<HTMLButtonElement>('#sb-inline-media-smart');
+      const aiFillButton = backdrop.querySelector<HTMLButtonElement>('#sb-inline-media-aifill');
       const fileInput = backdrop.querySelector<HTMLInputElement>('#sb-inline-media-file');
       const focalLink = backdrop.querySelector<HTMLAnchorElement>('#sb-inline-media-focal-link');
       const statusNode = backdrop.querySelector<HTMLParagraphElement>('#sb-inline-media-status');
@@ -982,6 +1014,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
         || !saveButton
         || !uploadButton
         || !smartAdjustButton
+        || !aiFillButton
         || !fileInput
         || !focalLink
         || !statusNode
@@ -1480,7 +1513,8 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
 
         const { imageElement: activeImage } = getActiveImageElement();
         const usesServerCrop = activeImage?.dataset.sbServerCrop === 'true';
-        if (activeImage && !usesServerCrop && (activeImage.dataset.sbAutoFocus || 'true') !== 'true') {
+        const usesAiFill = activeImage?.dataset.sbAiFill === 'true';
+        if (activeImage && !usesServerCrop && !usesAiFill && (activeImage.dataset.sbAutoFocus || 'true') !== 'true') {
           setStatus(
             'This image is using fixed template positioning, so Smart Adjust cannot move it yet.',
             'error'
@@ -1491,6 +1525,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
         smartAdjustButton.setAttribute('disabled', 'disabled');
         saveButton.setAttribute('disabled', 'disabled');
         uploadButton.setAttribute('disabled', 'disabled');
+        aiFillButton.setAttribute('disabled', 'disabled');
 
         try {
           setStatus('Smart Adjust is analyzing this page...');
@@ -1576,6 +1611,73 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
           const message = error instanceof Error ? error.message : 'Smart Adjust failed';
           setStatus(message, 'error');
         } finally {
+          smartAdjustButton.removeAttribute('disabled');
+          saveButton.removeAttribute('disabled');
+          uploadButton.removeAttribute('disabled');
+          aiFillButton.removeAttribute('disabled');
+        }
+      };
+
+      const runAiFill = async () => {
+        if (!state.activeSlotId) {
+          setStatus('No slot selected.', 'error');
+          return;
+        }
+
+        if (!state.selectedSlug) {
+          setStatus('Choose an image from the library first.', 'error');
+          return;
+        }
+
+        const { imageElement } = getActiveImageElement();
+        if (!imageElement) {
+          setStatus('Could not find the active image on the page.', 'error');
+          return;
+        }
+
+        const rect = imageElement.getBoundingClientRect();
+        const targetWidth = Math.max(180, Math.round(rect.width || imageElement.clientWidth || 0));
+        const targetHeight = Math.max(120, Math.round(rect.height || imageElement.clientHeight || 0));
+        const breakpoint = getCurrentBreakpoint();
+
+        aiFillButton.setAttribute('disabled', 'disabled');
+        smartAdjustButton.setAttribute('disabled', 'disabled');
+        saveButton.setAttribute('disabled', 'disabled');
+        uploadButton.setAttribute('disabled', 'disabled');
+
+        try {
+          setStatus(`Generating AI Fill for ${breakpoint} layout...`);
+
+          const response = await fetch('/api/admin/media/ai-fill', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              slotId: state.activeSlotId,
+              photoSlug: state.selectedSlug,
+              breakpoint,
+              targetWidth,
+              targetHeight
+            })
+          });
+
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(typeof payload.error === 'string' ? payload.error : 'AI Fill failed');
+          }
+
+          const returnedBreakpoint = typeof payload.breakpoint === 'string' ? payload.breakpoint : breakpoint;
+          setStatus(`AI Fill generated for ${returnedBreakpoint}. Refreshing page...`, 'success');
+          window.setTimeout(() => {
+            window.location.reload();
+          }, 600);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'AI Fill failed';
+          setStatus(message, 'error');
+        } finally {
+          aiFillButton.removeAttribute('disabled');
           smartAdjustButton.removeAttribute('disabled');
           saveButton.removeAttribute('disabled');
           uploadButton.removeAttribute('disabled');
@@ -1740,6 +1842,10 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
 
       smartAdjustButton.addEventListener('click', async () => {
         await runSmartAdjust();
+      });
+
+      aiFillButton.addEventListener('click', async () => {
+        await runAiFill();
       });
     })();
   </script>
