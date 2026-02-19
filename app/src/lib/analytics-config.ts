@@ -17,8 +17,9 @@ const parseBoolean = (value: unknown): boolean => {
 };
 
 const toStringValue = (value: unknown): string => {
-  if (typeof value !== 'string') return '';
-  return value.trim();
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number' && Number.isFinite(value)) return String(Math.trunc(value));
+  return '';
 };
 
 const readEnv = (key: string): string => {
