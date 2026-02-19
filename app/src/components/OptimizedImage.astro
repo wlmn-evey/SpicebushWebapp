@@ -193,6 +193,8 @@ const altText = stringFrom(photoData.altText, resolvedSlug);
 const effectiveAlt = alt || slotAltOverride || altText;
 const primaryFocalX = clamp(numberFrom(photoData.primaryFocalX, framingDefaults.primaryFocalX), 0, 100);
 const primaryFocalY = clamp(numberFrom(photoData.primaryFocalY, framingDefaults.primaryFocalY), 0, 100);
+const desktopFocalX = clamp(numberFrom(photoData.desktopFocalX, primaryFocalX), 0, 100);
+const desktopFocalY = clamp(numberFrom(photoData.desktopFocalY, primaryFocalY), 0, 100);
 
 const secondaryFocalX = optionalNumberFrom(photoData.secondaryFocalX);
 const secondaryFocalY = optionalNumberFrom(photoData.secondaryFocalY);
@@ -221,13 +223,12 @@ const tabletCrop = normalizeCrop(
     height: framingDefaults.tabletCropHeight
   }
 );
-
 const mobileFocusX = Math.round((mobileCrop.x + (mobileCrop.width / 2)) * 10) / 10;
 const mobileFocusY = Math.round((mobileCrop.y + (mobileCrop.height / 2)) * 10) / 10;
 const tabletFocusX = Math.round((tabletCrop.x + (tabletCrop.width / 2)) * 10) / 10;
 const tabletFocusY = Math.round((tabletCrop.y + (tabletCrop.height / 2)) * 10) / 10;
 
-const objectPositionDesktop = `${primaryFocalX}% ${primaryFocalY}%`;
+const objectPositionDesktop = `${desktopFocalX}% ${desktopFocalY}%`;
 const objectPositionTablet = `${tabletFocusX}% ${tabletFocusY}%`;
 const objectPositionMobile = `${mobileFocusX}% ${mobileFocusY}%`;
 const responsivePositionDesktop = objectPosition || objectPositionDesktop;
@@ -291,8 +292,8 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       data-sb-focus-mobile-y={mobileFocusY}
       data-sb-focus-tablet-x={tabletFocusX}
       data-sb-focus-tablet-y={tabletFocusY}
-      data-sb-focus-desktop-x={primaryFocalX}
-      data-sb-focus-desktop-y={primaryFocalY}
+      data-sb-focus-desktop-x={desktopFocalX}
+      data-sb-focus-desktop-y={desktopFocalY}
       style={`object-fit: ${objectFit}; --sb-pos-mobile: ${responsivePositionMobile}; --sb-pos-tablet: ${responsivePositionTablet}; --sb-pos-desktop: ${responsivePositionDesktop}; object-position: var(--sb-pos-mobile); ${style}`}
     />
   </picture>
@@ -317,8 +318,8 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
     <div class="focal-points-debug">
       <div
         class="focal-point focal-point-primary"
-        style={`left: ${primaryFocalX}%; top: ${primaryFocalY}%;`}
-        title={`Primary: ${primaryFocalX}%, ${primaryFocalY}%`}
+        style={`left: ${desktopFocalX}%; top: ${desktopFocalY}%;`}
+        title={`Desktop: ${desktopFocalX}%, ${desktopFocalY}%`}
       ></div>
 
       {secondaryFocalX !== null && secondaryFocalY !== null && (

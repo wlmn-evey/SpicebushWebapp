@@ -24,6 +24,8 @@ type EditorPhoto = {
   usedOnCsv: string;
   seoKeywordsCsv: string;
   primaryFocalDescription: string;
+  desktopFocalX: number;
+  desktopFocalY: number;
   primaryFocalX: number;
   primaryFocalY: number;
   mobileCropX: number;
@@ -185,6 +187,8 @@ const toEditorPhoto = (slug: string, source: PhotoSource, input: unknown): Edito
   const primaryFocalDescription = stringFrom(data.primaryFocalDescription, framingDefaults.primaryFocalDescription);
   const primaryFocalX = clamp(numberFrom(data.primaryFocalX, framingDefaults.primaryFocalX), 0, 100);
   const primaryFocalY = clamp(numberFrom(data.primaryFocalY, framingDefaults.primaryFocalY), 0, 100);
+  const desktopFocalX = clamp(numberFrom(data.desktopFocalX, primaryFocalX), 0, 100);
+  const desktopFocalY = clamp(numberFrom(data.desktopFocalY, primaryFocalY), 0, 100);
 
   const mobileCrop = normalizeCrop(
     data.mobileCropX,
@@ -226,6 +230,8 @@ const toEditorPhoto = (slug: string, source: PhotoSource, input: unknown): Edito
     originalWidth,
     originalHeight,
     primaryFocalDescription,
+    desktopFocalX,
+    desktopFocalY,
     primaryFocalX,
     primaryFocalY,
     mobileCropX: mobileCrop.x,
@@ -254,6 +260,8 @@ const toEditorPhoto = (slug: string, source: PhotoSource, input: unknown): Edito
     usedOnCsv: usedOn.join(', '),
     seoKeywordsCsv: seoKeywords.join(', '),
     primaryFocalDescription,
+    desktopFocalX,
+    desktopFocalY,
     primaryFocalX,
     primaryFocalY,
     mobileCropX: mobileCrop.x,
@@ -315,7 +323,7 @@ const serializedEditorState = JSON.stringify({
     <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="mb-2 text-lg font-semibold">Media Manager</h2>
       <p class="mb-4 text-sm text-earth-brown/80">
-        Pick an image, click to set the focal point, drag the crop boxes for mobile and tablet, then save.
+        Pick an image, set the desktop focal point, and adjust mobile/tablet crop boxes as needed.
       </p>
       <div class="grid gap-3 md:grid-cols-3">
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -514,7 +522,7 @@ const serializedEditorState = JSON.stringify({
                 </div>
 
                 <p class="text-xs text-earth-brown/70">
-                  Use the edit mode buttons for iPad-friendly controls: set focal, move crop, or resize crop. The live site keeps each focus point centered as much as possible.
+                  Use the edit mode buttons for iPad-friendly controls: set desktop focal, move crop, or resize crop.
                 </p>
                 <p id="media-coordinates" class="rounded-md border border-gray-200 bg-gray-50 p-2 text-xs text-earth-brown/80"></p>
               </div>
@@ -551,21 +559,23 @@ const serializedEditorState = JSON.stringify({
                 </section>
 
                 <section class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                  <h4 class="mb-3 text-sm font-semibold text-earth-brown">Focal Point</h4>
+                  <h4 class="mb-3 text-sm font-semibold text-earth-brown">Desktop Focal Point</h4>
                   <div class="grid grid-cols-2 gap-3">
                     <label class="block text-sm font-medium">
                       X (%)
-                      <input id="media-focal-x" type="number" min="0" max="100" step="0.1" name="data.primaryFocalX" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+                      <input id="media-focal-x" type="number" min="0" max="100" step="0.1" name="data.desktopFocalX" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
                     </label>
                     <label class="block text-sm font-medium">
                       Y (%)
-                      <input id="media-focal-y" type="number" min="0" max="100" step="0.1" name="data.primaryFocalY" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+                      <input id="media-focal-y" type="number" min="0" max="100" step="0.1" name="data.desktopFocalY" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
                     </label>
                     <label class="block text-sm font-medium col-span-2">
                       Focal Description
                       <input id="media-focal-description" type="text" name="data.primaryFocalDescription" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
                     </label>
                   </div>
+                  <input id="media-primary-focal-x" type="hidden" name="data.primaryFocalX" />
+                  <input id="media-primary-focal-y" type="hidden" name="data.primaryFocalY" />
                 </section>
 
                 <section class="rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -707,6 +717,8 @@ const serializedEditorState = JSON.stringify({
           const focalXInput = document.getElementById('media-focal-x');
           const focalYInput = document.getElementById('media-focal-y');
           const focalDescriptionInput = document.getElementById('media-focal-description');
+          const primaryFocalXHiddenInput = document.getElementById('media-primary-focal-x');
+          const primaryFocalYHiddenInput = document.getElementById('media-primary-focal-y');
 
           const mobileXInput = document.getElementById('media-mobile-x');
           const mobileYInput = document.getElementById('media-mobile-y');
@@ -754,6 +766,8 @@ const serializedEditorState = JSON.stringify({
             focalXInput,
             focalYInput,
             focalDescriptionInput,
+            primaryFocalXHiddenInput,
+            primaryFocalYHiddenInput,
             mobileXInput,
             mobileYInput,
             mobileWidthInput,
@@ -913,8 +927,10 @@ const serializedEditorState = JSON.stringify({
             seoKeywordsInput.value = workingEntry.seoKeywordsCsv;
             focalDescriptionInput.value = workingEntry.primaryFocalDescription;
 
-            focalXInput.value = format(workingEntry.primaryFocalX);
-            focalYInput.value = format(workingEntry.primaryFocalY);
+            focalXInput.value = format(workingEntry.desktopFocalX);
+            focalYInput.value = format(workingEntry.desktopFocalY);
+            primaryFocalXHiddenInput.value = format(workingEntry.desktopFocalX);
+            primaryFocalYHiddenInput.value = format(workingEntry.desktopFocalY);
 
             mobileXInput.value = format(workingEntry.mobileCropX);
             mobileYInput.value = format(workingEntry.mobileCropY);
@@ -926,8 +942,8 @@ const serializedEditorState = JSON.stringify({
             tabletWidthInput.value = format(workingEntry.tabletCropWidth);
             tabletHeightInput.value = format(workingEntry.tabletCropHeight);
 
-            focalMarker.style.left = `${workingEntry.primaryFocalX}%`;
-            focalMarker.style.top = `${workingEntry.primaryFocalY}%`;
+            focalMarker.style.left = `${workingEntry.desktopFocalX}%`;
+            focalMarker.style.top = `${workingEntry.desktopFocalY}%`;
 
             const mobileCrop = getCrop('mobile');
             mobileCropBox.style.left = `${mobileCrop.x}%`;
@@ -941,7 +957,7 @@ const serializedEditorState = JSON.stringify({
             tabletCropBox.style.width = `${tabletCrop.width}%`;
             tabletCropBox.style.height = `${tabletCrop.height}%`;
 
-            coordinates.textContent = `Focal ${format(workingEntry.primaryFocalX)}%, ${format(workingEntry.primaryFocalY)}% | Mobile crop ${format(mobileCrop.x)}%, ${format(mobileCrop.y)}%, ${format(mobileCrop.width)}%, ${format(mobileCrop.height)}% | Tablet crop ${format(tabletCrop.x)}%, ${format(tabletCrop.y)}%, ${format(tabletCrop.width)}%, ${format(tabletCrop.height)}%`;
+            coordinates.textContent = `Desktop focal ${format(workingEntry.desktopFocalX)}%, ${format(workingEntry.desktopFocalY)}% | Mobile crop ${format(mobileCrop.x)}%, ${format(mobileCrop.y)}%, ${format(mobileCrop.width)}%, ${format(mobileCrop.height)}% | Tablet crop ${format(tabletCrop.x)}%, ${format(tabletCrop.y)}%, ${format(tabletCrop.width)}%, ${format(tabletCrop.height)}%`;
 
             listButtons.forEach((button) => {
               button.setAttribute('aria-pressed', button.dataset.slug === workingEntry.slug ? 'true' : 'false');
@@ -965,8 +981,10 @@ const serializedEditorState = JSON.stringify({
 
           const updateFocalFromInputs = () => {
             if (!workingEntry) return;
-            workingEntry.primaryFocalX = round(clamp(numberOr(focalXInput.value, workingEntry.primaryFocalX), 0, 100));
-            workingEntry.primaryFocalY = round(clamp(numberOr(focalYInput.value, workingEntry.primaryFocalY), 0, 100));
+            workingEntry.desktopFocalX = round(clamp(numberOr(focalXInput.value, workingEntry.desktopFocalX), 0, 100));
+            workingEntry.desktopFocalY = round(clamp(numberOr(focalYInput.value, workingEntry.desktopFocalY), 0, 100));
+            workingEntry.primaryFocalX = workingEntry.desktopFocalX;
+            workingEntry.primaryFocalY = workingEntry.desktopFocalY;
             render();
           };
 
@@ -1084,8 +1102,10 @@ const serializedEditorState = JSON.stringify({
 
             const x = ((event.clientX - rect.left) / rect.width) * 100;
             const y = ((event.clientY - rect.top) / rect.height) * 100;
-            workingEntry.primaryFocalX = round(clamp(x, 0, 100));
-            workingEntry.primaryFocalY = round(clamp(y, 0, 100));
+            workingEntry.desktopFocalX = round(clamp(x, 0, 100));
+            workingEntry.desktopFocalY = round(clamp(y, 0, 100));
+            workingEntry.primaryFocalX = workingEntry.desktopFocalX;
+            workingEntry.primaryFocalY = workingEntry.desktopFocalY;
             render();
           });
 
