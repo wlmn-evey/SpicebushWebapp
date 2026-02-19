@@ -1,5 +1,4 @@
 import type { APIRoute } from 'astro';
-import sharp from 'sharp';
 
 const ALLOWED_RELATIVE_PREFIXES = ['/images/', '/uploads/', '/api/media/blob/'];
 
@@ -65,6 +64,34 @@ const resolveSourceUrl = (rawSrc: string, requestUrl: URL): URL | null => {
 
 type OutputFormat = 'webp' | 'jpg' | 'png';
 
+type FetchedImage = { buffer: Buffer; contentType: string };
+type SharpFactory = (input: Buffer) => import('sharp').Sharp;
+
+let sharpFactoryPromise: Promise<SharpFactory | null> | null = null;
+
+const getSharpFactory = async (): Promise<SharpFactory | null> => {
+  if (!sharpFactoryPromise) {
+    sharpFactoryPromise = import('sharp')
+      .then((module) => module.default as SharpFactory)
+      .catch(() => null);
+  }
+  return sharpFactoryPromise;
+};
+
+const passthroughResponse = (
+  image: FetchedImage,
+  reason: 'sharp-unavailable' | 'transform-error'
+): Response => {
+  const headers = new Headers();
+  headers.set('Content-Type', image.contentType || 'image/webp');
+  headers.set('Cache-Control', 'public, max-age=3600');
+  headers.set('X-SB-Render-Fallback', reason);
+  return new Response(new Uint8Array(image.buffer), {
+    status: 200,
+    headers
+  });
+};
+
 const parseFormat = (value: string | null): OutputFormat => {
   const normalized = (value ?? '').trim().toLowerCase();
   if (normalized === 'jpg' || normalized === 'jpeg') return 'jpg';
@@ -78,7 +105,7 @@ const contentTypeForFormat = (format: OutputFormat): string => {
   return 'image/webp';
 };
 
-const fetchImage = async (sourceUrl: URL): Promise<{ buffer: Buffer; contentType: string } | null> => {
+const fetchImage = async (sourceUrl: URL): Promise<FetchedImage | null> => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
 
@@ -144,8 +171,13 @@ export const GET: APIRoute = async ({ request, url }) => {
     });
   }
 
+  const sharpFactory = await getSharpFactory();
+  if (!sharpFactory) {
+    return passthroughResponse(image, 'sharp-unavailable');
+  }
+
   try {
-    const probe = sharp(image.buffer).rotate();
+    const probe = sharpFactory(image.buffer).rotate();
     const metadata = await probe.metadata();
     const sourceWidth = metadata.width ?? 0;
     const sourceHeight = metadata.height ?? 0;
@@ -164,7 +196,7 @@ export const GET: APIRoute = async ({ request, url }) => {
     const cropXPx = clamp(Math.round((cropX / 100) * sourceWidth), 0, cropXMax);
     const cropYPx = clamp(Math.round((cropY / 100) * sourceHeight), 0, cropYMax);
 
-    let pipeline = sharp(image.buffer)
+    let pipeline = sharpFactory(image.buffer)
       .rotate()
       .extract({
         left: cropXPx,
@@ -209,9 +241,6 @@ export const GET: APIRoute = async ({ request, url }) => {
       headers
     });
   } catch {
-    return new Response(JSON.stringify({ error: 'Failed to transform image' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return passthroughResponse(image, 'transform-error');
   }
 };
