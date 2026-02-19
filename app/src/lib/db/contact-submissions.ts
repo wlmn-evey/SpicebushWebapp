@@ -102,6 +102,11 @@ export async function getContactSubmissions(
           message,
           child_age,
           tour_interest,
+          attribution,
+          session_id,
+          client_id,
+          landing_page,
+          referrer_url,
           submitted_at
         FROM contact_form_submissions
         ${whereSql}

@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { query } from '@lib/db/client';
+import { recordAnalyticsEvent } from '@lib/db/analytics';
 import { logServerError, logServerWarn } from '@lib/server-logger';
 
 type SubmissionSource = 'contact' | 'coming-soon';
@@ -19,6 +20,23 @@ const parseBoolean = (value: FormDataEntryValue | null): boolean => {
   if (typeof value !== 'string') return false;
   const normalized = value.trim().toLowerCase();
   return ['true', '1', 'yes', 'on'].includes(normalized);
+};
+
+const parseJsonRecord = (value: FormDataEntryValue | null): Record<string, unknown> => {
+  if (typeof value !== 'string') return {};
+  const trimmed = value.trim();
+  if (!trimmed) return {};
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+  } catch {
+    // Ignore invalid payloads from clients.
+  }
+
+  return {};
 };
 
 const detectSource = (formData: FormData): SubmissionSource => {
@@ -114,6 +132,13 @@ export const POST: APIRoute = async ({ request, redirect }) => {
     const requestedRedirect = parseRedirectPath(formData.get('redirectTo'));
     const successRedirect = requestedRedirect ?? successRedirectFor(source);
 
+    const attribution = parseJsonRecord(formData.get('analytics-attribution'));
+    const sessionId = parseString(formData.get('analytics-session-id')) || null;
+    const clientId = parseString(formData.get('analytics-client-id')) || null;
+    const landingPage = parseString(formData.get('analytics-landing-page')) || null;
+    const referrerFromForm = parseString(formData.get('analytics-referrer-url')) || null;
+    const referrerUrl = referrerFromForm || parseString(request.headers.get('referer')) || null;
+
     // Silently accept obvious bot submissions while skipping storage.
     if (honeypot.length > 0) {
       return redirect(successRedirect);
@@ -136,8 +161,21 @@ export const POST: APIRoute = async ({ request, redirect }) => {
     await query(
       `
         INSERT INTO contact_form_submissions
-        (name, email, phone, subject, message, child_age, tour_interest)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        (
+          name,
+          email,
+          phone,
+          subject,
+          message,
+          child_age,
+          tour_interest,
+          attribution,
+          session_id,
+          client_id,
+          landing_page,
+          referrer_url
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12)
       `,
       [
         name,
@@ -146,9 +184,34 @@ export const POST: APIRoute = async ({ request, redirect }) => {
         subject,
         message,
         childAge,
-        tourInterest
+        tourInterest,
+        JSON.stringify(attribution),
+        sessionId,
+        clientId,
+        landingPage,
+        referrerUrl
       ]
     );
+
+    await recordAnalyticsEvent({
+      eventName: source === 'coming-soon' ? 'coming_soon_submit' : 'contact_submit',
+      eventCategory: 'lead',
+      pagePath: landingPage,
+      pageUrl: null,
+      referrerUrl,
+      sessionId,
+      clientId,
+      properties: {
+        source,
+        subject,
+        tourInterest,
+        hasPhone: Boolean(phoneValue),
+        hasChildAge: Boolean(childAge),
+        utmSource: typeof attribution.utm_source === 'string' ? attribution.utm_source : undefined,
+        utmMedium: typeof attribution.utm_medium === 'string' ? attribution.utm_medium : undefined,
+        utmCampaign: typeof attribution.utm_campaign === 'string' ? attribution.utm_campaign : undefined
+      }
+    });
 
     return redirect(successRedirect);
   } catch (error) {

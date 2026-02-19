@@ -78,7 +78,31 @@ const getSettingString = (key: string, fallback: string): string =>
 const getSettingBoolean = (key: string, fallback: boolean): boolean =>
   coerceBoolean(settingsRecord[key], fallback);
 
+const getEnvValue = (key: string): string => {
+  const runtimeEnv = typeof process !== 'undefined' ? process.env : undefined;
+  const runtimeValue = runtimeEnv?.[key];
+  if (typeof runtimeValue === 'string' && runtimeValue.trim().length > 0) {
+    return runtimeValue.trim();
+  }
+
+  const importEnv = import.meta.env as Record<string, string | undefined>;
+  const importValue = importEnv[key];
+  if (typeof importValue === 'string' && importValue.trim().length > 0) {
+    return importValue.trim();
+  }
+
+  return '';
+};
+
 const siteName = getSettingString('site_name', 'Spicebush Montessori School');
+const gaMeasurementId = getSettingString('ga4_measurement_id', '')
+  || getEnvValue('PUBLIC_GA4_MEASUREMENT_ID')
+  || getEnvValue('GA4_MEASUREMENT_ID');
+const analyticsEnabled = getSettingBoolean('ga4_enabled', false)
+  || getSettingString('ga4_enabled', '').toLowerCase() === 'true'
+  || getEnvValue('PUBLIC_GA4_ENABLED').toLowerCase() === 'true'
+  || gaMeasurementId.length > 0;
+const shouldLoadGaScript = analyticsEnabled && gaMeasurementId.length > 0;
 const mainPhone = getSettingString('school_phone', getSettingString('contact_phone', DEFAULT_PHONE));
 const mainEmail = getSettingString('school_email', getSettingString('contact_email', DEFAULT_EMAIL));
 
@@ -549,6 +573,28 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    {shouldLoadGaScript && (
+      <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaMeasurementId)}`}></script>
+    )}
+    {analyticsEnabled && (
+      <script is:inline define:vars={{ gaMeasurementId, shouldLoadGaScript }}>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { window.dataLayer.push(arguments); }
+        window.gtag = gtag;
+        if (shouldLoadGaScript && gaMeasurementId) {
+          gtag('js', new Date());
+          gtag('config', gaMeasurementId, {
+            anonymize_ip: true,
+            send_page_view: true
+          });
+        }
+        window.sbAnalyticsConfig = {
+          enabled: true,
+          measurementId: gaMeasurementId || ''
+        };
+      </script>
+    )}
+    {analyticsEnabled && <script is:inline src="/js/analytics-tracker.js" defer></script>}
     <style>
     * {
       margin: 0;
@@ -1848,11 +1894,26 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
             Note: These tuition ranges do not include additional financial aid that may be available. 
             Please contact us to discuss your family's specific needs.
             </p>
-            <a href={applicationLink} target="_blank" rel="noopener noreferrer" class="secondary-button" style="margin-right: 1rem;">
+            <a
+              href={applicationLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="secondary-button"
+              style="margin-right: 1rem;"
+              data-analytics-event="application_click"
+              data-analytics-label="coming-soon-apply"
+              data-analytics-location="coming-soon-tuition"
+            >
             Apply for {applicationSchoolYear}
             </a>
             {tourSchedulingEnabled && (
-              <a href={tourExternalLink} class="primary-button">
+              <a
+                href={tourExternalLink}
+                class="primary-button"
+                data-analytics-event="tour_click"
+                data-analytics-label="coming-soon-tour"
+                data-analytics-location="coming-soon-tuition"
+              >
               Schedule a Tour First
               </a>
             )}
@@ -1947,10 +2008,22 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
           {tourSchedulingEnabled && (
             <div class="contact-form">
               <h3>Schedule a Tour or Ask a Question</h3>
-              <form name="coming-soon-contact" method="POST" action="/api/contact/submit" id="contact-form">
+              <form
+                name="coming-soon-contact"
+                method="POST"
+                action="/api/contact/submit"
+                id="contact-form"
+                data-analytics-form="coming-soon-contact"
+                data-analytics-event="coming_soon_submit"
+              >
                 <input type="hidden" name="form-name" value="coming-soon-contact">
                 <input type="hidden" name="source" value="coming-soon">
                 <input type="hidden" name="redirectTo" value="/coming-soon?submitted=1">
+                <input type="hidden" name="analytics-attribution" value="">
+                <input type="hidden" name="analytics-session-id" value="">
+                <input type="hidden" name="analytics-client-id" value="">
+                <input type="hidden" name="analytics-landing-page" value="">
+                <input type="hidden" name="analytics-referrer-url" value="">
                 <p style="display: none;">
                   <label>Don't fill this out: <input name="bot-field"></label>
                 </p>

@@ -13,6 +13,7 @@ import {
 } from './content';
 import { getRecentMessages, getCommunicationStats, getTemplates } from './communications';
 import { getContactSubmissions } from './contact-submissions';
+import { recordAnalyticsEvent, getAnalyticsOverview, getRecentAnalyticsEvents } from './analytics';
 
 export const db = {
   content: {
@@ -34,6 +35,11 @@ export const db = {
   },
   contact: {
     getContactSubmissions
+  },
+  analytics: {
+    recordAnalyticsEvent,
+    getAnalyticsOverview,
+    getRecentAnalyticsEvents
   },
   raw: {
     getPublicClient,
@@ -62,4 +68,5 @@ export {
 
 export { getRecentMessages, getCommunicationStats, getTemplates } from './communications';
 export { getContactSubmissions } from './contact-submissions';
+export { recordAnalyticsEvent, getAnalyticsOverview, getRecentAnalyticsEvents } from './analytics';
 export { getPublicClient, getServiceClient, withServiceClient } from './client';

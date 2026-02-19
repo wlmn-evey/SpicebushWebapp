@@ -55,7 +55,28 @@ export interface ContactFormSubmissionRow {
   message: string;
   child_age: string | null;
   tour_interest: boolean;
+  attribution: Record<string, unknown> | null;
+  session_id: string | null;
+  client_id: string | null;
+  landing_page: string | null;
+  referrer_url: string | null;
   submitted_at: string;
+}
+
+export interface AnalyticsEventRow {
+  id: string;
+  event_name: string;
+  event_category: string | null;
+  page_path: string | null;
+  page_url: string | null;
+  referrer_url: string | null;
+  session_id: string | null;
+  client_id: string | null;
+  event_value: number | null;
+  properties: Record<string, unknown> | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
 }
 
 export interface MediaRow {
@@ -83,6 +104,7 @@ export interface Database {
       communications_messages: DatabaseTable<CommunicationMessageRow>;
       communications_templates: DatabaseTable<CommunicationTemplateRow>;
       contact_form_submissions: DatabaseTable<ContactFormSubmissionRow>;
+      analytics_events: DatabaseTable<AnalyticsEventRow>;
       media: DatabaseTable<MediaRow>;
     };
     Views: Record<string, never>;

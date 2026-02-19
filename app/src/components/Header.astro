@@ -86,7 +86,15 @@ const weekdayHours = {
         <!-- Right side: Links -->
         <div class="flex items-center space-x-4 text-sm">
           <a href="/resources/faq" class="text-earth-brown hover:text-forest-canopy transition-colors hidden sm:inline">FAQ</a>
-          <a href="/donate" class="text-earth-brown hover:text-forest-canopy transition-colors hidden sm:inline">Donate</a>
+          <a
+            href="/donate"
+            class="text-earth-brown hover:text-forest-canopy transition-colors hidden sm:inline"
+            data-analytics-event="donate_click"
+            data-analytics-label="header-donate-top"
+            data-analytics-location="header-topbar"
+          >
+            Donate
+          </a>
         </div>
       </div>
     </div>
@@ -123,6 +131,9 @@ const weekdayHours = {
             href="/admissions/tuition-calculator" 
             class="bg-white hover:bg-stone-beige text-forest-canopy border-2 border-forest-canopy px-4 xl:px-5 py-2 xl:py-2.5 rounded-lg font-semibold text-sm xl:text-base transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 whitespace-nowrap"
             aria-label="Calculate tuition"
+            data-analytics-event="tuition_calculator_click"
+            data-analytics-label="header-calc-tuition"
+            data-analytics-location="header-desktop"
           >
             Calculate Tuition
           </a>
@@ -130,6 +141,9 @@ const weekdayHours = {
             href={tourLink}
             class="bg-sunlight-gold hover:bg-orange-600 text-white px-4 xl:px-5 py-2 xl:py-2.5 rounded-lg font-semibold text-sm xl:text-base transition-colors focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 whitespace-nowrap"
             aria-label="Schedule a tour"
+            data-analytics-event="tour_click"
+            data-analytics-label="header-schedule-tour"
+            data-analytics-location="header-desktop"
           >
             Schedule Tour
           </a>
@@ -156,7 +170,16 @@ const weekdayHours = {
         <a href="/admissions" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Admissions</a>
         <a href="/contact" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Contact</a>
         <a href="/resources/faq" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">FAQ</a>
-        <a href="/donate" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Donate</a>
+        <a
+          href="/donate"
+          class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2"
+          role="menuitem"
+          data-analytics-event="donate_click"
+          data-analytics-label="header-donate-mobile-link"
+          data-analytics-location="header-mobile-menu"
+        >
+          Donate
+        </a>
         
         
         <!-- Mobile CTA Buttons -->
@@ -164,12 +187,18 @@ const weekdayHours = {
           <a 
             href="/admissions/tuition-calculator" 
             class="w-full bg-white hover:bg-stone-beige text-forest-canopy border-2 border-forest-canopy px-6 py-3 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 text-center block text-base"
+            data-analytics-event="tuition_calculator_click"
+            data-analytics-label="header-calc-tuition-mobile"
+            data-analytics-location="header-mobile-cta"
           >
             Calculate Tuition
           </a>
           <a 
             href={tourLink}
             class="w-full bg-sunlight-gold hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 text-center block text-base tracking-wide"
+            data-analytics-event="tour_click"
+            data-analytics-label="header-schedule-tour-mobile"
+            data-analytics-location="header-mobile-cta"
           >
             Schedule Tour
           </a>

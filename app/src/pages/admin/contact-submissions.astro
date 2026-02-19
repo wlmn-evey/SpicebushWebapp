@@ -39,6 +39,38 @@ const endIndex = result.total === 0 ? 0 : Math.min(result.total, currentPage * r
 const hasFilters = search.length > 0 || tourFilter !== 'all';
 const activeFilterCount = [search.length > 0, tourFilter !== 'all'].filter(Boolean).length;
 const tourRequestsOnPage = result.items.filter((submission) => submission.tour_interest).length;
+const asRecord = (value: unknown): Record<string, unknown> => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+};
+
+const getAttributionSummary = (submission: (typeof result.items)[number]): string => {
+  const attribution = asRecord(submission.attribution);
+  const source = typeof attribution.utm_source === 'string' ? attribution.utm_source.trim() : '';
+  const medium = typeof attribution.utm_medium === 'string' ? attribution.utm_medium.trim() : '';
+  const campaign = typeof attribution.utm_campaign === 'string' ? attribution.utm_campaign.trim() : '';
+  const gclid = typeof attribution.gclid === 'string' ? attribution.gclid.trim() : '';
+  const gbraid = typeof attribution.gbraid === 'string' ? attribution.gbraid.trim() : '';
+  const wbraid = typeof attribution.wbraid === 'string' ? attribution.wbraid.trim() : '';
+
+  const sourceMedium = [source || 'direct', medium || 'none'].join(' / ');
+  const campaignLabel = campaign || '(no campaign)';
+  const clickIdLabel = gclid || gbraid || wbraid;
+
+  return clickIdLabel
+    ? `${sourceMedium} • ${campaignLabel} • click-id`
+    : `${sourceMedium} • ${campaignLabel}`;
+};
+
+const attributedLeadsOnPage = result.items.filter((submission) => {
+  const attribution = asRecord(submission.attribution);
+  return ['utm_source', 'utm_campaign', 'gclid', 'gbraid', 'wbraid'].some((key) => {
+    const value = attribution[key];
+    return typeof value === 'string' && value.trim().length > 0;
+  });
+}).length;
 
 const submittedDateFormatter = new Intl.DateTimeFormat('en-US', {
   dateStyle: 'medium',
@@ -77,7 +109,7 @@ const clearFiltersHref = '/admin/contact-submissions';
       <p class="mb-4 text-sm text-earth-brown/80">
         Review inquiries from the website contact form. Use filters below to quickly find a family message.
       </p>
-      <div class="grid gap-3 md:grid-cols-3">
+      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
           <p class="text-xs uppercase tracking-wide text-earth-brown/70">Total Submissions</p>
           <p class="text-2xl font-semibold text-earth-brown">{result.total}</p>
@@ -90,6 +122,10 @@ const clearFiltersHref = '/admin/contact-submissions';
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
           <p class="text-xs uppercase tracking-wide text-earth-brown/70">Tour Requests (on page)</p>
           <p class="text-2xl font-semibold text-earth-brown">{tourRequestsOnPage}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Attributed Leads (on page)</p>
+          <p class="text-2xl font-semibold text-earth-brown">{attributedLeadsOnPage}</p>
         </div>
       </div>
     </section>
@@ -149,6 +185,7 @@ const clearFiltersHref = '/admin/contact-submissions';
                   <th class="border border-gray-200 px-3 py-2">Name & Child</th>
                   <th class="border border-gray-200 px-3 py-2">Contact</th>
                   <th class="border border-gray-200 px-3 py-2">Subject & Message</th>
+                  <th class="border border-gray-200 px-3 py-2">Attribution</th>
                   <th class="border border-gray-200 px-3 py-2">Tour</th>
                 </tr>
               </thead>
@@ -180,6 +217,12 @@ const clearFiltersHref = '/admin/contact-submissions';
                       <td class="border border-gray-200 px-3 py-3">
                         <p class="font-semibold text-earth-brown">{submission.subject || 'No subject'}</p>
                         <p class="mt-1 whitespace-pre-wrap text-xs text-earth-brown/80">{truncate(submission.message || '', 220)}</p>
+                      </td>
+                      <td class="border border-gray-200 px-3 py-3 text-xs text-earth-brown/80">
+                        {getAttributionSummary(submission)}
+                        {submission.landing_page && (
+                          <p class="mt-1 text-earth-brown/60">Landing: {submission.landing_page}</p>
+                        )}
                       </td>
                       <td class="border border-gray-200 px-3 py-3">
                         {submission.tour_interest ? (
@@ -234,6 +277,7 @@ const clearFiltersHref = '/admin/contact-submissions';
                       </p>
                     ) : null}
                     {submission.child_age ? <p class="mt-1 text-earth-brown/70">Child age: {submission.child_age}</p> : null}
+                    <p class="mt-1 text-earth-brown/70">Attribution: {getAttributionSummary(submission)}</p>
                   </div>
                 </article>
               );

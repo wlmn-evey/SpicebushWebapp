@@ -1,0 +1,283 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+import { db } from '@lib/db';
+import { getAnalyticsConfig } from '@lib/analytics-config';
+
+const rawWindow = Astro.url.searchParams.get('window');
+const parsedWindow = rawWindow ? Number.parseInt(rawWindow, 10) : 30;
+const windowDays = [7, 30, 90].includes(parsedWindow) ? parsedWindow : 30;
+
+const savedKey = Astro.url.searchParams.get('saved');
+const errorMessage = Astro.url.searchParams.get('error');
+const redirectBase = `/admin/seo?window=${windowDays}`;
+
+const analyticsConfig = await getAnalyticsConfig();
+const [overview, recentEvents, ga4EnabledSetting, ga4MeasurementSetting, ga4PropertySetting] = await Promise.all([
+  db.analytics.getAnalyticsOverview(windowDays),
+  db.analytics.getRecentAnalyticsEvents(24),
+  db.content.getSetting('ga4_enabled'),
+  db.content.getSetting('ga4_measurement_id'),
+  db.content.getSetting('ga4_property_id')
+]);
+
+const parseBoolean = (value: unknown): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    return ['true', '1', 'yes', 'on'].includes(value.trim().toLowerCase());
+  }
+  return false;
+};
+
+const toStringValue = (value: unknown): string => {
+  if (typeof value === 'string') return value.trim();
+  return '';
+};
+
+const formatNumber = (value: number): string => value.toLocaleString('en-US');
+const formatDate = (value: string): string => {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(parsed);
+};
+
+const configuredGaEnabled = parseBoolean(ga4EnabledSetting);
+const configuredGaMeasurementId = toStringValue(ga4MeasurementSetting);
+const configuredGaPropertyId = toStringValue(ga4PropertySetting);
+
+const isTrackingLive = analyticsConfig.enabled;
+const hasMeasurementId = analyticsConfig.measurementId.length > 0;
+---
+
+<AdminLayout title="SEO & Analytics">
+  {savedKey && (
+    <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+      Saved setting: <strong>{savedKey}</strong>
+    </p>
+  )}
+
+  {errorMessage && (
+    <p class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+      {errorMessage}
+    </p>
+  )}
+
+  <div class="space-y-6">
+    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <h2 class="text-lg font-semibold mb-2">Tracking Status</h2>
+      <p class="text-sm text-earth-brown/80 mb-4">
+        This dashboard combines on-site event tracking with lead attribution from contact submissions.
+      </p>
+      <div class="grid gap-3 md:grid-cols-3">
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Tracking Pipeline</p>
+          <p class={`text-lg font-semibold ${isTrackingLive ? 'text-green-700' : 'text-amber-700'}`}>
+            {isTrackingLive ? 'Enabled' : 'Disabled'}
+          </p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">GA4 Measurement ID</p>
+          <p class={`text-lg font-semibold ${hasMeasurementId ? 'text-green-700' : 'text-amber-700'}`}>
+            {hasMeasurementId ? analyticsConfig.measurementId : 'Not configured'}
+          </p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">GA4 Property ID</p>
+          <p class="text-lg font-semibold text-earth-brown">
+            {analyticsConfig.propertyId || '(optional for later API reporting)'}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <h2 class="text-lg font-semibold mb-3">Google Analytics Configuration</h2>
+      <p class="text-sm text-earth-brown/80 mb-4">
+        Set your GA4 values here. The measurement ID should look like <code>G-XXXXXXXXXX</code>.
+      </p>
+
+      <div class="grid gap-4 xl:grid-cols-3">
+        <form method="post" action="/api/admin/settings" class="space-y-2 rounded-lg border border-gray-200 p-3">
+          <input type="hidden" name="key" value="ga4_enabled" />
+          <input type="hidden" name="redirectTo" value={`${redirectBase}&saved=ga4_enabled`} />
+          <label class="block text-sm font-medium">
+            GA4 Tracking Enabled
+            <select name="value" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+              <option value="true" selected={configuredGaEnabled}>true</option>
+              <option value="false" selected={!configuredGaEnabled}>false</option>
+            </select>
+          </label>
+          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+            Save Toggle
+          </button>
+        </form>
+
+        <form method="post" action="/api/admin/settings" class="space-y-2 rounded-lg border border-gray-200 p-3">
+          <input type="hidden" name="key" value="ga4_measurement_id" />
+          <input type="hidden" name="redirectTo" value={`${redirectBase}&saved=ga4_measurement_id`} />
+          <label class="block text-sm font-medium">
+            GA4 Measurement ID
+            <input
+              type="text"
+              name="value"
+              value={configuredGaMeasurementId}
+              placeholder="G-XXXXXXXXXX"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+            Save Measurement ID
+          </button>
+        </form>
+
+        <form method="post" action="/api/admin/settings" class="space-y-2 rounded-lg border border-gray-200 p-3">
+          <input type="hidden" name="key" value="ga4_property_id" />
+          <input type="hidden" name="redirectTo" value={`${redirectBase}&saved=ga4_property_id`} />
+          <label class="block text-sm font-medium">
+            GA4 Property ID (optional)
+            <input
+              type="text"
+              name="value"
+              value={configuredGaPropertyId}
+              placeholder="123456789"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+            Save Property ID
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-lg font-semibold">Performance Snapshot</h2>
+        <div class="flex items-center gap-2 text-sm">
+          {[7, 30, 90].map((days) => (
+            <a
+              href={`/admin/seo?window=${days}`}
+              class={`rounded-lg border px-3 py-1.5 ${windowDays === days ? 'border-forest-canopy bg-forest-canopy text-white' : 'border-gray-300 text-earth-brown hover:bg-gray-50'}`}
+            >
+              Last {days} days
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Tracked Events</p>
+          <p class="text-2xl font-semibold text-earth-brown">{formatNumber(overview.totals.trackedEvents)}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Page Views</p>
+          <p class="text-2xl font-semibold text-earth-brown">{formatNumber(overview.totals.pageViews)}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">CTA Clicks</p>
+          <p class="text-2xl font-semibold text-earth-brown">{formatNumber(overview.totals.outboundClicks)}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Tracked Form Submits</p>
+          <p class="text-2xl font-semibold text-earth-brown">{formatNumber(overview.totals.formSubmissions)}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Leads Captured</p>
+          <p class="text-2xl font-semibold text-earth-brown">{formatNumber(overview.totals.leads)}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Leads With Attribution</p>
+          <p class="text-2xl font-semibold text-earth-brown">{formatNumber(overview.totals.attributedLeads)}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid gap-6 xl:grid-cols-3">
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="mb-3 text-base font-semibold">Top Landing Pages</h3>
+        {overview.topPages.length === 0 ? (
+          <p class="text-sm text-earth-brown/70">No page-view data yet.</p>
+        ) : (
+          <ul class="space-y-2 text-sm">
+            {overview.topPages.map((entry) => (
+              <li class="flex items-center justify-between gap-2 rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
+                <span class="truncate">{entry.pagePath}</span>
+                <span class="font-semibold">{formatNumber(entry.views)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="mb-3 text-base font-semibold">Top Campaigns (Lead Attribution)</h3>
+        {overview.topCampaigns.length === 0 ? (
+          <p class="text-sm text-earth-brown/70">No campaign-attributed leads yet.</p>
+        ) : (
+          <ul class="space-y-2 text-sm">
+            {overview.topCampaigns.map((entry) => (
+              <li class="flex items-center justify-between gap-2 rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
+                <span class="truncate">{entry.campaign}</span>
+                <span class="font-semibold">{formatNumber(entry.leads)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="mb-3 text-base font-semibold">Most Common Events</h3>
+        {overview.topEvents.length === 0 ? (
+          <p class="text-sm text-earth-brown/70">No tracked events yet.</p>
+        ) : (
+          <ul class="space-y-2 text-sm">
+            {overview.topEvents.map((entry) => (
+              <li class="flex items-center justify-between gap-2 rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
+                <span class="truncate">{entry.eventName}</span>
+                <span class="font-semibold">{formatNumber(entry.count)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <h2 class="mb-3 text-lg font-semibold">Recent Tracking Events</h2>
+      {recentEvents.length === 0 ? (
+        <p class="text-sm text-earth-brown/70">No recent tracking events found.</p>
+      ) : (
+        <div class="overflow-x-auto">
+          <table class="min-w-full border-collapse text-sm">
+            <thead>
+              <tr class="bg-gray-50 text-left text-xs uppercase tracking-wide text-earth-brown/70">
+                <th class="border border-gray-200 px-3 py-2">Time</th>
+                <th class="border border-gray-200 px-3 py-2">Event</th>
+                <th class="border border-gray-200 px-3 py-2">Path</th>
+                <th class="border border-gray-200 px-3 py-2">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentEvents.map((event) => {
+                const label = typeof event.properties.label === 'string' ? event.properties.label : '';
+                const href = typeof event.properties.href === 'string' ? event.properties.href : '';
+
+                return (
+                  <tr>
+                    <td class="border border-gray-200 px-3 py-2 text-xs text-earth-brown/80">{formatDate(event.createdAt)}</td>
+                    <td class="border border-gray-200 px-3 py-2 font-medium">{event.eventName}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-earth-brown/80">{event.pagePath || '(unknown)'}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-earth-brown/80">
+                      {label || href || '—'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  </div>
+</AdminLayout>

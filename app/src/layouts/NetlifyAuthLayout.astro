@@ -4,6 +4,7 @@ import MobileBottomNav from '../components/MobileBottomNav.astro';
 import AdminPreviewBar from '../components/AdminPreviewBar.astro';
 import ExternalLinkTargetBehavior from '../components/ExternalLinkTargetBehavior.astro';
 import { CRITICAL_IMAGES, generatePreloadLinks } from '../lib/image-preloader';
+import { getAnalyticsConfig } from '@lib/analytics-config';
 
 export interface Props {
   title: string;
@@ -20,6 +21,10 @@ const {
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const analyticsConfig = await getAnalyticsConfig();
+const analyticsEnabled = analyticsConfig.enabled;
+const gaMeasurementId = analyticsConfig.measurementId;
+const shouldLoadGaScript = analyticsEnabled && gaMeasurementId.length > 0;
 
 // Generate preload links for critical images on homepage
 const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
@@ -61,6 +66,29 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
     
     <!-- Preload Critical Images (Homepage only) -->
     <Fragment set:html={preloadLinks} />
+
+    {shouldLoadGaScript && (
+      <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaMeasurementId)}`}></script>
+    )}
+    {analyticsEnabled && (
+      <script is:inline define:vars={{ gaMeasurementId, shouldLoadGaScript }}>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { window.dataLayer.push(arguments); }
+        window.gtag = gtag;
+        if (shouldLoadGaScript && gaMeasurementId) {
+          gtag('js', new Date());
+          gtag('config', gaMeasurementId, {
+            anonymize_ip: true,
+            send_page_view: true
+          });
+        }
+        window.sbAnalyticsConfig = {
+          enabled: true,
+          measurementId: gaMeasurementId || ''
+        };
+      </script>
+    )}
+    {analyticsEnabled && <script is:inline src="/js/analytics-tracker.js" defer></script>}
     
   </head>
   <body>

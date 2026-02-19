@@ -72,6 +72,9 @@ const tourLink = await getTourLink();
                     target="_blank"
                     rel="noopener noreferrer"
                     class="inline-flex items-center text-forest-canopy hover:text-moss-green font-semibold"
+                    data-analytics-event="application_click"
+                    data-analytics-label="admissions-step-apply"
+                    data-analytics-location="admissions-steps"
                   >
                     Start Application
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -98,6 +101,9 @@ const tourLink = await getTourLink();
                   <a 
                     href={tourLink}
                     class="inline-flex items-center text-moss-green hover:text-forest-canopy font-semibold"
+                    data-analytics-event="tour_click"
+                    data-analytics-label="admissions-step-tour"
+                    data-analytics-location="admissions-steps"
                   >
                     Schedule Tour
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -186,6 +192,9 @@ const tourLink = await getTourLink();
               rel="noopener noreferrer"
               class="inline-flex items-center bg-sunlight-gold hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
               onclick="return openApplicationInNewTab(this)"
+              data-analytics-event="application_click"
+              data-analytics-label="admissions-hero-apply"
+              data-analytics-location="admissions-cta"
             >
               <FileText className="w-6 h-6 mr-3" />
               Start Application
@@ -332,7 +341,13 @@ const tourLink = await getTourLink();
             <div class="mt-8 pt-6 border-t border-white/20">
               <p class="text-green-200 text-sm">
                 Want to visit us first? 
-                <a href={tourLink} class="text-white hover:text-sunlight-gold font-medium underline">
+                <a
+                  href={tourLink}
+                  class="text-white hover:text-sunlight-gold font-medium underline"
+                  data-analytics-event="tour_click"
+                  data-analytics-label="admissions-footer-tour"
+                  data-analytics-location="admissions-cta"
+                >
                   Schedule a tour
                 </a> 
                 to see our community in action.
