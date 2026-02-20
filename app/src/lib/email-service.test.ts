@@ -1,7 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { queryRows } from '@lib/db/client';
 import { EmailService } from './email-service';
 
+vi.mock('@lib/db/client', () => ({
+  queryRows: vi.fn()
+}));
+
 const ORIGINAL_ENV = { ...process.env };
+const queryRowsMock = vi.mocked(queryRows);
 
 const setBaseEnv = () => {
   process.env = {
@@ -23,6 +29,7 @@ describe('EmailService', () => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     setBaseEnv();
+    queryRowsMock.mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -104,24 +111,36 @@ describe('EmailService', () => {
     expect(secondUrl).toBe('https://eu1.unione.io/en/transactional/api/v1/email/send.json');
   });
 
-  it('returns a clear error when sender is missing', async () => {
+  it('uses school_email from settings when EMAIL_FROM is not set', async () => {
     process.env.SENDGRID_API_KEY = 'SG.test-key';
     delete process.env.EMAIL_FROM;
+    queryRowsMock.mockResolvedValue([
+      { key: 'school_email', value: 'information@spicebushmontessori.org' }
+    ]);
 
-    const fetchMock = vi.fn();
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(null, {
+        status: 202,
+        headers: { 'x-message-id': 'sg-msg-db-sender' }
+      })
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     const service = new EmailService();
     const result = await service.send({
       to: 'family@example.com',
-      subject: 'Missing sender test',
+      subject: 'DB sender test',
       text: 'Body'
     });
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
     expect(result.provider).toBe('SendGrid');
-    expect(result.error).toContain('Sender email is not configured');
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(queryRowsMock).toHaveBeenCalledTimes(1);
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const payload = JSON.parse(String(request.body)) as { from?: { email?: string } };
+    expect(payload.from?.email).toBe('information@spicebushmontessori.org');
   });
 
   it('normalizes preferred provider aliases', () => {

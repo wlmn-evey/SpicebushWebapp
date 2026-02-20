@@ -23,12 +23,47 @@ const boolFrom = (value: unknown): boolean => {
   return false;
 };
 
+const boolFromSetting = (value: unknown, fallback: boolean): boolean => {
+  if (value === undefined || value === null || value === '') return fallback;
+  return boolFrom(value);
+};
+
+const stringifyEmailList = (value: unknown, fallback = ''): string => {
+  if (Array.isArray(value)) {
+    const normalized = value
+      .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
+      .filter((entry) => entry.length > 0);
+    return normalized.join(', ');
+  }
+  const normalized = stringifyValue(value);
+  return normalized || fallback;
+};
+
 const comingSoonEnabled = boolFrom(settings.coming_soon_enabled);
 const comingSoonMessage = stringifyValue(settings.coming_soon_message);
 const comingSoonLaunchDate = stringifyValue(settings.coming_soon_launch_date);
 const donationLink = stringifyValue(settings.donation_external_link);
 const enrollmentLink = stringifyValue(settings.enrollment_external_link);
 const tourExternalLink = stringifyValue(settings.tour_external_link);
+const schoolEmail = stringifyValue(
+  settings.school_email || settings.main_email || settings.contact_email || 'information@spicebushmontessori.org'
+);
+const contactNotifyEmails = stringifyEmailList(settings.contact_form_notify_emails, schoolEmail);
+const comingSoonNotifyEmails = stringifyEmailList(
+  settings.coming_soon_form_notify_emails,
+  schoolEmail
+);
+const contactConfirmSubmitter = boolFromSetting(settings.contact_form_confirm_submitter, true);
+const comingSoonConfirmSubmitter = boolFromSetting(settings.coming_soon_form_confirm_submitter, true);
+const contactNotifySubject =
+  stringifyValue(settings.contact_form_notify_subject) || 'New Contact Form Inquiry - {{name}}';
+const comingSoonNotifySubject =
+  stringifyValue(settings.coming_soon_form_notify_subject) || 'New Coming Soon Inquiry - {{name}}';
+const contactConfirmSubject =
+  stringifyValue(settings.contact_form_confirm_subject) || 'Thanks for contacting Spicebush Montessori';
+const comingSoonConfirmSubject =
+  stringifyValue(settings.coming_soon_form_confirm_subject) ||
+  'Thanks for your interest in Spicebush Montessori';
 const parseCampModeOverride = (value: unknown): 'auto' | 'on' | 'off' | 'prep' => {
   if (typeof value !== 'string') return 'off';
   const normalized = value.trim().toLowerCase();
@@ -314,6 +349,121 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
             class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
           >
             Save Tour Link
+          </button>
+        </form>
+
+        <form
+          method="post"
+          action="/api/admin/settings"
+          class="space-y-3 rounded-lg border border-gray-200 p-4"
+        >
+          <input type="hidden" name="redirectTo" value="/admin/settings?saved=email_routing" />
+          <h3 class="text-base font-semibold text-earth-brown">Email Routing And Templates</h3>
+          <p class="text-xs text-earth-brown/80">
+            Configure who gets notified for each form and what subject lines families/admins see.
+            Use comma-separated emails for recipient lists.
+          </p>
+          <div class="grid gap-3 md:grid-cols-2">
+            <label class="block text-sm font-medium">
+              School Email (sender fallback)
+              <input
+                type="email"
+                name="school_email"
+                value={schoolEmail}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+
+            <label class="block text-sm font-medium">
+              Contact Form Notification Recipients
+              <input
+                type="text"
+                name="contact_form_notify_emails"
+                value={contactNotifyEmails}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+
+            <label class="block text-sm font-medium">
+              Coming Soon Notification Recipients
+              <input
+                type="text"
+                name="coming_soon_form_notify_emails"
+                value={comingSoonNotifyEmails}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+
+            <label class="block text-sm font-medium">
+              Contact Notification Subject
+              <input
+                type="text"
+                name="contact_form_notify_subject"
+                value={contactNotifySubject}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+
+            <label class="block text-sm font-medium">
+              Coming Soon Notification Subject
+              <input
+                type="text"
+                name="coming_soon_form_notify_subject"
+                value={comingSoonNotifySubject}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+
+            <label class="block text-sm font-medium">
+              Send Contact Confirmation To Families
+              <select
+                name="contact_form_confirm_submitter"
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              >
+                <option value="true" selected={contactConfirmSubmitter}>true</option>
+                <option value="false" selected={!contactConfirmSubmitter}>false</option>
+              </select>
+            </label>
+
+            <label class="block text-sm font-medium">
+              Send Coming Soon Confirmation To Families
+              <select
+                name="coming_soon_form_confirm_submitter"
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              >
+                <option value="true" selected={comingSoonConfirmSubmitter}>true</option>
+                <option value="false" selected={!comingSoonConfirmSubmitter}>false</option>
+              </select>
+            </label>
+
+            <label class="block text-sm font-medium">
+              Contact Confirmation Subject
+              <input
+                type="text"
+                name="contact_form_confirm_subject"
+                value={contactConfirmSubject}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+
+            <label class="block text-sm font-medium">
+              Coming Soon Confirmation Subject
+              <input
+                type="text"
+                name="coming_soon_form_confirm_subject"
+                value={comingSoonConfirmSubject}
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+          </div>
+          <p class="text-xs text-earth-brown/75">
+            Subject placeholders supported: <code>{'{{name}}'}</code>, <code>{'{{subject}}'}</code>, <code>{'{{source}}'}</code>
+          </p>
+          <button
+            type="submit"
+            class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+          >
+            Save Email Routing
           </button>
         </form>
       </div>

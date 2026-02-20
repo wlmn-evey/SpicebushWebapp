@@ -27,6 +27,7 @@ const rl = readline.createInterface({
 const question = (query) => new Promise((resolve) => rl.question(query, resolve));
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DEFAULT_SENDER_EMAIL = 'information@spicebushmontessori.org';
 
 const normalizeProvider = (value) => {
   const normalized = String(value || 'sendgrid').trim().toLowerCase();
@@ -37,7 +38,11 @@ const normalizeProvider = (value) => {
 const preferredProvider = normalizeProvider(process.env.EMAIL_SERVICE || 'sendgrid');
 
 const resolveFromEmail = () => {
-  const value = (process.env.EMAIL_FROM || process.env.SENDGRID_FROM_EMAIL || '').trim();
+  const value = (
+    process.env.EMAIL_FROM ||
+    process.env.SENDGRID_FROM_EMAIL ||
+    DEFAULT_SENDER_EMAIL
+  ).trim();
   return EMAIL_REGEX.test(value) ? value : '';
 };
 
@@ -195,7 +200,7 @@ async function main() {
   const to = resolveToEmail();
 
   if (!from) {
-    console.log('❌ EMAIL_FROM is missing or invalid.');
+    console.log('❌ Sender email is invalid.');
     console.log('Set EMAIL_FROM to a verified sender address.');
     process.exit(1);
   }

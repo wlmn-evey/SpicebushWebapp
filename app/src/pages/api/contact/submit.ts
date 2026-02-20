@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { query } from '@lib/db/client';
 import { recordAnalyticsEvent } from '@lib/db/analytics';
+import { sendContactSubmissionEmails } from '@lib/contact-email';
 import { logServerError, logServerWarn } from '@lib/server-logger';
 
 type SubmissionSource = 'contact' | 'coming-soon';
@@ -250,8 +251,49 @@ export const POST: APIRoute = async ({ request, redirect }) => {
       }
     });
 
+    let emailResult:
+      | {
+          notificationSent: boolean;
+          confirmationSent: boolean;
+          notifiedRecipients: string[];
+          errors: string[];
+        }
+      | null = null;
+
+    try {
+      emailResult = await sendContactSubmissionEmails({
+        source,
+        name,
+        email,
+        phone: phoneValue || null,
+        subject,
+        message,
+        childAge,
+        tourInterest
+      });
+
+      if (emailResult.errors.length > 0) {
+        logServerWarn('Contact submission email delivery had partial failures', {
+          route: '/api/contact/submit',
+          source,
+          notifiedRecipients: emailResult.notifiedRecipients,
+          errors: emailResult.errors
+        });
+      }
+    } catch (emailError) {
+      logServerWarn('Contact submission emails failed unexpectedly', {
+        route: '/api/contact/submit',
+        source,
+        error: emailError instanceof Error ? emailError.message : String(emailError)
+      });
+    }
+
     if (wantsJson) {
-      return jsonResponse({ success: true });
+      return jsonResponse({
+        success: true,
+        notificationSent: emailResult?.notificationSent ?? false,
+        confirmationSent: emailResult?.confirmationSent ?? false
+      });
     }
 
     return redirect(successRedirect);

@@ -219,7 +219,8 @@ ADMIN_DOMAINS=@spicebushmontessori.org
 # Email Service (SendGrid standard)
 EMAIL_SERVICE=sendgrid
 SENDGRID_API_KEY=SG.your-sendgrid-key
-# EMAIL_FROM=noreply@spicebushmontessori.org
+# Optional override (runtime can use settings.school_email)
+# EMAIL_FROM=information@spicebushmontessori.org
 # EMAIL_FROM_NAME=Spicebush Montessori School
 
 # Monitoring (optional)

@@ -80,7 +80,7 @@ if (!['sendgrid', 'unione'].includes(emailService)) {
 }
 
 if (!process.env.EMAIL_FROM) {
-  console.log('⚠️  EMAIL_FROM is not set; sending may fail if a route does not pass a from address');
+  console.log('ℹ️  EMAIL_FROM not set; runtime will use Settings.school_email (or default fallback sender)');
 }
 
 if (authProvider === 'auth0') {
@@ -103,10 +103,6 @@ if (authProvider === 'netlify-magic-link') {
     hasErrors = true;
   }
 
-  if (!process.env.EMAIL_FROM) {
-    console.log('❌ EMAIL_FROM is required for magic-link delivery');
-    hasErrors = true;
-  }
 }
 
 // Final result

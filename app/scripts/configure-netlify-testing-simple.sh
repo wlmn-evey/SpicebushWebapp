@@ -16,7 +16,7 @@ echo "Optional variables:"
 echo "- ADMIN_EMAILS (comma-separated explicit allow-list)"
 echo "- ADMIN_DOMAINS (comma-separated allow-list domains)"
 echo "- For auth0: AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET"
-echo "- Email service (SendGrid standard): EMAIL_SERVICE, SENDGRID_API_KEY, EMAIL_FROM"
+echo "- Email service (SendGrid standard): EMAIL_SERVICE, SENDGRID_API_KEY"
 echo ""
 
 read -p "Do you have the required values ready? (y/n) " -n 1 -r
@@ -72,8 +72,6 @@ else
         [ -n "$UNIONE_API_KEY" ] && npx netlify env:set UNIONE_API_KEY "$UNIONE_API_KEY" || echo "Skipped"
     fi
 
-    read -p "EMAIL_FROM (recommended): " EMAIL_FROM
-    [ -n "$EMAIL_FROM" ] && npx netlify env:set EMAIL_FROM "$EMAIL_FROM" || echo "Skipped"
 fi
 
 echo ""

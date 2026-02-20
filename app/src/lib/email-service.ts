@@ -5,6 +5,7 @@
  * It supports multiple email services and handles provider-specific implementation details.
  */
 import { logServerWarn } from '@lib/server-logger';
+import { queryRows } from '@lib/db/client';
 
 // Email message interface
 export interface EmailMessage {
@@ -38,6 +39,16 @@ export interface EmailResult {
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DEFAULT_SENDER_EMAIL = 'information@spicebushmontessori.org';
+const DB_SENDER_SETTING_KEYS = ['school_email', 'main_email', 'contact_email'] as const;
+const DB_SENDER_CACHE_MS = 5 * 60 * 1000;
+
+type SenderCacheState = {
+  value: string | null;
+  expiresAt: number;
+};
+
+let cachedDbSenderEmail: SenderCacheState | null = null;
 
 const normalizeProviderKey = (value: string | null | undefined): string => {
   const normalized = String(value || '')
@@ -54,14 +65,85 @@ const parseRecipients = (to: string | string[]): string[] => {
     .filter(entry => entry.length > 0 && EMAIL_REGEX.test(entry));
 };
 
-const resolveSender = (message: EmailMessage): { email: string; name: string } | null => {
-  const email = (message.from || process.env.EMAIL_FROM || process.env.SENDGRID_FROM_EMAIL || '')
-    .trim();
-  if (!EMAIL_REGEX.test(email)) return null;
+const parseSettingEmail = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return EMAIL_REGEX.test(trimmed) ? trimmed : null;
+};
+
+const getDbSenderEmail = async (): Promise<string | null> => {
+  const now = Date.now();
+  if (cachedDbSenderEmail && cachedDbSenderEmail.expiresAt > now) {
+    return cachedDbSenderEmail.value;
+  }
+
+  try {
+    const rows = await queryRows<{ key: string; value: unknown }>(
+      `
+        SELECT key, value
+        FROM settings
+        WHERE key = ANY($1::text[])
+      `,
+      [DB_SENDER_SETTING_KEYS]
+    );
+
+    const rowByKey = new Map(rows.map((row) => [row.key, row.value]));
+    for (const key of DB_SENDER_SETTING_KEYS) {
+      const email = parseSettingEmail(rowByKey.get(key));
+      if (email) {
+        cachedDbSenderEmail = {
+          value: email,
+          expiresAt: now + DB_SENDER_CACHE_MS
+        };
+        return email;
+      }
+    }
+  } catch (error) {
+    logServerWarn('Unable to resolve sender email from settings table, using fallback sender', {
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+
+  cachedDbSenderEmail = {
+    value: null,
+    expiresAt: now + 60_000
+  };
+  return null;
+};
+
+const resolveSender = async (message: EmailMessage): Promise<{ email: string; name: string } | null> => {
+  const explicitEmail = message.from?.trim();
+  if (explicitEmail && EMAIL_REGEX.test(explicitEmail)) {
+    const name = (message.fromName || process.env.EMAIL_FROM_NAME || 'Spicebush Montessori').trim();
+    return {
+      email: explicitEmail,
+      name: name || 'Spicebush Montessori'
+    };
+  }
+
+  const envEmail = (process.env.EMAIL_FROM || process.env.SENDGRID_FROM_EMAIL || '').trim();
+  if (EMAIL_REGEX.test(envEmail)) {
+    const name = (message.fromName || process.env.EMAIL_FROM_NAME || 'Spicebush Montessori').trim();
+    return {
+      email: envEmail,
+      name: name || 'Spicebush Montessori'
+    };
+  }
+
+  const dbEmail = await getDbSenderEmail();
+  if (dbEmail) {
+    const name = (message.fromName || process.env.EMAIL_FROM_NAME || 'Spicebush Montessori').trim();
+    return {
+      email: dbEmail,
+      name: name || 'Spicebush Montessori'
+    };
+  }
+
+  if (!EMAIL_REGEX.test(DEFAULT_SENDER_EMAIL)) return null;
 
   const name = (message.fromName || process.env.EMAIL_FROM_NAME || 'Spicebush Montessori').trim();
   return {
-    email,
+    email: DEFAULT_SENDER_EMAIL,
     name: name || 'Spicebush Montessori'
   };
 };
@@ -115,11 +197,11 @@ class SendGridProvider implements EmailProvider {
       return providerError(this.name, 'No valid recipient email address provided');
     }
 
-    const sender = resolveSender(message);
+    const sender = await resolveSender(message);
     if (!sender) {
       return providerError(
         this.name,
-        'Sender email is not configured. Set EMAIL_FROM or SENDGRID_FROM_EMAIL.'
+        'Sender email is not configured. Set EMAIL_FROM or define school_email in Settings.'
       );
     }
 
@@ -238,9 +320,12 @@ class UnioneProvider implements EmailProvider {
       return providerError(this.name, 'No valid recipient email address provided');
     }
 
-    const sender = resolveSender(message);
+    const sender = await resolveSender(message);
     if (!sender) {
-      return providerError(this.name, 'Sender email is not configured. Set EMAIL_FROM.');
+      return providerError(
+        this.name,
+        'Sender email is not configured. Set EMAIL_FROM or define school_email in Settings.'
+      );
     }
 
     if (!messageHasBody(message)) {
