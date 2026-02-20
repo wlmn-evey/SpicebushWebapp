@@ -39,4 +39,4 @@ The camp extends the Montessori educational philosophy by:
 
 ## Registration
 
-Interested families are encouraged to [schedule a tour](/contact) and secure a spot in the summer program.
+Interested families are encouraged to [schedule a tour](/admissions) and secure a spot in the summer program.

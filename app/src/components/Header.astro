@@ -3,6 +3,7 @@ import { Menu, Phone } from 'lucide-astro';
 import { db, type ContentEntry } from '@lib/db';
 import { logServerError } from '@lib/server-logger';
 import { getTourLink } from '@lib/tour-settings';
+import { evaluateCampMode, parseCampModeSettings } from '@lib/camp-mode';
 import OptimizedImage from './OptimizedImage.astro';
 
 interface SchoolInfoData {
@@ -42,9 +43,34 @@ const schoolData = (schoolEntry?.data ?? {}) as SchoolInfoData;
 
 const phone = toDisplayString(schoolData.phone, defaultSchoolInfo.phone);
 const agesServed = toDisplayString(schoolData.agesServed, defaultSchoolInfo.agesServed);
-const extendedCareUntil = toDisplayString(schoolData.extendedCareUntil, defaultSchoolInfo.extendedCareUntil);
+const extendedCareUntil = toDisplayString(
+  schoolData.extendedCareUntil,
+  defaultSchoolInfo.extendedCareUntil
+);
 const phoneDigits = phone.replace(/[^0-9]/g, '');
 const tourLink = await getTourLink();
+
+let settings: Record<string, unknown> = {};
+try {
+  settings = await db.content.getAllSettings();
+} catch (error) {
+  logServerError('Failed to load settings in header', error, { component: 'Header' });
+}
+
+const campMode = evaluateCampMode(parseCampModeSettings(settings));
+const locals = Astro.locals as Record<string, unknown>;
+const isAdmin = locals.isAdmin === true;
+const campPromoEnabled = campMode.settings.promotionsEnabled;
+const isCampRoute = Astro.url.pathname === '/camp' || Astro.url.pathname === '/camp-coming-soon';
+const showCampEntryPoints = campMode.reason !== 'forced_off' && (!campMode.prepMode || isAdmin);
+const showCampPage = campMode.active || (campMode.prepMode && isAdmin);
+const campPromoLink = showCampPage ? '/camp' : '/camp-coming-soon';
+const campPromoMessage = toDisplayString(
+  campMode.active ? settings.camp_promo_active_message : settings.camp_promo_inactive_message,
+  campMode.active
+    ? 'Summer camp is open. View weekly themes and enroll now.'
+    : 'Summer camp details are coming soon. See updates and opening windows.'
+);
 
 const HOURS_FALLBACK = {
   open: '8:30 AM',
@@ -76,16 +102,25 @@ const weekdayHours = {
       <div class="flex justify-between items-center">
         <!-- Left side: Quick Info -->
         <div class="flex items-center space-x-4 text-sm">
-          <span class="text-earth-brown hidden md:inline">Ages {agesServed} • Mon-Fri {weekdayHours.open} - {weekdayHours.close}</span>
-          <a href={`tel:${phoneDigits}`} class="flex items-center space-x-2 text-forest-canopy hover:text-moss-green transition-colors font-semibold">
+          <span class="text-earth-brown hidden md:inline"
+          >Ages {agesServed} • Mon-Fri {weekdayHours.open} - {weekdayHours.close}</span
+          >
+          <a
+            href={`tel:${phoneDigits}`}
+            class="flex items-center space-x-2 text-forest-canopy hover:text-moss-green transition-colors font-semibold"
+          >
             <Phone className="w-4 h-4" />
             <span>{phone}</span>
           </a>
         </div>
-        
+
         <!-- Right side: Links -->
         <div class="flex items-center space-x-4 text-sm">
-          <a href="/resources/faq" class="text-earth-brown hover:text-forest-canopy transition-colors hidden sm:inline">FAQ</a>
+          <a
+            href="/resources/faq"
+            class="text-earth-brown hover:text-forest-canopy transition-colors hidden sm:inline"
+          >FAQ</a
+          >
           <a
             href="/donate"
             class="text-earth-brown hover:text-forest-canopy transition-colors hidden sm:inline"
@@ -99,7 +134,26 @@ const weekdayHours = {
       </div>
     </div>
   </div>
-  
+
+  {
+    campPromoEnabled && showCampEntryPoints && !isCampRoute && (
+      <div class="border-b border-forest-canopy/20 bg-forest-canopy text-white">
+        <div class="container mx-auto flex flex-col gap-2 px-4 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <p class="font-medium text-white/95">{campPromoMessage}</p>
+          <a
+            href={campPromoLink}
+            class="inline-flex min-h-[40px] items-center justify-center rounded-md border border-white/30 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-white/15"
+            data-analytics-event="camp_promo_click"
+            data-analytics-label="header-promo-bar"
+            data-analytics-location="header"
+          >
+            View Camp
+          </a>
+        </div>
+      </div>
+    )
+  }
+
   <!-- Main Navigation -->
   <nav class="container mx-auto px-4 py-3 sm:py-4" role="navigation" aria-label="Main navigation">
     <div class="flex justify-between items-center">
@@ -112,23 +166,52 @@ const weekdayHours = {
           priority={true}
         />
       </a>
-      
+
       <!-- Desktop Navigation -->
       <div class="hidden lg:flex items-center">
         <!-- Navigation Links with reduced spacing -->
         <div class="flex items-center space-x-3 xl:space-x-5">
-          <a href="/about" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">About</a>
-          <a href="/our-principles" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Principles</a>
-          <a href="/programs" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Programs</a>
-          <a href="/admissions" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Admissions</a>
-          <a href="/contact" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1">Contact</a>
+          <a
+            href="/about"
+            class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
+          >About</a
+          >
+          <a
+            href="/our-principles"
+            class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
+          >Principles</a
+          >
+          <a
+            href="/programs"
+            class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
+          >Programs</a
+          >
+          {
+            showCampEntryPoints && (
+              <a
+                href={campPromoLink}
+                class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
+              >
+                Camp
+              </a>
+            )
+          }
+          <a
+            href="/admissions"
+            class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
+          >Admissions</a
+          >
+          <a
+            href="/contact"
+            class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
+          >Contact</a
+          >
         </div>
-        
-        
+
         <!-- CTA Buttons with responsive sizing -->
         <div class="ml-4 xl:ml-6 flex items-center space-x-3">
-          <a 
-            href="/admissions/tuition-calculator" 
+          <a
+            href="/admissions/tuition-calculator"
             class="bg-white hover:bg-stone-beige text-forest-canopy border-2 border-forest-canopy px-4 xl:px-5 py-2 xl:py-2.5 rounded-lg font-semibold text-sm xl:text-base transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 whitespace-nowrap"
             aria-label="Calculate tuition"
             data-analytics-event="tuition_calculator_click"
@@ -137,7 +220,7 @@ const weekdayHours = {
           >
             Calculate Tuition
           </a>
-          <a 
+          <a
             href={tourLink}
             class="bg-sunlight-gold hover:bg-orange-600 text-white px-4 xl:px-5 py-2 xl:py-2.5 rounded-lg font-semibold text-sm xl:text-base transition-colors focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 whitespace-nowrap"
             aria-label="Schedule a tour"
@@ -149,9 +232,9 @@ const weekdayHours = {
           </a>
         </div>
       </div>
-      
+
       <!-- Mobile Menu Button -->
-      <button 
+      <button
         class="lg:hidden p-2 text-earth-brown hover:text-forest-canopy transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded"
         aria-label="Open mobile menu"
         aria-expanded="false"
@@ -160,16 +243,56 @@ const weekdayHours = {
         <Menu className="w-6 h-6" />
       </button>
     </div>
-    
+
     <!-- Mobile Navigation -->
-    <div class="lg:hidden hidden mt-4 pb-4 border-t border-gray-200" id="mobile-menu" role="menu" aria-labelledby="mobile-menu-toggle">
+    <div
+      class="lg:hidden hidden mt-4 pb-4 border-t border-gray-200"
+      id="mobile-menu"
+      role="menu"
+      aria-labelledby="mobile-menu-toggle"
+    >
       <div class="flex flex-col space-y-3 pt-6">
-        <a href="/about" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">About</a>
-        <a href="/our-principles" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Our Principles</a>
-        <a href="/programs" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Programs</a>
-        <a href="/admissions" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Admissions</a>
-        <a href="/contact" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">Contact</a>
-        <a href="/resources/faq" class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2" role="menuitem">FAQ</a>
+        <a
+          href="/about"
+          class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2"
+          role="menuitem">About</a
+        >
+        <a
+          href="/our-principles"
+          class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2"
+          role="menuitem">Our Principles</a
+        >
+        <a
+          href="/programs"
+          class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2"
+          role="menuitem">Programs</a
+        >
+        {
+          showCampEntryPoints && (
+            <a
+              href={campPromoLink}
+              class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2"
+              role="menuitem"
+            >
+              Camp
+            </a>
+          )
+        }
+        <a
+          href="/admissions"
+          class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2"
+          role="menuitem">Admissions</a
+        >
+        <a
+          href="/contact"
+          class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2"
+          role="menuitem">Contact</a
+        >
+        <a
+          href="/resources/faq"
+          class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2"
+          role="menuitem">FAQ</a
+        >
         <a
           href="/donate"
           class="text-earth-brown hover:text-forest-canopy transition-colors font-medium focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-3 py-2"
@@ -180,12 +303,11 @@ const weekdayHours = {
         >
           Donate
         </a>
-        
-        
+
         <!-- Mobile CTA Buttons -->
         <div class="pt-4 space-y-3">
-          <a 
-            href="/admissions/tuition-calculator" 
+          <a
+            href="/admissions/tuition-calculator"
             class="w-full bg-white hover:bg-stone-beige text-forest-canopy border-2 border-forest-canopy px-6 py-3 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 text-center block text-base"
             data-analytics-event="tuition_calculator_click"
             data-analytics-label="header-calc-tuition-mobile"
@@ -193,7 +315,7 @@ const weekdayHours = {
           >
             Calculate Tuition
           </a>
-          <a 
+          <a
             href={tourLink}
             class="w-full bg-sunlight-gold hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 text-center block text-base tracking-wide"
             data-analytics-event="tour_click"
@@ -203,7 +325,7 @@ const weekdayHours = {
             Schedule Tour
           </a>
         </div>
-        
+
         <!-- Mobile Quick Info -->
         <div class="pt-4 border-t border-gray-200">
           <div class="px-3 py-2 text-sm text-earth-brown space-y-2">
@@ -212,10 +334,13 @@ const weekdayHours = {
             <p>Extended care until {extendedCareUntil}</p>
           </div>
         </div>
-        
+
         <!-- Mobile Contact -->
         <div class="pt-4 border-t border-gray-200">
-          <a href={`tel:${phoneDigits}`} class="flex items-center justify-center space-x-2 bg-forest-canopy hover:bg-moss-green text-white px-6 py-3 rounded-lg font-semibold transition-colors mx-3">
+          <a
+            href={`tel:${phoneDigits}`}
+            class="flex items-center justify-center space-x-2 bg-forest-canopy hover:bg-moss-green text-white px-6 py-3 rounded-lg font-semibold transition-colors mx-3"
+          >
             <Phone className="w-5 h-5" />
             <span>Call {phone}</span>
           </a>
@@ -227,29 +352,32 @@ const weekdayHours = {
 
 <script>
   // Mobile menu toggle functionality with improved error handling
-  (function() {
+  (function () {
     'use strict';
-    
+
     // Function to initialize mobile menu
     function initMobileMenu() {
       const toggleButtonEl = document.getElementById('mobile-menu-toggle');
       const mobileMenuEl = document.getElementById('mobile-menu');
 
-      if (!(toggleButtonEl instanceof HTMLButtonElement) || !(mobileMenuEl instanceof HTMLElement)) {
+      if (
+        !(toggleButtonEl instanceof HTMLButtonElement) ||
+        !(mobileMenuEl instanceof HTMLElement)
+      ) {
         return;
       }
 
       const toggleButton = toggleButtonEl;
       const mobileMenu = mobileMenuEl;
-      
+
       // Toggle menu function
       function toggleMenu() {
         mobileMenu.classList.toggle('hidden');
-        
+
         // Update aria-expanded attribute for accessibility
         const isExpanded = !mobileMenu.classList.contains('hidden');
         toggleButton.setAttribute('aria-expanded', isExpanded.toString());
-        
+
         // Focus management for keyboard users
         if (isExpanded) {
           // Small delay to ensure menu is visible before focusing
@@ -261,44 +389,44 @@ const weekdayHours = {
           }, 100);
         }
       }
-      
+
       // Add click listener with error handling
       try {
-        toggleButton.addEventListener('click', (e) => {
+        toggleButton.addEventListener('click', e => {
           e.preventDefault();
           e.stopPropagation();
           toggleMenu();
         });
-        
       } catch {
         // Leave menu closed if binding fails.
       }
-      
+
       // Close mobile menu when pressing Escape
-      document.addEventListener('keydown', (event) => {
+      document.addEventListener('keydown', event => {
         if (event.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
           mobileMenu.classList.add('hidden');
           toggleButton.setAttribute('aria-expanded', 'false');
           toggleButton.focus();
         }
       });
-      
+
       // Close menu when clicking outside
-      document.addEventListener('click', (event) => {
+      document.addEventListener('click', event => {
         const target = event.target;
         if (!(target instanceof Node)) {
           return;
         }
-        if (!mobileMenu.classList.contains('hidden') && 
-            !mobileMenu.contains(target) && 
-            !toggleButton.contains(target)) {
+        if (
+          !mobileMenu.classList.contains('hidden') &&
+          !mobileMenu.contains(target) &&
+          !toggleButton.contains(target)
+        ) {
           mobileMenu.classList.add('hidden');
           toggleButton.setAttribute('aria-expanded', 'false');
         }
       });
-      
     }
-    
+
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initMobileMenu);

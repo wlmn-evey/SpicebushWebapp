@@ -5,7 +5,8 @@ import { db } from '@lib/db';
 const settings = await db.content.getAllSettings();
 const savedKey = Astro.url.searchParams.get('saved');
 const errorMessage = Astro.url.searchParams.get('error');
-const previewMode = Astro.cookies.get('sbms-preview-mode')?.value === 'site' ? 'site' : 'coming-soon';
+const previewMode =
+  Astro.cookies.get('sbms-preview-mode')?.value === 'site' ? 'site' : 'coming-soon';
 
 const stringifyValue = (value: unknown): string => {
   if (value === null || value === undefined) return '';
@@ -28,33 +29,59 @@ const comingSoonLaunchDate = stringifyValue(settings.coming_soon_launch_date);
 const donationLink = stringifyValue(settings.donation_external_link);
 const enrollmentLink = stringifyValue(settings.enrollment_external_link);
 const tourExternalLink = stringifyValue(settings.tour_external_link);
+const parseCampModeOverride = (value: unknown): 'auto' | 'on' | 'off' | 'prep' => {
+  if (typeof value !== 'string') return 'off';
+  const normalized = value.trim().toLowerCase();
+  if (
+    normalized === 'auto' ||
+    normalized === 'on' ||
+    normalized === 'off' ||
+    normalized === 'prep'
+  ) {
+    return normalized as 'auto' | 'on' | 'off' | 'prep';
+  }
+  return 'off';
+};
+const campModeOverride = parseCampModeOverride(settings.camp_mode_override);
+const campModeStartAt = stringifyValue(settings.camp_mode_start_at);
+const campModeEndAt = stringifyValue(settings.camp_mode_end_at);
+const campModeTimezone = stringifyValue(settings.camp_mode_timezone || 'America/New_York');
+const campPromotionsEnabled = boolFrom(settings.camp_promotions_enabled);
 const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompare(b));
 ---
 
 <AdminLayout title="Manage Settings">
-  {savedKey && (
-    <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
-      Saved setting: <strong>{savedKey}</strong>
-    </p>
-  )}
+  {
+    savedKey && (
+      <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+        Saved setting: <strong>{savedKey}</strong>
+      </p>
+    )
+  }
 
-  {errorMessage && (
-    <p class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-      {errorMessage}
-    </p>
-  )}
+  {
+    errorMessage && (
+      <p class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        {errorMessage}
+      </p>
+    )
+  }
 
   <div class="space-y-6">
     <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="text-lg font-semibold mb-3">Admin Preview Toggle</h2>
       <p class="text-sm text-earth-brown/80 mb-4">
-        Current preview mode: <strong>{previewMode === 'site' ? 'Full Site' : 'Coming Soon'}</strong>
+        Current preview mode: <strong>{previewMode === 'site' ? 'Full Site' : 'Coming Soon'}</strong
+        >
       </p>
       <form
         method="post"
         action={`/api/admin/preview-mode?mode=${previewMode === 'site' ? 'coming-soon' : 'site'}&redirect=${encodeURIComponent('/admin/settings')}`}
       >
-        <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
+        <button
+          type="submit"
+          class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green"
+        >
           {previewMode === 'site' ? 'Switch To Coming Soon View' : 'Switch To Full Site View'}
         </button>
       </form>
@@ -65,7 +92,11 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
       <div class="space-y-4">
         <form method="post" action="/api/admin/settings" class="space-y-2">
           <input type="hidden" name="key" value="coming_soon_enabled" />
-          <input type="hidden" name="redirectTo" value="/admin/settings?saved=coming_soon_enabled" />
+          <input
+            type="hidden"
+            name="redirectTo"
+            value="/admin/settings?saved=coming_soon_enabled"
+          />
           <label class="block text-sm font-medium">
             Coming Soon Enabled
             <select name="value" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
@@ -73,55 +104,195 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
               <option value="false" selected={!comingSoonEnabled}>false</option>
             </select>
           </label>
-          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+          <button
+            type="submit"
+            class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+          >
             Save Coming Soon Toggle
           </button>
         </form>
 
         <form method="post" action="/api/admin/settings" class="space-y-2">
           <input type="hidden" name="key" value="coming_soon_message" />
-          <input type="hidden" name="redirectTo" value="/admin/settings?saved=coming_soon_message" />
+          <input
+            type="hidden"
+            name="redirectTo"
+            value="/admin/settings?saved=coming_soon_message"
+          />
           <label class="block text-sm font-medium">
             Coming Soon Message
-            <textarea name="value" rows="3" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">{comingSoonMessage}</textarea>
+            <textarea
+              name="value"
+              rows="3"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            >{comingSoonMessage}</textarea
+            >
           </label>
-          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+          <button
+            type="submit"
+            class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+          >
             Save Message
           </button>
         </form>
 
         <form method="post" action="/api/admin/settings" class="space-y-2">
           <input type="hidden" name="key" value="coming_soon_launch_date" />
-          <input type="hidden" name="redirectTo" value="/admin/settings?saved=coming_soon_launch_date" />
+          <input
+            type="hidden"
+            name="redirectTo"
+            value="/admin/settings?saved=coming_soon_launch_date"
+          />
           <label class="block text-sm font-medium">
             Coming Soon Launch Date
-            <input type="text" name="value" value={comingSoonLaunchDate} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+            <input
+              type="text"
+              name="value"
+              value={comingSoonLaunchDate}
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
           </label>
-          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+          <button
+            type="submit"
+            class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+          >
             Save Launch Date
+          </button>
+        </form>
+
+        <form
+          method="post"
+          action="/api/admin/settings"
+          class="space-y-3 rounded-lg border border-gray-200 p-4"
+        >
+          <input type="hidden" name="redirectTo" value="/admin/settings?saved=camp_mode" />
+          <h3 class="text-base font-semibold text-earth-brown">Camp Mode And Promotions</h3>
+          <p class="text-xs text-earth-brown/80">
+            `prep` keeps camp private for admins to preview. `auto` follows the schedule window.
+            `on` makes camp live for everyone. `off` hides camp for everyone.
+          </p>
+          <div class="grid gap-3 md:grid-cols-2">
+            <label class="block text-sm font-medium">
+              Camp Mode Override
+              <select
+                name="camp_mode_override"
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              >
+                <option value="auto" selected={campModeOverride === 'auto'}>auto</option>
+                <option value="prep" selected={campModeOverride === 'prep'}>prep</option>
+                <option value="on" selected={campModeOverride === 'on'}>on</option>
+                <option value="off" selected={campModeOverride === 'off'}>off</option>
+              </select>
+            </label>
+
+            <label class="block text-sm font-medium">
+              Camp Timezone
+              <input
+                type="text"
+                name="camp_mode_timezone"
+                value={campModeTimezone}
+                placeholder="America/New_York"
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+
+            <label class="block text-sm font-medium">
+              Auto Start (ISO datetime)
+              <input
+                type="text"
+                name="camp_mode_start_at"
+                value={campModeStartAt}
+                placeholder="2026-05-01T00:00:00-04:00"
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+
+            <label class="block text-sm font-medium">
+              Auto End (ISO datetime)
+              <input
+                type="text"
+                name="camp_mode_end_at"
+                value={campModeEndAt}
+                placeholder="2026-08-31T23:59:59-04:00"
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+
+            <label class="block text-sm font-medium md:col-span-2">
+              Enable Sitewide Camp Promotions
+              <select
+                name="camp_promotions_enabled"
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              >
+                <option value="true" selected={campPromotionsEnabled}>true</option>
+                <option value="false" selected={!campPromotionsEnabled}>false</option>
+              </select>
+            </label>
+          </div>
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-earth-brown/80">
+            <p class="font-semibold text-earth-brown">Preview Links</p>
+            <p class="mt-1">
+              Camp page: <a href="/camp" class="text-forest-canopy hover:underline">/camp</a>
+            </p>
+            <p class="mt-1">
+              Camp coming soon page: <a
+                href="/camp-coming-soon"
+                class="text-forest-canopy hover:underline">/camp-coming-soon</a
+              >
+            </p>
+          </div>
+          <button
+            type="submit"
+            class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+          >
+            Save Camp Mode Settings
           </button>
         </form>
 
         <form method="post" action="/api/admin/settings" class="space-y-2">
           <input type="hidden" name="key" value="donation_external_link" />
-          <input type="hidden" name="redirectTo" value="/admin/settings?saved=donation_external_link" />
+          <input
+            type="hidden"
+            name="redirectTo"
+            value="/admin/settings?saved=donation_external_link"
+          />
           <label class="block text-sm font-medium">
             Donation Fallback Link (optional)
-            <input type="text" name="value" value={donationLink} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+            <input
+              type="text"
+              name="value"
+              value={donationLink}
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
           </label>
-          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+          <button
+            type="submit"
+            class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+          >
             Save Donation Link
           </button>
         </form>
 
         <form method="post" action="/api/admin/settings" class="space-y-2">
           <input type="hidden" name="key" value="enrollment_external_link" />
-          <input type="hidden" name="redirectTo" value="/admin/settings?saved=enrollment_external_link" />
+          <input
+            type="hidden"
+            name="redirectTo"
+            value="/admin/settings?saved=enrollment_external_link"
+          />
           <label class="block text-sm font-medium">
             Enrollment External Link (future)
-            <input type="text" name="value" value={enrollmentLink} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+            <input
+              type="text"
+              name="value"
+              value={enrollmentLink}
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
           </label>
-          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+          <button
+            type="submit"
+            class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+          >
             Save Enrollment Link
           </button>
         </form>
@@ -131,9 +302,17 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
           <input type="hidden" name="redirectTo" value="/admin/settings?saved=tour_external_link" />
           <label class="block text-sm font-medium">
             Tour External Link
-            <input type="text" name="value" value={tourExternalLink} class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" />
+            <input
+              type="text"
+              name="value"
+              value={tourExternalLink}
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
           </label>
-          <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green">
+          <button
+            type="submit"
+            class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+          >
             Save Tour Link
           </button>
         </form>
@@ -143,21 +322,36 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
     <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="text-lg font-semibold mb-3">All Settings</h2>
       <div class="space-y-4">
-        {sortedEntries.map(([key, value]) => (
-          <form method="post" action="/api/admin/settings" class="space-y-2 rounded-lg border border-gray-200 p-3">
-            <input type="hidden" name="key" value={key} />
-            <input type="hidden" name="redirectTo" value={`/admin/settings?saved=${encodeURIComponent(key)}`} />
-            <label class="block text-sm font-medium">{key}</label>
-            <textarea
-              name="value"
-              rows="2"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm"
-            >{stringifyValue(value)}</textarea>
-            <button type="submit" class="rounded-lg bg-forest-canopy px-3 py-1.5 text-sm font-semibold text-white hover:bg-moss-green">
-              Save {key}
-            </button>
-          </form>
-        ))}
+        {
+          sortedEntries.map(([key, value]) => (
+            <form
+              method="post"
+              action="/api/admin/settings"
+              class="space-y-2 rounded-lg border border-gray-200 p-3"
+            >
+              <input type="hidden" name="key" value={key} />
+              <input
+                type="hidden"
+                name="redirectTo"
+                value={`/admin/settings?saved=${encodeURIComponent(key)}`}
+              />
+              <label class="block text-sm font-medium">{key}</label>
+              <textarea
+                name="value"
+                rows="2"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm"
+              >
+                {stringifyValue(value)}
+              </textarea>
+              <button
+                type="submit"
+                class="rounded-lg bg-forest-canopy px-3 py-1.5 text-sm font-semibold text-white hover:bg-moss-green"
+              >
+                Save {key}
+              </button>
+            </form>
+          ))
+        }
       </div>
     </section>
 
@@ -165,9 +359,22 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
       <h2 class="text-lg font-semibold mb-3">Create New Setting</h2>
       <form method="post" action="/api/admin/settings" class="space-y-3">
         <input type="hidden" name="redirectTo" value="/admin/settings?saved=new" />
-        <input type="text" name="key" placeholder="new_setting_key" required class="w-full rounded-lg border border-gray-300 px-3 py-2" />
-        <textarea name="value" rows="3" placeholder="Setting value (string or JSON)" class="w-full rounded-lg border border-gray-300 px-3 py-2"></textarea>
-        <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
+        <input
+          type="text"
+          name="key"
+          placeholder="new_setting_key"
+          required
+          class="w-full rounded-lg border border-gray-300 px-3 py-2"
+        />
+        <textarea
+          name="value"
+          rows="3"
+          placeholder="Setting value (string or JSON)"
+          class="w-full rounded-lg border border-gray-300 px-3 py-2"></textarea>
+        <button
+          type="submit"
+          class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green"
+        >
           Create Setting
         </button>
       </form>

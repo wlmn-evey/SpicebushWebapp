@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import CampPromoModule from '../components/CampPromoModule.astro';
 import { Clock, Users, Calendar, Leaf } from 'lucide-astro';
 import { getTourLink } from '@lib/tour-settings';
 import { getManagedFaqItems } from '@lib/faq-content';
@@ -17,17 +18,21 @@ interface DayScheduleEntry {
 
 const normalizeForMatch = (value: string): string => value.trim().toLowerCase();
 
-const dailyScheduleFaqItems = faqItems.filter((item) => {
+const dailyScheduleFaqItems = faqItems.filter(item => {
   const sectionTitle = normalizeForMatch(item.sectionTitle);
   const slug = normalizeForMatch(item.slug);
-  return sectionTitle.includes('daily life') || sectionTitle.includes('schedule') || slug.includes('daily-life-and-schedule');
+  return (
+    sectionTitle.includes('daily life') ||
+    sectionTitle.includes('schedule') ||
+    slug.includes('daily-life-and-schedule')
+  );
 });
 
 const scheduleFaqItem =
   dailyScheduleFaqItems.find(
-    (item) => item.bullets.length > 0 && item.bullets.some((bullet) => bullet.includes(':'))
+    item => item.bullets.length > 0 && item.bullets.some(bullet => bullet.includes(':'))
   ) ??
-  dailyScheduleFaqItems.find((item) => item.bullets.length > 0) ??
+  dailyScheduleFaqItems.find(item => item.bullets.length > 0) ??
   null;
 
 const parseScheduleBullet = (bullet: string): DayScheduleEntry | null => {
@@ -65,7 +70,9 @@ const parseScheduleBullet = (bullet: string): DayScheduleEntry | null => {
 };
 
 const faqScheduleEntries = scheduleFaqItem
-  ? scheduleFaqItem.bullets.map(parseScheduleBullet).filter((entry): entry is DayScheduleEntry => entry !== null)
+  ? scheduleFaqItem.bullets
+    .map(parseScheduleBullet)
+    .filter((entry): entry is DayScheduleEntry => entry !== null)
   : [];
 
 const defaultScheduleEntries: DayScheduleEntry[] = [
@@ -106,10 +113,11 @@ const defaultScheduleEntries: DayScheduleEntry[] = [
   }
 ];
 
-const dayScheduleEntries = faqScheduleEntries.length > 0 ? faqScheduleEntries : defaultScheduleEntries;
+const dayScheduleEntries =
+  faqScheduleEntries.length > 0 ? faqScheduleEntries : defaultScheduleEntries;
 
 const schoolHoursFaqItem =
-  dailyScheduleFaqItems.find((item) => {
+  dailyScheduleFaqItems.find(item => {
     const question = normalizeForMatch(item.question);
     const title = normalizeForMatch(item.title);
     return question.includes('school hours') || title.includes('school hours');
@@ -120,199 +128,266 @@ const dayScheduleIntro =
   'Our regular school day runs from 8:00 AM to 4:00 PM, Monday through Friday, with optional extended care until 5:30 PM.';
 ---
 
-<Layout 
+<Layout
   title="Our Programs - Spicebush Montessori School"
   description="Learn about our Montessori programs for ages 3-6, including our full-day schedule, enrichment activities, and inclusive approach to education."
   keywords="Montessori programs, preschool curriculum, ages 3-6, school schedule, enrichment activities"
 >
   <Header />
-  
+
   <main id="main-content">
     <!-- Hero Section -->
     <section class="bg-gradient-to-br from-stone-beige to-light-stone py-16 lg:py-24">
       <div class="container mx-auto px-4">
         <div class="text-center">
-          <h1 class="text-4xl lg:text-5xl font-bold text-earth-brown mb-6">
-            Our Programs
-          </h1>
+          <h1 class="text-4xl lg:text-5xl font-bold text-earth-brown mb-6">Our Programs</h1>
           <p class="text-lg lg:text-xl text-earth-brown max-w-3xl mx-auto">
-            A carefully prepared environment where children ages 3-6 learn, grow, and thrive together through authentic Montessori education.
+            A carefully prepared environment where children ages 3-6 learn, grow, and thrive
+            together through authentic Montessori education.
           </p>
         </div>
       </div>
     </section>
-    
+
+    <CampPromoModule placement="programs" />
+
     <!-- Preschool & Kindergarten Program Overview -->
     <section class="py-16 bg-white">
       <div class="container mx-auto px-4">
         <div class="max-w-6xl mx-auto">
           <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-earth-brown mb-4">Preschool & Kindergarten Program (Ages 3-6)</h2>
+            <h2 class="text-3xl font-bold text-earth-brown mb-4">
+              Preschool & Kindergarten Program (Ages 3-6)
+            </h2>
             <p class="text-lg text-earth-brown/80 max-w-3xl mx-auto">
-              Our mixed-age classroom brings together children from 3 to 6 years old, creating a vibrant community where younger children learn from older peers and older children develop leadership and mentoring skills.
+              Our mixed-age classroom brings together children from 3 to 6 years old, creating a
+              vibrant community where younger children learn from older peers and older children
+              develop leadership and mentoring skills.
             </p>
           </div>
-          
+
           <!-- Program Features Grid -->
           <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             <div class="bg-stone-beige rounded-lg p-6 text-center">
-              <div class="w-12 h-12 bg-sunlight-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div
+                class="w-12 h-12 bg-sunlight-gold/20 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
                 <Clock className="w-6 h-6 text-sunlight-gold" />
               </div>
               <h3 class="font-semibold text-earth-brown mb-2">Full Day Program</h3>
-              <p class="text-sm text-earth-brown/80">Daily schedule is listed below<br/>Optional before care and extended care available</p>
+              <p class="text-sm text-earth-brown/80">
+                Daily schedule is listed below<br />Optional before care and extended care available
+              </p>
             </div>
-            
+
             <div class="bg-stone-beige rounded-lg p-6 text-center">
-              <div class="w-12 h-12 bg-sunlight-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div
+                class="w-12 h-12 bg-sunlight-gold/20 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
                 <Users className="w-6 h-6 text-sunlight-gold" />
               </div>
               <h3 class="font-semibold text-earth-brown mb-2">Small Class Size</h3>
-              <p class="text-sm text-earth-brown/80">24 students<br/>4 trained guides</p>
+              <p class="text-sm text-earth-brown/80">24 students<br />4 trained guides</p>
             </div>
-            
+
             <div class="bg-stone-beige rounded-lg p-6 text-center">
-              <div class="w-12 h-12 bg-sunlight-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div
+                class="w-12 h-12 bg-sunlight-gold/20 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
                 <Calendar className="w-6 h-6 text-sunlight-gold" />
               </div>
               <h3 class="font-semibold text-earth-brown mb-2">School Year</h3>
-              <p class="text-sm text-earth-brown/80">September - June<br/>Optional summer program</p>
+              <p class="text-sm text-earth-brown/80">
+                September - June<br />Optional summer program
+              </p>
             </div>
-            
+
             <div class="bg-stone-beige rounded-lg p-6 text-center">
-              <div class="w-12 h-12 bg-sunlight-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div
+                class="w-12 h-12 bg-sunlight-gold/20 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
                 <Leaf className="w-6 h-6 text-sunlight-gold" />
               </div>
               <h3 class="font-semibold text-earth-brown mb-2">Outdoor Time</h3>
-              <p class="text-sm text-earth-brown/80">Daily nature exploration<br/>Garden & outdoor classroom</p>
+              <p class="text-sm text-earth-brown/80">
+                Daily nature exploration<br />Garden & outdoor classroom
+              </p>
             </div>
           </div>
         </div>
       </div>
     </section>
-    
+
     <!-- Daily Schedule -->
     <section class="py-16 bg-moss-green/10">
       <div class="container mx-auto px-4">
         <div class="max-w-4xl mx-auto">
           <h2 class="text-3xl font-bold text-earth-brown mb-8 text-center">A Day at Spicebush</h2>
           <p class="text-earth-brown/80 text-center mb-6">{dayScheduleIntro}</p>
-          
+
           <div class="bg-white rounded-lg shadow-lg p-8">
             <div class="space-y-4">
-              {dayScheduleEntries.map((entry) => (
-                <div class="flex items-start space-x-4">
-                  <span class="font-semibold text-forest-canopy whitespace-nowrap">{entry.time}</span>
-                  <div>
-                    <p class="font-semibold text-earth-brown">{entry.title}</p>
-                    {entry.detail ? <p class="text-sm text-earth-brown/80">{entry.detail}</p> : null}
+              {
+                dayScheduleEntries.map(entry => (
+                  <div class="flex items-start space-x-4">
+                    <span class="font-semibold text-forest-canopy whitespace-nowrap">
+                      {entry.time}
+                    </span>
+                    <div>
+                      <p class="font-semibold text-earth-brown">{entry.title}</p>
+                      {entry.detail ? (
+                        <p class="text-sm text-earth-brown/80">{entry.detail}</p>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              }
             </div>
-            {scheduleFaqItem?.note ? <p class="mt-6 text-sm text-earth-brown/80">{scheduleFaqItem.note}</p> : null}
+            {
+              scheduleFaqItem?.note ? (
+                <p class="mt-6 text-sm text-earth-brown/80">{scheduleFaqItem.note}</p>
+              ) : null
+            }
           </div>
         </div>
       </div>
     </section>
-    
+
     <!-- Curriculum Areas -->
     <section class="py-16 bg-white">
       <div class="container mx-auto px-4">
         <div class="max-w-6xl mx-auto">
-          <h2 class="text-3xl font-bold text-earth-brown mb-12 text-center">Montessori Curriculum Areas</h2>
-          
+          <h2 class="text-3xl font-bold text-earth-brown mb-12 text-center">
+            Montessori Curriculum Areas
+          </h2>
+
           <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div class="text-center">
               <div class="bg-stone-beige rounded-lg p-6 mb-4">
                 <h3 class="font-semibold text-earth-brown mb-2">Practical Life</h3>
-                <p class="text-sm text-earth-brown/80">Real-world activities that develop coordination, concentration, independence, and care for self and environment</p>
+                <p class="text-sm text-earth-brown/80">
+                  Real-world activities that develop coordination, concentration, independence, and
+                  care for self and environment
+                </p>
               </div>
             </div>
-            
+
             <div class="text-center">
               <div class="bg-stone-beige rounded-lg p-6 mb-4">
                 <h3 class="font-semibold text-earth-brown mb-2">Sensorial</h3>
-                <p class="text-sm text-earth-brown/80">Materials that refine the senses and help children classify and understand the world around them</p>
+                <p class="text-sm text-earth-brown/80">
+                  Materials that refine the senses and help children classify and understand the
+                  world around them
+                </p>
               </div>
             </div>
-            
+
             <div class="text-center">
               <div class="bg-stone-beige rounded-lg p-6 mb-4">
                 <h3 class="font-semibold text-earth-brown mb-2">Language</h3>
-                <p class="text-sm text-earth-brown/80">Rich oral language, phonics, writing, and reading experiences that follow each child's readiness</p>
+                <p class="text-sm text-earth-brown/80">
+                  Rich oral language, phonics, writing, and reading experiences that follow each
+                  child's readiness
+                </p>
               </div>
             </div>
-            
+
             <div class="text-center">
               <div class="bg-stone-beige rounded-lg p-6 mb-4">
                 <h3 class="font-semibold text-earth-brown mb-2">Mathematics</h3>
-                <p class="text-sm text-earth-brown/80">Concrete materials that make abstract concepts tangible, from counting to complex operations</p>
+                <p class="text-sm text-earth-brown/80">
+                  Concrete materials that make abstract concepts tangible, from counting to complex
+                  operations
+                </p>
               </div>
             </div>
-            
+
             <div class="text-center">
               <div class="bg-stone-beige rounded-lg p-6 mb-4">
                 <h3 class="font-semibold text-earth-brown mb-2">Cultural Studies</h3>
-                <p class="text-sm text-earth-brown/80">Geography, history, science, art, and music that connect children to the wider world</p>
+                <p class="text-sm text-earth-brown/80">
+                  Geography, history, science, art, and music that connect children to the wider
+                  world
+                </p>
               </div>
             </div>
-            
+
             <div class="text-center">
               <div class="bg-stone-beige rounded-lg p-6 mb-4">
                 <h3 class="font-semibold text-earth-brown mb-2">Peace Education</h3>
-                <p class="text-sm text-earth-brown/80">Conflict resolution, grace and courtesy, and building a caring classroom community</p>
+                <p class="text-sm text-earth-brown/80">
+                  Conflict resolution, grace and courtesy, and building a caring classroom community
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
     </section>
-    
+
     <!-- Enrichment Programs -->
     <section class="py-16 bg-stone-beige">
       <div class="container mx-auto px-4">
         <div class="max-w-4xl mx-auto text-center">
           <h2 class="text-3xl font-bold text-earth-brown mb-8">Enrichment & Special Activities</h2>
-          
+
           <div class="grid md:grid-cols-2 gap-6 text-left">
             <div class="bg-white rounded-lg p-6">
               <h3 class="font-semibold text-earth-brown mb-3">Garden & Nature Program</h3>
-              <p class="text-earth-brown/80">Children tend our organic garden, learning about plants, seasons, and where food comes from. Daily outdoor exploration connects children with nature.</p>
+              <p class="text-earth-brown/80">
+                Children tend our organic garden, learning about plants, seasons, and where food
+                comes from. Daily outdoor exploration connects children with nature.
+              </p>
             </div>
-            
+
             <div class="bg-white rounded-lg p-6">
               <h3 class="font-semibold text-earth-brown mb-3">Art & Creative Expression</h3>
-              <p class="text-earth-brown/80">Weekly art experiences with various media, plus daily access to art materials for self-expression and creativity.</p>
+              <p class="text-earth-brown/80">
+                Weekly art experiences with various media, plus daily access to art materials for
+                self-expression and creativity.
+              </p>
             </div>
-            
+
             <div class="bg-white rounded-lg p-6">
               <h3 class="font-semibold text-earth-brown mb-3">Music & Movement</h3>
-              <p class="text-earth-brown/80">Songs, instruments, and movement activities integrated throughout the day, plus special music circles.</p>
+              <p class="text-earth-brown/80">
+                Songs, instruments, and movement activities integrated throughout the day, plus
+                special music circles.
+              </p>
             </div>
-            
+
             <div class="bg-white rounded-lg p-6">
               <h3 class="font-semibold text-earth-brown mb-3">Community Connections</h3>
-              <p class="text-earth-brown/80">Neighborhood connections, visits from community helpers, and celebrations of diverse cultures.</p>
+              <p class="text-earth-brown/80">
+                Neighborhood connections, visits from community helpers, and celebrations of diverse
+                cultures.
+              </p>
             </div>
           </div>
         </div>
       </div>
     </section>
-    
+
     <!-- Call to Action -->
     <section class="py-16 bg-white">
       <div class="container mx-auto px-4">
         <div class="max-w-3xl mx-auto text-center">
           <h2 class="text-3xl font-bold text-earth-brown mb-6">Ready to Learn More?</h2>
           <p class="text-lg text-earth-brown/80 mb-8">
-            The best way to understand our program is to see it in action. Schedule a tour to observe our classroom and meet our teachers.
+            The best way to understand our program is to see it in action. Schedule a tour to
+            observe our classroom and meet our teachers.
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href={tourLink} class="bg-sunlight-gold hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+            <a
+              href={tourLink}
+              class="bg-sunlight-gold hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+            >
               Schedule a Tour
             </a>
-            <a href="/admissions/tuition-calculator" class="bg-white hover:bg-gray-50 text-earth-brown border-2 border-earth-brown px-8 py-3 rounded-lg font-semibold transition-colors">
+            <a
+              href="/admissions/tuition-calculator"
+              class="bg-white hover:bg-gray-50 text-earth-brown border-2 border-earth-brown px-8 py-3 rounded-lg font-semibold transition-colors"
+            >
               Calculate Tuition
             </a>
           </div>
@@ -320,6 +395,6 @@ const dayScheduleIntro =
       </div>
     </section>
   </main>
-  
+
   <Footer />
 </Layout>

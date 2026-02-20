@@ -3,13 +3,14 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import HoursWidget from '../components/HoursWidget.astro';
-import { 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Clock, 
-  Send, 
-  MessageSquare, 
+import CampPromoModule from '../components/CampPromoModule.astro';
+import {
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  Send,
+  MessageSquare,
   AlertCircle,
   CheckCircle,
   User,
@@ -20,50 +21,59 @@ import {
 import ErrorMessage from '../components/ErrorMessage.astro';
 ---
 
-<Layout 
+<Layout
   title="Contact Us - Spicebush Montessori School"
   description="Get in touch with Spicebush Montessori School. Schedule a tour, ask questions, or learn more about our inclusive education programs in Glen Mills, PA."
   keywords="contact Montessori school, schedule tour, school location, Glen Mills PA preschool, Montessori questions"
 >
   <Header />
-  
+
   <main id="main-content">
     <!-- Hero Section -->
     <section class="bg-gradient-to-br from-forest-canopy to-moss-green py-16 lg:py-20">
       <div class="container mx-auto px-4">
         <div class="max-w-4xl mx-auto text-center">
           <div class="flex justify-center mb-6">
-            <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
+            <div
+              class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30"
+            >
               <MessageSquare className="w-8 h-8 text-white" aria-hidden="true" />
             </div>
           </div>
           <h1 class="text-4xl lg:text-5xl font-heading font-bold text-white mb-6 tracking-tight">
             Let's Connect
           </h1>
-          <p class="text-lg lg:text-xl text-green-100 max-w-3xl mx-auto leading-relaxed-plus font-light">
-            We'd love to hear from you. Whether you're curious about our programs, want to schedule a tour, 
-            or have questions about our community, we're here to help.
+          <p
+            class="text-lg lg:text-xl text-green-100 max-w-3xl mx-auto leading-relaxed-plus font-light"
+          >
+            We'd love to hear from you. Whether you're curious about our programs, want to schedule
+            a tour, or have questions about our community, we're here to help.
           </p>
         </div>
       </div>
     </section>
 
+    <CampPromoModule placement="contact" />
+
     <!-- Contact Methods Grid -->
     <section class="py-16 bg-white">
       <div class="container mx-auto px-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          
           <!-- Phone Contact -->
-          <div class="text-center p-8 bg-stone-beige rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300">
-            <div class="w-16 h-16 bg-forest-canopy rounded-full flex items-center justify-center mx-auto mb-6">
+          <div
+            class="text-center p-8 bg-stone-beige rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300"
+          >
+            <div
+              class="w-16 h-16 bg-forest-canopy rounded-full flex items-center justify-center mx-auto mb-6"
+            >
               <Phone className="w-8 h-8 text-white" aria-hidden="true" />
             </div>
             <h3 class="text-xl font-semibold text-earth-brown mb-3">Call Us</h3>
             <p class="text-earth-brown mb-4 leading-relaxed">
               The quickest way to get answers and schedule a visit
             </p>
-            <a 
-              href="tel:484-202-0712" 
+            <a
+              href="tel:484-202-0712"
               class="text-2xl font-bold text-forest-canopy hover:text-moss-green transition-colors block mb-2"
             >
               (484) 202-0712
@@ -72,16 +82,20 @@ import ErrorMessage from '../components/ErrorMessage.astro';
           </div>
 
           <!-- Email Contact -->
-          <div class="text-center p-8 bg-stone-beige rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300">
-            <div class="w-16 h-16 bg-moss-green rounded-full flex items-center justify-center mx-auto mb-6">
+          <div
+            class="text-center p-8 bg-stone-beige rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300"
+          >
+            <div
+              class="w-16 h-16 bg-moss-green rounded-full flex items-center justify-center mx-auto mb-6"
+            >
               <Mail className="w-8 h-8 text-white" aria-hidden="true" />
             </div>
             <h3 class="text-xl font-semibold text-earth-brown mb-3">Email Us</h3>
             <p class="text-earth-brown mb-4 leading-relaxed">
               Send us a message and we'll get back to you within 24 hours
             </p>
-            <a 
-              href="mailto:information@spicebushmontessori.org" 
+            <a
+              href="mailto:information@spicebushmontessori.org"
               class="text-lg font-semibold text-forest-canopy hover:text-moss-green transition-colors block break-all"
             >
               information@spicebushmontessori.org
@@ -89,8 +103,12 @@ import ErrorMessage from '../components/ErrorMessage.astro';
           </div>
 
           <!-- Visit Us -->
-          <div class="text-center p-8 bg-stone-beige rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300">
-            <div class="w-16 h-16 bg-sunlight-gold rounded-full flex items-center justify-center mx-auto mb-6">
+          <div
+            class="text-center p-8 bg-stone-beige rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300"
+          >
+            <div
+              class="w-16 h-16 bg-sunlight-gold rounded-full flex items-center justify-center mx-auto mb-6"
+            >
               <MapPin className="w-8 h-8 text-white" aria-hidden="true" />
             </div>
             <h3 class="text-xl font-semibold text-earth-brown mb-3">Visit Us</h3>
@@ -98,12 +116,12 @@ import ErrorMessage from '../components/ErrorMessage.astro';
               Come see our beautiful learning environment in person
             </p>
             <address class="text-forest-canopy font-medium not-italic">
-              827 Concord Road<br>
+              827 Concord Road<br />
               Glen Mills, PA 19342
             </address>
-            <a 
-              href="https://maps.google.com/?q=827+Concord+Road,+Glen+Mills,+PA+19342" 
-              target="_blank" 
+            <a
+              href="https://maps.google.com/?q=827+Concord+Road,+Glen+Mills,+PA+19342"
+              target="_blank"
               rel="noopener noreferrer"
               class="inline-block mt-3 text-sm text-moss-green hover:text-forest-canopy transition-colors"
             >
@@ -114,34 +132,41 @@ import ErrorMessage from '../components/ErrorMessage.astro';
 
         <!-- Main Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          
           <!-- Contact Form -->
           <div class="bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
             <div class="flex items-center mb-6">
               <Send className="w-6 h-6 text-forest-canopy mr-3" aria-hidden="true" />
               <h2 class="text-2xl font-bold text-earth-brown">Send Us a Message</h2>
             </div>
-            
+
             <!-- Form Alert Messages -->
-            <div id="form-success" class="hidden mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div
+              id="form-success"
+              class="hidden mb-6 p-4 bg-green-50 border border-green-200 rounded-lg"
+            >
               <div class="flex items-center">
                 <CheckCircle className="w-5 h-5 text-green-600 mr-3" aria-hidden="true" />
-                <p class="text-green-800 font-medium">Thank you! Your message has been sent successfully. We'll get back to you within 24 hours.</p>
+                <p class="text-green-800 font-medium">
+                  Thank you! Your message has been sent successfully. We'll get back to you within
+                  24 hours.
+                </p>
               </div>
             </div>
-            
+
             <div id="form-error" class="hidden mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
               <div class="flex items-center">
                 <AlertCircle className="w-5 h-5 text-red-600 mr-3" aria-hidden="true" />
-                <p class="text-red-800 font-medium">There was an error sending your message. Please try again or contact us directly.</p>
+                <p class="text-red-800 font-medium">
+                  There was an error sending your message. Please try again or contact us directly.
+                </p>
               </div>
             </div>
 
             <!-- Contact Form -->
-            <form 
-              id="contact-form" 
+            <form
+              id="contact-form"
               name="contact-form"
-              method="POST" 
+              method="POST"
               action="/api/contact/submit"
               data-analytics-form="contact-form"
               data-analytics-event="contact_submit"
@@ -155,7 +180,7 @@ import ErrorMessage from '../components/ErrorMessage.astro';
               <input type="hidden" name="analytics-client-id" value="" />
               <input type="hidden" name="analytics-landing-page" value="" />
               <input type="hidden" name="analytics-referrer-url" value="" />
-              
+
               <!-- Honeypot field for spam protection -->
               <div style="display: none;" aria-hidden="true">
                 <input name="bot-field" tabindex="-1" autocomplete="off" />
@@ -168,11 +193,11 @@ import ErrorMessage from '../components/ErrorMessage.astro';
                     <User className="w-4 h-4 inline mr-1" aria-hidden="true" />
                     Your Name *
                   </label>
-                  <input 
-                    type="text" 
-                    id="name" 
-                    name="name" 
-                    required 
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent transition-colors"
                     placeholder="Enter your full name"
                   />
@@ -183,11 +208,11 @@ import ErrorMessage from '../components/ErrorMessage.astro';
                     <Mail className="w-4 h-4 inline mr-1" aria-hidden="true" />
                     Email Address *
                   </label>
-                  <input 
-                    type="email" 
-                    id="email" 
-                    name="email" 
-                    required 
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent transition-colors"
                     placeholder="your.email@example.com"
                   />
@@ -202,10 +227,10 @@ import ErrorMessage from '../components/ErrorMessage.astro';
                     <Phone className="w-4 h-4 inline mr-1" aria-hidden="true" />
                     Phone Number
                   </label>
-                  <input 
-                    type="tel" 
-                    id="phone" 
-                    name="phone" 
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent transition-colors"
                     placeholder="(555) 123-4567"
                   />
@@ -216,8 +241,8 @@ import ErrorMessage from '../components/ErrorMessage.astro';
                     <Baby className="w-4 h-4 inline mr-1" aria-hidden="true" />
                     Child's Age (if applicable)
                   </label>
-                  <select 
-                    id="child-age" 
+                  <select
+                    id="child-age"
                     name="child-age"
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent transition-colors"
                   >
@@ -238,9 +263,9 @@ import ErrorMessage from '../components/ErrorMessage.astro';
                   <MessageSquare className="w-4 h-4 inline mr-1" aria-hidden="true" />
                   Subject *
                 </label>
-                <select 
-                  id="subject" 
-                  name="subject" 
+                <select
+                  id="subject"
+                  name="subject"
                   required
                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent transition-colors"
                 >
@@ -261,10 +286,10 @@ import ErrorMessage from '../components/ErrorMessage.astro';
                 <label for="message" class="block text-sm font-medium text-earth-brown mb-2">
                   Your Message *
                 </label>
-                <textarea 
-                  id="message" 
-                  name="message" 
-                  rows="6" 
+                <textarea
+                  id="message"
+                  name="message"
+                  rows="6"
                   required
                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent transition-colors resize-vertical"
                   placeholder="Tell us about your questions, interests, or how we can help you and your family..."
@@ -282,23 +307,28 @@ import ErrorMessage from '../components/ErrorMessage.astro';
                   The best way to understand our community is to experience it firsthand.
                 </p>
                 <label class="flex items-center">
-                  <input 
-                    type="checkbox" 
-                    name="tour-interest" 
+                  <input
+                    type="checkbox"
+                    name="tour-interest"
                     value="yes"
                     class="mr-3 text-forest-canopy focus:ring-forest-canopy"
                   />
-                  <span class="text-earth-brown">Yes, I'd like to schedule a tour of your school</span>
+                  <span class="text-earth-brown"
+                  >Yes, I'd like to schedule a tour of your school</span
+                  >
                 </label>
               </div>
 
               <!-- Submit Button -->
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 id="submit-btn"
                 class="w-full bg-forest-canopy hover:bg-moss-green text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Send className="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+                <Send
+                  className="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform"
+                  aria-hidden="true"
+                />
                 <span id="submit-text">Send Message</span>
                 <span id="submit-loading" class="hidden">Sending...</span>
               </button>
@@ -311,7 +341,6 @@ import ErrorMessage from '../components/ErrorMessage.astro';
 
           <!-- Contact Information & Hours -->
           <div class="space-y-8">
-            
             <!-- School Hours Widget -->
             <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
               <div class="flex items-center mb-4">
@@ -327,42 +356,43 @@ import ErrorMessage from '../components/ErrorMessage.astro';
                 <Heart className="w-6 h-6 text-forest-canopy mr-3" aria-hidden="true" />
                 <h3 class="text-xl font-semibold text-earth-brown">More Ways to Connect</h3>
               </div>
-              
+
               <div class="space-y-4">
                 <div>
                   <h4 class="font-semibold text-earth-brown mb-2">Admissions Questions</h4>
                   <p class="text-sm text-gray-600 mb-2">
                     Have questions about enrollment, tuition, or our programs?
                   </p>
-                  <a 
-                    href="/admissions" 
+                  <a
+                    href="/admissions"
                     class="text-forest-canopy hover:text-moss-green font-medium text-sm transition-colors"
                   >
                     Visit our Admissions page →
                   </a>
                 </div>
-                
+
                 <div>
                   <h4 class="font-semibold text-earth-brown mb-2">Tuition Calculator</h4>
                   <p class="text-sm text-gray-600 mb-2">
-                    Find out what tuition might look like for your family with our sliding scale calculator.
+                    Find out what tuition might look like for your family with our sliding scale
+                    calculator.
                   </p>
-                  <a 
-                    href="/admissions/tuition-calculator" 
+                  <a
+                    href="/admissions/tuition-calculator"
                     class="text-forest-canopy hover:text-moss-green font-medium text-sm transition-colors"
                   >
                     Calculate your rate →
                   </a>
                 </div>
-                
+
                 <div>
                   <h4 class="font-semibold text-earth-brown mb-2">Anonymous Feedback</h4>
                   <p class="text-sm text-gray-600 mb-2">
                     Share feedback about bias or discrimination confidentially.
                   </p>
-                  <a 
-                    href="https://docs.google.com/forms/d/e/1FAIpQLSd9x0mdbCKXBjbWuVme2SeRX9enMfUAf7Y_80VqFUDFs4qfRg/viewform?usp=sf_link" 
-                    target="_blank" 
+                  <a
+                    href="https://docs.google.com/forms/d/e/1FAIpQLSd9x0mdbCKXBjbWuVme2SeRX9enMfUAf7Y_80VqFUDFs4qfRg/viewform?usp=sf_link"
+                    target="_blank"
                     rel="noopener noreferrer"
                     class="text-forest-canopy hover:text-moss-green font-medium text-sm transition-colors"
                   >
@@ -375,15 +405,19 @@ import ErrorMessage from '../components/ErrorMessage.astro';
             <!-- Emergency Contact -->
             <div class="bg-orange-50 border border-orange-200 rounded-xl p-6">
               <div class="flex items-start">
-                <AlertCircle className="w-6 h-6 text-orange-600 mr-3 flex-shrink-0 mt-1" aria-hidden="true" />
+                <AlertCircle
+                  className="w-6 h-6 text-orange-600 mr-3 flex-shrink-0 mt-1"
+                  aria-hidden="true"
+                />
                 <div>
                   <h3 class="text-lg font-semibold text-orange-800 mb-2">Emergency Contact</h3>
                   <p class="text-orange-700 text-sm mb-3">
-                    For urgent matters during school hours, please call our main number. 
-                    For after-hours emergencies involving enrolled children, families will receive separate emergency contact information.
+                    For urgent matters during school hours, please call our main number. For
+                    after-hours emergencies involving enrolled children, families will receive
+                    separate emergency contact information.
                   </p>
-                  <a 
-                    href="tel:484-202-0712" 
+                  <a
+                    href="tel:484-202-0712"
                     class="text-orange-800 font-semibold hover:text-orange-900 transition-colors"
                   >
                     (484) 202-0712
@@ -402,50 +436,50 @@ import ErrorMessage from '../components/ErrorMessage.astro';
         <div class="text-center mb-12">
           <h2 class="text-3xl font-bold text-earth-brown mb-4">Find Us</h2>
           <p class="text-lg text-earth-brown max-w-2xl mx-auto">
-            We're located in Glen Mills, Pennsylvania, easily accessible from the greater Philadelphia area.
+            We're located in Glen Mills, Pennsylvania, easily accessible from the greater
+            Philadelphia area.
           </p>
         </div>
-        
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          
           <!-- Map Embed -->
           <div class="lg:col-span-2">
             <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
-              <iframe 
+              <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3049.8234567890123!2d-75.5234567!3d39.9123456!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s827%20Concord%20Road%2C%20Glen%20Mills%2C%20PA%2019342!5e0!3m2!1sen!2sus!4v1234567890123"
-                width="100%" 
-                height="400" 
-                style="border:0;" 
-                allowfullscreen="" 
-                loading="lazy" 
+                width="100%"
+                height="400"
+                style="border:0;"
+                allowfullscreen=""
+                loading="lazy"
                 referrerpolicy="no-referrer-when-downgrade"
                 title="Spicebush Montessori School Location Map"
-                aria-describedby="school-address"
-              ></iframe>
+                aria-describedby="school-address"></iframe>
             </div>
           </div>
-          
+
           <!-- Directions & Parking -->
           <div class="space-y-6">
             <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <h3 class="text-xl font-semibold text-earth-brown mb-4">Getting Here</h3>
-              
+
               <div class="space-y-4">
                 <div id="school-address">
                   <h4 class="font-semibold text-earth-brown mb-2">Address</h4>
                   <address class="text-earth-brown not-italic">
-                    827 Concord Road<br>
+                    827 Concord Road<br />
                     Glen Mills, PA 19342
                   </address>
                 </div>
-                
+
                 <div>
                   <h4 class="font-semibold text-earth-brown mb-2">Parking</h4>
                   <p class="text-earth-brown text-sm">
-                    Free parking is available on-site. Visitor spaces are clearly marked near the main entrance.
+                    Free parking is available on-site. Visitor spaces are clearly marked near the
+                    main entrance.
                   </p>
                 </div>
-                
+
                 <div>
                   <h4 class="font-semibold text-earth-brown mb-2">Public Transportation</h4>
                   <p class="text-earth-brown text-sm">
@@ -453,11 +487,11 @@ import ErrorMessage from '../components/ErrorMessage.astro';
                   </p>
                 </div>
               </div>
-              
+
               <div class="mt-6 pt-4 border-t border-gray-200">
-                <a 
-                  href="https://maps.google.com/?q=827+Concord+Road,+Glen+Mills,+PA+19342" 
-                  target="_blank" 
+                <a
+                  href="https://maps.google.com/?q=827+Concord+Road,+Glen+Mills,+PA+19342"
+                  target="_blank"
                   rel="noopener noreferrer"
                   class="inline-flex items-center text-forest-canopy hover:text-moss-green font-medium transition-colors"
                 >
@@ -471,7 +505,7 @@ import ErrorMessage from '../components/ErrorMessage.astro';
       </div>
     </section>
   </main>
-  
+
   <Footer />
 </Layout>
 
@@ -483,7 +517,7 @@ import ErrorMessage from '../components/ErrorMessage.astro';
     const submitBtn = document.getElementById('submit-btn');
     const submitText = document.getElementById('submit-text');
     const submitLoading = document.getElementById('submit-loading');
-    
+
     // Simple form enhancement for loading state
     if (
       form instanceof HTMLFormElement &&
@@ -496,7 +530,7 @@ import ErrorMessage from '../components/ErrorMessage.astro';
         submitBtn.disabled = true;
         submitText.classList.add('hidden');
         submitLoading.classList.remove('hidden');
-        
+
         // API route handles persistence and redirects to the success page.
         // The loading state will persist until page redirect.
       });

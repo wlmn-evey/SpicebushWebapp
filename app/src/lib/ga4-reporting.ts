@@ -33,10 +33,16 @@ const readEnv = (key: string): string => {
     return runtimeValue.trim();
   }
 
-  const importEnv = import.meta.env as Record<string, string | undefined>;
-  const importValue = importEnv[key];
-  if (typeof importValue === 'string' && importValue.trim().length > 0) {
-    return importValue.trim();
+  const meta = import.meta as unknown;
+  if (meta && typeof meta === 'object' && 'env' in (meta as Record<string, unknown>)) {
+    const candidate = (meta as { env?: unknown }).env;
+    if (candidate && typeof candidate === 'object') {
+      const importEnv = candidate as Record<string, string | undefined>;
+      const importValue = importEnv[key];
+      if (typeof importValue === 'string' && importValue.trim().length > 0) {
+        return importValue.trim();
+      }
+    }
   }
 
   return '';
@@ -86,7 +92,7 @@ const getServiceAccountCredentials = (): ServiceAccountCredentials | null => {
         return { clientEmail, privateKey };
       }
     } catch {
-      return null;
+      // Fall back to split variables when JSON is present but malformed.
     }
   }
 

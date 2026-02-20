@@ -1,0 +1,1392 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+import { db } from '@lib/db';
+import type { CampWeekView } from '@lib/db/camp';
+
+const [campData, settings] = await Promise.all([
+  db.camp.getCampAdminData(),
+  db.content.getAllSettings()
+]);
+
+const savedKey = Astro.url.searchParams.get('saved');
+const errorKey = Astro.url.searchParams.get('error');
+
+const asString = (value: unknown, fallback = ''): string => {
+  if (typeof value !== 'string') return fallback;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : fallback;
+};
+
+const asBool = (value: unknown, fallback = false): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', '1', 'yes', 'on'].includes(normalized)) return true;
+    if (['false', '0', 'no', 'off'].includes(normalized)) return false;
+  }
+  return fallback;
+};
+
+const parseCampModeOverride = (value: unknown): 'auto' | 'prep' | 'on' | 'off' => {
+  const normalized = asString(value).toLowerCase();
+  if (
+    normalized === 'auto' ||
+    normalized === 'prep' ||
+    normalized === 'on' ||
+    normalized === 'off'
+  ) {
+    return normalized;
+  }
+  return 'off';
+};
+
+const formatDate = (value: string): string => {
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) return value;
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }).format(new Date(parsed));
+};
+
+const campModeOverride = parseCampModeOverride(settings.camp_mode_override);
+const campModeStartAt = asString(settings.camp_mode_start_at);
+const campModeEndAt = asString(settings.camp_mode_end_at);
+const campModeTimezone = asString(settings.camp_mode_timezone, 'America/New_York');
+const campPromotionsEnabled = asBool(settings.camp_promotions_enabled, false);
+const campPromoActiveMessage = asString(
+  settings.camp_promo_active_message,
+  'Summer camp is open. View weekly themes and enroll now.'
+);
+const campPromoInactiveMessage = asString(
+  settings.camp_promo_inactive_message,
+  'Summer camp details are coming soon. See updates and opening windows.'
+);
+const campOpenDateLabel = asString(settings.camp_open_date_label);
+
+const seasonOptions = campData.seasons;
+
+const statusClass = (week: CampWeekView): string => {
+  switch (week.status) {
+  case 'open':
+    return 'bg-green-100 text-green-800 border-green-200';
+  case 'limited':
+    return 'bg-amber-100 text-amber-800 border-amber-200';
+  case 'full':
+    return 'bg-red-100 text-red-800 border-red-200';
+  case 'waitlist':
+    return 'bg-blue-100 text-blue-800 border-blue-200';
+  case 'closed':
+    return 'bg-gray-200 text-gray-800 border-gray-300';
+  case 'draft':
+    return 'bg-purple-100 text-purple-800 border-purple-200';
+  default:
+    return 'bg-gray-100 text-gray-700 border-gray-200';
+  }
+};
+
+const statusLabel = (week: CampWeekView): string => {
+  switch (week.status) {
+  case 'open':
+    return 'Open';
+  case 'limited':
+    return 'Limited';
+  case 'full':
+    return 'Full';
+  case 'waitlist':
+    return 'Waitlist';
+  case 'closed':
+    return 'Closed';
+  case 'draft':
+    return 'Draft';
+  default:
+    return 'Unknown';
+  }
+};
+
+const modeSummary = (() => {
+  if (campModeOverride === 'on') return 'Camp is live for all visitors.';
+  if (campModeOverride === 'off') return 'Camp is hidden for everyone.';
+  if (campModeOverride === 'prep') return 'Camp is private preview for admins only.';
+  return 'Camp follows your scheduled start and end window.';
+})();
+
+const toVariantLines = (week: CampWeekView): string =>
+  week.variants
+    .map(variant =>
+      [
+        variant.label,
+        variant.ageRangeLabel ?? '',
+        variant.hoursLabel ?? '',
+        variant.priceLabel ?? '',
+        variant.notes ?? ''
+      ].join(' | ')
+    )
+    .join('\n');
+
+const totalCapacity = campData.weeks.reduce((sum, week) => sum + week.capacityTotal, 0);
+const totalAvailable = campData.weeks.reduce((sum, week) => sum + week.availableSeats, 0);
+const publishedCount = campData.weeks.filter(week => week.isPublished).length;
+const enrollmentConfiguredCount = campData.weeks.filter(
+  week => week.enrollmentUrl.length > 0
+).length;
+
+const statusCounts = {
+  open: campData.weeks.filter(week => week.status === 'open').length,
+  limited: campData.weeks.filter(week => week.status === 'limited').length,
+  waitlist: campData.weeks.filter(week => week.status === 'waitlist').length,
+  full: campData.weeks.filter(week => week.status === 'full').length,
+  closed: campData.weeks.filter(week => week.status === 'closed').length,
+  draft: campData.weeks.filter(week => week.status === 'draft').length
+};
+
+const totalAdjustments = campData.recentAdjustments.length;
+const latestAdjustment = campData.recentAdjustments[0] ?? null;
+
+const TABS = ['overview', 'seasons', 'weeks', 'activity'] as const;
+type CampTab = (typeof TABS)[number];
+
+const parseTab = (value: string | null): CampTab => {
+  if (value && TABS.includes(value as CampTab)) {
+    return value as CampTab;
+  }
+  return 'overview';
+};
+
+const activeTab = parseTab(Astro.url.searchParams.get('tab'));
+const tabHref = (tab: CampTab) => `/admin/camp?tab=${tab}`;
+
+const tabLabel: Record<CampTab, string> = {
+  overview: 'Overview',
+  seasons: 'Seasons',
+  weeks: 'Weeks',
+  activity: 'Activity'
+};
+---
+
+<AdminLayout title="Camp Management">
+  {
+    savedKey && (
+      <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+        Saved: <strong>{savedKey}</strong>
+      </p>
+    )
+  }
+
+  {
+    errorKey && (
+      <p class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        Error: <strong>{errorKey}</strong>
+      </p>
+    )
+  }
+
+  {
+    campData.errorMessage && (
+      <p class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+        {campData.errorMessage}
+      </p>
+    )
+  }
+
+  <div class="space-y-6">
+    <section
+      class="overflow-hidden rounded-2xl border border-forest-canopy/20 bg-gradient-to-br from-forest-canopy via-moss-green to-forest-canopy p-6 text-white shadow-md"
+    >
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="space-y-2">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
+            Camp Workspace
+          </p>
+          <h2 class="text-2xl font-bold tracking-tight">Clear, Friendly Camp Operations</h2>
+          <p class="max-w-2xl text-sm text-white/90">
+            Manage mode, seasons, weekly seats, and enrollment links without digging through one
+            giant form.
+          </p>
+        </div>
+        <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm backdrop-blur">
+          <p class="text-xs uppercase tracking-wide text-white/75">Current Mode</p>
+          <p class="text-lg font-semibold">{campModeOverride}</p>
+        </div>
+      </div>
+
+      <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-xl border border-white/20 bg-white/10 p-3">
+          <p class="text-xs uppercase tracking-wide text-white/75">Weeks</p>
+          <p class="text-xl font-semibold">{campData.weeks.length}</p>
+          <p class="text-xs text-white/80">{publishedCount} published</p>
+        </div>
+        <div class="rounded-xl border border-white/20 bg-white/10 p-3">
+          <p class="text-xs uppercase tracking-wide text-white/75">Seats</p>
+          <p class="text-xl font-semibold">{totalAvailable} available</p>
+          <p class="text-xs text-white/80">{totalCapacity} total capacity</p>
+        </div>
+        <div class="rounded-xl border border-white/20 bg-white/10 p-3">
+          <p class="text-xs uppercase tracking-wide text-white/75">Enrollment Links</p>
+          <p class="text-xl font-semibold">{enrollmentConfiguredCount}</p>
+          <p class="text-xs text-white/80">configured weeks</p>
+        </div>
+        <div class="rounded-xl border border-white/20 bg-white/10 p-3">
+          <p class="text-xs uppercase tracking-wide text-white/75">Recent Seat Logs</p>
+          <p class="text-xl font-semibold">{totalAdjustments}</p>
+          <p class="text-xs text-white/80">last 60 adjustments</p>
+        </div>
+      </div>
+    </section>
+
+    <nav class="flex flex-wrap gap-2" aria-label="Camp management sections">
+      {
+        TABS.map(tab => (
+          <a
+            href={tabHref(tab)}
+            class={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+              activeTab === tab
+                ? 'border-forest-canopy bg-forest-canopy text-white'
+                : 'border-gray-300 bg-white text-earth-brown hover:border-forest-canopy hover:text-forest-canopy'
+            }`}
+          >
+            {tabLabel[tab]}
+          </a>
+        ))
+      }
+    </nav>
+
+    {
+      activeTab === 'overview' && (
+        <div class="space-y-6">
+          <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div class="mb-4">
+              <h3 class="text-lg font-semibold text-earth-brown">Mode and Promotion Controls</h3>
+              <p class="mt-1 text-sm text-earth-brown/80">{modeSummary}</p>
+            </div>
+
+            <form method="post" action="/api/admin/settings" class="space-y-4">
+              <input
+                type="hidden"
+                name="redirectTo"
+                value="/admin/camp?tab=overview&saved=camp_mode"
+              />
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <label class="block text-sm font-medium text-earth-brown">
+                  Camp Mode
+                  <select
+                    name="camp_mode_override"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  >
+                    <option value="auto" selected={campModeOverride === 'auto'}>
+                      auto
+                    </option>
+                    <option value="prep" selected={campModeOverride === 'prep'}>
+                      prep
+                    </option>
+                    <option value="on" selected={campModeOverride === 'on'}>
+                      on
+                    </option>
+                    <option value="off" selected={campModeOverride === 'off'}>
+                      off
+                    </option>
+                  </select>
+                </label>
+
+                <label class="block text-sm font-medium text-earth-brown">
+                  Timezone
+                  <input
+                    type="text"
+                    name="camp_mode_timezone"
+                    value={campModeTimezone}
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+
+                <label class="block text-sm font-medium text-earth-brown">
+                  Auto Start (ISO)
+                  <input
+                    type="text"
+                    name="camp_mode_start_at"
+                    value={campModeStartAt}
+                    placeholder="2026-05-01T00:00:00-04:00"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+
+                <label class="block text-sm font-medium text-earth-brown">
+                  Auto End (ISO)
+                  <input
+                    type="text"
+                    name="camp_mode_end_at"
+                    value={campModeEndAt}
+                    placeholder="2026-08-31T23:59:59-04:00"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+
+                <label class="block text-sm font-medium text-earth-brown md:col-span-2">
+                  Enable Sitewide Camp Promotions
+                  <select
+                    name="camp_promotions_enabled"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  >
+                    <option value="true" selected={campPromotionsEnabled}>
+                      true
+                    </option>
+                    <option value="false" selected={!campPromotionsEnabled}>
+                      false
+                    </option>
+                  </select>
+                </label>
+
+                <label class="block text-sm font-medium text-earth-brown md:col-span-2">
+                  Active Promo Message
+                  <input
+                    type="text"
+                    name="camp_promo_active_message"
+                    value={campPromoActiveMessage}
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+
+                <label class="block text-sm font-medium text-earth-brown md:col-span-2">
+                  Inactive Promo Message
+                  <input
+                    type="text"
+                    name="camp_promo_inactive_message"
+                    value={campPromoInactiveMessage}
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+
+                <label class="block text-sm font-medium text-earth-brown md:col-span-2">
+                  Coming Soon Date Label
+                  <input
+                    type="text"
+                    name="camp_open_date_label"
+                    value={campOpenDateLabel}
+                    placeholder="Registration opens January 2027"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3">
+                <button
+                  type="submit"
+                  class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+                >
+                  Save Mode and Promo Settings
+                </button>
+                <a
+                  href="/camp"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-earth-brown hover:bg-gray-100"
+                >
+                  Open /camp
+                </a>
+                <a
+                  href="/camp-coming-soon"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-earth-brown hover:bg-gray-100"
+                >
+                  Open /camp-coming-soon
+                </a>
+              </div>
+            </form>
+          </section>
+
+          <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 class="text-lg font-semibold text-earth-brown">Week Status At A Glance</h3>
+            <p class="mt-1 text-sm text-earth-brown/80">
+              Quick read of availability and publishing state. Use the Weeks tab to edit details.
+            </p>
+
+            <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <article class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                <p class="text-xs uppercase tracking-wide text-earth-brown/70">Open</p>
+                <p class="text-2xl font-semibold text-earth-brown">{statusCounts.open}</p>
+              </article>
+              <article class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                <p class="text-xs uppercase tracking-wide text-earth-brown/70">Limited</p>
+                <p class="text-2xl font-semibold text-earth-brown">{statusCounts.limited}</p>
+              </article>
+              <article class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                <p class="text-xs uppercase tracking-wide text-earth-brown/70">Waitlist</p>
+                <p class="text-2xl font-semibold text-earth-brown">{statusCounts.waitlist}</p>
+              </article>
+              <article class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                <p class="text-xs uppercase tracking-wide text-earth-brown/70">Full</p>
+                <p class="text-2xl font-semibold text-earth-brown">{statusCounts.full}</p>
+              </article>
+              <article class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                <p class="text-xs uppercase tracking-wide text-earth-brown/70">Closed</p>
+                <p class="text-2xl font-semibold text-earth-brown">{statusCounts.closed}</p>
+              </article>
+              <article class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                <p class="text-xs uppercase tracking-wide text-earth-brown/70">Draft</p>
+                <p class="text-2xl font-semibold text-earth-brown">{statusCounts.draft}</p>
+              </article>
+            </div>
+
+            {campData.weeks.length > 0 && (
+              <div class="mt-4 grid gap-3 lg:grid-cols-2">
+                {campData.weeks.map(week => (
+                  <article class="rounded-xl border border-gray-200 bg-white p-3">
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <p class="text-sm font-semibold text-earth-brown">{week.themeTitle}</p>
+                        <p class="text-xs text-earth-brown/70">
+                          {formatDate(week.startDate)} to {formatDate(week.endDate)}
+                        </p>
+                      </div>
+                      <span
+                        class={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass(week)}`}
+                      >
+                        {statusLabel(week)}
+                      </span>
+                    </div>
+                    <p class="mt-2 text-xs text-earth-brown/80">
+                      {week.availableSeats} seats available of {week.capacityTotal}
+                    </p>
+                    <a
+                      href={`/admin/camp?tab=weeks#week-${week.id}`}
+                      class="mt-3 inline-flex text-xs font-semibold text-forest-canopy hover:underline"
+                    >
+                      Edit week details
+                    </a>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      )
+    }
+
+    {
+      activeTab === 'seasons' && (
+        <div class="space-y-6">
+          <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 class="text-lg font-semibold text-earth-brown">Create New Season</h3>
+            <p class="mt-1 text-sm text-earth-brown/80">
+              Add a season first, then attach weeks under it.
+            </p>
+
+            <form method="post" action="/api/admin/camp" class="mt-4 grid gap-4 md:grid-cols-2">
+              <input type="hidden" name="action" value="create-season" />
+              <input type="hidden" name="redirectTo" value="/admin/camp?tab=seasons" />
+
+              <label class="block text-sm font-medium text-earth-brown">
+                Season Name
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Summer Camp 2027"
+                  required
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+
+              <label class="block text-sm font-medium text-earth-brown">
+                Slug
+                <input
+                  type="text"
+                  name="slug"
+                  placeholder="summer-2027"
+                  required
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+
+              <label class="block text-sm font-medium text-earth-brown">
+                Year
+                <input
+                  type="number"
+                  name="year"
+                  min="2020"
+                  max="2100"
+                  value="2027"
+                  required
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+
+              <label class="block text-sm font-medium text-earth-brown">
+                Active
+                <select
+                  name="isActive"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                >
+                  <option value="false" selected>
+                    false
+                  </option>
+                  <option value="true">true</option>
+                </select>
+              </label>
+
+              <label class="block text-sm font-medium text-earth-brown">
+                Registration Open At (optional)
+                <input
+                  type="text"
+                  name="registrationOpenAt"
+                  placeholder="2027-01-15T09:00:00-05:00"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+
+              <label class="block text-sm font-medium text-earth-brown">
+                Registration Close At (optional)
+                <input
+                  type="text"
+                  name="registrationCloseAt"
+                  placeholder="2027-07-31T17:00:00-04:00"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+
+              <div class="md:col-span-2">
+                <button
+                  type="submit"
+                  class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+                >
+                  Create Season
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 class="text-lg font-semibold text-earth-brown">Existing Seasons</h3>
+
+            {campData.seasons.length === 0 ? (
+              <p class="mt-3 text-sm text-earth-brown/75">No camp seasons created yet.</p>
+            ) : (
+              <div class="mt-4 space-y-4">
+                {campData.seasons.map(season => (
+                  <form
+                    method="post"
+                    action="/api/admin/camp"
+                    class="rounded-xl border border-gray-200 p-4"
+                  >
+                    <input type="hidden" name="action" value="save-season" />
+                    <input type="hidden" name="seasonId" value={season.id} />
+                    <input type="hidden" name="redirectTo" value="/admin/camp?tab=seasons" />
+
+                    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <p class="text-sm font-semibold text-earth-brown">{season.name}</p>
+                      <span
+                        class={`rounded-full px-2.5 py-1 text-xs font-semibold ${season.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}
+                      >
+                        {season.isActive ? 'active' : 'inactive'}
+                      </span>
+                    </div>
+
+                    <div class="grid gap-3 md:grid-cols-2">
+                      <label class="block text-sm font-medium text-earth-brown">
+                        Season Name
+                        <input
+                          type="text"
+                          name="name"
+                          value={season.name}
+                          required
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+
+                      <label class="block text-sm font-medium text-earth-brown">
+                        Slug
+                        <input
+                          type="text"
+                          name="slug"
+                          value={season.slug}
+                          required
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+
+                      <label class="block text-sm font-medium text-earth-brown">
+                        Year
+                        <input
+                          type="number"
+                          name="year"
+                          value={season.year}
+                          min="2020"
+                          max="2100"
+                          required
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+
+                      <label class="block text-sm font-medium text-earth-brown">
+                        Active
+                        <select
+                          name="isActive"
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        >
+                          <option value="true" selected={season.isActive}>
+                            true
+                          </option>
+                          <option value="false" selected={!season.isActive}>
+                            false
+                          </option>
+                        </select>
+                      </label>
+
+                      <label class="block text-sm font-medium text-earth-brown">
+                        Registration Open At
+                        <input
+                          type="text"
+                          name="registrationOpenAt"
+                          value={season.registrationOpenAt ?? ''}
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+
+                      <label class="block text-sm font-medium text-earth-brown">
+                        Registration Close At
+                        <input
+                          type="text"
+                          name="registrationCloseAt"
+                          value={season.registrationCloseAt ?? ''}
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+                    </div>
+
+                    <button
+                      type="submit"
+                      class="mt-4 rounded-lg border border-forest-canopy px-4 py-2 text-sm font-semibold text-forest-canopy hover:bg-forest-canopy hover:text-white"
+                    >
+                      Save Season
+                    </button>
+                  </form>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      )
+    }
+
+    {
+      activeTab === 'weeks' && (
+        <div class="space-y-6">
+          <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <details open={campData.weeks.length === 0}>
+              <summary class="cursor-pointer list-none">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h3 class="text-lg font-semibold text-earth-brown">Create Camp Week</h3>
+                    <p class="text-sm text-earth-brown/80">
+                      Add week title, dates, seats, and links.
+                    </p>
+                  </div>
+                  <span class="rounded-full bg-stone-beige px-3 py-1 text-xs font-semibold text-earth-brown">
+                    New week
+                  </span>
+                </div>
+              </summary>
+
+              <form method="post" action="/api/admin/camp" class="mt-4 space-y-4">
+                <input type="hidden" name="action" value="create-week" />
+                <input type="hidden" name="redirectTo" value="/admin/camp?tab=weeks" />
+
+                <div class="grid gap-3 lg:grid-cols-3">
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Season
+                    <select
+                      name="seasonId"
+                      required
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    >
+                      <option value="">Select season</option>
+                      {seasonOptions.map(season => (
+                        <option value={season.id}>
+                          {season.name} ({season.year})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Week Title / Theme
+                    <input
+                      type="text"
+                      name="themeTitle"
+                      required
+                      placeholder="Week 1 - Nature Explorers"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Slug
+                    <input
+                      type="text"
+                      name="slug"
+                      required
+                      placeholder="week-1-nature-explorers"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Start Date
+                    <input
+                      type="date"
+                      name="startDate"
+                      required
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    End Date
+                    <input
+                      type="date"
+                      name="endDate"
+                      required
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Display Order
+                    <input
+                      type="number"
+                      name="displayOrder"
+                      value="0"
+                      min="0"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Age Range Label
+                    <input
+                      type="text"
+                      name="ageRangeLabel"
+                      placeholder="Ages 3-6"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Hours Label
+                    <input
+                      type="text"
+                      name="hoursLabel"
+                      placeholder="8:30 AM - 4:30 PM"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Price Label
+                    <input
+                      type="text"
+                      name="priceLabel"
+                      placeholder="$350 / week"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Capacity Total
+                    <input
+                      type="number"
+                      name="capacityTotal"
+                      value="20"
+                      min="0"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Seats Confirmed
+                    <input
+                      type="number"
+                      name="seatsConfirmed"
+                      value="0"
+                      min="0"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Seats Held
+                    <input
+                      type="number"
+                      name="seatsHeld"
+                      value="0"
+                      min="0"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Limited Threshold
+                    <input
+                      type="number"
+                      name="limitedThreshold"
+                      value="4"
+                      min="0"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Waitlist Enabled
+                    <select
+                      name="waitlistEnabled"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    >
+                      <option value="true" selected>
+                        true
+                      </option>
+                      <option value="false">false</option>
+                    </select>
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Published
+                    <select
+                      name="isPublished"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    >
+                      <option value="false" selected>
+                        false
+                      </option>
+                      <option value="true">true</option>
+                    </select>
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown lg:col-span-3">
+                    Summary
+                    <textarea
+                      name="summary"
+                      rows="2"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      placeholder="Short parent-friendly week summary"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown lg:col-span-3">
+                    Description
+                    <textarea
+                      name="description"
+                      rows="3"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      placeholder="Longer details and highlights"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown lg:col-span-2">
+                    Enrollment URL (Transparent Classroom)
+                    <input
+                      type="text"
+                      name="enrollmentUrl"
+                      placeholder="https://..."
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Waitlist URL (optional)
+                    <input
+                      type="text"
+                      name="waitlistUrl"
+                      placeholder="https://..."
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Registration Open At (optional)
+                    <input
+                      type="text"
+                      name="registrationOpenAt"
+                      placeholder="2027-01-15T09:00:00-05:00"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown">
+                    Registration Close At (optional)
+                    <input
+                      type="text"
+                      name="registrationCloseAt"
+                      placeholder="2027-08-15T17:00:00-04:00"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                  </label>
+
+                  <label class="block text-sm font-medium text-earth-brown lg:col-span-3">
+                    Display Variants (one per line)
+                    <textarea
+                      name="variantLines"
+                      rows="4"
+                      class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-xs"
+                      placeholder="Half Day | Ages 3-6 | 8:30 AM - 12:00 PM | $220 / week | Optional note"
+                    />
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+                >
+                  Create Camp Week
+                </button>
+              </form>
+            </details>
+          </section>
+
+          <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 class="text-lg font-semibold text-earth-brown">Manage Existing Weeks</h3>
+
+            {campData.weeks.length === 0 ? (
+              <p class="mt-3 text-sm text-earth-brown/75">No camp weeks created yet.</p>
+            ) : (
+              <div class="mt-4 space-y-4">
+                {campData.weeks.map(week => (
+                  <details
+                    id={`week-${week.id}`}
+                    class="rounded-xl border border-gray-200 bg-white p-4"
+                  >
+                    <summary class="cursor-pointer list-none">
+                      <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p class="font-semibold text-earth-brown">{week.themeTitle}</p>
+                          <p class="text-xs text-earth-brown/75">
+                            {formatDate(week.startDate)} to {formatDate(week.endDate)} |{' '}
+                            {week.seasonName}
+                          </p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <span
+                            class={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass(week)}`}
+                          >
+                            {statusLabel(week)}
+                          </span>
+                          <span class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-earth-brown">
+                            {week.availableSeats} seats left
+                          </span>
+                        </div>
+                      </div>
+                    </summary>
+
+                    <div class="mt-4 space-y-4">
+                      <form method="post" action="/api/admin/camp" class="space-y-4">
+                        <input type="hidden" name="action" value="save-week" />
+                        <input type="hidden" name="weekId" value={week.id} />
+                        <input type="hidden" name="redirectTo" value="/admin/camp?tab=weeks" />
+
+                        <div class="grid gap-3 lg:grid-cols-3">
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Season
+                            <select
+                              name="seasonId"
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            >
+                              {seasonOptions.map(season => (
+                                <option value={season.id} selected={season.id === week.seasonId}>
+                                  {season.name} ({season.year})
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Week Title / Theme
+                            <input
+                              type="text"
+                              name="themeTitle"
+                              value={week.themeTitle}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Slug
+                            <input
+                              type="text"
+                              name="slug"
+                              value={week.slug}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Start Date
+                            <input
+                              type="date"
+                              name="startDate"
+                              value={week.startDate}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            End Date
+                            <input
+                              type="date"
+                              name="endDate"
+                              value={week.endDate}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Display Order
+                            <input
+                              type="number"
+                              name="displayOrder"
+                              min="0"
+                              value={week.displayOrder}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Age Range Label
+                            <input
+                              type="text"
+                              name="ageRangeLabel"
+                              value={week.ageRangeLabel}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Hours Label
+                            <input
+                              type="text"
+                              name="hoursLabel"
+                              value={week.hoursLabel}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Price Label
+                            <input
+                              type="text"
+                              name="priceLabel"
+                              value={week.priceLabel}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Capacity Total
+                            <input
+                              type="number"
+                              name="capacityTotal"
+                              min="0"
+                              value={week.capacityTotal}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Seats Confirmed
+                            <input
+                              type="number"
+                              name="seatsConfirmed"
+                              min="0"
+                              value={week.seatsConfirmed}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Seats Held
+                            <input
+                              type="number"
+                              name="seatsHeld"
+                              min="0"
+                              value={week.seatsHeld}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Limited Threshold
+                            <input
+                              type="number"
+                              name="limitedThreshold"
+                              min="0"
+                              value={week.limitedThreshold}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Waitlist Enabled
+                            <select
+                              name="waitlistEnabled"
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            >
+                              <option value="true" selected={week.waitlistEnabled}>
+                                true
+                              </option>
+                              <option value="false" selected={!week.waitlistEnabled}>
+                                false
+                              </option>
+                            </select>
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Published
+                            <select
+                              name="isPublished"
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            >
+                              <option value="true" selected={week.isPublished}>
+                                true
+                              </option>
+                              <option value="false" selected={!week.isPublished}>
+                                false
+                              </option>
+                            </select>
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown lg:col-span-3">
+                            Summary
+                            <textarea
+                              name="summary"
+                              rows="2"
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            >
+                              {week.summary}
+                            </textarea>
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown lg:col-span-3">
+                            Description
+                            <textarea
+                              name="description"
+                              rows="3"
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            >
+                              {week.description}
+                            </textarea>
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown lg:col-span-2">
+                            Enrollment URL (Transparent Classroom)
+                            <input
+                              type="text"
+                              name="enrollmentUrl"
+                              value={week.enrollmentUrl}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Waitlist URL
+                            <input
+                              type="text"
+                              name="waitlistUrl"
+                              value={week.waitlistUrl ?? ''}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Registration Open At
+                            <input
+                              type="text"
+                              name="registrationOpenAt"
+                              value={week.registrationOpenAt ?? ''}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown">
+                            Registration Close At
+                            <input
+                              type="text"
+                              name="registrationCloseAt"
+                              value={week.registrationCloseAt ?? ''}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium text-earth-brown lg:col-span-3">
+                            Display Variants (one per line)
+                            <textarea
+                              name="variantLines"
+                              rows="4"
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-xs"
+                            >
+                              {toVariantLines(week)}
+                            </textarea>
+                          </label>
+                        </div>
+
+                        <button
+                          type="submit"
+                          class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+                        >
+                          Save Week
+                        </button>
+                      </form>
+
+                      <div class="grid gap-3 md:grid-cols-2">
+                        <form
+                          method="post"
+                          action="/api/admin/camp"
+                          class="rounded-lg border border-gray-200 p-3"
+                        >
+                          <input type="hidden" name="action" value="adjust-seats" />
+                          <input type="hidden" name="weekId" value={week.id} />
+                          <input type="hidden" name="redirectTo" value="/admin/camp?tab=weeks" />
+                          <p class="text-sm font-semibold text-earth-brown">
+                            Quick Seat Adjustment
+                          </p>
+                          <div class="mt-2 grid gap-2 sm:grid-cols-3">
+                            <label class="text-xs font-medium text-earth-brown/80">
+                              Delta Confirmed
+                              <input
+                                type="number"
+                                name="deltaConfirmed"
+                                value="0"
+                                class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
+                              />
+                            </label>
+                            <label class="text-xs font-medium text-earth-brown/80">
+                              Delta Held
+                              <input
+                                type="number"
+                                name="deltaHeld"
+                                value="0"
+                                class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
+                              />
+                            </label>
+                            <label class="text-xs font-medium text-earth-brown/80">
+                              Delta Capacity
+                              <input
+                                type="number"
+                                name="deltaCapacity"
+                                value="0"
+                                class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
+                              />
+                            </label>
+                          </div>
+                          <label class="mt-2 block text-xs font-medium text-earth-brown/80">
+                            Note
+                            <input
+                              type="text"
+                              name="note"
+                              placeholder="Optional adjustment note"
+                              class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
+                            />
+                          </label>
+                          <button
+                            type="submit"
+                            class="mt-3 rounded-lg border border-forest-canopy px-3 py-1.5 text-xs font-semibold text-forest-canopy hover:bg-forest-canopy hover:text-white"
+                          >
+                            Apply Seat Adjustment
+                          </button>
+                        </form>
+
+                        <form
+                          method="post"
+                          action="/api/admin/camp"
+                          class="rounded-lg border border-red-200 bg-red-50 p-3"
+                        >
+                          <input type="hidden" name="action" value="delete-week" />
+                          <input type="hidden" name="weekId" value={week.id} />
+                          <input type="hidden" name="redirectTo" value="/admin/camp?tab=weeks" />
+                          <p class="text-sm font-semibold text-red-800">Delete Week</p>
+                          <p class="mt-1 text-xs text-red-700">
+                            This removes the week, variants, and linked seat adjustment history.
+                          </p>
+                          <button
+                            type="submit"
+                            class="mt-3 rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
+                          >
+                            Delete {week.themeTitle}
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </details>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      )
+    }
+
+    {
+      activeTab === 'activity' && (
+        <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 class="text-lg font-semibold text-earth-brown">Recent Seat Adjustments</h3>
+              <p class="mt-1 text-sm text-earth-brown/80">
+                Audit trail for manual seat changes across camp weeks.
+              </p>
+            </div>
+            {latestAdjustment && (
+              <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-earth-brown/85">
+                Latest: {latestAdjustment.action} by {latestAdjustment.actorEmail ?? 'system'} on{' '}
+                {formatDate(latestAdjustment.createdAt)}
+              </div>
+            )}
+          </div>
+
+          {campData.recentAdjustments.length === 0 ? (
+            <p class="mt-4 text-sm text-earth-brown/75">No seat adjustment history yet.</p>
+          ) : (
+            <div class="mt-4 overflow-x-auto">
+              <table class="min-w-full border-collapse text-sm">
+                <thead>
+                  <tr class="bg-gray-50 text-left text-xs uppercase tracking-wide text-earth-brown/70">
+                    <th class="border border-gray-200 px-3 py-2">Time</th>
+                    <th class="border border-gray-200 px-3 py-2">Week</th>
+                    <th class="border border-gray-200 px-3 py-2">Action</th>
+                    <th class="border border-gray-200 px-3 py-2">Before to After</th>
+                    <th class="border border-gray-200 px-3 py-2">Actor</th>
+                    <th class="border border-gray-200 px-3 py-2">Note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {campData.recentAdjustments.map(entry => (
+                    <tr>
+                      <td class="border border-gray-200 px-3 py-2 text-xs text-earth-brown/80">
+                        {entry.createdAt}
+                      </td>
+                      <td class="border border-gray-200 px-3 py-2">{entry.weekTitle}</td>
+                      <td class="border border-gray-200 px-3 py-2">{entry.action}</td>
+                      <td class="border border-gray-200 px-3 py-2 text-xs text-earth-brown/80">
+                        confirmed {entry.beforeConfirmed ?? 'n/a'} to{' '}
+                        {entry.afterConfirmed ?? 'n/a'}
+                        <br />
+                        held {entry.beforeHeld ?? 'n/a'} to {entry.afterHeld ?? 'n/a'}
+                        <br />
+                        capacity {entry.beforeCapacity ?? 'n/a'} to {entry.afterCapacity ?? 'n/a'}
+                      </td>
+                      <td class="border border-gray-200 px-3 py-2 text-xs text-earth-brown/80">
+                        {entry.actorEmail ?? 'system'}
+                      </td>
+                      <td class="border border-gray-200 px-3 py-2 text-xs text-earth-brown/80">
+                        {entry.note ?? 'n/a'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )
+    }
+  </div>
+</AdminLayout>

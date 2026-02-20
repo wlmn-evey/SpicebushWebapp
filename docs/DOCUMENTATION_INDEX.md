@@ -1,5 +1,5 @@
 # Documentation Index
-*Last Updated: February 8, 2026*
+*Last Updated: February 19, 2026*
 
 ## Start Here
 - `docs/README.md`
@@ -19,6 +19,7 @@
   - `docs/testing/qa-checklist.md`
 - Architecture:
   - `docs/architecture/database-setup.md`
+  - `docs/architecture/camp-feature-blueprint.md`
   - `docs/roadmap.md`
 
 ## Incidents

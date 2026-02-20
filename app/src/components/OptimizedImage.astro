@@ -634,8 +634,14 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       if ((img.dataset.sbAutoFocus || 'true') !== 'true') return;
       if ((img.dataset.sbObjectFit || 'cover') !== 'cover') return;
 
-      const intrinsicWidth = parseNumber(img.getAttribute('width') || `${img.naturalWidth}`, img.naturalWidth || 0);
-      const intrinsicHeight = parseNumber(img.getAttribute('height') || `${img.naturalHeight}`, img.naturalHeight || 0);
+      // Prefer decoded natural dimensions when available. Some legacy records can
+      // carry stale width/height metadata that skews focal positioning math.
+      const naturalWidth = img.naturalWidth > 0 ? img.naturalWidth : 0;
+      const naturalHeight = img.naturalHeight > 0 ? img.naturalHeight : 0;
+      const attributeWidth = parseNumber(img.getAttribute('width'), 0);
+      const attributeHeight = parseNumber(img.getAttribute('height'), 0);
+      const intrinsicWidth = naturalWidth > 0 ? naturalWidth : attributeWidth;
+      const intrinsicHeight = naturalHeight > 0 ? naturalHeight : attributeHeight;
 
       if (intrinsicWidth <= 0 || intrinsicHeight <= 0) return;
 
@@ -651,9 +657,28 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
       const renderedWidth = intrinsicWidth * scale;
       const renderedHeight = intrinsicHeight * scale;
       const target = getTargetPoint(img);
+      const intrinsicRatio = intrinsicWidth / intrinsicHeight;
+      const containerRatio = containerWidth / containerHeight;
+      const adjustedTarget = (() => {
+        if (!Number.isFinite(intrinsicRatio) || !Number.isFinite(containerRatio)) return target;
+        if (intrinsicRatio >= 0.95 || containerRatio <= 1.2) return target;
 
-      const objectX = computeAxisPosition(containerWidth, renderedWidth, target.x);
-      const objectY = computeAxisPosition(containerHeight, renderedHeight, target.y);
+        // Portrait source shown in a wide frame often leaves the visual subject low
+        // in frame. Nudge toward lower-center when focus is still near default center.
+        const defaultCentered = Math.abs(target.y - 50) <= 8;
+        if (!defaultCentered) return target;
+
+        const portraitSeverity = clamp((1 - intrinsicRatio) / 0.4, 0, 1);
+        const wideSeverity = clamp((containerRatio - 1.2) / 1.2, 0, 1);
+        const biasTargetY = 58 + (portraitSeverity * 14) + (wideSeverity * 6);
+        return {
+          x: target.x,
+          y: clamp((target.y * 0.35) + (biasTargetY * 0.65), 0, 100)
+        };
+      })();
+
+      const objectX = computeAxisPosition(containerWidth, renderedWidth, adjustedTarget.x);
+      const objectY = computeAxisPosition(containerHeight, renderedHeight, adjustedTarget.y);
 
       img.style.objectPosition = `${objectX.toFixed(2)}% ${objectY.toFixed(2)}%`;
     };

@@ -39,12 +39,25 @@ const parseJsonRecord = (value: FormDataEntryValue | null): Record<string, unkno
   return {};
 };
 
+const requestWantsJson = (request: Request, formData: FormData): boolean => {
+  const requestedMode = parseString(formData.get('response')).toLowerCase();
+  if (requestedMode === 'json') return true;
+
+  const accept = request.headers.get('accept') ?? '';
+  if (accept.includes('application/json')) return true;
+
+  const requestedWith = request.headers.get('x-requested-with') ?? '';
+  if (requestedWith.toLowerCase() === 'xmlhttprequest') return true;
+
+  return false;
+};
+
 const detectSource = (formData: FormData): SubmissionSource => {
   if (
-    typeof formData.get('parent-name') === 'string'
-    || typeof formData.get('child-birthdate') === 'string'
-    || parseString(formData.get('form-name')) === 'coming-soon-contact'
-    || parseString(formData.get('source')) === 'coming-soon'
+    typeof formData.get('parent-name') === 'string' ||
+    typeof formData.get('child-birthdate') === 'string' ||
+    parseString(formData.get('form-name')) === 'coming-soon-contact' ||
+    parseString(formData.get('source')) === 'coming-soon'
   ) {
     return 'coming-soon';
   }
@@ -119,14 +132,24 @@ const successRedirectFor = (source: SubmissionSource): string =>
   source === 'contact' ? '/contact-success' : '/coming-soon?submitted=1';
 
 const errorRedirectFor = (source: SubmissionSource): string =>
-  source === 'contact' ? '/contact?error=submission-failed' : '/coming-soon?error=submission-failed';
+  source === 'contact'
+    ? '/contact?error=submission-failed'
+    : '/coming-soon?error=submission-failed';
+
+const jsonResponse = (payload: Record<string, unknown>, status = 200): Response =>
+  new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
 
 export const POST: APIRoute = async ({ request, redirect }) => {
   let source: SubmissionSource = 'contact';
+  let wantsJson = false;
 
   try {
     const formData = await request.formData();
     source = detectSource(formData);
+    wantsJson = requestWantsJson(request, formData);
 
     const honeypot = parseString(formData.get('bot-field'));
     const requestedRedirect = parseRedirectPath(formData.get('redirectTo'));
@@ -141,12 +164,16 @@ export const POST: APIRoute = async ({ request, redirect }) => {
 
     // Silently accept obvious bot submissions while skipping storage.
     if (honeypot.length > 0) {
+      if (wantsJson) {
+        return jsonResponse({ success: true });
+      }
       return redirect(successRedirect);
     }
 
-    const name = source === 'coming-soon'
-      ? parseString(formData.get('parent-name'))
-      : parseString(formData.get('name'));
+    const name =
+      source === 'coming-soon'
+        ? parseString(formData.get('parent-name'))
+        : parseString(formData.get('name'));
     const email = parseString(formData.get('email'));
     const phoneValue = parseString(formData.get('phone'));
     const subject = toSubject(source, formData);
@@ -154,7 +181,16 @@ export const POST: APIRoute = async ({ request, redirect }) => {
     const childAge = toChildAge(source, formData);
     const tourInterest = toTourInterest(source, formData);
 
-    if (!name || !email) {
+    if (!name || !email || (source === 'contact' && !message)) {
+      if (wantsJson) {
+        return jsonResponse(
+          {
+            success: false,
+            error: 'Please complete name, email, and question.'
+          },
+          400
+        );
+      }
       return redirect(errorRedirectFor(source));
     }
 
@@ -209,9 +245,14 @@ export const POST: APIRoute = async ({ request, redirect }) => {
         hasChildAge: Boolean(childAge),
         utmSource: typeof attribution.utm_source === 'string' ? attribution.utm_source : undefined,
         utmMedium: typeof attribution.utm_medium === 'string' ? attribution.utm_medium : undefined,
-        utmCampaign: typeof attribution.utm_campaign === 'string' ? attribution.utm_campaign : undefined
+        utmCampaign:
+          typeof attribution.utm_campaign === 'string' ? attribution.utm_campaign : undefined
       }
     });
+
+    if (wantsJson) {
+      return jsonResponse({ success: true });
+    }
 
     return redirect(successRedirect);
   } catch (error) {
@@ -219,6 +260,17 @@ export const POST: APIRoute = async ({ request, redirect }) => {
       route: '/api/contact/submit',
       source
     });
+
+    if (wantsJson) {
+      return jsonResponse(
+        {
+          success: false,
+          error: 'Sorry, we could not send your question. Please try again.'
+        },
+        500
+      );
+    }
+
     return redirect(errorRedirectFor(source));
   }
 };

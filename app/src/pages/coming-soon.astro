@@ -5,10 +5,10 @@ import { getCollection, getEntries, getAllSettings, type ContentEntry } from '@l
 import { getTestimonialsForPlacement, type ManagedTestimonial } from '@lib/testimonials-content';
 import ExternalLinkTargetBehavior from '@components/ExternalLinkTargetBehavior.astro';
 import OptimizedImage from '@components/OptimizedImage.astro';
+import { resolveSeoMetadata } from '@lib/seo-config';
 
 const DEFAULT_APPLICATION_SCHOOL_YEAR = '2026-2027 School Year';
 const DEFAULT_UPDATE_MESSAGE = 'Enrollment is open for the 2026-2027 school year while we work on bringing you an improved website experience.';
-const DEFAULT_TOUR_EXTERNAL_LINK = 'https://calendly.com/spicebushmontessori/tour-of-spicebush-montessori-school?month=2026-02';
 const DEFAULT_PHONE = '(484) 202-0712';
 const DEFAULT_EMAIL = 'information@spicebushmontessori.org';
 const DEFAULT_ADDRESS = {
@@ -116,7 +116,7 @@ const tagline = `Nurturing Young Minds in ${addressCity}, ${addressState}`;
 const agesServed = getSettingString('school_ages_served', '3-6 years old');
 const agesServedShort = agesServed.replace(/\byears old\b/i, 'years');
 const applicationSchoolYear = getSettingString('application_school_year', DEFAULT_APPLICATION_SCHOOL_YEAR);
-const tourExternalLink = getSettingString('tour_external_link', DEFAULT_TOUR_EXTERNAL_LINK);
+const tourExternalLink = '/admissions';
 
 const tourSchedulingEnabled = getSettingBoolean('tour_scheduling_enabled', true);
 
@@ -557,9 +557,18 @@ const formatMonthlyTuition = (range: { min: number; max: number }): string | nul
 };
 
 // Constants
-const applicationLink = 'https://www.transparentclassroom.com/s/4693/online_applications/new';
+const applicationLink = '/admissions';
 const adminPreviewPath = '/api/admin/preview-mode?mode=site&redirect=/';
 const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPath)}`;
+const comingSoonDescription = `Spicebush Montessori School in Glen Mills, PA has enrollment open for the ${applicationSchoolYear}. Inclusive Montessori education for ${agesServed.toLowerCase()} with income-based tuition.`;
+const seoMetadata = await resolveSeoMetadata({
+  pathname: Astro.url.pathname,
+  title: `${siteName} - Enrollment Open for ${applicationSchoolYear}`,
+  description: comingSoonDescription,
+  keywords:
+    'montessori school enrollment, kindergarten enrollment, glen mills montessori, inclusive early childhood education',
+  site: Astro.site
+});
 ---
 
 <!DOCTYPE html>
@@ -567,8 +576,22 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spicebush Montessori School - Enrollment Open for {applicationSchoolYear}</title>
-    <meta name="description" content={`Spicebush Montessori School in Glen Mills, PA has enrollment open for the ${applicationSchoolYear}. Inclusive Montessori education for ${agesServed.toLowerCase()} with income-based tuition.`}>
+    <title>{seoMetadata.title}</title>
+    <meta name="description" content={seoMetadata.description}>
+    <meta name="keywords" content={seoMetadata.keywords}>
+    <link rel="canonical" href={seoMetadata.canonicalUrl}>
+    <meta name="robots" content={seoMetadata.robotsContent}>
+    {seoMetadata.noIndex && <meta name="googlebot" content="noindex, nofollow" />}
+    <meta property="og:type" content="website">
+    <meta property="og:url" content={seoMetadata.canonicalUrl}>
+    <meta property="og:title" content={seoMetadata.title}>
+    <meta property="og:description" content={seoMetadata.description}>
+    <meta property="og:image" content={seoMetadata.ogImageUrl}>
+    <meta property="twitter:card" content={seoMetadata.twitterCard}>
+    <meta property="twitter:url" content={seoMetadata.canonicalUrl}>
+    <meta property="twitter:title" content={seoMetadata.title}>
+    <meta property="twitter:description" content={seoMetadata.description}>
+    <meta property="twitter:image" content={seoMetadata.ogImageUrl}>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1896,8 +1919,6 @@ const adminSignInPath = `/auth/sign-in?next=${encodeURIComponent(adminPreviewPat
             </p>
             <a
               href={applicationLink}
-              target="_blank"
-              rel="noopener noreferrer"
               class="secondary-button"
               style="margin-right: 1rem;"
               data-analytics-event="application_click"

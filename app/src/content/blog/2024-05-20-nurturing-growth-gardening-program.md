@@ -45,4 +45,4 @@ Spicebush Montessori offers a family individualized tuition program to make Mont
 
 ## Invitation to Explore
 
-The school invites families to [schedule a tour](/contact) and discover how their environment can nurture children's growth and curiosity.
+The school invites families to [schedule a tour](/admissions) and discover how their environment can nurture children's growth and curiosity.

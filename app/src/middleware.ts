@@ -1,19 +1,28 @@
 import type { APIContext, MiddlewareNext } from 'astro';
 import { isAdminEmail } from '@lib/admin-config';
 import { ADMIN_SESSION_COOKIE_NAME, validateAdminSession } from '@lib/auth/admin-session';
-import { queryFirst } from '@lib/db/client';
+import { evaluateCampMode, parseCampModeSettings, type CampModeEvaluation } from '@lib/camp-mode';
+import { queryFirst, queryRows } from '@lib/db/client';
 
 const PREVIEW_MODE_COOKIE = 'sbms-preview-mode';
 const PREVIEW_MODE_SITE = 'site';
-const COMING_SOON_CACHE_TTL_MS = 30 * 1000;
+const SETTINGS_CACHE_TTL_MS = 30 * 1000;
 
 let cachedComingSoonValue: boolean | null = null;
 let cachedComingSoonExpiresAt = 0;
+let cachedCampModeEvaluation: CampModeEvaluation | null = null;
+let cachedCampModeExpiresAt = 0;
 
-const PROTECTED_PREFIXES = ['/admin', '/api/admin', '/api/cms', '/api/media/upload', '/api/storage/stats'];
+const PROTECTED_PREFIXES = [
+  '/admin',
+  '/api/admin',
+  '/api/cms',
+  '/api/media/upload',
+  '/api/storage/stats'
+];
 
 const isProtectedRoute = (pathname: string): boolean =>
-  PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  PROTECTED_PREFIXES.some(prefix => pathname === prefix || pathname.startsWith(`${prefix}/`));
 
 const parseBoolean = (value: unknown): boolean => {
   if (typeof value === 'boolean') return value;
@@ -49,7 +58,8 @@ const toSignInRedirect = (context: APIContext, errorCode?: string): Response => 
 };
 
 async function getComingSoonEnabled(): Promise<boolean> {
-  const runtimeEnv = (typeof process !== 'undefined' && typeof process.env !== 'undefined') ? process.env : undefined;
+  const runtimeEnv =
+    typeof process !== 'undefined' && typeof process.env !== 'undefined' ? process.env : undefined;
   const rawComingSoon = runtimeEnv?.COMING_SOON_MODE ?? import.meta.env.COMING_SOON_MODE;
   if (typeof rawComingSoon === 'string') {
     return parseBoolean(rawComingSoon);
@@ -73,14 +83,102 @@ async function getComingSoonEnabled(): Promise<boolean> {
 
     const enabled = parseBoolean(data?.value ?? false);
     cachedComingSoonValue = enabled;
-    cachedComingSoonExpiresAt = now + COMING_SOON_CACHE_TTL_MS;
+    cachedComingSoonExpiresAt = now + SETTINGS_CACHE_TTL_MS;
     return enabled;
   } catch {
     cachedComingSoonValue = false;
-    cachedComingSoonExpiresAt = now + COMING_SOON_CACHE_TTL_MS;
+    cachedComingSoonExpiresAt = now + SETTINGS_CACHE_TTL_MS;
     return false;
   }
 }
+
+async function getCampModeEvaluation(): Promise<CampModeEvaluation> {
+  const now = Date.now();
+  if (cachedCampModeEvaluation !== null && cachedCampModeExpiresAt > now) {
+    return cachedCampModeEvaluation;
+  }
+
+  const fallback = evaluateCampMode(parseCampModeSettings({ camp_mode_override: 'off' }));
+
+  try {
+    const rows = await queryRows<{ key: string; value: unknown }>(
+      `
+        SELECT key, value
+        FROM settings
+        WHERE key = ANY($1::text[])
+      `,
+      [
+        [
+          'camp_mode_override',
+          'camp_mode_start_at',
+          'camp_mode_end_at',
+          'camp_mode_timezone',
+          'camp_promotions_enabled'
+        ]
+      ]
+    );
+
+    const settings: Record<string, unknown> = {};
+    rows.forEach(row => {
+      settings[row.key] = row.value;
+    });
+
+    const evaluation = evaluateCampMode(parseCampModeSettings(settings));
+    cachedCampModeEvaluation = evaluation;
+    cachedCampModeExpiresAt = now + SETTINGS_CACHE_TTL_MS;
+    return evaluation;
+  } catch {
+    cachedCampModeEvaluation = fallback;
+    cachedCampModeExpiresAt = now + SETTINGS_CACHE_TTL_MS;
+    return fallback;
+  }
+}
+
+const isCampRoute = (pathname: string): boolean =>
+  pathname === '/camp' || pathname.startsWith('/camp/');
+
+const isCampComingSoonRoute = (pathname: string): boolean => pathname === '/camp-coming-soon';
+
+const redirectWithSearch = (context: APIContext, targetPath: string): Response => {
+  const search = context.url.search;
+  return context.redirect(search ? `${targetPath}${search}` : targetPath);
+};
+
+const handleCampMode = async (context: APIContext, next: MiddlewareNext) => {
+  const pathname = context.url.pathname;
+  const isCampPageRequest = isCampRoute(pathname);
+  const isCampComingSoonPageRequest = isCampComingSoonRoute(pathname);
+
+  if (!isCampPageRequest && !isCampComingSoonPageRequest) {
+    return next();
+  }
+
+  const campMode = await getCampModeEvaluation();
+  const locals = context.locals as unknown as Record<string, unknown>;
+  const isAdmin = locals.isAdmin === true;
+
+  locals.campModeActive = campMode.active;
+  locals.campModeActiveForAdmin = campMode.activeForAdmin;
+  locals.campModePrep = campMode.prepMode;
+  locals.campModeReason = campMode.reason;
+
+  if (isAdmin) {
+    if (isCampPageRequest && !campMode.activeForAdmin) {
+      return redirectWithSearch(context, '/camp-coming-soon');
+    }
+    return next();
+  }
+
+  if (isCampPageRequest && !campMode.active) {
+    return redirectWithSearch(context, '/camp-coming-soon');
+  }
+
+  if (isCampComingSoonPageRequest && campMode.active) {
+    return redirectWithSearch(context, '/camp');
+  }
+
+  return next();
+};
 
 const handleComingSoon = async (context: APIContext, next: MiddlewareNext) => {
   const isComingSoonEnabled = await getComingSoonEnabled();
@@ -98,17 +196,20 @@ const handleComingSoon = async (context: APIContext, next: MiddlewareNext) => {
     '/admin',
     '/auth',
     '/api',
+    '/robots.txt',
+    '/sitemap',
     '/uploads',
     '/_image',
     '/favicon.svg',
     '/images/'
   ];
 
-  const shouldBypass = bypassPaths.some((path) => pathname.startsWith(path));
-  const hasAuthParams = context.url.searchParams.has('token_hash') ||
-                       context.url.searchParams.has('type') ||
-                       context.url.searchParams.has('error') ||
-                       context.url.searchParams.has('error_code');
+  const shouldBypass = bypassPaths.some(path => pathname.startsWith(path));
+  const hasAuthParams =
+    context.url.searchParams.has('token_hash') ||
+    context.url.searchParams.has('type') ||
+    context.url.searchParams.has('error') ||
+    context.url.searchParams.has('error_code');
 
   if (isComingSoonEnabled && !shouldBypass && !hasAuthParams) {
     const locals = context.locals as unknown as Record<string, unknown>;
@@ -121,7 +222,7 @@ const handleComingSoon = async (context: APIContext, next: MiddlewareNext) => {
     return context.redirect('/coming-soon');
   }
 
-  return next();
+  return handleCampMode(context, next);
 };
 
 export const onRequest = async (context: APIContext, next: MiddlewareNext) => {

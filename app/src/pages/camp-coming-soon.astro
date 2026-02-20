@@ -1,0 +1,99 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { db } from '@lib/db';
+
+const settings = await db.content.getAllSettings();
+
+const asString = (value: unknown, fallback = ''): string => {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  return fallback;
+};
+
+const seasonLabel = asString(settings.camp_current_season_label, 'Summer Camp');
+const openDateText = asString(settings.camp_open_date_label, 'Details coming soon');
+const contactEmail = asString(settings.main_email, 'information@spicebushmontessori.org');
+const locals = Astro.locals as Record<string, unknown>;
+const showAdminBanner = locals.isAdmin === true;
+const campModeReason =
+  typeof locals.campModeReason === 'string' ? locals.campModeReason : 'unknown';
+---
+
+<Layout
+  title={`${seasonLabel} Updates | Spicebush Montessori School`}
+  description="Summer camp details are coming soon. Stay connected for opening dates and weekly themes."
+  keywords="summer camp coming soon, montessori summer camp updates"
+>
+  <Header />
+
+  <main id="main-content" class="bg-warm-white">
+    {
+      showAdminBanner && (
+        <div class="border-b border-sky-200 bg-sky-50">
+          <div class="container mx-auto px-4 py-2 text-sm font-semibold text-sky-800">
+            Admin preview: camp coming soon page (mode reason: {campModeReason}).
+          </div>
+        </div>
+      )
+    }
+    <section class="bg-gradient-to-br from-moss-green to-forest-canopy py-14 lg:py-20 text-white">
+      <div class="container mx-auto px-4">
+        <div class="mx-auto max-w-3xl text-center">
+          <p class="text-xs uppercase tracking-[0.2em] text-white/80">Camp Mode</p>
+          <h1 class="mt-3 text-3xl font-heading font-bold lg:text-5xl">
+            {seasonLabel} Is Not Open Yet
+          </h1>
+          <p class="mx-auto mt-4 max-w-2xl text-base text-white/90 lg:text-lg">
+            We are preparing this year's camp details. Check back soon for weekly themes, seat
+            availability, and enrollment links.
+          </p>
+          <p
+            class="mt-5 inline-flex rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white/95"
+          >
+            Expected update: {openDateText}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-10 lg:py-12">
+      <div class="container mx-auto px-4">
+        <div class="mx-auto grid max-w-4xl gap-4 md:grid-cols-2">
+          <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <h2 class="text-lg font-semibold text-earth-brown">Get notified</h2>
+            <p class="mt-2 text-sm text-earth-brown/85">
+              Reach out and our team will share camp updates as soon as registration windows are
+              live.
+            </p>
+            <div class="mt-4 flex flex-col gap-2 sm:flex-row">
+              <a
+                href="/contact"
+                class="inline-flex items-center justify-center rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+              >
+                Contact Us
+              </a>
+              <a
+                href={`mailto:${contactEmail}`}
+                class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-earth-brown hover:bg-gray-100"
+              >
+                Email Admissions
+              </a>
+            </div>
+          </article>
+
+          <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <h2 class="text-lg font-semibold text-earth-brown">What to expect</h2>
+            <ul class="mt-2 space-y-2 text-sm text-earth-brown/85">
+              <li>Weekly camp themes with hands-on Montessori activities.</li>
+              <li>Live seat status by week: open, limited, full, or waitlist.</li>
+              <li>Week-specific registration links through Transparent Classroom.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

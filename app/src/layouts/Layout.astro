@@ -5,6 +5,7 @@ import AdminPreviewBar from '../components/AdminPreviewBar.astro';
 import ExternalLinkTargetBehavior from '../components/ExternalLinkTargetBehavior.astro';
 import { CRITICAL_IMAGES, generatePreloadLinks } from '../lib/image-preloader';
 import { getAnalyticsConfig } from '@lib/analytics-config';
+import { resolveSeoMetadata } from '@lib/seo-config';
 
 export interface Props {
   title: string;
@@ -20,7 +21,15 @@ const {
   preloadImages = false
 } = Astro.props;
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const seoMetadata = await resolveSeoMetadata({
+  pathname: Astro.url.pathname,
+  title,
+  description,
+  keywords,
+  site: Astro.site
+});
+
+const canonicalURL = seoMetadata.canonicalUrl;
 const analyticsConfig = await getAnalyticsConfig();
 const analyticsEnabled = analyticsConfig.enabled;
 const gaMeasurementId = analyticsConfig.measurementId;
@@ -40,24 +49,26 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
     <meta name="generator" content={Astro.generator} />
     
     <!-- SEO Meta Tags -->
-    <title>{title}</title>
-    <meta name="description" content={description} />
-    <meta name="keywords" content={keywords} />
+    <title>{seoMetadata.title}</title>
+    <meta name="description" content={seoMetadata.description} />
+    <meta name="keywords" content={seoMetadata.keywords} />
     <link rel="canonical" href={canonicalURL} />
+    <meta name="robots" content={seoMetadata.robotsContent} />
+    {seoMetadata.noIndex && <meta name="googlebot" content="noindex, nofollow" />}
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalURL} />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:image" content={`${Astro.site}SpicebushLogo-03.png`} />
+    <meta property="og:title" content={seoMetadata.title} />
+    <meta property="og:description" content={seoMetadata.description} />
+    <meta property="og:image" content={seoMetadata.ogImageUrl} />
     
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:card" content={seoMetadata.twitterCard} />
     <meta property="twitter:url" content={canonicalURL} />
-    <meta property="twitter:title" content={title} />
-    <meta property="twitter:description" content={description} />
-    <meta property="twitter:image" content={`${Astro.site}SpicebushLogo-03.png`} />
+    <meta property="twitter:title" content={seoMetadata.title} />
+    <meta property="twitter:description" content={seoMetadata.description} />
+    <meta property="twitter:image" content={seoMetadata.ogImageUrl} />
     
     <!-- Performance Optimization: Resource Hints -->
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">

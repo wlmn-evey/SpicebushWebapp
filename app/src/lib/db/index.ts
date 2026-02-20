@@ -14,7 +14,25 @@ import {
 import { getRecentMessages, getCommunicationStats, getTemplates } from './communications';
 import { getContactSubmissions } from './contact-submissions';
 import { recordAnalyticsEvent, getAnalyticsOverview, getRecentAnalyticsEvents } from './analytics';
-import { getAdSpendSummary, getRecentAdSpendEntries, insertAdSpendEntries, deleteAdSpendEntry, getCampaignValueRows } from './ad-spend';
+import {
+  getAdSpendSummary,
+  getRecentAdSpendEntries,
+  insertAdSpendEntries,
+  deleteAdSpendEntry,
+  getCampaignValueRows
+} from './ad-spend';
+import {
+  getCampAdminData,
+  getPublishedCampWeeks,
+  getCampPromotionSummary,
+  createCampSeason,
+  updateCampSeason,
+  createCampWeek,
+  updateCampWeek,
+  deleteCampWeek,
+  adjustCampWeekSeats,
+  replaceCampWeekVariantsFromLines
+} from './camp';
 
 export const db = {
   content: {
@@ -49,6 +67,18 @@ export const db = {
     deleteAdSpendEntry,
     getCampaignValueRows
   },
+  camp: {
+    getCampAdminData,
+    getPublishedCampWeeks,
+    getCampPromotionSummary,
+    createCampSeason,
+    updateCampSeason,
+    createCampWeek,
+    updateCampWeek,
+    deleteCampWeek,
+    adjustCampWeekSeats,
+    replaceCampWeekVariantsFromLines
+  },
   raw: {
     getPublicClient,
     getServiceClient,
@@ -77,5 +107,23 @@ export {
 export { getRecentMessages, getCommunicationStats, getTemplates } from './communications';
 export { getContactSubmissions } from './contact-submissions';
 export { recordAnalyticsEvent, getAnalyticsOverview, getRecentAnalyticsEvents } from './analytics';
-export { getAdSpendSummary, getRecentAdSpendEntries, insertAdSpendEntries, deleteAdSpendEntry, getCampaignValueRows } from './ad-spend';
+export {
+  getAdSpendSummary,
+  getRecentAdSpendEntries,
+  insertAdSpendEntries,
+  deleteAdSpendEntry,
+  getCampaignValueRows
+} from './ad-spend';
+export {
+  getCampAdminData,
+  getPublishedCampWeeks,
+  getCampPromotionSummary,
+  createCampSeason,
+  updateCampSeason,
+  createCampWeek,
+  updateCampWeek,
+  deleteCampWeek,
+  adjustCampWeekSeats,
+  replaceCampWeekVariantsFromLines
+} from './camp';
 export { getPublicClient, getServiceClient, withServiceClient } from './client';

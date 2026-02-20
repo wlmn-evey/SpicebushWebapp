@@ -36,14 +36,6 @@ const asString = (value: unknown, fallback = ''): string => {
   return trimmed.length > 0 ? trimmed : fallback;
 };
 
-const formatDate = (value: string): string => {
-  const parsed = Date.parse(`${value}T00:00:00`);
-  if (!Number.isFinite(parsed)) return value;
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(
-    new Date(parsed)
-  );
-};
-
 const formatDateWithYear = (value: string): string => {
   const parsed = Date.parse(`${value}T00:00:00`);
   if (!Number.isFinite(parsed)) return value;
@@ -268,8 +260,6 @@ const primaryWeek =
   null;
 const primaryAction = primaryWeek ? getWeekAction(primaryWeek) : null;
 
-const spotlightWeeks = visibleWeeks.filter(week => Boolean(week.heroMediaSlug)).slice(0, 3);
-
 const enrollmentReadinessMessage = nextAvailableWeek
   ? `${nextAvailableWeek.availableSeats} seats currently open in ${nextAvailableWeek.themeTitle}.`
   : waitlistCount + fullCount > 0
@@ -342,7 +332,8 @@ const faqEntries: Array<{ question: string; answer: string }> = [
               {seasonLabel}
             </h1>
             <p class="mt-4 max-w-2xl text-base text-white/90 md:text-lg">
-              A summer of outdoor play, hands-on discovery, and Montessori-led exploration. Explore our weekly themes and reserve your child's spot in minutes.
+              A summer of outdoor play, hands-on discovery, and Montessori-led exploration. Explore
+              our weekly themes and reserve your child's spot in minutes.
             </p>
 
             <div class="mt-5 flex flex-wrap gap-2 text-xs font-semibold">
@@ -450,9 +441,13 @@ const faqEntries: Array<{ question: string; answer: string }> = [
               </h2>
               {
                 heroWeek && (
-                  <p class="mt-1 text-sm text-white/85">
-                    {formatDate(heroWeek.startDate)} - {formatDate(heroWeek.endDate)}
-                  </p>
+                  <div class="mt-2 inline-flex items-center gap-2 rounded-lg border border-white/35 bg-white/12 px-3 py-1.5 text-sm font-semibold text-white">
+                    <Calendar className="h-4 w-4 text-sunlight-gold" />
+                    <span>
+                      {formatDateWithYear(heroWeek.startDate)} -{' '}
+                      {formatDateWithYear(heroWeek.endDate)}
+                    </span>
+                  </div>
                 )
               }
               <p class="mt-3 text-sm font-semibold text-white">{enrollmentReadinessMessage}</p>
@@ -488,41 +483,26 @@ const faqEntries: Array<{ question: string; answer: string }> = [
       </div>
     </section>
 
-    {
-      spotlightWeeks.length > 0 && (
-        <section class="-mt-7 pb-6">
-          <div class="container mx-auto px-4">
-            <div class="grid gap-3 md:grid-cols-3">
-              {spotlightWeeks.map((week, index) => (
-                <article
-                  data-camp-animate
-                  style={`--camp-delay: ${index * 75}ms;`}
-                  class="camp-card camp-reveal overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
-                >
-                  <div class="aspect-[4/3] w-full">
-                    {week.heroMediaSlug && (
-                      <OptimizedImage
-                        photoSlug={week.heroMediaSlug}
-                        alt={`${week.themeTitle} spotlight image`}
-                        className="h-full w-full object-cover"
-                        slotId={`camp-spotlight-${week.slug}`}
-                        mediaCategory="events"
-                      />
-                    )}
-                  </div>
-                  <div class="p-3">
-                    <p class="text-xs uppercase tracking-wide text-earth-brown/70">
-                      {formatDate(week.startDate)} - {formatDate(week.endDate)}
-                    </p>
-                    <p class="mt-1 text-sm font-semibold text-earth-brown">{week.themeTitle}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
+    <section data-camp-animate class="camp-reveal py-4">
+      <div class="px-4 sm:px-6 lg:px-10">
+        <div
+          class="water-play-banner relative overflow-hidden rounded-2xl border border-[#8fd1e8] bg-gradient-to-r from-[#0f5f86] via-[#1b7aa7] to-[#0c4f72] px-5 py-5 text-white shadow-sm md:px-8"
+        >
+          <div class="water-play-wave water-play-wave-a" aria-hidden="true"></div>
+          <div class="water-play-wave water-play-wave-b" aria-hidden="true"></div>
+          <div class="relative z-10 flex flex-wrap items-center gap-3">
+            <span
+              class="inline-flex items-center rounded-full border border-white/35 bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white"
+            >
+              Summer Update
+            </span>
+            <p class="text-base font-semibold leading-tight text-white sm:text-lg">
+              Water Play Available Weekly Dependent On Weather
+            </p>
           </div>
-        </section>
-      )
-    }
+        </div>
+      </div>
+    </section>
 
     <section data-camp-animate class="camp-reveal py-8">
       <div class="container mx-auto px-4">
@@ -600,7 +580,8 @@ const faqEntries: Array<{ question: string; answer: string }> = [
                 <p class="text-xs uppercase tracking-wide text-earth-brown/70">Step 2</p>
                 <h3 class="mt-1 text-base font-semibold text-earth-brown">Reserve Directly</h3>
                 <p class="mt-1 text-sm text-earth-brown/85">
-                  Click 'Reserve This Week' on any opening to secure your spot directly through Transparent Classroom.
+                  Click 'Reserve This Week' on any opening to secure your spot directly through
+                  Transparent Classroom.
                 </p>
               </article>
 
@@ -722,46 +703,95 @@ const faqEntries: Array<{ question: string; answer: string }> = [
                     style={`--camp-delay: ${Math.min(index, 8) * 70}ms;`}
                     class="camp-card camp-reveal overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm"
                   >
-                    <div class="grid lg:grid-cols-[1.15fr_0.85fr]">
-                      <div>
-                        <div class="relative aspect-[5/4] w-full md:aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[24rem]">
-                          {week.heroMediaSlug ? (
-                            <OptimizedImage
-                              photoSlug={week.heroMediaSlug}
-                              alt={`${week.themeTitle} promotional image`}
-                              className="h-full w-full object-cover"
-                              slotId={`camp-week-${week.slug}`}
-                              mediaCategory="events"
-                            />
-                          ) : (
-                            <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-stone-beige to-moss-green/20 px-5 text-center text-earth-brown">
-                              <p class="text-lg font-semibold">{week.themeTitle}</p>
+                    <div class="grid lg:grid-cols-[330px_1fr]">
+                      <div class="h-56 w-full md:h-64 lg:h-full lg:min-h-[16rem]">
+                        {week.heroMediaSlug ? (
+                          <OptimizedImage
+                            photoSlug={week.heroMediaSlug}
+                            alt={`${week.themeTitle} promotional image`}
+                            className="h-full w-full object-cover"
+                            slotId={`camp-week-${week.slug}`}
+                            mediaCategory="events"
+                          />
+                        ) : (
+                          <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-stone-beige to-moss-green/20 px-5 text-center text-earth-brown">
+                            <p class="text-lg font-semibold">{week.themeTitle}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div class="p-4 lg:p-5">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <div class="inline-flex items-center gap-2 rounded-lg border border-forest-canopy/20 bg-forest-canopy/10 px-3 py-1.5 text-sm font-semibold text-forest-canopy">
+                              <Calendar className="h-4 w-4" />
+                              <span>
+                                {formatDateWithYear(week.startDate)} -{' '}
+                                {formatDateWithYear(week.endDate)}
+                              </span>
                             </div>
-                          )}
-                          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
-                            <p class="text-xs uppercase tracking-[0.2em] text-white/80">
-                              {formatDate(week.startDate)} - {formatDate(week.endDate)}
-                            </p>
-                            <h3 class="mt-1 text-2xl font-heading font-bold md:text-3xl">
+                            <h3 class="mt-1 text-2xl font-heading font-bold text-earth-brown">
                               {week.themeTitle}
                             </h3>
                           </div>
-                          <div class="absolute right-4 top-4">
-                            <span
-                              class={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold shadow ${statusClass(week.status)} ${week.status === 'open' || week.status === 'limited' ? 'camp-status-chip' : ''}`}
-                            >
-                              {statusLabel(week.status)}
-                            </span>
-                          </div>
+                          <span
+                            class={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold shadow ${statusClass(week.status)} ${week.status === 'open' || week.status === 'limited' ? 'camp-status-chip' : ''}`}
+                          >
+                            {statusLabel(week.status)}
+                          </span>
                         </div>
 
-                        <div class="p-5 lg:p-6">
-                          {leadCopy && (
-                            <p class="text-sm text-earth-brown/85 md:text-base">{leadCopy}</p>
-                          )}
+                        <p class="mt-3 text-sm font-semibold text-earth-brown">
+                          {availabilityText(week, isAdmin)}
+                        </p>
 
-                          {highlights.length > 0 && (
-                            <ul class="mt-4 grid gap-2 text-sm text-earth-brown/85 sm:grid-cols-2">
+                        <section class="mt-3 border-t border-gray-200 pt-3">
+                          <div class="grid gap-2 text-sm sm:grid-cols-3">
+                            <p class="text-earth-brown/85">
+                              <span class="text-[11px] uppercase tracking-wide text-earth-brown/60">
+                                Ages
+                              </span>
+                              <br />
+                              <span class="font-semibold text-earth-brown">
+                                {week.ageRangeLabel || 'See week details'}
+                              </span>
+                            </p>
+                            <p class="text-earth-brown/85">
+                              <span class="text-[11px] uppercase tracking-wide text-earth-brown/60">
+                                Hours
+                              </span>
+                              <br />
+                              <span class="font-semibold text-earth-brown">
+                                {week.hoursLabel || 'See week details'}
+                              </span>
+                            </p>
+                            <p class="text-earth-brown/85">
+                              <span class="text-[11px] uppercase tracking-wide text-earth-brown/60">
+                                Price
+                              </span>
+                              <br />
+                              <span class="font-semibold text-earth-brown">
+                                {week.priceLabel || 'See week details'}
+                              </span>
+                            </p>
+                          </div>
+                        </section>
+
+                        {leadCopy && (
+                          <section class="mt-3 border-t border-gray-200 pt-3">
+                            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-earth-brown/70">
+                              Week Overview
+                            </p>
+                            <p class="mt-2 text-sm text-earth-brown/85">{leadCopy}</p>
+                          </section>
+                        )}
+
+                        {highlights.length > 0 && (
+                          <section class="mt-3 border-t border-gray-200 pt-3">
+                            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-earth-brown/70">
+                              Children Will Explore
+                            </p>
+                            <ul class="mt-2 grid gap-2 text-sm text-earth-brown/85 sm:grid-cols-2">
                               {highlights.map(item => (
                                 <li class="flex items-start gap-2">
                                   <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-forest-canopy" />
@@ -769,54 +799,30 @@ const faqEntries: Array<{ question: string; answer: string }> = [
                                 </li>
                               ))}
                             </ul>
-                          )}
+                          </section>
+                        )}
 
-                          {week.variants.length > 0 && (
-                            <div class="mt-4 rounded-xl border border-gray-200 bg-stone-beige/30 p-3">
-                              <p class="text-xs font-semibold uppercase tracking-wide text-earth-brown/75">
-                                Program Options
-                              </p>
-                              <div class="mt-2 flex flex-wrap gap-2">
-                                {week.variants.map(variant => (
-                                  <span class="rounded-full border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-earth-brown">
-                                    {variant.label}
-                                  </span>
-                                ))}
-                              </div>
+                        {week.variants.length > 0 && (
+                          <section class="mt-3 border-t border-gray-200 pt-3">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-earth-brown/75">
+                              Program Options
+                            </p>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                              {week.variants.map(variant => (
+                                <span class="rounded-full border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-earth-brown">
+                                  {variant.label}
+                                </span>
+                              ))}
                             </div>
-                          )}
-                        </div>
-                      </div>
+                          </section>
+                        )}
 
-                      <aside class="border-t border-gray-200 bg-[#fbfaf6] p-5 lg:border-l lg:border-t-0 lg:p-6">
-                        <p class="text-xs uppercase tracking-[0.2em] text-earth-brown/70">
-                          Planning Details
-                        </p>
-                        <p class="mt-2 text-sm font-semibold text-earth-brown">
-                          {availabilityText(week, isAdmin)}
-                        </p>
-
-                        <dl class="mt-4 space-y-3 text-sm text-earth-brown/90">
-                          <div>
-                            <dt class="font-semibold text-earth-brown">Ages</dt>
-                            <dd>{week.ageRangeLabel || 'See week details'}</dd>
-                          </div>
-                          <div>
-                            <dt class="font-semibold text-earth-brown">Hours</dt>
-                            <dd>{week.hoursLabel || 'See week details'}</dd>
-                          </div>
-                          <div>
-                            <dt class="font-semibold text-earth-brown">Price</dt>
-                            <dd>{week.priceLabel || 'See week details'}</dd>
-                          </div>
-                        </dl>
-
-                        <div class="mt-5 space-y-3">
+                        <div class="mt-4 flex flex-wrap gap-3 border-t border-gray-200 pt-4">
                           <a
                             href={action.href}
                             target={action.external ? '_blank' : undefined}
                             rel={action.external ? 'noopener noreferrer' : undefined}
-                            class="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-forest-canopy px-4 py-2 text-sm font-semibold text-white transition hover:bg-moss-green"
+                            class="inline-flex min-h-[46px] items-center justify-center rounded-xl bg-forest-canopy px-4 py-2 text-sm font-semibold text-white transition hover:bg-moss-green"
                             data-analytics-event={action.eventName}
                             data-analytics-label={action.eventLabel}
                             data-analytics-location="camp-week-card"
@@ -824,22 +830,20 @@ const faqEntries: Array<{ question: string; answer: string }> = [
                             {action.label}
                             <ArrowRight className="ml-2 h-4 w-4" />
                           </a>
-                          <a
-                            href="/contact"
-                            class="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-earth-brown transition hover:bg-gray-100"
+                          <button
+                            type="button"
+                            class="inline-flex min-h-[46px] items-center justify-center rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-earth-brown transition hover:bg-gray-100"
                             data-analytics-event="camp_contact_click"
                             data-analytics-label={`question-${week.slug}`}
                             data-analytics-location="camp-week-card"
+                            data-camp-ask-button
+                            data-week-title={week.themeTitle}
+                            data-week-slug={week.slug}
                           >
                             Ask Admissions
-                          </a>
+                          </button>
                         </div>
-
-                        <div class="mt-4 rounded-xl border border-gray-200 bg-white p-3 text-xs text-earth-brown/80">
-                          <p class="font-semibold text-earth-brown">Enrollment partner</p>
-                          <p class="mt-1">Registration links open in Transparent Classroom.</p>
-                        </div>
-                      </aside>
+                      </div>
                     </div>
                   </article>
                 );
@@ -938,6 +942,120 @@ const faqEntries: Array<{ question: string; answer: string }> = [
     </section>
   </main>
 
+  <div id="camp-ask-modal" class="camp-modal hidden" aria-hidden="true">
+    <div class="camp-modal-backdrop" data-camp-modal-close></div>
+    <div
+      class="camp-modal-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="camp-ask-title"
+      aria-describedby="camp-ask-subtitle"
+    >
+      <div class="flex items-start justify-between gap-4 border-b border-gray-200 pb-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-earth-brown/70">
+            Ask Admissions
+          </p>
+          <h3 id="camp-ask-title" class="mt-1 text-xl font-heading font-bold text-earth-brown">
+            Quick Question
+          </h3>
+          <p id="camp-ask-subtitle" class="mt-1 text-sm text-earth-brown/80">
+            We will follow up about <span
+              id="camp-ask-week-label"
+              class="font-semibold text-earth-brown"></span>.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="rounded-lg border border-gray-300 px-2 py-1 text-sm font-semibold text-earth-brown hover:bg-gray-100"
+          data-camp-modal-close
+          aria-label="Close form"
+        >
+          Close
+        </button>
+      </div>
+
+      <form id="camp-ask-form" class="mt-4 space-y-3">
+        <input type="hidden" name="response" value="json" />
+        <input type="hidden" name="subject" id="camp-ask-subject" value="" />
+        <input type="hidden" name="source" value="contact" />
+        <input type="hidden" name="bot-field" value="" />
+
+        <div>
+          <label for="camp-ask-question" class="camp-ask-label">Question</label>
+          <textarea
+            id="camp-ask-question"
+            name="message"
+            rows="4"
+            required
+            class="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm text-earth-brown focus:border-forest-canopy focus:outline-none focus:ring-2 focus:ring-forest-canopy/20"
+            placeholder="What would you like to ask?"></textarea>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label for="camp-ask-name" class="camp-ask-label">Name</label>
+            <input
+              id="camp-ask-name"
+              name="name"
+              type="text"
+              required
+              class="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm text-earth-brown focus:border-forest-canopy focus:outline-none focus:ring-2 focus:ring-forest-canopy/20"
+              autocomplete="name"
+            />
+          </div>
+          <div>
+            <label for="camp-ask-phone" class="camp-ask-label">Phone Number</label>
+            <input
+              id="camp-ask-phone"
+              name="phone"
+              type="tel"
+              required
+              class="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm text-earth-brown focus:border-forest-canopy focus:outline-none focus:ring-2 focus:ring-forest-canopy/20"
+              autocomplete="tel"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label for="camp-ask-email" class="camp-ask-label">Email</label>
+          <input
+            id="camp-ask-email"
+            name="email"
+            type="email"
+            required
+            class="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm text-earth-brown focus:border-forest-canopy focus:outline-none focus:ring-2 focus:ring-forest-canopy/20"
+            autocomplete="email"
+          />
+        </div>
+
+        <p
+          id="camp-ask-status"
+          class="min-h-[1.25rem] text-sm text-earth-brown/80"
+          aria-live="polite"
+        >
+        </p>
+
+        <div class="flex flex-wrap gap-2 border-t border-gray-200 pt-3">
+          <button
+            type="submit"
+            id="camp-ask-submit"
+            class="inline-flex min-h-[46px] items-center justify-center rounded-xl bg-forest-canopy px-4 py-2 text-sm font-semibold text-white transition hover:bg-moss-green"
+          >
+            Send Question
+          </button>
+          <button
+            type="button"
+            class="inline-flex min-h-[46px] items-center justify-center rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-earth-brown transition hover:bg-gray-100"
+            data-camp-modal-close
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   {
     primaryAction && (
       <div class="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 p-3 backdrop-blur md:hidden">
@@ -956,8 +1074,10 @@ const faqEntries: Array<{ question: string; answer: string }> = [
     )
   }
 
-  <script>
+  <script is:inline>
     function initCampAnimations() {
+      if (typeof window === 'undefined') return;
+      document.documentElement.classList.add('camp-motion-ready');
       const nodes = Array.from(document.querySelectorAll('[data-camp-animate]'));
       if (nodes.length === 0) return;
 
@@ -991,12 +1111,244 @@ const faqEntries: Array<{ question: string; answer: string }> = [
       });
     }
 
-    // Run on initial load and after Astro View Transitions
-    document.addEventListener('astro:page-load', initCampAnimations);
+    function initCampAskAdmissionsModal() {
+      if (typeof window === 'undefined') return;
+
+      const modal = document.getElementById('camp-ask-modal');
+      if (!(modal instanceof HTMLDivElement)) return;
+
+      const form = document.getElementById('camp-ask-form');
+      const submitButton = document.getElementById('camp-ask-submit');
+      const weekLabel = document.getElementById('camp-ask-week-label');
+      const subjectInput = document.getElementById('camp-ask-subject');
+      const status = document.getElementById('camp-ask-status');
+      const questionField = document.getElementById('camp-ask-question');
+      const closeButtons = Array.from(document.querySelectorAll('[data-camp-modal-close]'));
+      const openButtons = Array.from(document.querySelectorAll('[data-camp-ask-button]'));
+
+      if (!(form instanceof HTMLFormElement)) return;
+      if (!(submitButton instanceof HTMLButtonElement)) return;
+      if (!(weekLabel instanceof HTMLSpanElement)) return;
+      if (!(subjectInput instanceof HTMLInputElement)) return;
+      if (!(status instanceof HTMLParagraphElement)) return;
+      if (!(questionField instanceof HTMLTextAreaElement)) return;
+      if (openButtons.length === 0) return;
+
+      if (modal.dataset.initialized === 'true') return;
+      modal.dataset.initialized = 'true';
+
+      let activeWeekTitle = '';
+      let activeWeekSlug = '';
+
+      const setStatus = (message, kind = 'info') => {
+        status.textContent = message;
+        status.classList.remove('text-earth-brown/80', 'text-red-700', 'text-green-700');
+        if (kind === 'error') {
+          status.classList.add('text-red-700');
+          return;
+        }
+        if (kind === 'success') {
+          status.classList.add('text-green-700');
+          return;
+        }
+        status.classList.add('text-earth-brown/80');
+      };
+
+      const openModal = (weekTitle, weekSlug) => {
+        activeWeekTitle = weekTitle || 'this camp week';
+        activeWeekSlug = weekSlug || '';
+
+        form.reset();
+        subjectInput.value = `Camp Question: ${activeWeekTitle}`;
+        weekLabel.textContent = activeWeekTitle;
+        questionField.placeholder = `What would you like to ask about ${activeWeekTitle}?`;
+        setStatus('');
+
+        modal.classList.remove('hidden');
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('overflow-hidden');
+        questionField.focus();
+      };
+
+      const closeModal = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('overflow-hidden');
+      };
+
+      closeButtons.forEach(button => {
+        button.addEventListener('click', closeModal);
+      });
+
+      openButtons.forEach(button => {
+        if (!(button instanceof HTMLButtonElement)) return;
+        button.addEventListener('click', () => {
+          openModal(button.dataset.weekTitle || '', button.dataset.weekSlug || '');
+        });
+      });
+
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+          closeModal();
+        }
+      });
+
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        const formData = new FormData(form);
+        const message = String(formData.get('message') || '').trim();
+        const phone = String(formData.get('phone') || '').trim();
+        const email = String(formData.get('email') || '').trim();
+        const name = String(formData.get('name') || '').trim();
+
+        if (!message || !name || !phone || !email) {
+          setStatus('Please complete all fields before sending.', 'error');
+          return;
+        }
+
+        formData.set(
+          'message',
+          `${message}\n\nCamp week: ${activeWeekTitle}${activeWeekSlug ? ` (${activeWeekSlug})` : ''}`
+        );
+        formData.set('subject', `Camp Question: ${activeWeekTitle}`);
+        formData.set('response', 'json');
+
+        submitButton.disabled = true;
+        submitButton.textContent = 'Sending...';
+        setStatus('Sending your question...');
+
+        try {
+          const response = await fetch('/api/contact/submit', {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'x-requested-with': 'XMLHttpRequest'
+            },
+            body: formData
+          });
+
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok || payload?.success !== true) {
+            throw new Error(
+              typeof payload?.error === 'string'
+                ? payload.error
+                : 'Unable to send your question right now.'
+            );
+          }
+
+          setStatus(
+            'Thanks! Admissions received your question and will follow up soon.',
+            'success'
+          );
+          form.reset();
+          setTimeout(() => {
+            closeModal();
+          }, 1100);
+        } catch (error) {
+          const messageText =
+            error instanceof Error ? error.message : 'Unable to send your question right now.';
+          setStatus(messageText, 'error');
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Send Question';
+        }
+      });
+    }
+
+    function initCampPageInteractions() {
+      initCampAnimations();
+      initCampAskAdmissionsModal();
+    }
+
+    // Run on both initial load and after Astro View Transitions navigate
+    initCampPageInteractions();
+    document.addEventListener('astro:page-load', initCampPageInteractions);
   </script>
 
   <style>
+    .camp-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .camp-modal.is-open {
+      display: flex;
+    }
+
+    .camp-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+    }
+
+    .camp-modal-panel {
+      position: relative;
+      z-index: 1;
+      width: min(40rem, 100%);
+      border-radius: 1rem;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      padding: 1rem;
+      box-shadow: 0 24px 50px rgba(15, 23, 42, 0.26);
+      max-height: min(90vh, 52rem);
+      overflow-y: auto;
+    }
+
+    .camp-ask-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #2e2e2e;
+    }
+
+    .water-play-banner {
+      isolation: isolate;
+      animation: waterBannerRise 620ms cubic-bezier(0.2, 0.74, 0.25, 1);
+    }
+
+    .water-play-wave {
+      position: absolute;
+      inset: auto -8% -32%;
+      height: 88%;
+      background-repeat: repeat-x;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .water-play-wave-a {
+      background-image: radial-gradient(
+        circle at 24px 0,
+        rgba(255, 255, 255, 0.42) 16px,
+        transparent 17px
+      );
+      background-size: 80px 44px;
+      animation: waterWaveMove 9s linear infinite;
+    }
+
+    .water-play-wave-b {
+      background-image: radial-gradient(
+        circle at 34px 0,
+        rgba(255, 255, 255, 0.24) 18px,
+        transparent 19px
+      );
+      background-size: 110px 56px;
+      opacity: 0.28;
+      transform: translateY(12px);
+      animation: waterWaveMoveReverse 11s linear infinite;
+    }
+
     .camp-reveal {
+      opacity: 1;
+      transform: none;
+    }
+
+    :global(html.camp-motion-ready) .camp-reveal {
       opacity: 0;
       transform: translate3d(0, 18px, 0) scale(0.992);
       transition-property: opacity, transform;
@@ -1006,7 +1358,7 @@ const faqEntries: Array<{ question: string; answer: string }> = [
       will-change: opacity, transform;
     }
 
-    .camp-reveal.is-visible {
+    :global(html.camp-motion-ready) .camp-reveal.is-visible {
       opacity: 1;
       transform: translate3d(0, 0, 0) scale(1);
     }
@@ -1051,6 +1403,38 @@ const faqEntries: Array<{ question: string; answer: string }> = [
       }
     }
 
+    @keyframes waterBannerRise {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, 14px, 0);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    @keyframes waterWaveMove {
+      from {
+        background-position-x: 0;
+      }
+
+      to {
+        background-position-x: 180px;
+      }
+    }
+
+    @keyframes waterWaveMoveReverse {
+      from {
+        background-position-x: 0;
+      }
+
+      to {
+        background-position-x: -220px;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .camp-reveal {
         opacity: 1;
@@ -1058,11 +1442,33 @@ const faqEntries: Array<{ question: string; answer: string }> = [
         transition: none;
       }
 
+      .water-play-banner {
+        animation: none;
+      }
+
+      .water-play-wave {
+        animation: none;
+      }
+
       .camp-card,
       .camp-stat-card,
       .camp-status-chip {
         transition: none;
         animation: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .camp-modal {
+        align-items: flex-end;
+        padding: 0;
+      }
+
+      .camp-modal-panel {
+        width: 100%;
+        border-radius: 1rem 1rem 0 0;
+        max-height: 92vh;
+        padding: 0.9rem;
       }
     }
   </style>
