@@ -1,0 +1,43 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  format?: string;
+  example?: string;
+  impact?: string;
+  defaultValue?: string;
+}
+
+const { title, description, format, example, impact, defaultValue } = Astro.props as Props;
+---
+
+<details class="rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-xs text-earth-brown/85">
+  <summary class="cursor-pointer select-none text-[11px] font-semibold uppercase tracking-wide text-forest-canopy">
+    Info
+  </summary>
+  <div class="mt-2 space-y-1.5 leading-relaxed">
+    <p>
+      <span class="font-semibold text-earth-brown">{title}:</span> {description}
+    </p>
+    {format && (
+      <p>
+        <span class="font-semibold text-earth-brown">Format:</span> {format}
+      </p>
+    )}
+    {example && (
+      <p>
+        <span class="font-semibold text-earth-brown">Example:</span> <code>{example}</code>
+      </p>
+    )}
+    {defaultValue && (
+      <p>
+        <span class="font-semibold text-earth-brown">Default:</span> {defaultValue}
+      </p>
+    )}
+    {impact && (
+      <p>
+        <span class="font-semibold text-earth-brown">Impact:</span> {impact}
+      </p>
+    )}
+  </div>
+</details>

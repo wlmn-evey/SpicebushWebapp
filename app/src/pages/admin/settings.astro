@@ -1,5 +1,6 @@
 ---
 import AdminLayout from '@layouts/AdminLayout.astro';
+import SettingInfo from '@components/admin/SettingInfo.astro';
 import { db } from '@lib/db';
 
 const settings = await db.content.getAllSettings();
@@ -83,6 +84,147 @@ const campModeEndAt = stringifyValue(settings.camp_mode_end_at);
 const campModeTimezone = stringifyValue(settings.camp_mode_timezone || 'America/New_York');
 const campPromotionsEnabled = boolFrom(settings.camp_promotions_enabled);
 const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompare(b));
+
+type SettingHelpContent = {
+  title: string;
+  description: string;
+  format?: string;
+  example?: string;
+  defaultValue?: string;
+  impact?: string;
+};
+
+const settingHelp: Record<string, SettingHelpContent> = {
+  coming_soon_enabled: {
+    title: 'Coming Soon Enabled',
+    description: 'Turns the public site into coming-soon mode for visitors.',
+    format: 'true or false',
+    defaultValue: 'false',
+    impact: 'Admins can still bypass based on existing auth logic.'
+  },
+  coming_soon_message: {
+    title: 'Coming Soon Message',
+    description: 'Main text families see on the coming-soon page.',
+    format: 'Plain text',
+    impact: 'Used as the primary enrollment/update message.'
+  },
+  coming_soon_launch_date: {
+    title: 'Coming Soon Launch Date',
+    description: 'Short launch/date label shown on the coming-soon page.',
+    format: 'Plain text',
+    example: 'Fall 2026'
+  },
+  camp_mode_override: {
+    title: 'Camp Mode Override',
+    description: 'Controls camp visibility state.',
+    format: 'auto, prep, on, off',
+    impact: '`prep` is admin-only preview, `off` hides camp for everyone.'
+  },
+  camp_mode_timezone: {
+    title: 'Camp Timezone',
+    description: 'Timezone used for auto camp mode scheduling.',
+    format: 'IANA timezone string',
+    example: 'America/New_York'
+  },
+  camp_mode_start_at: {
+    title: 'Camp Auto Start',
+    description: 'Date/time when camp mode can automatically activate.',
+    format: 'ISO datetime',
+    example: '2026-05-01T00:00:00-04:00'
+  },
+  camp_mode_end_at: {
+    title: 'Camp Auto End',
+    description: 'Date/time when camp mode can automatically turn off.',
+    format: 'ISO datetime',
+    example: '2026-08-31T23:59:59-04:00'
+  },
+  camp_promotions_enabled: {
+    title: 'Camp Promotions Enabled',
+    description: 'Shows or hides camp-related promo banners/CTAs around the site.',
+    format: 'true or false',
+    defaultValue: 'false'
+  },
+  donation_external_link: {
+    title: 'Donation Link',
+    description: 'External URL used for donation CTA fallback.',
+    format: 'Absolute URL',
+    example: 'https://example.org/donate'
+  },
+  enrollment_external_link: {
+    title: 'Enrollment Link',
+    description: 'External URL used for enrollment CTA.',
+    format: 'Absolute URL',
+    example: 'https://example.org/enroll'
+  },
+  tour_external_link: {
+    title: 'Tour Link',
+    description: 'External tour scheduling URL used across admissions and coming soon.',
+    format: 'Absolute URL',
+    example: 'https://calendly.com/...'
+  },
+  school_email: {
+    title: 'School Email',
+    description: 'Primary school email used as routing/sender fallback.',
+    format: 'Email address',
+    example: 'information@spicebushmontessori.org'
+  },
+  contact_form_notify_emails: {
+    title: 'Contact Notification Recipients',
+    description: 'Who gets notified when the contact form is submitted.',
+    format: 'Comma-separated emails',
+    example: 'admin@domain.org, admissions@domain.org'
+  },
+  coming_soon_form_notify_emails: {
+    title: 'Coming Soon Notification Recipients',
+    description: 'Who gets notified when the coming-soon inquiry form is submitted.',
+    format: 'Comma-separated emails',
+    example: 'information@domain.org, director@domain.org'
+  },
+  contact_form_notify_subject: {
+    title: 'Contact Notification Subject',
+    description: 'Subject line used for internal contact form alerts.',
+    format: 'Plain text with optional placeholders',
+    example: 'New Contact Form Inquiry - {{name}}'
+  },
+  coming_soon_form_notify_subject: {
+    title: 'Coming Soon Notification Subject',
+    description: 'Subject line used for internal coming-soon alerts.',
+    format: 'Plain text with optional placeholders',
+    example: 'New Coming Soon Inquiry - {{name}}'
+  },
+  contact_form_confirm_submitter: {
+    title: 'Contact Auto Confirmation',
+    description: 'Send confirmation email to family after contact form submit.',
+    format: 'true or false',
+    defaultValue: 'true'
+  },
+  coming_soon_form_confirm_submitter: {
+    title: 'Coming Soon Auto Confirmation',
+    description: 'Send confirmation email to family after coming-soon inquiry submit.',
+    format: 'true or false',
+    defaultValue: 'true'
+  },
+  contact_form_confirm_subject: {
+    title: 'Contact Confirmation Subject',
+    description: 'Subject line for family confirmation after contact submission.',
+    format: 'Plain text with optional placeholders',
+    example: 'Thanks for contacting Spicebush Montessori'
+  },
+  coming_soon_form_confirm_subject: {
+    title: 'Coming Soon Confirmation Subject',
+    description: 'Subject line for family confirmation after coming-soon submission.',
+    format: 'Plain text with optional placeholders',
+    example: 'Thanks for your interest in Spicebush Montessori'
+  }
+};
+
+const getSettingHelp = (key: string): SettingHelpContent =>
+  settingHelp[key] ?? {
+    title: key,
+    description: 'Raw setting stored in the database. Change carefully.',
+    format: 'Plain text or valid JSON',
+    impact: 'Used by whichever feature reads this key at runtime.'
+  };
 ---
 
 <AdminLayout title="Manage Settings">
@@ -109,6 +251,12 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
         Current preview mode: <strong>{previewMode === 'site' ? 'Full Site' : 'Coming Soon'}</strong
         >
       </p>
+      <SettingInfo
+        title="Admin Preview Toggle"
+        description="Switches your personal admin preview between full site and coming-soon mode."
+        format="Button toggle"
+        impact="Only affects your preview cookie while editing."
+      />
       <form
         method="post"
         action={`/api/admin/preview-mode?mode=${previewMode === 'site' ? 'coming-soon' : 'site'}&redirect=${encodeURIComponent('/admin/settings')}`}
@@ -139,6 +287,7 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
               <option value="false" selected={!comingSoonEnabled}>false</option>
             </select>
           </label>
+          <SettingInfo {...getSettingHelp('coming_soon_enabled')} />
           <button
             type="submit"
             class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
@@ -163,6 +312,7 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
             >{comingSoonMessage}</textarea
             >
           </label>
+          <SettingInfo {...getSettingHelp('coming_soon_message')} />
           <button
             type="submit"
             class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
@@ -187,6 +337,7 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
             />
           </label>
+          <SettingInfo {...getSettingHelp('coming_soon_launch_date')} />
           <button
             type="submit"
             class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
@@ -207,62 +358,77 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
             `on` makes camp live for everyone. `off` hides camp for everyone.
           </p>
           <div class="grid gap-3 md:grid-cols-2">
-            <label class="block text-sm font-medium">
-              Camp Mode Override
-              <select
-                name="camp_mode_override"
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              >
-                <option value="auto" selected={campModeOverride === 'auto'}>auto</option>
-                <option value="prep" selected={campModeOverride === 'prep'}>prep</option>
-                <option value="on" selected={campModeOverride === 'on'}>on</option>
-                <option value="off" selected={campModeOverride === 'off'}>off</option>
-              </select>
-            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Camp Mode Override
+                <select
+                  name="camp_mode_override"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                >
+                  <option value="auto" selected={campModeOverride === 'auto'}>auto</option>
+                  <option value="prep" selected={campModeOverride === 'prep'}>prep</option>
+                  <option value="on" selected={campModeOverride === 'on'}>on</option>
+                  <option value="off" selected={campModeOverride === 'off'}>off</option>
+                </select>
+              </label>
+              <SettingInfo {...getSettingHelp('camp_mode_override')} />
+            </div>
 
-            <label class="block text-sm font-medium">
-              Camp Timezone
-              <input
-                type="text"
-                name="camp_mode_timezone"
-                value={campModeTimezone}
-                placeholder="America/New_York"
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Camp Timezone
+                <input
+                  type="text"
+                  name="camp_mode_timezone"
+                  value={campModeTimezone}
+                  placeholder="America/New_York"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('camp_mode_timezone')} />
+            </div>
 
-            <label class="block text-sm font-medium">
-              Auto Start (ISO datetime)
-              <input
-                type="text"
-                name="camp_mode_start_at"
-                value={campModeStartAt}
-                placeholder="2026-05-01T00:00:00-04:00"
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Auto Start (ISO datetime)
+                <input
+                  type="text"
+                  name="camp_mode_start_at"
+                  value={campModeStartAt}
+                  placeholder="2026-05-01T00:00:00-04:00"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('camp_mode_start_at')} />
+            </div>
 
-            <label class="block text-sm font-medium">
-              Auto End (ISO datetime)
-              <input
-                type="text"
-                name="camp_mode_end_at"
-                value={campModeEndAt}
-                placeholder="2026-08-31T23:59:59-04:00"
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Auto End (ISO datetime)
+                <input
+                  type="text"
+                  name="camp_mode_end_at"
+                  value={campModeEndAt}
+                  placeholder="2026-08-31T23:59:59-04:00"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('camp_mode_end_at')} />
+            </div>
 
-            <label class="block text-sm font-medium md:col-span-2">
-              Enable Sitewide Camp Promotions
-              <select
-                name="camp_promotions_enabled"
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              >
-                <option value="true" selected={campPromotionsEnabled}>true</option>
-                <option value="false" selected={!campPromotionsEnabled}>false</option>
-              </select>
-            </label>
+            <div class="space-y-2 md:col-span-2">
+              <label class="block text-sm font-medium">
+                Enable Sitewide Camp Promotions
+                <select
+                  name="camp_promotions_enabled"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                >
+                  <option value="true" selected={campPromotionsEnabled}>true</option>
+                  <option value="false" selected={!campPromotionsEnabled}>false</option>
+                </select>
+              </label>
+              <SettingInfo {...getSettingHelp('camp_promotions_enabled')} />
+            </div>
           </div>
           <div class="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-earth-brown/80">
             <p class="font-semibold text-earth-brown">Preview Links</p>
@@ -300,6 +466,7 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
             />
           </label>
+          <SettingInfo {...getSettingHelp('donation_external_link')} />
           <button
             type="submit"
             class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
@@ -324,6 +491,7 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
             />
           </label>
+          <SettingInfo {...getSettingHelp('enrollment_external_link')} />
           <button
             type="submit"
             class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
@@ -344,6 +512,7 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
             />
           </label>
+          <SettingInfo {...getSettingHelp('tour_external_link')} />
           <button
             type="submit"
             class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
@@ -364,97 +533,124 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
             Use comma-separated emails for recipient lists.
           </p>
           <div class="grid gap-3 md:grid-cols-2">
-            <label class="block text-sm font-medium">
-              School Email (sender fallback)
-              <input
-                type="email"
-                name="school_email"
-                value={schoolEmail}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                School Email (sender fallback)
+                <input
+                  type="email"
+                  name="school_email"
+                  value={schoolEmail}
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('school_email')} />
+            </div>
 
-            <label class="block text-sm font-medium">
-              Contact Form Notification Recipients
-              <input
-                type="text"
-                name="contact_form_notify_emails"
-                value={contactNotifyEmails}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Contact Form Notification Recipients
+                <input
+                  type="text"
+                  name="contact_form_notify_emails"
+                  value={contactNotifyEmails}
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('contact_form_notify_emails')} />
+            </div>
 
-            <label class="block text-sm font-medium">
-              Coming Soon Notification Recipients
-              <input
-                type="text"
-                name="coming_soon_form_notify_emails"
-                value={comingSoonNotifyEmails}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Coming Soon Notification Recipients
+                <input
+                  type="text"
+                  name="coming_soon_form_notify_emails"
+                  value={comingSoonNotifyEmails}
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('coming_soon_form_notify_emails')} />
+            </div>
 
-            <label class="block text-sm font-medium">
-              Contact Notification Subject
-              <input
-                type="text"
-                name="contact_form_notify_subject"
-                value={contactNotifySubject}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Contact Notification Subject
+                <input
+                  type="text"
+                  name="contact_form_notify_subject"
+                  value={contactNotifySubject}
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('contact_form_notify_subject')} />
+            </div>
 
-            <label class="block text-sm font-medium">
-              Coming Soon Notification Subject
-              <input
-                type="text"
-                name="coming_soon_form_notify_subject"
-                value={comingSoonNotifySubject}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Coming Soon Notification Subject
+                <input
+                  type="text"
+                  name="coming_soon_form_notify_subject"
+                  value={comingSoonNotifySubject}
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('coming_soon_form_notify_subject')} />
+            </div>
 
-            <label class="block text-sm font-medium">
-              Send Contact Confirmation To Families
-              <select
-                name="contact_form_confirm_submitter"
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              >
-                <option value="true" selected={contactConfirmSubmitter}>true</option>
-                <option value="false" selected={!contactConfirmSubmitter}>false</option>
-              </select>
-            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Send Contact Confirmation To Families
+                <select
+                  name="contact_form_confirm_submitter"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                >
+                  <option value="true" selected={contactConfirmSubmitter}>true</option>
+                  <option value="false" selected={!contactConfirmSubmitter}>false</option>
+                </select>
+              </label>
+              <SettingInfo {...getSettingHelp('contact_form_confirm_submitter')} />
+            </div>
 
-            <label class="block text-sm font-medium">
-              Send Coming Soon Confirmation To Families
-              <select
-                name="coming_soon_form_confirm_submitter"
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              >
-                <option value="true" selected={comingSoonConfirmSubmitter}>true</option>
-                <option value="false" selected={!comingSoonConfirmSubmitter}>false</option>
-              </select>
-            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Send Coming Soon Confirmation To Families
+                <select
+                  name="coming_soon_form_confirm_submitter"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                >
+                  <option value="true" selected={comingSoonConfirmSubmitter}>true</option>
+                  <option value="false" selected={!comingSoonConfirmSubmitter}>false</option>
+                </select>
+              </label>
+              <SettingInfo {...getSettingHelp('coming_soon_form_confirm_submitter')} />
+            </div>
 
-            <label class="block text-sm font-medium">
-              Contact Confirmation Subject
-              <input
-                type="text"
-                name="contact_form_confirm_subject"
-                value={contactConfirmSubject}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Contact Confirmation Subject
+                <input
+                  type="text"
+                  name="contact_form_confirm_subject"
+                  value={contactConfirmSubject}
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('contact_form_confirm_subject')} />
+            </div>
 
-            <label class="block text-sm font-medium">
-              Coming Soon Confirmation Subject
-              <input
-                type="text"
-                name="coming_soon_form_confirm_subject"
-                value={comingSoonConfirmSubject}
-                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Coming Soon Confirmation Subject
+                <input
+                  type="text"
+                  name="coming_soon_form_confirm_subject"
+                  value={comingSoonConfirmSubject}
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('coming_soon_form_confirm_subject')} />
+            </div>
           </div>
           <p class="text-xs text-earth-brown/75">
             Subject placeholders supported: <code>{'{{name}}'}</code>, <code>{'{{subject}}'}</code>, <code>{'{{source}}'}</code>
@@ -486,6 +682,7 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
                 value={`/admin/settings?saved=${encodeURIComponent(key)}`}
               />
               <label class="block text-sm font-medium">{key}</label>
+              <SettingInfo {...getSettingHelp(key)} />
               <textarea
                 name="value"
                 rows="2"
@@ -509,18 +706,40 @@ const sortedEntries = Object.entries(settings).sort(([a], [b]) => a.localeCompar
       <h2 class="text-lg font-semibold mb-3">Create New Setting</h2>
       <form method="post" action="/api/admin/settings" class="space-y-3">
         <input type="hidden" name="redirectTo" value="/admin/settings?saved=new" />
-        <input
-          type="text"
-          name="key"
-          placeholder="new_setting_key"
-          required
-          class="w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
-        <textarea
-          name="value"
-          rows="3"
-          placeholder="Setting value (string or JSON)"
-          class="w-full rounded-lg border border-gray-300 px-3 py-2"></textarea>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium">
+            Setting Key
+            <input
+              type="text"
+              name="key"
+              placeholder="new_setting_key"
+              required
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <SettingInfo
+            title="Setting Key"
+            description="Unique identifier used in code to read this value."
+            format="letters, numbers, and underscores only"
+            example="contact_form_notify_emails"
+          />
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium">
+            Setting Value
+            <textarea
+              name="value"
+              rows="3"
+              placeholder="Setting value (string or JSON)"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"></textarea>
+          </label>
+          <SettingInfo
+            title="Setting Value"
+            description="The value stored for this key."
+            format="plain text, true/false, number, or JSON"
+            example='["a@domain.org", "b@domain.org"]'
+          />
+        </div>
         <button
           type="submit"
           class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green"
