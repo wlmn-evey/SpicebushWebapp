@@ -1,7 +1,7 @@
 import { db } from '@lib/db';
 import { emailService } from '@lib/email-service';
 
-export type SubmissionSource = 'contact' | 'coming-soon';
+export type SubmissionSource = 'contact' | 'coming-soon' | 'camp' | 'tour';
 
 export interface ContactSubmissionEmailInput {
   source: SubmissionSource;
@@ -24,6 +24,55 @@ export interface ContactSubmissionEmailResult {
 const DEFAULT_SCHOOL_EMAIL = 'information@spicebushmontessori.org';
 const BRAND_NAME = 'Spicebush Montessori School';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type SourceRoutingConfig = {
+  label: string;
+  notifyRecipientsKey: string;
+  notifySubjectKey: string;
+  confirmEnabledKey: string;
+  confirmSubjectKey: string;
+  defaultNotifySubject: string;
+  defaultConfirmSubject: string;
+};
+
+const SOURCE_CONFIG: Record<SubmissionSource, SourceRoutingConfig> = {
+  contact: {
+    label: 'Contact Form Inquiry',
+    notifyRecipientsKey: 'contact_form_notify_emails',
+    notifySubjectKey: 'contact_form_notify_subject',
+    confirmEnabledKey: 'contact_form_confirm_submitter',
+    confirmSubjectKey: 'contact_form_confirm_subject',
+    defaultNotifySubject: 'New Contact Form Inquiry - {{name}}',
+    defaultConfirmSubject: 'Thanks for contacting Spicebush Montessori'
+  },
+  'coming-soon': {
+    label: 'Coming Soon Inquiry',
+    notifyRecipientsKey: 'coming_soon_form_notify_emails',
+    notifySubjectKey: 'coming_soon_form_notify_subject',
+    confirmEnabledKey: 'coming_soon_form_confirm_submitter',
+    confirmSubjectKey: 'coming_soon_form_confirm_subject',
+    defaultNotifySubject: 'New Coming Soon Inquiry - {{name}}',
+    defaultConfirmSubject: 'Thanks for your interest in Spicebush Montessori'
+  },
+  camp: {
+    label: 'Camp Inquiry',
+    notifyRecipientsKey: 'camp_form_notify_emails',
+    notifySubjectKey: 'camp_form_notify_subject',
+    confirmEnabledKey: 'camp_form_confirm_submitter',
+    confirmSubjectKey: 'camp_form_confirm_subject',
+    defaultNotifySubject: 'New Camp Question - {{name}}',
+    defaultConfirmSubject: 'Thanks for your camp question'
+  },
+  tour: {
+    label: 'Tour Request',
+    notifyRecipientsKey: 'tour_request_notify_emails',
+    notifySubjectKey: 'tour_request_notify_subject',
+    confirmEnabledKey: 'tour_request_confirm_submitter',
+    confirmSubjectKey: 'tour_request_confirm_subject',
+    defaultNotifySubject: 'New Tour Request - {{name}}',
+    defaultConfirmSubject: 'Tour Request Confirmation - Spicebush Montessori'
+  }
+};
 
 const escapeHtml = (value: string): string =>
   value
@@ -84,8 +133,7 @@ const resolveSchoolEmail = (settings: Record<string, unknown>): string => {
   return DEFAULT_SCHOOL_EMAIL;
 };
 
-const sourceLabel = (source: SubmissionSource): string =>
-  source === 'coming-soon' ? 'Coming Soon Inquiry' : 'Contact Form Inquiry';
+const sourceLabel = (source: SubmissionSource): string => SOURCE_CONFIG[source].label;
 
 const interpolate = (template: string, input: ContactSubmissionEmailInput): string =>
   template
@@ -93,8 +141,7 @@ const interpolate = (template: string, input: ContactSubmissionEmailInput): stri
     .replaceAll('{{subject}}', input.subject)
     .replaceAll('{{source}}', sourceLabel(input.source));
 
-const formatMultiline = (value: string): string =>
-  escapeHtml(value).replace(/\n/g, '<br/>');
+const formatMultiline = (value: string): string => escapeHtml(value).replace(/\n/g, '<br/>');
 
 const toLines = (input: ContactSubmissionEmailInput): Array<{ label: string; value: string }> => [
   { label: 'Source', value: sourceLabel(input.source) },
@@ -194,17 +241,31 @@ const buildNotificationEmail = (input: ContactSubmissionEmailInput) => {
   };
 };
 
+const confirmationBodyLineBySource = (input: ContactSubmissionEmailInput): string => {
+  if (input.source === 'tour') {
+    return 'We received your tour request and our admissions team will follow up to schedule your visit.';
+  }
+
+  if (input.source === 'camp') {
+    return 'Thanks for your camp question. Our admissions team will follow up shortly with details.';
+  }
+
+  if (input.tourInterest) {
+    return 'You mentioned interest in touring, so we will include next-step scheduling details in our reply.';
+  }
+
+  return 'If you would like to tour the school, just reply and we can help schedule that as well.';
+};
+
 const buildConfirmationEmail = (input: ContactSubmissionEmailInput) => {
-  const needsTourFollowup = input.tourInterest
-    ? 'You mentioned you are interested in touring, so we will include next-step scheduling details in our reply.'
-    : 'If you would like to tour the school, just reply and we can help schedule that as well.';
+  const followupText = confirmationBodyLineBySource(input);
 
   const body = `
     <p style="margin:0 0 12px;font-size:15px;line-height:1.65;color:#2f3a34;">Hi ${escapeHtml(input.name)},</p>
     <p style="margin:0 0 12px;font-size:15px;line-height:1.65;color:#2f3a34;">
       Thank you for reaching out to ${BRAND_NAME}. We received your message and our team will get back to you shortly.
     </p>
-    <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#2f3a34;">${escapeHtml(needsTourFollowup)}</p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#2f3a34;">${escapeHtml(followupText)}</p>
     <div style="margin:0 0 16px;padding:12px 14px;border-left:4px solid #6f987f;background:#f7faf7;border-radius:8px;">
       <p style="margin:0 0 8px;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:#597565;font-weight:700;">Your message</p>
       <p style="margin:0;font-size:14px;line-height:1.6;color:#2f3a34;">${formatMultiline(input.message)}</p>
@@ -216,7 +277,7 @@ const buildConfirmationEmail = (input: ContactSubmissionEmailInput) => {
     `Hi ${input.name},`,
     '',
     `Thank you for reaching out to ${BRAND_NAME}. We received your message and our team will get back to you shortly.`,
-    needsTourFollowup,
+    followupText,
     '',
     'Your message:',
     input.message,
@@ -240,34 +301,14 @@ const buildConfirmationEmail = (input: ContactSubmissionEmailInput) => {
 const loadEmailRoutingSettings = async (source: SubmissionSource) => {
   const settings = await db.content.getAllSettings();
   const schoolEmail = resolveSchoolEmail(settings);
+  const sourceConfig = SOURCE_CONFIG[source];
 
-  const notifyRecipientsKey =
-    source === 'coming-soon' ? 'coming_soon_form_notify_emails' : 'contact_form_notify_emails';
-  const notifyRecipients = parseEmailList(settings[notifyRecipientsKey]);
-
-  const notifySubjectKey =
-    source === 'coming-soon' ? 'coming_soon_form_notify_subject' : 'contact_form_notify_subject';
+  const notifyRecipients = parseEmailList(settings[sourceConfig.notifyRecipientsKey]);
   const notifySubjectTemplate =
-    asString(settings[notifySubjectKey]) ||
-    (source === 'coming-soon'
-      ? 'New Coming Soon Inquiry - {{name}}'
-      : 'New Contact Form Inquiry - {{name}}');
-
-  const confirmEnabledKey =
-    source === 'coming-soon'
-      ? 'coming_soon_form_confirm_submitter'
-      : 'contact_form_confirm_submitter';
-  const sendConfirmation = asBool(settings[confirmEnabledKey], true);
-
-  const confirmSubjectKey =
-    source === 'coming-soon'
-      ? 'coming_soon_form_confirm_subject'
-      : 'contact_form_confirm_subject';
+    asString(settings[sourceConfig.notifySubjectKey]) || sourceConfig.defaultNotifySubject;
+  const sendConfirmation = asBool(settings[sourceConfig.confirmEnabledKey], true);
   const confirmSubjectTemplate =
-    asString(settings[confirmSubjectKey]) ||
-    (source === 'coming-soon'
-      ? 'Thanks for your interest in Spicebush Montessori'
-      : 'Thanks for contacting Spicebush Montessori');
+    asString(settings[sourceConfig.confirmSubjectKey]) || sourceConfig.defaultConfirmSubject;
 
   return {
     schoolEmail,

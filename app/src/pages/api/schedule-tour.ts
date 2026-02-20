@@ -1,131 +1,142 @@
 import type { APIRoute } from 'astro';
-import { emailService } from '@lib/email-service';
+import { query } from '@lib/db/client';
+import { recordAnalyticsEvent } from '@lib/db/analytics';
+import { sendContactSubmissionEmails } from '@lib/contact-email';
 import { logServerError, logServerWarn } from '@lib/server-logger';
 
-const DEFAULT_TOUR_INBOX = 'information@spicebushmontessori.org';
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const escapeHtml = (value: string): string =>
-  value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+const parseString = (value: unknown): string => {
+  if (typeof value !== 'string') return '';
+  return value.trim();
+};
+
+const toJson = (payload: Record<string, unknown>, status = 200) =>
+  new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     const data = await request.json();
-    const { parentName, email, phone, childAge, preferredTimes, questions } = data;
+    const parentName = parseString(data?.parentName);
+    const email = parseString(data?.email);
+    const phone = parseString(data?.phone);
+    const childAge = parseString(data?.childAge);
+    const preferredTimes = parseString(data?.preferredTimes);
+    const questions = parseString(data?.questions);
 
-    // Validate required fields
     if (!parentName || !email || !phone || !childAge) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return toJson({ error: 'Missing required fields' }, 400);
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid email address' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (!EMAIL_REGEX.test(email)) {
+      return toJson({ error: 'Invalid email address' }, 400);
     }
 
-    const safeParentName = escapeHtml(String(parentName));
-    const safeEmail = escapeHtml(String(email));
-    const safePhone = escapeHtml(String(phone));
-    const safeChildAge = escapeHtml(String(childAge));
-    const safePreferredTimes = preferredTimes ? escapeHtml(String(preferredTimes)) : '';
-    const safeQuestions = questions ? escapeHtml(String(questions)) : '';
-    const schoolInbox = import.meta.env.SCHOOL_CONTACT_EMAIL || DEFAULT_TOUR_INBOX;
+    const subject = `Tour Request: ${parentName}`;
+    const messageLines = [
+      `Parent/Guardian Name: ${parentName}`,
+      `Email: ${email}`,
+      `Phone: ${phone}`,
+      `Child Age: ${childAge}`
+    ];
 
-    // Create email content
-    const emailContent = `
-      <h2>New Tour Request</h2>
-      <p><strong>Parent/Guardian Name:</strong> ${safeParentName}</p>
-      <p><strong>Email:</strong> ${safeEmail}</p>
-      <p><strong>Phone:</strong> ${safePhone}</p>
-      <p><strong>Child's Age:</strong> ${safeChildAge}</p>
-      ${safePreferredTimes ? `<p><strong>Preferred Times:</strong> ${safePreferredTimes}</p>` : ''}
-      ${safeQuestions ? `<p><strong>Questions/Special Considerations:</strong> ${safeQuestions}</p>` : ''}
-      <hr>
-      <p><em>This tour request was submitted via the website on ${new Date().toLocaleString()}</em></p>
-    `;
-
-    // For development, we'll just log the email content
-    // In production, you would configure a real email service
-    if (import.meta.env.DEV) {
-      // Tour request email prepared
-
-      // Simulate email sending delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Tour request received (development mode - email logged to console)' 
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (preferredTimes) {
+      messageLines.push(`Preferred Times: ${preferredTimes}`);
+    }
+    if (questions) {
+      messageLines.push(`Questions: ${questions}`);
     }
 
-    // Send email using the configured email service
-    const result = await emailService.send({
-      to: schoolInbox,
-      subject: `New Tour Request from ${safeParentName}`,
-      html: emailContent,
-      replyTo: email
-    });
+    const message = messageLines.join('\n');
 
-    if (!result.success) {
-      logServerError('Failed to send tour request email', result.error, { route: '/api/schedule-tour' });
-      return new Response(
-        JSON.stringify({ error: 'Failed to send tour request. Please try again later.' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Send confirmation email to parent
-    const confirmationEmail = `
-      <h2>Thank you for your interest in Spicebush Montessori School!</h2>
-      <p>We've received your tour request and will contact you within 1-2 business days to schedule your visit.</p>
-      <p>If you have any immediate questions, please reply to this email and our team will help.</p>
-      <p>We look forward to meeting you and showing you our wonderful school!</p>
-      <hr>
-      <p><strong>Your Tour Request Details:</strong></p>
-      <p>Child's Age: ${safeChildAge}</p>
-      ${safePreferredTimes ? `<p>Preferred Times: ${safePreferredTimes}</p>` : ''}
-      ${safeQuestions ? `<p>Questions: ${safeQuestions}</p>` : ''}
-    `;
-
-    // Send confirmation email to parent
-    const confirmationResult = await emailService.send({
-      to: email,
-      subject: 'Tour Request Confirmation - Spicebush Montessori School',
-      html: confirmationEmail
-    });
-
-    if (!confirmationResult.success) {
-      logServerWarn('Failed to send tour confirmation email', {
-        route: '/api/schedule-tour',
-        error: confirmationResult.error
-      });
-      // Don't fail the request if confirmation email fails
-    }
-
-    return new Response(
-      JSON.stringify({ success: true, message: 'Tour request submitted successfully' }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    await query(
+      `
+        INSERT INTO contact_form_submissions
+        (
+          name,
+          email,
+          phone,
+          subject,
+          message,
+          child_age,
+          tour_interest,
+          attribution,
+          session_id,
+          client_id,
+          landing_page,
+          referrer_url
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12)
+      `,
+      [
+        parentName,
+        email,
+        phone,
+        subject,
+        message,
+        childAge,
+        true,
+        JSON.stringify({}),
+        null,
+        null,
+        null,
+        null
+      ]
     );
+
+    await recordAnalyticsEvent({
+      eventName: 'tour_request_submit',
+      eventCategory: 'lead',
+      pagePath: null,
+      pageUrl: null,
+      referrerUrl: parseString(request.headers.get('referer')) || null,
+      sessionId: null,
+      clientId: null,
+      properties: {
+        source: 'tour',
+        subject,
+        tourInterest: true,
+        hasPhone: true,
+        hasChildAge: Boolean(childAge),
+        preferredTimes
+      }
+    });
+
+    const emailResult = await sendContactSubmissionEmails({
+      source: 'tour',
+      name: parentName,
+      email,
+      phone,
+      subject,
+      message,
+      childAge,
+      tourInterest: true
+    });
+
+    if (emailResult.errors.length > 0) {
+      logServerWarn('Tour request email delivery had partial failures', {
+        route: '/api/schedule-tour',
+        notifiedRecipients: emailResult.notifiedRecipients,
+        errors: emailResult.errors
+      });
+    }
+
+    if (!emailResult.notificationSent) {
+      return toJson({ error: 'Failed to send tour request. Please try again later.' }, 500);
+    }
+
+    return toJson({
+      success: true,
+      message: 'Tour request submitted successfully',
+      notificationSent: emailResult.notificationSent,
+      confirmationSent: emailResult.confirmationSent
+    });
   } catch (error) {
     logServerError('Error processing tour request', error, { route: '/api/schedule-tour' });
-    
-    return new Response(
-      JSON.stringify({ error: 'Failed to process tour request' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+
+    return toJson({ error: 'Failed to process tour request' }, 500);
   }
 };

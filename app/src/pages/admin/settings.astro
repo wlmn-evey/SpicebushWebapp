@@ -54,17 +54,30 @@ const comingSoonNotifyEmails = stringifyEmailList(
   settings.coming_soon_form_notify_emails,
   schoolEmail
 );
+const campNotifyEmails = stringifyEmailList(settings.camp_form_notify_emails, schoolEmail);
+const tourNotifyEmails = stringifyEmailList(settings.tour_request_notify_emails, schoolEmail);
 const contactConfirmSubmitter = boolFromSetting(settings.contact_form_confirm_submitter, true);
 const comingSoonConfirmSubmitter = boolFromSetting(settings.coming_soon_form_confirm_submitter, true);
+const campConfirmSubmitter = boolFromSetting(settings.camp_form_confirm_submitter, true);
+const tourConfirmSubmitter = boolFromSetting(settings.tour_request_confirm_submitter, true);
 const contactNotifySubject =
   stringifyValue(settings.contact_form_notify_subject) || 'New Contact Form Inquiry - {{name}}';
 const comingSoonNotifySubject =
   stringifyValue(settings.coming_soon_form_notify_subject) || 'New Coming Soon Inquiry - {{name}}';
+const campNotifySubject =
+  stringifyValue(settings.camp_form_notify_subject) || 'New Camp Question - {{name}}';
+const tourNotifySubject =
+  stringifyValue(settings.tour_request_notify_subject) || 'New Tour Request - {{name}}';
 const contactConfirmSubject =
   stringifyValue(settings.contact_form_confirm_subject) || 'Thanks for contacting Spicebush Montessori';
 const comingSoonConfirmSubject =
   stringifyValue(settings.coming_soon_form_confirm_subject) ||
   'Thanks for your interest in Spicebush Montessori';
+const campConfirmSubject =
+  stringifyValue(settings.camp_form_confirm_subject) || 'Thanks for your camp question';
+const tourConfirmSubject =
+  stringifyValue(settings.tour_request_confirm_subject) ||
+  'Tour Request Confirmation - Spicebush Montessori';
 const parseCampModeOverride = (value: unknown): 'auto' | 'on' | 'off' | 'prep' => {
   if (typeof value !== 'string') return 'off';
   const normalized = value.trim().toLowerCase();
@@ -180,6 +193,18 @@ const settingHelp: Record<string, SettingHelpContent> = {
     format: 'Comma-separated emails',
     example: 'information@domain.org, director@domain.org'
   },
+  camp_form_notify_emails: {
+    title: 'Camp Notification Recipients',
+    description: 'Who gets notified when the camp Ask Admissions form is submitted.',
+    format: 'Comma-separated emails',
+    example: 'camp@domain.org, admissions@domain.org'
+  },
+  tour_request_notify_emails: {
+    title: 'Tour Request Notification Recipients',
+    description: 'Who gets notified when a tour request is submitted.',
+    format: 'Comma-separated emails',
+    example: 'information@domain.org, director@domain.org'
+  },
   contact_form_notify_subject: {
     title: 'Contact Notification Subject',
     description: 'Subject line used for internal contact form alerts.',
@@ -192,6 +217,18 @@ const settingHelp: Record<string, SettingHelpContent> = {
     format: 'Plain text with optional placeholders',
     example: 'New Coming Soon Inquiry - {{name}}'
   },
+  camp_form_notify_subject: {
+    title: 'Camp Notification Subject',
+    description: 'Subject line used for internal camp inquiry alerts.',
+    format: 'Plain text with optional placeholders',
+    example: 'New Camp Question - {{name}}'
+  },
+  tour_request_notify_subject: {
+    title: 'Tour Notification Subject',
+    description: 'Subject line used for internal tour request alerts.',
+    format: 'Plain text with optional placeholders',
+    example: 'New Tour Request - {{name}}'
+  },
   contact_form_confirm_submitter: {
     title: 'Contact Auto Confirmation',
     description: 'Send confirmation email to family after contact form submit.',
@@ -201,6 +238,18 @@ const settingHelp: Record<string, SettingHelpContent> = {
   coming_soon_form_confirm_submitter: {
     title: 'Coming Soon Auto Confirmation',
     description: 'Send confirmation email to family after coming-soon inquiry submit.',
+    format: 'true or false',
+    defaultValue: 'true'
+  },
+  camp_form_confirm_submitter: {
+    title: 'Camp Auto Confirmation',
+    description: 'Send confirmation email to families after camp inquiry submit.',
+    format: 'true or false',
+    defaultValue: 'true'
+  },
+  tour_request_confirm_submitter: {
+    title: 'Tour Auto Confirmation',
+    description: 'Send confirmation email to families after tour request submit.',
     format: 'true or false',
     defaultValue: 'true'
   },
@@ -215,6 +264,18 @@ const settingHelp: Record<string, SettingHelpContent> = {
     description: 'Subject line for family confirmation after coming-soon submission.',
     format: 'Plain text with optional placeholders',
     example: 'Thanks for your interest in Spicebush Montessori'
+  },
+  camp_form_confirm_subject: {
+    title: 'Camp Confirmation Subject',
+    description: 'Subject line for family confirmation after camp inquiry submission.',
+    format: 'Plain text with optional placeholders',
+    example: 'Thanks for your camp question'
+  },
+  tour_request_confirm_subject: {
+    title: 'Tour Confirmation Subject',
+    description: 'Subject line for family confirmation after tour request submission.',
+    format: 'Plain text with optional placeholders',
+    example: 'Tour Request Confirmation - Spicebush Montessori'
   }
 };
 
@@ -574,6 +635,32 @@ const getSettingHelp = (key: string): SettingHelpContent =>
 
             <div class="space-y-2">
               <label class="block text-sm font-medium">
+                Camp Notification Recipients
+                <input
+                  type="text"
+                  name="camp_form_notify_emails"
+                  value={campNotifyEmails}
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('camp_form_notify_emails')} />
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Tour Request Notification Recipients
+                <input
+                  type="text"
+                  name="tour_request_notify_emails"
+                  value={tourNotifyEmails}
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('tour_request_notify_emails')} />
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
                 Contact Notification Subject
                 <input
                   type="text"
@@ -596,6 +683,32 @@ const getSettingHelp = (key: string): SettingHelpContent =>
                 />
               </label>
               <SettingInfo {...getSettingHelp('coming_soon_form_notify_subject')} />
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Camp Notification Subject
+                <input
+                  type="text"
+                  name="camp_form_notify_subject"
+                  value={campNotifySubject}
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('camp_form_notify_subject')} />
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Tour Request Notification Subject
+                <input
+                  type="text"
+                  name="tour_request_notify_subject"
+                  value={tourNotifySubject}
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('tour_request_notify_subject')} />
             </div>
 
             <div class="space-y-2">
@@ -628,6 +741,34 @@ const getSettingHelp = (key: string): SettingHelpContent =>
 
             <div class="space-y-2">
               <label class="block text-sm font-medium">
+                Send Camp Confirmation To Families
+                <select
+                  name="camp_form_confirm_submitter"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                >
+                  <option value="true" selected={campConfirmSubmitter}>true</option>
+                  <option value="false" selected={!campConfirmSubmitter}>false</option>
+                </select>
+              </label>
+              <SettingInfo {...getSettingHelp('camp_form_confirm_submitter')} />
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Send Tour Confirmation To Families
+                <select
+                  name="tour_request_confirm_submitter"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                >
+                  <option value="true" selected={tourConfirmSubmitter}>true</option>
+                  <option value="false" selected={!tourConfirmSubmitter}>false</option>
+                </select>
+              </label>
+              <SettingInfo {...getSettingHelp('tour_request_confirm_submitter')} />
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
                 Contact Confirmation Subject
                 <input
                   type="text"
@@ -650,6 +791,32 @@ const getSettingHelp = (key: string): SettingHelpContent =>
                 />
               </label>
               <SettingInfo {...getSettingHelp('coming_soon_form_confirm_subject')} />
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Camp Confirmation Subject
+                <input
+                  type="text"
+                  name="camp_form_confirm_subject"
+                  value={campConfirmSubject}
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('camp_form_confirm_subject')} />
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-medium">
+                Tour Confirmation Subject
+                <input
+                  type="text"
+                  name="tour_request_confirm_subject"
+                  value={tourConfirmSubject}
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <SettingInfo {...getSettingHelp('tour_request_confirm_subject')} />
             </div>
           </div>
           <p class="text-xs text-earth-brown/75">

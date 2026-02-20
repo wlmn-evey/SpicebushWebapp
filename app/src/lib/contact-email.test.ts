@@ -107,4 +107,37 @@ describe('sendContactSubmissionEmails', () => {
     expect(result.errors[0]).toContain('notification:');
     expect(emailSendMock).toHaveBeenCalledTimes(1);
   });
+
+  it('uses camp-specific routing keys when source is camp', async () => {
+    getAllSettingsMock.mockResolvedValue({
+      school_email: 'information@spicebushmontessori.org',
+      camp_form_notify_emails: 'camp@spicebushmontessori.org',
+      camp_form_notify_subject: 'Camp lead from {{name}}',
+      camp_form_confirm_submitter: false
+    });
+
+    emailSendMock.mockResolvedValueOnce({ success: true, provider: 'SendGrid' });
+
+    const result = await sendContactSubmissionEmails({
+      source: 'camp',
+      name: 'Riley Parent',
+      email: 'riley@example.com',
+      phone: '610-222-3333',
+      subject: 'Camp Question: Week 1',
+      message: 'Do you offer after care during camp?',
+      childAge: '5 years',
+      tourInterest: false
+    });
+
+    expect(result.notificationSent).toBe(true);
+    expect(result.confirmationSent).toBe(false);
+    expect(result.notifiedRecipients).toEqual(['camp@spicebushmontessori.org']);
+    expect(emailSendMock).toHaveBeenCalledTimes(1);
+    expect(emailSendMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: ['camp@spicebushmontessori.org'],
+        subject: 'Camp lead from Riley Parent'
+      })
+    );
+  });
 });

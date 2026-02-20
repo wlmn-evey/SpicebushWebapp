@@ -1,10 +1,8 @@
 import type { APIRoute } from 'astro';
 import { query } from '@lib/db/client';
 import { recordAnalyticsEvent } from '@lib/db/analytics';
-import { sendContactSubmissionEmails } from '@lib/contact-email';
+import { sendContactSubmissionEmails, type SubmissionSource } from '@lib/contact-email';
 import { logServerError, logServerWarn } from '@lib/server-logger';
-
-type SubmissionSource = 'contact' | 'coming-soon';
 
 const parseString = (value: FormDataEntryValue | null): string => {
   if (typeof value !== 'string') return '';
@@ -53,7 +51,23 @@ const requestWantsJson = (request: Request, formData: FormData): boolean => {
   return false;
 };
 
+const normalizeSource = (value: string): SubmissionSource | null => {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'contact') return 'contact';
+  if (normalized === 'coming-soon' || normalized === 'coming_soon') return 'coming-soon';
+  if (normalized === 'camp') return 'camp';
+  if (normalized === 'tour' || normalized === 'schedule-tour' || normalized === 'schedule_tour') {
+    return 'tour';
+  }
+  return null;
+};
+
 const detectSource = (formData: FormData): SubmissionSource => {
+  const explicit = normalizeSource(parseString(formData.get('source')));
+  if (explicit) {
+    return explicit;
+  }
+
   if (
     typeof formData.get('parent-name') === 'string' ||
     typeof formData.get('child-birthdate') === 'string' ||
@@ -62,12 +76,21 @@ const detectSource = (formData: FormData): SubmissionSource => {
   ) {
     return 'coming-soon';
   }
+
   return 'contact';
 };
 
 const toSubject = (source: SubmissionSource, formData: FormData): string => {
   if (source === 'contact') {
     return parseString(formData.get('subject')) || 'General inquiry';
+  }
+
+  if (source === 'camp') {
+    return parseString(formData.get('subject')) || 'Camp Inquiry';
+  }
+
+  if (source === 'tour') {
+    return parseString(formData.get('subject')) || 'Tour Request';
   }
 
   const programInterest = parseString(formData.get('program-interest'));
@@ -80,7 +103,7 @@ const toSubject = (source: SubmissionSource, formData: FormData): string => {
 const toMessage = (source: SubmissionSource, formData: FormData): string => {
   const primaryMessage = parseString(formData.get('message'));
 
-  if (source === 'contact') {
+  if (source === 'contact' || source === 'camp' || source === 'tour') {
     return primaryMessage;
   }
 
@@ -111,7 +134,7 @@ const toMessage = (source: SubmissionSource, formData: FormData): string => {
 };
 
 const toChildAge = (source: SubmissionSource, formData: FormData): string | null => {
-  if (source === 'contact') {
+  if (source === 'contact' || source === 'camp' || source === 'tour') {
     const childAge = parseString(formData.get('child-age'));
     return childAge || null;
   }
@@ -121,7 +144,11 @@ const toChildAge = (source: SubmissionSource, formData: FormData): string | null
 };
 
 const toTourInterest = (source: SubmissionSource, formData: FormData): boolean => {
-  if (source === 'contact') {
+  if (source === 'tour') {
+    return true;
+  }
+
+  if (source === 'contact' || source === 'camp') {
     return parseBoolean(formData.get('tour-interest'));
   }
 
@@ -130,12 +157,22 @@ const toTourInterest = (source: SubmissionSource, formData: FormData): boolean =
 };
 
 const successRedirectFor = (source: SubmissionSource): string =>
-  source === 'contact' ? '/contact-success' : '/coming-soon?submitted=1';
+  source === 'contact'
+    ? '/contact-success'
+    : source === 'camp'
+      ? '/camp'
+      : source === 'tour'
+        ? '/contact-success'
+        : '/coming-soon?submitted=1';
 
 const errorRedirectFor = (source: SubmissionSource): string =>
   source === 'contact'
     ? '/contact?error=submission-failed'
-    : '/coming-soon?error=submission-failed';
+    : source === 'camp'
+      ? '/camp?error=submission-failed'
+      : source === 'tour'
+        ? '/contact?error=submission-failed'
+        : '/coming-soon?error=submission-failed';
 
 const jsonResponse = (payload: Record<string, unknown>, status = 200): Response =>
   new Response(JSON.stringify(payload), {
@@ -182,7 +219,8 @@ export const POST: APIRoute = async ({ request, redirect }) => {
     const childAge = toChildAge(source, formData);
     const tourInterest = toTourInterest(source, formData);
 
-    if (!name || !email || (source === 'contact' && !message)) {
+    const requiresMessage = source === 'contact' || source === 'camp' || source === 'tour';
+    if (!name || !email || (requiresMessage && !message)) {
       if (wantsJson) {
         return jsonResponse(
           {
@@ -230,8 +268,17 @@ export const POST: APIRoute = async ({ request, redirect }) => {
       ]
     );
 
+    const eventName =
+      source === 'coming-soon'
+        ? 'coming_soon_submit'
+        : source === 'camp'
+          ? 'camp_inquiry_submit'
+          : source === 'tour'
+            ? 'tour_request_submit'
+            : 'contact_submit';
+
     await recordAnalyticsEvent({
-      eventName: source === 'coming-soon' ? 'coming_soon_submit' : 'contact_submit',
+      eventName,
       eventCategory: 'lead',
       pagePath: landingPage,
       pageUrl: null,
