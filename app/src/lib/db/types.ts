@@ -199,6 +199,23 @@ export interface SchoolScheduleExceptionRow {
   updated_at: string;
 }
 
+export interface AnnouncementEmailJobRow {
+  id: string;
+  announcement_id: string;
+  job_kind: string;
+  template_key: string;
+  recipients: string[] | null;
+  scheduled_for: string;
+  status: string;
+  attempt_count: number;
+  sent_count: number;
+  sent_at: string | null;
+  last_error: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MediaRow {
   id: string;
   filename: string;
@@ -232,6 +249,7 @@ export interface Database {
       camp_seat_adjustments: DatabaseTable<CampSeatAdjustmentRow>;
       school_announcements: DatabaseTable<SchoolAnnouncementRow>;
       school_schedule_exceptions: DatabaseTable<SchoolScheduleExceptionRow>;
+      announcement_email_jobs: DatabaseTable<AnnouncementEmailJobRow>;
       media: DatabaseTable<MediaRow>;
     };
     Views: Record<string, never>;

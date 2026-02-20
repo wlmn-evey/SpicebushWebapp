@@ -1,5 +1,12 @@
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
+import {
+  cancelAnnouncementEmailJob,
+  processDueAnnouncementEmailJobs,
+  saveAnnouncementEmailRecipients,
+  scheduleAnnouncementEmailReminder,
+  sendAnnouncementEmailNow
+} from '@lib/announcement-email';
 import { db } from '@lib/db';
 
 const jsonResponse = (payload: unknown, status = 200) =>
@@ -104,6 +111,88 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const redirect = buildRedirect(redirectTo, 'error', 'announcement_action_missing');
     if (redirect) return redirect;
     return jsonResponse({ error: 'Missing action' }, 400);
+  }
+
+  if (action === 'save-announcement-email-settings') {
+    try {
+      const recipients = await saveAnnouncementEmailRecipients(body.announcementEmailRecipients);
+      const redirect = buildRedirect(redirectTo, 'saved', 'announcement_email_settings_updated');
+      if (redirect) return redirect;
+      return jsonResponse({ success: true, recipients });
+    } catch {
+      const redirect = buildRedirect(redirectTo, 'error', 'announcement_email_settings_failed');
+      if (redirect) return redirect;
+      return jsonResponse({ error: 'Failed to save announcement email settings' }, 500);
+    }
+  }
+
+  if (action === 'send-announcement-email-now') {
+    const result = await sendAnnouncementEmailNow({
+      announcementId: asString(body.announcementId),
+      requestedTemplateKey: asString(body.templateKey),
+      createdBy: user?.email ?? null
+    });
+
+    if (!result.success) {
+      const redirect = buildRedirect(redirectTo, 'error', 'announcement_email_send_failed');
+      if (redirect) return redirect;
+      return jsonResponse(
+        {
+          error: result.error || 'Failed to send announcement email',
+          recipients: result.recipients
+        },
+        400
+      );
+    }
+
+    const redirect = buildRedirect(redirectTo, 'saved', 'announcement_email_sent');
+    if (redirect) return redirect;
+    return jsonResponse({
+      success: true,
+      recipients: result.recipients,
+      provider: result.provider,
+      messageId: result.messageId,
+      subject: result.subject
+    });
+  }
+
+  if (action === 'schedule-announcement-email-reminder') {
+    const scheduled = await scheduleAnnouncementEmailReminder({
+      announcementId: asString(body.announcementId),
+      scheduledFor: asString(body.scheduledFor),
+      requestedTemplateKey: asString(body.templateKey),
+      createdBy: user?.email ?? null,
+      jobKind: 'reminder'
+    });
+
+    if (!scheduled.id) {
+      const redirect = buildRedirect(redirectTo, 'error', 'announcement_email_schedule_failed');
+      if (redirect) return redirect;
+      return jsonResponse({ error: scheduled.error || 'Failed to schedule reminder email' }, 400);
+    }
+
+    const redirect = buildRedirect(redirectTo, 'saved', 'announcement_email_reminder_scheduled');
+    if (redirect) return redirect;
+    return jsonResponse({ success: true, id: scheduled.id });
+  }
+
+  if (action === 'run-announcement-email-jobs') {
+    const summary = await processDueAnnouncementEmailJobs({ limit: 40 });
+    const redirect = buildRedirect(redirectTo, 'saved', 'announcement_email_jobs_processed');
+    if (redirect) return redirect;
+    return jsonResponse({ success: true, summary });
+  }
+
+  if (action === 'cancel-announcement-email-job') {
+    const cancelled = await cancelAnnouncementEmailJob(asString(body.jobId));
+    if (!cancelled) {
+      const redirect = buildRedirect(redirectTo, 'error', 'announcement_email_cancel_failed');
+      if (redirect) return redirect;
+      return jsonResponse({ error: 'Failed to cancel announcement email job' }, 400);
+    }
+    const redirect = buildRedirect(redirectTo, 'saved', 'announcement_email_job_cancelled');
+    if (redirect) return redirect;
+    return jsonResponse({ success: true });
   }
 
   if (action === 'create-announcement') {
