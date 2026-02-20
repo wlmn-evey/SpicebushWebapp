@@ -246,12 +246,28 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   if (action === 'adjust-seats') {
     const weekId = asString(body.weekId);
+    const availablePreset = asString(body.availablePreset).toLowerCase();
+    let deltaConfirmed = asInt(body.deltaConfirmed, 0);
+    const deltaHeld = asInt(body.deltaHeld, 0);
+    const deltaCapacity = asInt(body.deltaCapacity, 0);
+    let note = asString(body.note);
+
+    if (availablePreset === 'increase') {
+      // available = capacity - confirmed - held; decrease confirmed to add available seat.
+      deltaConfirmed -= 1;
+      if (!note) note = 'Quick action: +1 available seat';
+    } else if (availablePreset === 'decrease') {
+      // available = capacity - confirmed - held; increase confirmed to reduce available seat.
+      deltaConfirmed += 1;
+      if (!note) note = 'Quick action: -1 available seat';
+    }
+
     const adjusted = await db.camp.adjustCampWeekSeats({
       weekId,
-      deltaConfirmed: asInt(body.deltaConfirmed, 0),
-      deltaHeld: asInt(body.deltaHeld, 0),
-      deltaCapacity: asInt(body.deltaCapacity, 0),
-      note: asString(body.note),
+      deltaConfirmed,
+      deltaHeld,
+      deltaCapacity,
+      note,
       actorEmail: user?.email ?? null
     });
 

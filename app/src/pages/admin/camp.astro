@@ -1248,6 +1248,28 @@ const tabLabel: Record<CampTab, string> = {
                           <p class="text-sm font-semibold text-earth-brown">
                             Quick Seat Adjustment
                           </p>
+                          <p class="mt-1 text-xs text-earth-brown/75">
+                            Fast controls for available seats (uses confirmed seats behind the
+                            scenes).
+                          </p>
+                          <div class="mt-2 flex flex-wrap gap-2">
+                            <button
+                              type="submit"
+                              name="availablePreset"
+                              value="increase"
+                              class="rounded-lg border border-green-300 bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-800 hover:bg-green-100"
+                            >
+                              +1 Available Seat
+                            </button>
+                            <button
+                              type="submit"
+                              name="availablePreset"
+                              value="decrease"
+                              class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100"
+                            >
+                              -1 Available Seat
+                            </button>
+                          </div>
                           <div class="mt-2 grid gap-2 sm:grid-cols-3">
                             <label class="text-xs font-medium text-earth-brown/80">
                               Delta Confirmed
