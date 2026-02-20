@@ -6,13 +6,14 @@ const required = [
 
 const optional = [
   'UNIONE_API_KEY',
-  'RESEND_API_KEY',
   'SENDGRID_API_KEY',
-  'POSTMARK_SERVER_TOKEN',
   'EMAIL_FROM',
   'EMAIL_FROM_NAME',
   'UNIONE_REGION',
   'EMAIL_SERVICE',
+  'SENDGRID_FROM_EMAIL',
+  'SENDGRID_TIMEOUT_MS',
+  'SENDGRID_API_BASE_URL',
   'AUTH_PROVIDER',
   'AUTH0_DOMAIN',
   'AUTH0_CLIENT_ID',
@@ -26,7 +27,7 @@ const optional = [
 ];
 
 // Load .env.local
-require('dotenv').config({ path: '.env.local' });
+require('dotenv').config({ path: '.env.local', quiet: true });
 
 console.log('🔍 Checking environment variables...\n');
 
@@ -71,6 +72,17 @@ if (!['netlify-magic-link', 'auth0'].includes(authProvider)) {
   hasErrors = true;
 }
 
+const rawEmailService = (process.env.EMAIL_SERVICE || 'sendgrid').trim().toLowerCase();
+const emailService = rawEmailService === 'send-grid' ? 'sendgrid' : rawEmailService;
+if (!['sendgrid', 'unione'].includes(emailService)) {
+  console.log('❌ EMAIL_SERVICE must be "sendgrid" (default) or "unione"');
+  hasErrors = true;
+}
+
+if (!process.env.EMAIL_FROM) {
+  console.log('⚠️  EMAIL_FROM is not set; sending may fail if a route does not pass a from address');
+}
+
 if (authProvider === 'auth0') {
   const auth0Required = ['AUTH0_DOMAIN', 'AUTH0_CLIENT_ID', 'AUTH0_CLIENT_SECRET'];
   const missingAuth0 = auth0Required.filter((key) => !process.env[key]);
@@ -81,10 +93,19 @@ if (authProvider === 'auth0') {
 }
 
 if (authProvider === 'netlify-magic-link') {
-  const emailKeys = ['UNIONE_API_KEY', 'RESEND_API_KEY', 'SENDGRID_API_KEY', 'POSTMARK_SERVER_TOKEN'];
-  const hasEmailKey = emailKeys.some((key) => !!process.env[key]);
-  if (!hasEmailKey) {
-    console.log('⚠️  No email provider API key configured; magic-link delivery will fail');
+  if (emailService === 'sendgrid' && !process.env.SENDGRID_API_KEY) {
+    console.log('❌ SENDGRID_API_KEY is required for magic-link delivery when EMAIL_SERVICE=sendgrid');
+    hasErrors = true;
+  }
+
+  if (emailService === 'unione' && !process.env.UNIONE_API_KEY) {
+    console.log('❌ UNIONE_API_KEY is required for magic-link delivery when EMAIL_SERVICE=unione');
+    hasErrors = true;
+  }
+
+  if (!process.env.EMAIL_FROM) {
+    console.log('❌ EMAIL_FROM is required for magic-link delivery');
+    hasErrors = true;
   }
 }
 

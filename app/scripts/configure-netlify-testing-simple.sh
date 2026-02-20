@@ -16,7 +16,7 @@ echo "Optional variables:"
 echo "- ADMIN_EMAILS (comma-separated explicit allow-list)"
 echo "- ADMIN_DOMAINS (comma-separated allow-list domains)"
 echo "- For auth0: AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET"
-echo "- For magic-link: EMAIL_SERVICE and provider API key"
+echo "- Email service (SendGrid standard): EMAIL_SERVICE, SENDGRID_API_KEY, EMAIL_FROM"
 echo ""
 
 read -p "Do you have the required values ready? (y/n) " -n 1 -r
@@ -60,23 +60,20 @@ if [[ "$AUTH_PROVIDER" == "auth0" ]]; then
     read -p "AUTH0_AUDIENCE (optional): " AUTH0_AUDIENCE
     [ -n "$AUTH0_AUDIENCE" ] && npx netlify env:set AUTH0_AUDIENCE "$AUTH0_AUDIENCE" || echo "Skipped"
 else
-    read -p "EMAIL_SERVICE (optional, e.g. resend): " EMAIL_SERVICE
-    [ -n "$EMAIL_SERVICE" ] && npx netlify env:set EMAIL_SERVICE "$EMAIL_SERVICE" || echo "Skipped"
-
-    if [[ "$EMAIL_SERVICE" == "resend" ]]; then
-        read -s -p "RESEND_API_KEY (optional): " RESEND_API_KEY && echo
-        [ -n "$RESEND_API_KEY" ] && npx netlify env:set RESEND_API_KEY "$RESEND_API_KEY" || echo "Skipped"
-    fi
+    read -p "EMAIL_SERVICE [sendgrid]: " EMAIL_SERVICE
+    EMAIL_SERVICE=${EMAIL_SERVICE:-sendgrid}
+    npx netlify env:set EMAIL_SERVICE "$EMAIL_SERVICE"
 
     if [[ "$EMAIL_SERVICE" == "sendgrid" ]]; then
-        read -s -p "SENDGRID_API_KEY (optional): " SENDGRID_API_KEY && echo
+        read -s -p "SENDGRID_API_KEY (required for magic-link): " SENDGRID_API_KEY && echo
         [ -n "$SENDGRID_API_KEY" ] && npx netlify env:set SENDGRID_API_KEY "$SENDGRID_API_KEY" || echo "Skipped"
+    elif [[ "$EMAIL_SERVICE" == "unione" ]]; then
+        read -s -p "UNIONE_API_KEY (required for magic-link): " UNIONE_API_KEY && echo
+        [ -n "$UNIONE_API_KEY" ] && npx netlify env:set UNIONE_API_KEY "$UNIONE_API_KEY" || echo "Skipped"
     fi
 
-    if [[ "$EMAIL_SERVICE" == "postmark" ]]; then
-        read -s -p "POSTMARK_SERVER_TOKEN (optional): " POSTMARK_SERVER_TOKEN && echo
-        [ -n "$POSTMARK_SERVER_TOKEN" ] && npx netlify env:set POSTMARK_SERVER_TOKEN "$POSTMARK_SERVER_TOKEN" || echo "Skipped"
-    fi
+    read -p "EMAIL_FROM (recommended): " EMAIL_FROM
+    [ -n "$EMAIL_FROM" ] && npx netlify env:set EMAIL_FROM "$EMAIL_FROM" || echo "Skipped"
 fi
 
 echo ""

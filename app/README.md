@@ -7,6 +7,7 @@ Astro frontend and Netlify runtime for the Spicebush Montessori site.
 - Backend platform: Netlify
 - Database: Neon via Netlify DB (`NETLIFY_DATABASE_URL`)
 - Admin auth: Netlify-compatible magic-link sessions
+- Transactional email: SendGrid (with Unione fallback during migration)
 - Core admin modules: Hours, Staff, Tuition, Settings
 
 ## Current Product Scope
@@ -34,6 +35,7 @@ npm run lint -- --max-warnings=0
 npm run typecheck
 npm run test
 npm run test:e2e
+npm run test:email
 ```
 
 ## Documentation

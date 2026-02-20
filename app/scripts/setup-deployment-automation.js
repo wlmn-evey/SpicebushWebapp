@@ -183,7 +183,7 @@ async function configureEnvironmentVariables() {
     { name: 'AUTH0_CLIENT_SECRET', description: 'Required when AUTH_PROVIDER=auth0' },
     { name: 'ADMIN_EMAILS', description: 'Optional comma-separated explicit admin allow-list' },
     { name: 'ADMIN_DOMAINS', description: 'Optional comma-separated admin domain allow-list' },
-    { name: 'EMAIL_SERVICE', description: 'Optional provider: unione, sendgrid, postmark, resend' },
+    { name: 'EMAIL_SERVICE', description: 'Optional, defaults to sendgrid (supported: sendgrid, unione)' },
     { name: 'NODE_ENV', description: 'Environment (staging/production)' }
   ];
   
@@ -216,10 +216,11 @@ AUTH_PROVIDER=auth0
 ADMIN_EMAILS=admin@spicebushmontessori.org
 ADMIN_DOMAINS=@spicebushmontessori.org
 
-# Email Service (choose one)
+# Email Service (SendGrid standard)
+EMAIL_SERVICE=sendgrid
 SENDGRID_API_KEY=SG.your-sendgrid-key
-# RESEND_API_KEY=re_your-resend-key
-# POSTMARK_SERVER_TOKEN=your-postmark-token
+# EMAIL_FROM=noreply@spicebushmontessori.org
+# EMAIL_FROM_NAME=Spicebush Montessori School
 
 # Monitoring (optional)
 SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id

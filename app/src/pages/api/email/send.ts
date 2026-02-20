@@ -92,11 +92,13 @@ export const GET: APIRoute = async ({ locals }) => {
   try {
     const status = emailService.getStatus();
     const configured = Object.values(status).some(v => v);
+    const configuredProviders = emailService.getConfiguredProviderNames();
 
     return new Response(JSON.stringify({
       configured,
       providers: status,
-      preferredProvider: import.meta.env.EMAIL_SERVICE || 'auto'
+      configuredProviders,
+      preferredProvider: emailService.getPreferredProvider()
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

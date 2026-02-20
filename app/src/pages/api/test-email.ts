@@ -42,7 +42,8 @@ export const GET: APIRoute = async ({ request, locals }) => {
       message: result.success ? `Test email sent to ${testEmail}` : `Failed to send email: ${result.error}`,
       provider: result.provider,
       messageId: result.messageId,
-      serviceStatus: status
+      serviceStatus: status,
+      preferredProvider: emailService.getPreferredProvider()
     });
   } catch (error) {
     return jsonResponse(500, {

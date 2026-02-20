@@ -1,29 +1,5 @@
 // Type declarations for imports without types
 
-declare module '@sendgrid/mail' {
-  type SendGridMessage = Record<string, unknown>;
-  type SendGridResponse = unknown;
-
-  export function setApiKey(key: string): void;
-  export function send(msg: SendGridMessage): Promise<SendGridResponse>;
-
-  const sendGrid: {
-    setApiKey: typeof setApiKey;
-    send: typeof send;
-  };
-  export default sendGrid;
-}
-
-declare module 'postmark' {
-  type PostmarkEmailOptions = Record<string, unknown>;
-  type PostmarkEmailResponse = unknown;
-
-  export class ServerClient {
-    constructor(token: string);
-    sendEmail(options: PostmarkEmailOptions): Promise<PostmarkEmailResponse>;
-  }
-}
-
 declare module '@lib/email-service' {
   export interface EmailMessage {
     to: string | string[];
@@ -33,6 +9,11 @@ declare module '@lib/email-service' {
     text?: string;
     html?: string;
     replyTo?: string;
+    attachments?: Array<{
+      filename: string;
+      content: string | Buffer;
+      contentType?: string;
+    }>;
   }
   
   export interface EmailResult {
@@ -45,6 +26,8 @@ declare module '@lib/email-service' {
   export class EmailService {
     send(message: EmailMessage): Promise<EmailResult>;
     getStatus(): Record<string, boolean>;
+    getConfiguredProviderNames(): string[];
+    getPreferredProvider(): string;
   }
   
   export const emailService: EmailService;
