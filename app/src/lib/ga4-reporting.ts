@@ -206,7 +206,10 @@ const defaultReport = (windowDays: number, message: string): Ga4OverviewReport =
   fetchedAt: null
 });
 
-export async function getGa4OverviewReport(propertyIdInput: string, windowDaysInput: number): Promise<Ga4OverviewReport> {
+export async function getGa4OverviewReport(
+  propertyIdInput: string,
+  windowDaysInput: number
+): Promise<Ga4OverviewReport> {
   const propertyId = asString(propertyIdInput);
   const windowDays = Math.min(365, Math.max(1, Math.trunc(windowDaysInput)));
   const cacheKey = `${propertyId}:${windowDays}`;

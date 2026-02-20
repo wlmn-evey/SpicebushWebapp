@@ -85,6 +85,15 @@
       }
     },
     {
+      "files": ["src/components/OptimizedImage.astro"],
+      "rules": {
+        // Work around ESLint indent recursion on very large Astro templates
+        "indent": "off",
+        // Dynamic selectors are toggled by runtime focal-point tooling
+        "astro/no-unused-css-selector": "off"
+      }
+    },
+    {
       "files": ["scripts/**/*.js", "scripts/**/*.ts"],
       "rules": {
         // Allow console logs in scripts
