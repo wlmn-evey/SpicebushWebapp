@@ -49,42 +49,37 @@ try {
 ---
 
 <footer class="bg-forest-canopy text-white">
-  <div class="container mx-auto px-4 py-12">
-    
-    <!-- Main Footer Layout: Exactly 2 Equal Columns -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-8">
-      
-      <!-- Left Column: 4x4 Grid (50%) -->
-      <div class="w-full">
-        <div class="grid grid-cols-2 gap-8 h-full">
-          
-          <!-- Grid Cell 1: School Info -->
-          <div class="space-y-4">
-            <OptimizedImage
-              photoSlug="homepage-spicebush-logo-brand-identity"
-              className="h-16 sm:h-20 md:h-24 w-auto mb-4 object-contain"
-              style="max-width: 300px;"
-              loading="lazy"
-              alt="Spicebush Montessori School"
-            />
-            <p class="text-light-stone text-sm leading-relaxed-plus font-light tracking-wide">
-              A warm community where every child can be exactly who they are.
-            </p>
-            <div class="flex space-x-3">
-              {socialMedia?.facebook && (
-                <a href={socialMedia.facebook} class="text-light-stone hover:text-sunlight-gold transition-colors" aria-label="Facebook">
-                  <Facebook className="w-5 h-5" />
-                </a>
-              )}
-              {socialMedia?.instagram && (
-                <a href={socialMedia.instagram} class="text-light-stone hover:text-sunlight-gold transition-colors" aria-label="Instagram">
-                  <Instagram className="w-5 h-5" />
-                </a>
-              )}
-            </div>
+  <div class="container mx-auto px-4 pt-12 pb-24 md:pb-12">
+    <!-- Main Footer Layout -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-10 xl:gap-12 mb-10">
+      <!-- Left Column -->
+      <div class="space-y-8">
+        <div class="space-y-4 max-w-xl">
+          <OptimizedImage
+            photoSlug="homepage-spicebush-logo-brand-identity"
+            className="h-16 sm:h-20 md:h-24 w-auto object-contain"
+            style="max-width: 300px;"
+            loading="lazy"
+            alt="Spicebush Montessori School"
+          />
+          <p class="text-light-stone text-sm leading-relaxed-plus font-light tracking-wide">
+            A warm community where every child can be exactly who they are.
+          </p>
+          <div class="flex items-center gap-3">
+            {socialMedia?.facebook && (
+              <a href={socialMedia.facebook} class="text-light-stone hover:text-sunlight-gold transition-colors" aria-label="Facebook">
+                <Facebook className="w-5 h-5" />
+              </a>
+            )}
+            {socialMedia?.instagram && (
+              <a href={socialMedia.instagram} class="text-light-stone hover:text-sunlight-gold transition-colors" aria-label="Instagram">
+                <Instagram className="w-5 h-5" />
+              </a>
+            )}
           </div>
-          
-          <!-- Grid Cell 2: Quick Links -->
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
           <div class="space-y-4">
             <h3 class="text-lg font-semibold text-sunlight-gold">Quick Links</h3>
             <ul class="space-y-2 text-sm">
@@ -92,70 +87,63 @@ try {
               <li><a href="/our-principles" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Our Principles</a></li>
               <li><a href="/admissions" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Admissions</a></li>
               <li><a href="/admissions/tuition-calculator" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Tuition Calculator</a></li>
-              <li><a href={adminFooterHref} class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">{adminFooterLabel}</a></li>
             </ul>
           </div>
-          
-          <!-- Grid Cell 3: Resources -->
-          <div class="space-y-6">
-            <div class="space-y-4">
-              <h3 class="text-lg font-semibold text-sunlight-gold">Resources</h3>
-              <ul class="space-y-2 text-sm">
-                <li><a href="/resources/faq" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">FAQ</a></li>
-                <li><a href="/blog" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Blog</a></li>
-                <li><a href="/contact" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Contact</a></li>
-              </ul>
-            </div>
-          </div>
-          
-          <!-- Grid Cell 4: Contact Info -->
+
           <div class="space-y-4">
-            <h3 class="text-lg font-semibold text-sunlight-gold">Get in Touch</h3>
-            
-            <ContactInfo 
-              className="text-sm [&_a]:text-light-stone [&_a]:hover:text-sunlight-gold [&_address]:text-light-stone [&_svg]:text-moss-green"
-            />
-            
-            <!-- CTA Buttons -->
-            <div class="space-y-2 pt-2">
-              <a 
-                href={tourLink}
-                class="block text-center bg-sunlight-gold hover:bg-orange-600 text-white px-4 py-2.5 rounded-lg font-semibold transition-colors text-sm tracking-wide"
-                data-analytics-event="tour_click"
-                data-analytics-label="footer-come-visit"
-                data-analytics-location="footer-cta"
-              >
-                Come Visit
-              </a>
-              <a 
-                href="/contact" 
-                class="block text-center border border-gray-300 text-light-stone hover:border-sunlight-gold hover:text-sunlight-gold px-4 py-2 rounded-lg font-medium transition-colors text-sm tracking-wide"
-                data-analytics-event="contact_cta_click"
-                data-analytics-label="footer-get-in-touch"
-                data-analytics-location="footer-cta"
-              >
-                Get in Touch
-              </a>
-            </div>
+            <h3 class="text-lg font-semibold text-sunlight-gold">Resources</h3>
+            <ul class="space-y-2 text-sm">
+              <li><a href="/resources/faq" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">FAQ</a></li>
+              <li><a href="/blog" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Blog</a></li>
+              <li><a href="/contact" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Contact</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="space-y-4 max-w-xl">
+          <h3 class="text-lg font-semibold text-sunlight-gold">Get in Touch</h3>
+          <ContactInfo 
+            className="text-sm [&_a]:text-light-stone [&_a]:hover:text-sunlight-gold [&_address]:text-light-stone [&_svg]:text-moss-green"
+          />
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            <a 
+              href={tourLink}
+              class="block text-center bg-sunlight-gold hover:bg-orange-600 text-white px-4 py-2.5 rounded-lg font-semibold transition-colors text-sm tracking-wide"
+              data-analytics-event="tour_click"
+              data-analytics-label="footer-come-visit"
+              data-analytics-location="footer-cta"
+            >
+              Come Visit
+            </a>
+            <a 
+              href="/contact" 
+              class="block text-center border border-gray-300 text-light-stone hover:border-sunlight-gold hover:text-sunlight-gold px-4 py-2 rounded-lg font-medium transition-colors text-sm tracking-wide"
+              data-analytics-event="contact_cta_click"
+              data-analytics-label="footer-get-in-touch"
+              data-analytics-location="footer-cta"
+            >
+              Get in Touch
+            </a>
           </div>
         </div>
       </div>
-      
-      <!-- Right Column: Hours Widget (50%) -->
+
+      <!-- Right Column: Hours Widget -->
       <div class="w-full">
-        <div class="bg-white/5 backdrop-blur-sm rounded-xl p-2 border border-white/10 h-full">
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl p-3 lg:p-4 border border-white/10 overflow-hidden">
           <HoursWidget />
         </div>
       </div>
     </div>
     
     <!-- Bottom Section -->
-    <div class="border-t border-gray-600 pt-8">
-      <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-        <div class="text-light-stone text-sm text-center md:text-left">
+    <div class="border-t border-gray-600 pt-6">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="text-light-stone text-sm text-center lg:text-left">
           <p>&copy; {copyrightYear} Spicebush Montessori School. All rights reserved.</p>
         </div>
-        <div class="flex flex-wrap items-center justify-center md:justify-end gap-3 md:gap-6 text-sm">
+        <div class="flex flex-wrap items-center justify-center lg:justify-end gap-x-5 gap-y-2 text-sm">
           <a
             href={adminFooterHref}
             class="inline-flex items-center rounded-lg border border-sunlight-gold/50 bg-sunlight-gold/15 px-3 py-1.5 font-semibold text-sunlight-gold transition-colors hover:bg-sunlight-gold hover:text-white"
