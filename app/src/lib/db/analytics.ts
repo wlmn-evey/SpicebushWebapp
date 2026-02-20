@@ -43,7 +43,19 @@ const normalizeProperties = (value: unknown): Record<string, AnalyticsScalar> =>
         return [normalizedKey, rawValue] as const;
       }
 
-      return [normalizedKey, JSON.stringify(rawValue).slice(0, 800)] as const;
+      if (rawValue === undefined) {
+        return null;
+      }
+
+      try {
+        const serialized = JSON.stringify(rawValue);
+        if (typeof serialized !== 'string') {
+          return null;
+        }
+        return [normalizedKey, serialized.slice(0, 800)] as const;
+      } catch {
+        return [normalizedKey, '[unserializable]'] as const;
+      }
     })
     .filter((entry): entry is readonly [string, AnalyticsScalar] => Boolean(entry));
 
