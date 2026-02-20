@@ -1,0 +1,76 @@
+---
+import { AlertTriangle, Bell, Info, Megaphone } from 'lucide-astro';
+import { db } from '@lib/db';
+import type { AnnouncementPlacement, AnnouncementSeverity } from '@lib/db/announcements';
+
+const pathname = Astro.url.pathname;
+
+const placement: AnnouncementPlacement | null = (() => {
+  if (pathname === '/') return 'homepage';
+  if (pathname === '/camp' || pathname.startsWith('/camp/')) return 'camp';
+  if (pathname === '/coming-soon' || pathname.startsWith('/coming-soon')) return 'coming-soon';
+  return null;
+})();
+
+const activeAnnouncements = await db.announcements.getActiveAnnouncements({
+  placement,
+  limit: 1
+});
+
+const announcement = activeAnnouncements[0] ?? null;
+
+const severityStyles: Record<AnnouncementSeverity, string> = {
+  info: 'border-blue-200 bg-blue-50 text-blue-900',
+  reminder: 'border-amber-200 bg-amber-50 text-amber-900',
+  urgent: 'border-red-200 bg-red-50 text-red-900',
+  closure: 'border-rose-300 bg-rose-100 text-rose-900'
+};
+
+const severityLabel: Record<AnnouncementSeverity, string> = {
+  info: 'School Update',
+  reminder: 'Parent Reminder',
+  urgent: 'Urgent Update',
+  closure: 'Closure Notice'
+};
+---
+
+{
+  announcement && (
+    <div
+      class={`border-b ${severityStyles[announcement.severity]}`}
+      role={
+        announcement.severity === 'urgent' || announcement.severity === 'closure'
+          ? 'alert'
+          : 'status'
+      }
+    >
+      <div class="container mx-auto flex flex-col gap-2 px-4 py-2 text-sm sm:flex-row sm:items-start sm:justify-between">
+        <div class="flex items-start gap-2">
+          <span class="mt-0.5 shrink-0">
+            {announcement.severity === 'closure' ? (
+              <AlertTriangle className="h-4 w-4" />
+            ) : announcement.severity === 'urgent' ? (
+              <Megaphone className="h-4 w-4" />
+            ) : announcement.severity === 'reminder' ? (
+              <Bell className="h-4 w-4" />
+            ) : (
+              <Info className="h-4 w-4" />
+            )}
+          </span>
+          <div>
+            <p class="font-semibold">{severityLabel[announcement.severity]}</p>
+            <p>{announcement.message}</p>
+          </div>
+        </div>
+        {announcement.ctaLabel && announcement.ctaUrl && (
+          <a
+            href={announcement.ctaUrl}
+            class="inline-flex min-h-[40px] items-center justify-center rounded-md border border-current/30 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide hover:bg-white/35"
+          >
+            {announcement.ctaLabel}
+          </a>
+        )}
+      </div>
+    </div>
+  )
+}

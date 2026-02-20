@@ -5,6 +5,7 @@ import { logServerError } from '@lib/server-logger';
 import { getTourLink } from '@lib/tour-settings';
 import { evaluateCampMode, parseCampModeSettings } from '@lib/camp-mode';
 import OptimizedImage from './OptimizedImage.astro';
+import AnnouncementBar from './AnnouncementBar.astro';
 
 interface SchoolInfoData {
   phone?: unknown;
@@ -134,6 +135,8 @@ const weekdayHours = {
       </div>
     </div>
   </div>
+
+  <AnnouncementBar />
 
   {
     campPromoEnabled && showCampEntryPoints && !isCampRoute && (

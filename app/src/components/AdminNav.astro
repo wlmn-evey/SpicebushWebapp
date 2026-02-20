@@ -10,7 +10,8 @@ import {
   MessageSquare,
   Mail,
   LineChart,
-  Tent
+  Tent,
+  Bell
 } from 'lucide-astro';
 
 const currentPath = Astro.url.pathname;
@@ -97,6 +98,15 @@ const currentPath = Astro.url.pathname;
         >
           <Mail className="w-5 h-5 mr-3" />
           Contact Submissions
+        </a>
+
+        <a
+          href="/admin/announcements"
+          aria-current={currentPath === '/admin/announcements' ? 'page' : undefined}
+          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+        >
+          <Bell className="w-5 h-5 mr-3" />
+          Announcements
         </a>
 
         <a

@@ -33,6 +33,17 @@ import {
   adjustCampWeekSeats,
   replaceCampWeekVariantsFromLines
 } from './camp';
+import {
+  getActiveAnnouncements,
+  getScheduleExceptionsInRange,
+  getAnnouncementAdminData,
+  createSchoolAnnouncement,
+  updateSchoolAnnouncement,
+  deleteSchoolAnnouncement,
+  createScheduleException,
+  updateScheduleException,
+  deleteScheduleException
+} from './announcements';
 
 export const db = {
   content: {
@@ -78,6 +89,17 @@ export const db = {
     deleteCampWeek,
     adjustCampWeekSeats,
     replaceCampWeekVariantsFromLines
+  },
+  announcements: {
+    getActiveAnnouncements,
+    getScheduleExceptionsInRange,
+    getAnnouncementAdminData,
+    createSchoolAnnouncement,
+    updateSchoolAnnouncement,
+    deleteSchoolAnnouncement,
+    createScheduleException,
+    updateScheduleException,
+    deleteScheduleException
   },
   raw: {
     getPublicClient,
@@ -126,4 +148,15 @@ export {
   adjustCampWeekSeats,
   replaceCampWeekVariantsFromLines
 } from './camp';
+export {
+  getActiveAnnouncements,
+  getScheduleExceptionsInRange,
+  getAnnouncementAdminData,
+  createSchoolAnnouncement,
+  updateSchoolAnnouncement,
+  deleteSchoolAnnouncement,
+  createScheduleException,
+  updateScheduleException,
+  deleteScheduleException
+} from './announcements';
 export { getPublicClient, getServiceClient, withServiceClient } from './client';

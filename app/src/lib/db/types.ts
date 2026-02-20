@@ -164,6 +164,41 @@ export interface CampSeatAdjustmentRow {
   created_at: string;
 }
 
+export interface SchoolAnnouncementRow {
+  id: string;
+  title: string;
+  message: string;
+  severity: string;
+  audience: string;
+  placement: string;
+  cta_label: string | null;
+  cta_url: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  is_published: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SchoolScheduleExceptionRow {
+  id: string;
+  title: string;
+  reason: string | null;
+  start_date: string;
+  end_date: string;
+  exception_type: string;
+  open_time_decimal: number | string | null;
+  close_time_decimal: number | string | null;
+  before_care_offset: number | string | null;
+  after_care_offset: number | string | null;
+  linked_announcement_id: string | null;
+  is_published: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MediaRow {
   id: string;
   filename: string;
@@ -195,6 +230,8 @@ export interface Database {
       camp_weeks: DatabaseTable<CampWeekRow>;
       camp_week_variants: DatabaseTable<CampWeekVariantRow>;
       camp_seat_adjustments: DatabaseTable<CampSeatAdjustmentRow>;
+      school_announcements: DatabaseTable<SchoolAnnouncementRow>;
+      school_schedule_exceptions: DatabaseTable<SchoolScheduleExceptionRow>;
       media: DatabaseTable<MediaRow>;
     };
     Views: Record<string, never>;

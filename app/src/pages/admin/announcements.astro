@@ -1,0 +1,669 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+import { db } from '@lib/db';
+
+const adminData = await db.announcements.getAnnouncementAdminData();
+const savedKey = Astro.url.searchParams.get('saved');
+const errorKey = Astro.url.searchParams.get('error');
+
+const toDateTimeInputValue = (value: string | null): string => {
+  if (!value) return '';
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) return '';
+  const date = new Date(parsed);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+const formatRange = (startDate: string, endDate: string): string => {
+  if (startDate === endDate) return startDate;
+  return `${startDate} to ${endDate}`;
+};
+---
+
+<AdminLayout title="Announcements & Closures">
+  {
+    savedKey && (
+      <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+        Saved: <strong>{savedKey}</strong>
+      </p>
+    )
+  }
+
+  {
+    errorKey && (
+      <p class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        Error: <strong>{errorKey}</strong>
+      </p>
+    )
+  }
+
+  <div class="space-y-6">
+    <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <h2 class="text-xl font-semibold text-earth-brown">Family Announcements</h2>
+      <p class="mt-1 text-sm text-earth-brown/80">
+        Share reminders, urgent updates, and closure notices with clear scheduling.
+      </p>
+
+      <form method="post" action="/api/admin/announcements" class="mt-4 grid gap-3 lg:grid-cols-3">
+        <input type="hidden" name="action" value="create-announcement" />
+        <input type="hidden" name="redirectTo" value="/admin/announcements" />
+
+        <label class="block text-sm font-medium text-earth-brown lg:col-span-2">
+          Title
+          <input
+            type="text"
+            name="title"
+            required
+            placeholder="School closing tomorrow due to weather"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          Severity
+          <select name="severity" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+            <option value="info">info</option>
+            <option value="reminder">reminder</option>
+            <option value="urgent">urgent</option>
+            <option value="closure">closure</option>
+          </select>
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown lg:col-span-3">
+          Message
+          <textarea
+            name="message"
+            rows="3"
+            required
+            placeholder="We are closed tomorrow, January 16, due to severe weather."
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"></textarea>
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          Placement
+          <select name="placement" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+            <option value="global">global</option>
+            <option value="homepage">homepage</option>
+            <option value="camp">camp</option>
+            <option value="coming-soon">coming-soon</option>
+          </select>
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          Starts At (optional)
+          <input
+            type="datetime-local"
+            name="startsAt"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          Ends At (optional)
+          <input
+            type="datetime-local"
+            name="endsAt"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          CTA Label (optional)
+          <input
+            type="text"
+            name="ctaLabel"
+            placeholder="Read full details"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown lg:col-span-2">
+          CTA URL (optional)
+          <input
+            type="text"
+            name="ctaUrl"
+            placeholder="/contact"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          Publish
+          <select
+            name="isPublished"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          >
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select>
+        </label>
+
+        <div class="lg:col-span-3">
+          <button
+            type="submit"
+            class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+          >
+            Create Announcement
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <h3 class="text-lg font-semibold text-earth-brown">Existing Announcements</h3>
+      {
+        adminData.announcements.length === 0 ? (
+          <p class="mt-3 text-sm text-earth-brown/75">No announcements yet.</p>
+        ) : (
+          <div class="mt-4 space-y-4">
+            {adminData.announcements.map(announcement => (
+              <details class="rounded-xl border border-gray-200 bg-white p-4">
+                <summary class="cursor-pointer list-none">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p class="text-sm font-semibold text-earth-brown">{announcement.title}</p>
+                      <p class="text-xs text-earth-brown/75">
+                        {announcement.severity} • {announcement.placement}
+                      </p>
+                    </div>
+                    <span
+                      class={`rounded-full px-2.5 py-1 text-xs font-semibold ${announcement.isPublished ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}
+                    >
+                      {announcement.isPublished ? 'published' : 'draft'}
+                    </span>
+                  </div>
+                </summary>
+
+                <div class="mt-4 space-y-3">
+                  <form
+                    method="post"
+                    action="/api/admin/announcements"
+                    class="grid gap-3 lg:grid-cols-3"
+                  >
+                    <input type="hidden" name="action" value="save-announcement" />
+                    <input type="hidden" name="announcementId" value={announcement.id} />
+                    <input type="hidden" name="redirectTo" value="/admin/announcements" />
+
+                    <label class="block text-sm font-medium text-earth-brown lg:col-span-2">
+                      Title
+                      <input
+                        type="text"
+                        name="title"
+                        value={announcement.title}
+                        required
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      Severity
+                      <select
+                        name="severity"
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      >
+                        <option value="info" selected={announcement.severity === 'info'}>
+                          info
+                        </option>
+                        <option value="reminder" selected={announcement.severity === 'reminder'}>
+                          reminder
+                        </option>
+                        <option value="urgent" selected={announcement.severity === 'urgent'}>
+                          urgent
+                        </option>
+                        <option value="closure" selected={announcement.severity === 'closure'}>
+                          closure
+                        </option>
+                      </select>
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown lg:col-span-3">
+                      Message
+                      <textarea
+                        name="message"
+                        rows="3"
+                        required
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      >
+                        {announcement.message}
+                      </textarea>
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      Placement
+                      <select
+                        name="placement"
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      >
+                        <option value="global" selected={announcement.placement === 'global'}>
+                          global
+                        </option>
+                        <option value="homepage" selected={announcement.placement === 'homepage'}>
+                          homepage
+                        </option>
+                        <option value="camp" selected={announcement.placement === 'camp'}>
+                          camp
+                        </option>
+                        <option
+                          value="coming-soon"
+                          selected={announcement.placement === 'coming-soon'}
+                        >
+                          coming-soon
+                        </option>
+                      </select>
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      Starts At
+                      <input
+                        type="datetime-local"
+                        name="startsAt"
+                        value={toDateTimeInputValue(announcement.startsAt)}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      Ends At
+                      <input
+                        type="datetime-local"
+                        name="endsAt"
+                        value={toDateTimeInputValue(announcement.endsAt)}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      CTA Label
+                      <input
+                        type="text"
+                        name="ctaLabel"
+                        value={announcement.ctaLabel ?? ''}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown lg:col-span-2">
+                      CTA URL
+                      <input
+                        type="text"
+                        name="ctaUrl"
+                        value={announcement.ctaUrl ?? ''}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      Published
+                      <select
+                        name="isPublished"
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      >
+                        <option value="true" selected={announcement.isPublished}>
+                          true
+                        </option>
+                        <option value="false" selected={!announcement.isPublished}>
+                          false
+                        </option>
+                      </select>
+                    </label>
+                    <div class="lg:col-span-3 flex flex-wrap gap-2">
+                      <button
+                        type="submit"
+                        class="rounded-lg border border-forest-canopy px-3 py-1.5 text-sm font-semibold text-forest-canopy hover:bg-forest-canopy hover:text-white"
+                      >
+                        Save Announcement
+                      </button>
+                    </div>
+                  </form>
+
+                  <form method="post" action="/api/admin/announcements">
+                    <input type="hidden" name="action" value="delete-announcement" />
+                    <input type="hidden" name="announcementId" value={announcement.id} />
+                    <input type="hidden" name="redirectTo" value="/admin/announcements" />
+                    <button
+                      type="submit"
+                      class="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50"
+                    >
+                      Delete Announcement
+                    </button>
+                  </form>
+                </div>
+              </details>
+            ))}
+          </div>
+        )
+      }
+    </section>
+
+    <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <h2 class="text-xl font-semibold text-earth-brown">School Closures & Hour Exceptions</h2>
+      <p class="mt-1 text-sm text-earth-brown/80">
+        Schedule full closures or temporary hour changes. These can feed the hours widget directly.
+      </p>
+
+      <form method="post" action="/api/admin/announcements" class="mt-4 grid gap-3 lg:grid-cols-3">
+        <input type="hidden" name="action" value="create-exception" />
+        <input type="hidden" name="redirectTo" value="/admin/announcements" />
+
+        <label class="block text-sm font-medium text-earth-brown lg:col-span-2">
+          Exception Title
+          <input
+            type="text"
+            name="title"
+            required
+            placeholder="Snow closure"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          Type
+          <select
+            name="exceptionType"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          >
+            <option value="closed">closed</option>
+            <option value="modified_hours">modified_hours</option>
+          </select>
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          Start Date
+          <input
+            type="date"
+            name="startDate"
+            required
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          End Date
+          <input
+            type="date"
+            name="endDate"
+            required
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          Open Time (decimal)
+          <input
+            type="number"
+            name="openTimeDecimal"
+            step="0.25"
+            placeholder="8.5"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          Close Time (decimal)
+          <input
+            type="number"
+            name="closeTimeDecimal"
+            step="0.25"
+            placeholder="15"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          Before Care Offset (decimal)
+          <input
+            type="number"
+            name="beforeCareOffset"
+            step="0.25"
+            placeholder="1"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          After Care Offset (decimal)
+          <input
+            type="number"
+            name="afterCareOffset"
+            step="0.25"
+            placeholder="2.5"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown lg:col-span-2">
+          Link Announcement (optional)
+          <select
+            name="linkedAnnouncementId"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          >
+            <option value="">None</option>
+            {
+              adminData.announcements.map(announcement => (
+                <option value={announcement.id}>{announcement.title}</option>
+              ))
+            }
+          </select>
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown">
+          Published
+          <select
+            name="isPublished"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          >
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select>
+        </label>
+
+        <label class="block text-sm font-medium text-earth-brown lg:col-span-3">
+          Reason (optional)
+          <input
+            type="text"
+            name="reason"
+            placeholder="Due to severe weather"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+
+        <div class="lg:col-span-3">
+          <button
+            type="submit"
+            class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+          >
+            Create Schedule Exception
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <h3 class="text-lg font-semibold text-earth-brown">Existing Closures & Hour Exceptions</h3>
+      {
+        adminData.scheduleExceptions.length === 0 ? (
+          <p class="mt-3 text-sm text-earth-brown/75">No schedule exceptions yet.</p>
+        ) : (
+          <div class="mt-4 space-y-4">
+            {adminData.scheduleExceptions.map(exception => (
+              <details class="rounded-xl border border-gray-200 bg-white p-4">
+                <summary class="cursor-pointer list-none">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p class="text-sm font-semibold text-earth-brown">{exception.title}</p>
+                      <p class="text-xs text-earth-brown/75">
+                        {formatRange(exception.startDate, exception.endDate)} •{' '}
+                        {exception.exceptionType}
+                      </p>
+                    </div>
+                    <span
+                      class={`rounded-full px-2.5 py-1 text-xs font-semibold ${exception.isPublished ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}
+                    >
+                      {exception.isPublished ? 'published' : 'draft'}
+                    </span>
+                  </div>
+                </summary>
+
+                <div class="mt-4 space-y-3">
+                  <form
+                    method="post"
+                    action="/api/admin/announcements"
+                    class="grid gap-3 lg:grid-cols-3"
+                  >
+                    <input type="hidden" name="action" value="save-exception" />
+                    <input type="hidden" name="exceptionId" value={exception.id} />
+                    <input type="hidden" name="redirectTo" value="/admin/announcements" />
+
+                    <label class="block text-sm font-medium text-earth-brown lg:col-span-2">
+                      Exception Title
+                      <input
+                        type="text"
+                        name="title"
+                        required
+                        value={exception.title}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      Type
+                      <select
+                        name="exceptionType"
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      >
+                        <option value="closed" selected={exception.exceptionType === 'closed'}>
+                          closed
+                        </option>
+                        <option
+                          value="modified_hours"
+                          selected={exception.exceptionType === 'modified_hours'}
+                        >
+                          modified_hours
+                        </option>
+                      </select>
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      Start Date
+                      <input
+                        type="date"
+                        name="startDate"
+                        value={exception.startDate}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      End Date
+                      <input
+                        type="date"
+                        name="endDate"
+                        value={exception.endDate}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      Open Time (decimal)
+                      <input
+                        type="number"
+                        name="openTimeDecimal"
+                        step="0.25"
+                        value={exception.openTimeDecimal ?? ''}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      Close Time (decimal)
+                      <input
+                        type="number"
+                        name="closeTimeDecimal"
+                        step="0.25"
+                        value={exception.closeTimeDecimal ?? ''}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      Before Care Offset
+                      <input
+                        type="number"
+                        name="beforeCareOffset"
+                        step="0.25"
+                        value={exception.beforeCareOffset ?? ''}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      After Care Offset
+                      <input
+                        type="number"
+                        name="afterCareOffset"
+                        step="0.25"
+                        value={exception.afterCareOffset ?? ''}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown lg:col-span-2">
+                      Link Announcement
+                      <select
+                        name="linkedAnnouncementId"
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      >
+                        <option value="">None</option>
+                        {adminData.announcements.map(announcement => (
+                          <option
+                            value={announcement.id}
+                            selected={announcement.id === exception.linkedAnnouncementId}
+                          >
+                            {announcement.title}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown">
+                      Published
+                      <select
+                        name="isPublished"
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      >
+                        <option value="true" selected={exception.isPublished}>
+                          true
+                        </option>
+                        <option value="false" selected={!exception.isPublished}>
+                          false
+                        </option>
+                      </select>
+                    </label>
+                    <label class="block text-sm font-medium text-earth-brown lg:col-span-3">
+                      Reason
+                      <input
+                        type="text"
+                        name="reason"
+                        value={exception.reason ?? ''}
+                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+
+                    <div class="lg:col-span-3 flex flex-wrap gap-2">
+                      <button
+                        type="submit"
+                        class="rounded-lg border border-forest-canopy px-3 py-1.5 text-sm font-semibold text-forest-canopy hover:bg-forest-canopy hover:text-white"
+                      >
+                        Save Exception
+                      </button>
+                    </div>
+                  </form>
+
+                  <form method="post" action="/api/admin/announcements">
+                    <input type="hidden" name="action" value="delete-exception" />
+                    <input type="hidden" name="exceptionId" value={exception.id} />
+                    <input type="hidden" name="redirectTo" value="/admin/announcements" />
+                    <button
+                      type="submit"
+                      class="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50"
+                    >
+                      Delete Exception
+                    </button>
+                  </form>
+                </div>
+              </details>
+            ))}
+          </div>
+        )
+      }
+    </section>
+  </div>
+</AdminLayout>
