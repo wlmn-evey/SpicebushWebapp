@@ -1,5 +1,11 @@
 import { db } from '@lib/db';
 import { emailService } from '@lib/email-service';
+import {
+  buildSchoolContactFooterHtml,
+  buildSchoolContactFooterText,
+  resolveSchoolEmailContactInfo,
+  type SchoolEmailContactInfo
+} from '@lib/email-template-footer';
 
 export type SubmissionSource = 'contact' | 'coming-soon' | 'camp' | 'tour';
 
@@ -21,7 +27,6 @@ export interface ContactSubmissionEmailResult {
   errors: string[];
 }
 
-const DEFAULT_SCHOOL_EMAIL = 'information@spicebushmontessori.org';
 const BRAND_NAME = 'Spicebush Montessori School';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -118,21 +123,6 @@ const parseEmailList = (value: unknown): string[] => {
     .filter((entry) => isEmail(entry));
 };
 
-const resolveSchoolEmail = (settings: Record<string, unknown>): string => {
-  const candidates = [
-    asString(settings.school_email),
-    asString(settings.main_email),
-    asString(settings.contact_email),
-    DEFAULT_SCHOOL_EMAIL
-  ];
-
-  for (const candidate of candidates) {
-    if (isEmail(candidate)) return candidate;
-  }
-
-  return DEFAULT_SCHOOL_EMAIL;
-};
-
 const sourceLabel = (source: SubmissionSource): string => SOURCE_CONFIG[source].label;
 
 const interpolate = (template: string, input: ContactSubmissionEmailInput): string =>
@@ -158,12 +148,14 @@ const emailShell = ({
   title,
   intro,
   body,
+  contactInfo,
   footerNote
 }: {
   preheader: string;
   title: string;
   intro: string;
   body: string;
+  contactInfo: SchoolEmailContactInfo;
   footerNote?: string;
 }): string => `
   <div style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">${escapeHtml(preheader)}</div>
@@ -185,7 +177,7 @@ const emailShell = ({
           </tr>
           <tr>
             <td style="padding:6px 26px 24px;color:#5f6f67;font-size:13px;line-height:1.5;">
-              ${footerNote ? `<p style="margin:10px 0 0;">${escapeHtml(footerNote)}</p>` : ''}
+              ${buildSchoolContactFooterHtml(contactInfo, { footerNote })}
             </td>
           </tr>
         </table>
@@ -194,7 +186,10 @@ const emailShell = ({
   </table>
 `;
 
-const buildNotificationEmail = (input: ContactSubmissionEmailInput) => {
+const buildNotificationEmail = (
+  input: ContactSubmissionEmailInput,
+  contactInfo: SchoolEmailContactInfo
+) => {
   const rows = toLines(input)
     .map(
       (row) => `
@@ -226,7 +221,11 @@ const buildNotificationEmail = (input: ContactSubmissionEmailInput) => {
     `Subject: ${input.subject}`,
     '',
     'Message:',
-    input.message
+    input.message,
+    '',
+    buildSchoolContactFooterText(contactInfo, {
+      footerNote: 'Reply directly to this email to respond to the parent.'
+    })
   ].join('\n');
 
   return {
@@ -235,6 +234,7 @@ const buildNotificationEmail = (input: ContactSubmissionEmailInput) => {
       title: 'New Family Inquiry',
       intro: `A new ${sourceLabel(input.source).toLowerCase()} has been submitted through the website.`,
       body,
+      contactInfo,
       footerNote: 'Reply directly to this email to respond to the parent.'
     }),
     text
@@ -257,7 +257,10 @@ const confirmationBodyLineBySource = (input: ContactSubmissionEmailInput): strin
   return 'If you would like to tour the school, just reply and we can help schedule that as well.';
 };
 
-const buildConfirmationEmail = (input: ContactSubmissionEmailInput) => {
+const buildConfirmationEmail = (
+  input: ContactSubmissionEmailInput,
+  contactInfo: SchoolEmailContactInfo
+) => {
   const followupText = confirmationBodyLineBySource(input);
 
   const body = `
@@ -283,7 +286,9 @@ const buildConfirmationEmail = (input: ContactSubmissionEmailInput) => {
     input.message,
     '',
     'Warmly,',
-    BRAND_NAME
+    BRAND_NAME,
+    '',
+    buildSchoolContactFooterText(contactInfo)
   ].join('\n');
 
   return {
@@ -292,6 +297,7 @@ const buildConfirmationEmail = (input: ContactSubmissionEmailInput) => {
       title: 'We Received Your Message',
       intro: 'Thanks for contacting us. A member of our team will follow up soon.',
       body,
+      contactInfo,
       footerNote: 'If you did not submit this message, you can ignore this email.'
     }),
     text
@@ -300,7 +306,8 @@ const buildConfirmationEmail = (input: ContactSubmissionEmailInput) => {
 
 const loadEmailRoutingSettings = async (source: SubmissionSource) => {
   const settings = await db.content.getAllSettings();
-  const schoolEmail = resolveSchoolEmail(settings);
+  const contactInfo = resolveSchoolEmailContactInfo(settings);
+  const schoolEmail = contactInfo.email;
   const sourceConfig = SOURCE_CONFIG[source];
 
   const notifyRecipients = parseEmailList(settings[sourceConfig.notifyRecipientsKey]);
@@ -312,6 +319,7 @@ const loadEmailRoutingSettings = async (source: SubmissionSource) => {
 
   return {
     schoolEmail,
+    contactInfo,
     notifyRecipients: notifyRecipients.length > 0 ? notifyRecipients : [schoolEmail],
     notifySubjectTemplate,
     sendConfirmation,
@@ -331,7 +339,7 @@ export const sendContactSubmissionEmails = async (
     errors: []
   };
 
-  const notificationContent = buildNotificationEmail(input);
+  const notificationContent = buildNotificationEmail(input, config.contactInfo);
   const notificationSubject = interpolate(config.notifySubjectTemplate, input);
 
   const notificationResult = await emailService.send({
@@ -352,7 +360,7 @@ export const sendContactSubmissionEmails = async (
   }
 
   if (config.sendConfirmation && isEmail(input.email)) {
-    const confirmationContent = buildConfirmationEmail(input);
+    const confirmationContent = buildConfirmationEmail(input, config.contactInfo);
     const confirmationSubject = interpolate(config.confirmSubjectTemplate, input);
     const confirmationResult = await emailService.send({
       to: input.email,

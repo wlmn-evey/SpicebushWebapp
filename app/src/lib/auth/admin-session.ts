@@ -1,6 +1,12 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { isAdminEmail } from '@lib/admin-config';
+import { db } from '@lib/db';
 import { emailService } from '@lib/email-service';
+import {
+  buildSchoolContactFooterHtml,
+  buildSchoolContactFooterText,
+  resolveSchoolEmailContactInfo
+} from '@lib/email-template-footer';
 import { query, queryFirst, withTransaction } from '@lib/db/client';
 
 const MAGIC_LINK_TTL_MINUTES = 15;
@@ -95,12 +101,30 @@ const getSiteOrigin = (requestUrl?: string): string => {
 
 const sendMagicLinkEmail = async (email: string, loginUrl: string): Promise<void> => {
   const subject = 'Your Spicebush Montessori admin login link';
-  const text = `Use this secure link to access the admin dashboard:\n\n${loginUrl}\n\nThis link expires in ${MAGIC_LINK_TTL_MINUTES} minutes.`;
+
+  let contactInfo = resolveSchoolEmailContactInfo({});
+  try {
+    const settings = await db.content.getAllSettings();
+    contactInfo = resolveSchoolEmailContactInfo(settings);
+  } catch {
+    // Fall back to defaults when settings cannot be loaded.
+  }
+
+  const footerNote = 'If you did not request this login link, you can ignore this email.';
+  const text = [
+    'Use this secure link to access the admin dashboard:',
+    '',
+    loginUrl,
+    '',
+    `This link expires in ${MAGIC_LINK_TTL_MINUTES} minutes.`,
+    '',
+    buildSchoolContactFooterText(contactInfo, { footerNote })
+  ].join('\n');
   const html = `
     <p>Use this secure link to access the Spicebush Montessori admin dashboard.</p>
     <p><a href="${loginUrl}" style="color:#1f684d;font-weight:600;">Sign in now</a></p>
     <p>This link expires in ${MAGIC_LINK_TTL_MINUTES} minutes.</p>
-    <p>If you did not request this login link, you can ignore this email.</p>
+    ${buildSchoolContactFooterHtml(contactInfo, { footerNote })}
   `;
 
   const result = await emailService.send({ to: email, subject, text, html });

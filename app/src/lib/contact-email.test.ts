@@ -75,6 +75,15 @@ describe('sendContactSubmissionEmails', () => {
         subject: 'Thanks Alicia Parent'
       })
     );
+
+    const notificationPayload = emailSendMock.mock.calls[0]?.[0];
+    const confirmationPayload = emailSendMock.mock.calls[1]?.[0];
+    expect(String(notificationPayload?.html || '')).toContain('School Contact & Directions');
+    expect(String(notificationPayload?.html || '')).toContain('Open in Maps');
+    expect(String(notificationPayload?.html || '')).toContain(
+      'not meant to be published or shared publicly'
+    );
+    expect(String(confirmationPayload?.text || '')).toContain('Confidentiality notice:');
   });
 
   it('falls back to school email and skips confirmation when disabled', async () => {
