@@ -216,6 +216,43 @@ export interface AnnouncementEmailJobRow {
   updated_at: string;
 }
 
+export interface DonationEventRow {
+  id: string;
+  stripe_event_id: string;
+  stripe_event_type: string;
+  stripe_object_id: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  donor_name: string | null;
+  donor_email: string | null;
+  amount_cents: number | null;
+  currency: string | null;
+  donation_kind: string;
+  source: string;
+  event_created_at: string;
+  metadata: Record<string, unknown>;
+  thank_you_email_status: string;
+  thank_you_email_sent_at: string | null;
+  thank_you_email_error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DonationEmailJobRow {
+  id: string;
+  donation_event_id: string;
+  job_kind: string;
+  template_key: string;
+  scheduled_for: string;
+  status: string;
+  attempt_count: number;
+  sent_at: string | null;
+  last_error: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MediaRow {
   id: string;
   filename: string;
@@ -250,6 +287,8 @@ export interface Database {
       school_announcements: DatabaseTable<SchoolAnnouncementRow>;
       school_schedule_exceptions: DatabaseTable<SchoolScheduleExceptionRow>;
       announcement_email_jobs: DatabaseTable<AnnouncementEmailJobRow>;
+      donation_events: DatabaseTable<DonationEventRow>;
+      donation_email_jobs: DatabaseTable<DonationEmailJobRow>;
       media: DatabaseTable<MediaRow>;
     };
     Views: Record<string, never>;
