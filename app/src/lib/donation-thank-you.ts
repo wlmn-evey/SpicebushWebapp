@@ -14,6 +14,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-
 const BRAND_NAME = 'Spicebush Montessori School';
 const DEFAULT_DONOR_NAME = 'friend';
 const DEFAULT_CURRENCY = 'USD';
+const DEFAULT_NOTIFICATION_SUBJECT = 'New donation received: {{amount}} from {{donor_name}}';
 
 export type DonationKind = 'one-time' | 'recurring-start' | 'recurring-renewal';
 export type DonationTemplateKey = DonationKind;
@@ -103,6 +104,9 @@ export interface DonationThankYouSettings {
   enabled: boolean;
   sendRecurringRenewals: boolean;
   defaultReminderHours: number;
+  sendInternalNotifications: boolean;
+  internalNotificationRecipients: string[];
+  internalNotificationSubjectTemplate: string;
   contactInfo: SchoolEmailContactInfo;
 }
 
@@ -258,6 +262,24 @@ const escapeHtml = (value: string): string =>
 const isEmail = (value: string): boolean => EMAIL_REGEX.test(value.trim());
 const isUuid = (value: string): boolean => UUID_REGEX.test(value);
 
+const parseEmailList = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => asString(entry).toLowerCase())
+      .filter((entry) => isEmail(entry));
+  }
+
+  const raw = asString(value);
+  if (!raw) return [];
+
+  return raw
+    .split(/[\n,;]+/)
+    .map((entry) => entry.trim().toLowerCase())
+    .filter((entry) => isEmail(entry));
+};
+
+const dedupeEmails = (emails: string[]): string[] => Array.from(new Set(emails));
+
 const formatCurrency = (amountCents: number | null, currency: string | null): string => {
   if (typeof amountCents !== 'number' || !Number.isFinite(amountCents) || amountCents < 0) return 'an amount';
   const normalizedCurrency = (currency || DEFAULT_CURRENCY).toUpperCase();
@@ -386,11 +408,26 @@ const toJobSummary = (row: DonationEmailJobRow): DonationEmailJobSummary => ({
 const loadSettingsAndContactInfo = async (): Promise<DonationThankYouSettings> => {
   const settings = await db.content.getAllSettings();
   const contactInfo = resolveSchoolEmailContactInfo(settings);
+  const defaultNotificationRecipient = isEmail(contactInfo.email)
+    ? contactInfo.email
+    : 'information@spicebushmontessori.org';
+  const configuredNotificationRecipients = dedupeEmails(
+    parseEmailList(
+      settings.donation_internal_notify_emails ?? settings.donation_notification_recipients ?? ''
+    )
+  );
 
   return {
     enabled: asBoolean(settings.donation_thank_you_enabled, true),
     sendRecurringRenewals: asBoolean(settings.donation_thank_you_send_recurring_renewals, false),
     defaultReminderHours: normalizeReminderHours(settings.donation_thank_you_default_reminder_hours),
+    sendInternalNotifications: asBoolean(settings.donation_internal_notify_enabled, true),
+    internalNotificationRecipients:
+      configuredNotificationRecipients.length > 0
+        ? configuredNotificationRecipients
+        : [defaultNotificationRecipient],
+    internalNotificationSubjectTemplate:
+      asString(settings.donation_internal_notify_subject) || DEFAULT_NOTIFICATION_SUBJECT,
     contactInfo
   };
 };
@@ -520,6 +557,103 @@ const buildDonationEmail = (input: {
   };
 };
 
+const buildDonationNotificationEmail = (input: {
+  event: DonationEventSummary;
+  contactInfo: SchoolEmailContactInfo;
+  subjectTemplate: string;
+}): { subject: string; html: string; text: string } => {
+  const donorName = asString(input.event.donorName) || 'Unknown donor';
+  const donorEmail = asString(input.event.donorEmail) || 'No donor email provided';
+  const amount = formatCurrency(input.event.amountCents, input.event.currency);
+  const donationDate = new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'long',
+    timeStyle: 'short'
+  }).format(new Date(input.event.eventCreatedAt));
+  const donationType =
+    input.event.donationKind === 'one-time'
+      ? 'One-time'
+      : input.event.donationKind === 'recurring-start'
+        ? 'Recurring start'
+        : 'Recurring renewal';
+
+  const values: Record<string, string> = {
+    donor_name: donorName,
+    donor_email: donorEmail,
+    amount,
+    donation_date: donationDate,
+    donation_kind: donationType,
+    stripe_event_id: input.event.stripeEventId,
+    school_name: BRAND_NAME
+  };
+
+  const subject = interpolate(input.subjectTemplate, values).trim() || 'New donation received';
+  const footerNote = `Stripe event: ${input.event.stripeEventId}`;
+  const detailsRows = [
+    ['Donor Name', donorName],
+    ['Donor Email', donorEmail],
+    ['Amount', amount],
+    ['Donation Type', donationType],
+    ['Received At', donationDate],
+    ['Stripe Event ID', input.event.stripeEventId]
+  ];
+
+  const detailHtml = detailsRows
+    .map(
+      ([label, value]) => `
+        <tr>
+          <td style="padding:8px 0;color:#5a6a62;font-size:13px;font-weight:700;vertical-align:top;width:180px;">${escapeHtml(label)}</td>
+          <td style="padding:8px 0;color:#2f3a34;font-size:14px;">${escapeHtml(value)}</td>
+        </tr>
+      `
+    )
+    .join('');
+
+  const html = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5ef;padding:24px 12px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#2f3a34;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#ffffff;border-radius:16px;border:1px solid #d9dfd6;overflow:hidden;">
+            <tr>
+              <td style="background:linear-gradient(135deg,#2f6a4f,#5f8f76);padding:22px 26px;color:#ffffff;">
+                <p style="margin:0;font-size:12px;letter-spacing:1px;text-transform:uppercase;opacity:.9;">${BRAND_NAME}</p>
+                <h1 style="margin:8px 0 0;font-size:24px;line-height:1.3;">${escapeHtml(subject)}</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 26px 8px;">
+                <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#2f3a34;">A new donation has been received on the website.</p>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                  ${detailHtml}
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:6px 26px 24px;color:#5f6f67;font-size:13px;line-height:1.5;">
+                ${buildSchoolContactFooterHtml(input.contactInfo, { footerNote })}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  const text = [
+    'A new donation has been received on the website.',
+    '',
+    `Donor Name: ${donorName}`,
+    `Donor Email: ${donorEmail}`,
+    `Amount: ${amount}`,
+    `Donation Type: ${donationType}`,
+    `Received At: ${donationDate}`,
+    `Stripe Event ID: ${input.event.stripeEventId}`,
+    '',
+    buildSchoolContactFooterText(input.contactInfo, { footerNote })
+  ].join('\n');
+
+  return { subject, html, text };
+};
+
 const updateDonationEventEmailStatus = async (input: {
   eventId: string;
   status: DonationEventEmailStatus;
@@ -578,14 +712,19 @@ const fetchDonationEvent = async (eventId: string): Promise<DonationEventSummary
 const logDonationMessage = async (input: {
   subject: string;
   body: string;
-  recipient: string | null;
+  recipient: string | string[] | null;
   scheduledFor?: string | null;
   sentAt?: string | null;
   status: 'scheduled' | 'sent' | 'failed';
+  messageType?: 'donation_thank_you' | 'donation_notification';
   createdBy?: string | null;
   metadata?: Record<string, unknown>;
 }) => {
-  const recipientCount = input.recipient && isEmail(input.recipient) ? 1 : 0;
+  const recipients = Array.isArray(input.recipient)
+    ? dedupeEmails(input.recipient.filter((entry) => isEmail(entry)))
+    : input.recipient && isEmail(input.recipient)
+      ? [input.recipient]
+      : [];
   await query(
     `
       INSERT INTO communications_messages (
@@ -600,17 +739,19 @@ const logDonationMessage = async (input: {
         delivery_stats,
         created_by
       )
-      VALUES ($1, $2, 'donation_thank_you', 'single', $3, $4::timestamptz, $5::timestamptz, $6, $7::jsonb, $8)
+      VALUES ($1, $2, $3, $4, $5, $6::timestamptz, $7::timestamptz, $8, $9::jsonb, $10)
     `,
     [
       input.subject,
       input.body,
-      recipientCount,
+      input.messageType || 'donation_thank_you',
+      recipients.length > 1 ? 'custom_list' : 'single',
+      recipients.length,
       input.scheduledFor ?? null,
       input.sentAt ?? null,
       input.status,
       JSON.stringify({
-        recipient: input.recipient,
+        recipients,
         ...(input.metadata || {})
       }),
       input.createdBy ?? null
@@ -671,6 +812,83 @@ const renderAndSendDonationThankYou = async (input: {
     templateKey,
     provider: sendResult.provider,
     error: sendResult.error || 'Failed to send donor thank-you email'
+  };
+};
+
+const sendDonationNotificationEmail = async (input: {
+  event: DonationEventSummary;
+  settings: DonationThankYouSettings;
+  source: 'stripe_webhook';
+}): Promise<{ sent: boolean; recipients: string[]; subject: string; error?: string; skipped?: string }> => {
+  if (!input.settings.sendInternalNotifications) {
+    return { sent: false, recipients: [], subject: '', skipped: 'notifications_disabled' };
+  }
+
+  const recipients = dedupeEmails(input.settings.internalNotificationRecipients.filter(isEmail));
+  if (recipients.length === 0) {
+    return { sent: false, recipients: [], subject: '', skipped: 'no_valid_recipients' };
+  }
+
+  const notification = buildDonationNotificationEmail({
+    event: input.event,
+    contactInfo: input.settings.contactInfo,
+    subjectTemplate: input.settings.internalNotificationSubjectTemplate
+  });
+
+  const sendResult = await emailService.send({
+    to: recipients,
+    subject: notification.subject,
+    html: notification.html,
+    text: notification.text,
+    fromName: BRAND_NAME,
+    replyTo: input.event.donorEmail && isEmail(input.event.donorEmail) ? input.event.donorEmail : undefined
+  });
+
+  if (sendResult.success) {
+    await logDonationMessage({
+      messageType: 'donation_notification',
+      subject: notification.subject,
+      body: 'Automatic school donation notification sent.',
+      recipient: recipients,
+      sentAt: new Date().toISOString(),
+      status: 'sent',
+      createdBy: null,
+      metadata: {
+        source: input.source,
+        eventId: input.event.id,
+        provider: sendResult.provider,
+        messageId: sendResult.messageId || null
+      }
+    });
+
+    return {
+      sent: true,
+      recipients,
+      subject: notification.subject
+    };
+  }
+
+  await logDonationMessage({
+    messageType: 'donation_notification',
+    subject: notification.subject,
+    body: `Automatic school donation notification failed: ${sendResult.error || 'Unknown error'}`,
+    recipient: recipients,
+    sentAt: null,
+    status: 'failed',
+    createdBy: null,
+    metadata: {
+      source: input.source,
+      eventId: input.event.id,
+      provider: sendResult.provider,
+      error: sendResult.error || null
+    }
+  });
+
+  return {
+    sent: false,
+    recipients,
+    subject: notification.subject,
+    error: sendResult.error || 'Failed to send donation notification email'
   };
 };
 
@@ -953,15 +1171,25 @@ export const saveDonationThankYouSettings = async (input: {
   enabled: unknown;
   sendRecurringRenewals: unknown;
   defaultReminderHours: unknown;
+  sendInternalNotifications?: unknown;
+  internalNotificationRecipients?: unknown;
+  internalNotificationSubjectTemplate?: unknown;
 }) => {
   const nextEnabled = asBoolean(input.enabled, true);
   const nextRenewals = asBoolean(input.sendRecurringRenewals, false);
   const nextReminderHours = normalizeReminderHours(input.defaultReminderHours);
+  const nextSendInternalNotifications = asBoolean(input.sendInternalNotifications, true);
+  const nextNotificationRecipients = dedupeEmails(parseEmailList(input.internalNotificationRecipients)).join(', ');
+  const nextNotificationSubject =
+    asString(input.internalNotificationSubjectTemplate) || DEFAULT_NOTIFICATION_SUBJECT;
 
   const entries: Array<[string, unknown]> = [
     ['donation_thank_you_enabled', nextEnabled],
     ['donation_thank_you_send_recurring_renewals', nextRenewals],
-    ['donation_thank_you_default_reminder_hours', nextReminderHours]
+    ['donation_thank_you_default_reminder_hours', nextReminderHours],
+    ['donation_internal_notify_enabled', nextSendInternalNotifications],
+    ['donation_internal_notify_emails', nextNotificationRecipients],
+    ['donation_internal_notify_subject', nextNotificationSubject]
   ];
 
   for (const [key, value] of entries) {
@@ -1348,6 +1576,26 @@ export const handleStripeDonationWebhook = async (
       reason: 'event_not_found_after_insert',
       eventId
     };
+  }
+
+  try {
+    const notificationResult = await sendDonationNotificationEmail({
+      event,
+      settings,
+      source: 'stripe_webhook'
+    });
+    if (!notificationResult.sent && notificationResult.error) {
+      logServerWarn('Donation notification email failed', {
+        eventId,
+        recipients: notificationResult.recipients,
+        error: notificationResult.error
+      });
+    }
+  } catch (error) {
+    logServerWarn('Donation notification processing threw unexpectedly', {
+      eventId,
+      error: error instanceof Error ? error.message : String(error)
+    });
   }
 
   if (!settings.enabled) {

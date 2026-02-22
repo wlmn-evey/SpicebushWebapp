@@ -122,7 +122,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
       await saveDonationThankYouSettings({
         enabled: asBoolean(body.enabled, true),
         sendRecurringRenewals: asBoolean(body.sendRecurringRenewals, false),
-        defaultReminderHours: body.defaultReminderHours
+        defaultReminderHours: body.defaultReminderHours,
+        sendInternalNotifications: asBoolean(body.sendInternalNotifications, true),
+        internalNotificationRecipients: body.internalNotificationRecipients,
+        internalNotificationSubjectTemplate: body.internalNotificationSubjectTemplate
       });
       const redirect = buildRedirect(redirectTo, 'saved', 'donation_thank_you_settings_updated');
       if (redirect) return redirect;
