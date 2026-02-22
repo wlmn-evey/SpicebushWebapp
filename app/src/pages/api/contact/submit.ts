@@ -316,7 +316,7 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
       return redirect(errorRedirectFor(source));
     }
 
-    await query(
+    const insertedSubmission = await query<{ id: string }>(
       `
         INSERT INTO contact_form_submissions
         (
@@ -335,6 +335,7 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
           ip_address
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13)
+        RETURNING id
       `,
       [
         name,
@@ -352,6 +353,7 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
         requestIp
       ]
     );
+    const submissionId = insertedSubmission.rows[0]?.id ?? null;
 
     const eventName =
       source === 'coming-soon'
@@ -395,6 +397,7 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
     try {
       emailResult = await sendContactSubmissionEmails({
         source,
+        submissionId,
         name,
         email,
         phone: phoneValue || null,

@@ -1,4 +1,5 @@
 import { db } from '@lib/db';
+import { query } from '@lib/db/client';
 import { emailService } from '@lib/email-service';
 import {
   buildSchoolContactFooterHtml,
@@ -6,11 +7,13 @@ import {
   resolveSchoolEmailContactInfo,
   type SchoolEmailContactInfo
 } from '@lib/email-template-footer';
+import { logServerWarn } from '@lib/server-logger';
 
 export type SubmissionSource = 'contact' | 'coming-soon' | 'camp' | 'tour';
 
 export interface ContactSubmissionEmailInput {
   source: SubmissionSource;
+  submissionId?: string | null;
   name: string;
   email: string;
   phone: string | null;
@@ -123,7 +126,83 @@ const parseEmailList = (value: unknown): string[] => {
     .filter((entry) => isEmail(entry));
 };
 
+const dedupeEmails = (emails: string[]): string[] => Array.from(new Set(emails.map((entry) => entry.trim())));
+
 const sourceLabel = (source: SubmissionSource): string => SOURCE_CONFIG[source].label;
+
+const messageTypeFor = (
+  source: SubmissionSource,
+  kind: 'owner_notification' | 'submitter_confirmation'
+): string => {
+  const prefix =
+    source === 'contact'
+      ? 'contact_form'
+      : source === 'coming-soon'
+        ? 'coming_soon_form'
+        : source === 'camp'
+          ? 'camp_form'
+          : 'tour_request';
+  return `${prefix}_${kind}`;
+};
+
+const logContactEmailMessage = async (input: {
+  source: SubmissionSource;
+  kind: 'owner_notification' | 'submitter_confirmation';
+  subject: string;
+  bodyText: string;
+  recipients: string[];
+  status: 'sent' | 'failed';
+  provider?: string;
+  messageId?: string;
+  error?: string;
+  submissionId?: string | null;
+}) => {
+  try {
+    const recipients = dedupeEmails(input.recipients.filter((entry) => isEmail(entry)));
+    await query(
+      `
+        INSERT INTO communications_messages (
+          subject,
+          message_content,
+          message_type,
+          recipient_type,
+          recipient_count,
+          scheduled_for,
+          sent_at,
+          status,
+          delivery_stats,
+          created_by
+        )
+        VALUES ($1, $2, $3, $4, $5, NULL, $6::timestamptz, $7, $8::jsonb, $9)
+      `,
+      [
+        input.subject,
+        input.bodyText,
+        messageTypeFor(input.source, input.kind),
+        recipients.length > 1 ? 'custom_list' : 'single',
+        recipients.length,
+        input.status === 'sent' ? new Date().toISOString() : null,
+        input.status,
+        JSON.stringify({
+          source: input.source,
+          kind: input.kind,
+          recipients,
+          provider: input.provider || null,
+          messageId: input.messageId || null,
+          error: input.error || null,
+          submissionId: input.submissionId || null
+        }),
+        'contact-form-system'
+      ]
+    );
+  } catch (error) {
+    logServerWarn('Failed to write communications_messages row for contact-form email', {
+      source: input.source,
+      kind: input.kind,
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+};
 
 const interpolate = (template: string, input: ContactSubmissionEmailInput): string =>
   template
@@ -310,7 +389,7 @@ const loadEmailRoutingSettings = async (source: SubmissionSource) => {
   const schoolEmail = contactInfo.email;
   const sourceConfig = SOURCE_CONFIG[source];
 
-  const notifyRecipients = parseEmailList(settings[sourceConfig.notifyRecipientsKey]);
+  const notifyRecipients = dedupeEmails(parseEmailList(settings[sourceConfig.notifyRecipientsKey]));
   const notifySubjectTemplate =
     asString(settings[sourceConfig.notifySubjectKey]) || sourceConfig.defaultNotifySubject;
   const sendConfirmation = asBool(settings[sourceConfig.confirmEnabledKey], true);
@@ -359,6 +438,19 @@ export const sendContactSubmissionEmails = async (
     );
   }
 
+  await logContactEmailMessage({
+    source: input.source,
+    kind: 'owner_notification',
+    subject: notificationSubject,
+    bodyText: notificationContent.text,
+    recipients: config.notifyRecipients,
+    status: notificationResult.success ? 'sent' : 'failed',
+    provider: notificationResult.provider,
+    messageId: notificationResult.messageId,
+    error: notificationResult.error,
+    submissionId: input.submissionId ?? null
+  });
+
   if (config.sendConfirmation && isEmail(input.email)) {
     const confirmationContent = buildConfirmationEmail(input, config.contactInfo);
     const confirmationSubject = interpolate(config.confirmSubjectTemplate, input);
@@ -377,6 +469,19 @@ export const sendContactSubmissionEmails = async (
         `confirmation: ${confirmationResult.error || 'Failed to send confirmation email'}`
       );
     }
+
+    await logContactEmailMessage({
+      source: input.source,
+      kind: 'submitter_confirmation',
+      subject: confirmationSubject,
+      bodyText: confirmationContent.text,
+      recipients: [input.email],
+      status: confirmationResult.success ? 'sent' : 'failed',
+      provider: confirmationResult.provider,
+      messageId: confirmationResult.messageId,
+      error: confirmationResult.error,
+      submissionId: input.submissionId ?? null
+    });
   }
 
   return result;

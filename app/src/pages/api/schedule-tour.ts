@@ -103,7 +103,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const message = messageLines.join('\n');
 
-    await query(
+    const insertedSubmission = await query<{ id: string }>(
       `
         INSERT INTO contact_form_submissions
         (
@@ -122,6 +122,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
           ip_address
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13)
+        RETURNING id
       `,
       [
         parentName,
@@ -139,6 +140,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         requestIp
       ]
     );
+    const submissionId = insertedSubmission.rows[0]?.id ?? null;
 
     await recordAnalyticsEvent({
       eventName: 'tour_request_submit',
@@ -160,6 +162,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const emailResult = await sendContactSubmissionEmails({
       source: 'tour',
+      submissionId,
       name: parentName,
       email,
       phone,
