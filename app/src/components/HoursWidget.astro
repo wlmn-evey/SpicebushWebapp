@@ -16,23 +16,7 @@ type HoursRow = {
   note?: string;
 };
 
-type ScheduleExceptionPayload = {
-  id: string;
-  title: string;
-  reason: string | null;
-  startDate: string;
-  endDate: string;
-  exceptionType: 'closed' | 'modified_hours';
-  openTimeDecimal: number | null;
-  closeTimeDecimal: number | null;
-  beforeCareOffset: number | null;
-  afterCareOffset: number | null;
-};
-
 const SCHOOL_TIMEZONE = 'America/New_York';
-
-const toDateKeyInSchoolTimezone = (date: Date): string =>
-  new Intl.DateTimeFormat('en-CA', { timeZone: SCHOOL_TIMEZONE }).format(date);
 
 const FALLBACK_CONFIGURATION: Record<string, HoursRow> = {
   Sunday: {
@@ -195,7 +179,6 @@ const normalizeEntry = (raw: Record<string, unknown>): HoursRow | null => {
 
 // Fetch hours data from database with robust error handling
 let hoursPayload: HoursRow[] = [];
-let scheduleExceptionsPayload: ScheduleExceptionPayload[] = [];
 let hasDataError = false;
 
 try {
@@ -223,37 +206,12 @@ try {
   hoursPayload = DAY_ORDER.map(day => FALLBACK_CONFIGURATION[day]);
 }
 
-try {
-  const today = new Date();
-  const rangeEnd = new Date(today);
-  rangeEnd.setDate(rangeEnd.getDate() + 14);
-  const exceptions = await db.announcements.getScheduleExceptionsInRange(
-    toDateKeyInSchoolTimezone(today),
-    toDateKeyInSchoolTimezone(rangeEnd)
-  );
-
-  scheduleExceptionsPayload = exceptions.map(entry => ({
-    id: entry.id,
-    title: entry.title,
-    reason: entry.reason,
-    startDate: entry.startDate,
-    endDate: entry.endDate,
-    exceptionType: entry.exceptionType,
-    openTimeDecimal: entry.openTimeDecimal,
-    closeTimeDecimal: entry.closeTimeDecimal,
-    beforeCareOffset: entry.beforeCareOffset,
-    afterCareOffset: entry.afterCareOffset
-  }));
-} catch {
-  scheduleExceptionsPayload = [];
-}
 ---
 
 <div
   id="sbms-hours-widget"
   class="bg-white rounded-lg p-4 text-earth-brown shadow-sm"
   data-hours={JSON.stringify(hoursPayload)}
-  data-exceptions={JSON.stringify(scheduleExceptionsPayload)}
   data-school-timezone={SCHOOL_TIMEZONE}
 >
   <h3 class="text-xl font-bold text-center text-forest-canopy mb-2">School Hours</h3>
@@ -442,10 +400,6 @@ try {
     }
   }
 
-  function getDateKeyInTimeZone(date, timeZone) {
-    return new Intl.DateTimeFormat('en-CA', { timeZone }).format(date);
-  }
-
   function getDayNameInTimeZone(date, timeZone) {
     return new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone }).format(date);
   }
@@ -461,21 +415,6 @@ try {
     const hour = Number(parts.find(part => part.type === 'hour')?.value ?? '0');
     const minute = Number(parts.find(part => part.type === 'minute')?.value ?? '0');
     return hour + minute / 60;
-  }
-
-  function isDateWithinRange(dateKey, startDate, endDate) {
-    return dateKey >= startDate && dateKey <= endDate;
-  }
-
-  function formatExceptionRange(startDate, endDate) {
-    if (!startDate || !endDate) return '';
-    if (startDate === endDate) return formatHolidayDate(startDate);
-
-    const start = new Date(`${startDate}T00:00:00`);
-    const end = new Date(`${endDate}T00:00:00`);
-    const startLabel = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const endLabel = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return `${startLabel} - ${endLabel}`;
   }
 
   // Initialize widget function
@@ -497,17 +436,11 @@ try {
     // Get hours data from data attribute
     /** @type {Array<any>} */
     let hoursData = [];
-    /** @type {Array<any>} */
-    let scheduleExceptions = [];
     const schoolTimeZone = widget.getAttribute('data-school-timezone') || 'America/New_York';
     try {
       const dataAttr = widget.getAttribute('data-hours');
       if (dataAttr) {
         hoursData = JSON.parse(dataAttr);
-      }
-      const exceptionsAttr = widget.getAttribute('data-exceptions');
-      if (exceptionsAttr) {
-        scheduleExceptions = JSON.parse(exceptionsAttr);
       }
     } catch {
       // Ignore malformed or missing serialized hours payload and keep defaults.
@@ -534,10 +467,7 @@ try {
         if (dataSourceEl) dataSourceEl.textContent = dataSource;
         if (daysCountEl)
           daysCountEl.textContent = Object.keys(processedHoursData).length.toString();
-        if (holidaysCountEl)
-          holidaysCountEl.textContent = (
-            upcomingHolidays.length + scheduleExceptions.length
-          ).toString();
+        if (holidaysCountEl) holidaysCountEl.textContent = upcomingHolidays.length.toString();
       }
     }
 
@@ -670,10 +600,6 @@ try {
       const todayName = getDayNameInTimeZone(now, schoolTimeZone);
       const todayIdx = days.indexOf(todayName) >= 0 ? days.indexOf(todayName) : now.getDay();
       const currentTime = getCurrentDecimalInTimeZone(now, schoolTimeZone);
-      const todayDateKey = getDateKeyInTimeZone(now, schoolTimeZone);
-      const activeTodayException = scheduleExceptions.find(exception =>
-        isDateWithinRange(todayDateKey, exception.startDate, exception.endDate)
-      );
 
       // Reorder days starting with today, then continue through the week
       const orderedDays = [...days.slice(todayIdx), ...days.slice(0, todayIdx)];
@@ -682,35 +608,6 @@ try {
         const info = processedHoursData[day];
         const isToday = day === days[todayIdx];
         let effectiveInfo = info ? { ...info } : null;
-
-        if (effectiveInfo && isToday && activeTodayException) {
-          if (activeTodayException.exceptionType === 'closed') {
-            effectiveInfo = {
-              ...effectiveInfo,
-              start: 0,
-              end: 0,
-              before_care_offset: 0,
-              after_care_offset: 0,
-              aftercare_available: false,
-              closed: true
-            };
-          } else if (activeTodayException.exceptionType === 'modified_hours') {
-            const openTime = Number(activeTodayException.openTimeDecimal);
-            const closeTime = Number(activeTodayException.closeTimeDecimal);
-            const beforeOffset = Number(activeTodayException.beforeCareOffset);
-            const afterOffset = Number(activeTodayException.afterCareOffset);
-
-            if (Number.isFinite(openTime)) effectiveInfo.start = openTime;
-            if (Number.isFinite(closeTime)) effectiveInfo.end = closeTime;
-            if (Number.isFinite(beforeOffset))
-              effectiveInfo.before_care_offset = Math.max(0, beforeOffset);
-            if (Number.isFinite(afterOffset)) {
-              effectiveInfo.after_care_offset = Math.max(0, afterOffset);
-              effectiveInfo.aftercare_available = effectiveInfo.after_care_offset > 0;
-            }
-            effectiveInfo.closed = false;
-          }
-        }
 
         const li = document.createElement('li');
         li.className = 'p-3 rounded-lg transition-all duration-300';
@@ -728,11 +625,6 @@ try {
               <span class="font-semibold text-sm">${day}</span>
               <span class="text-xs opacity-75">Closed</span>
             </div>
-            ${
-    isToday && activeTodayException
-      ? `<div class="mt-1 text-xs text-red-700">${activeTodayException.reason || activeTodayException.title}</div>`
-      : ''
-  }
           `;
         } else {
           const beforeCareStart = Math.max(
@@ -798,11 +690,6 @@ try {
             `
       : ''
   }
-            ${
-    isToday && activeTodayException
-      ? `<div class="text-xs text-center mt-1 text-red-700">${activeTodayException.reason || activeTodayException.title}</div>`
-      : ''
-  }
           `;
 
           // Add current time indicator for today
@@ -852,56 +739,6 @@ try {
     // Render holiday messages with clean styling
     function renderHolidayMessages() {
       holidayMessagesEl.innerHTML = '';
-      const todayDateKey = getDateKeyInTimeZone(new Date(), schoolTimeZone);
-      let messageIndex = 0;
-
-      const upcomingScheduleExceptions = scheduleExceptions
-        .filter(exception => exception.endDate >= todayDateKey)
-        .sort((a, b) => a.startDate.localeCompare(b.startDate));
-
-      upcomingScheduleExceptions.forEach(exception => {
-        const exceptionEl = document.createElement('div');
-        const isClosure = exception.exceptionType === 'closed';
-        const exceptionMessage = isClosure
-          ? 'School is scheduled to be closed.'
-          : `Modified hours: ${formatTime(Number(exception.openTimeDecimal))} - ${formatTime(Number(exception.closeTimeDecimal))}.`;
-        exceptionEl.className = `flex items-start border-l-4 p-3 rounded text-sm font-medium shadow-sm mt-3 ${
-          isClosure
-            ? 'bg-red-100 border-red-600 text-earth-brown'
-            : 'bg-blue-100 border-blue-600 text-earth-brown'
-        }`;
-        exceptionEl.style.opacity = '0';
-        exceptionEl.style.transform = 'translateY(10px)';
-        exceptionEl.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-        exceptionEl.style.transitionDelay = `${(days.length + messageIndex) * 100}ms`;
-
-        exceptionEl.innerHTML = `
-          <span class="mr-2 text-lg">${isClosure ? '🔔' : '⏱️'}</span>
-          <div class="flex-1">
-            <div class="font-semibold">${exception.title}</div>
-            <div class="text-xs opacity-90 mt-1 leading-tight">${exceptionMessage}</div>
-            ${
-    exception.reason
-      ? `<div class="text-xs opacity-90 mt-1 leading-tight">${exception.reason}</div>`
-      : ''
-  }
-            <div class="text-xs opacity-75 mt-1">
-              ${formatExceptionRange(exception.startDate, exception.endDate)}
-            </div>
-          </div>
-        `;
-
-        holidayMessagesEl.appendChild(exceptionEl);
-
-        setTimeout(
-          () => {
-            exceptionEl.style.opacity = '1';
-            exceptionEl.style.transform = 'translateY(0)';
-          },
-          50 + (days.length + messageIndex) * 100
-        );
-        messageIndex += 1;
-      });
 
       upcomingHolidays.forEach((holiday, index) => {
         const holidayEl = document.createElement('div');
@@ -910,7 +747,7 @@ try {
         holidayEl.style.opacity = '0';
         holidayEl.style.transform = 'translateY(10px)';
         holidayEl.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-        holidayEl.style.transitionDelay = `${(days.length + messageIndex + index) * 100}ms`;
+        holidayEl.style.transitionDelay = `${(days.length + index) * 100}ms`;
 
         // Determine holiday emoji based on the holiday name
         const holidayEmoji = getHolidayEmoji(holiday.name || holiday.localName);
@@ -938,7 +775,7 @@ try {
             holidayEl.style.opacity = '1';
             holidayEl.style.transform = 'translateY(0)';
           },
-          50 + (days.length + messageIndex + index) * 100
+          50 + (days.length + index) * 100
         );
       });
     }
