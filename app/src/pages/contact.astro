@@ -19,6 +19,9 @@ import {
   Heart
 } from 'lucide-astro';
 import ErrorMessage from '../components/ErrorMessage.astro';
+import { getTurnstileSiteKey } from '@lib/turnstile-config';
+
+const turnstileSiteKey = getTurnstileSiteKey();
 ---
 
 <Layout
@@ -180,6 +183,12 @@ import ErrorMessage from '../components/ErrorMessage.astro';
               <input type="hidden" name="analytics-client-id" value="" />
               <input type="hidden" name="analytics-landing-page" value="" />
               <input type="hidden" name="analytics-referrer-url" value="" />
+              <input
+                type="hidden"
+                name="submission-started-at"
+                id="contact-submission-started-at"
+                value=""
+              />
 
               <!-- Honeypot field for spam protection -->
               <div style="display: none;" aria-hidden="true">
@@ -317,6 +326,17 @@ import ErrorMessage from '../components/ErrorMessage.astro';
                   >Yes, I'd like to schedule a tour of your school</span
                   >
                 </label>
+              </div>
+
+              <div class="space-y-2">
+                <div
+                  class="cf-turnstile"
+                  data-sitekey={turnstileSiteKey}
+                  data-theme="light"
+                  data-response-field-name="cf-turnstile-response"></div>
+                <p class="text-xs text-gray-600">
+                  Security check to protect families from spam.
+                </p>
               </div>
 
               <!-- Submit Button -->
@@ -509,6 +529,8 @@ import ErrorMessage from '../components/ErrorMessage.astro';
   <Footer />
 </Layout>
 
+<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
 <script>
   document.addEventListener('DOMContentLoaded', async () => {
     const { enhanceForm } = await import('../lib/form-enhance');
@@ -517,6 +539,11 @@ import ErrorMessage from '../components/ErrorMessage.astro';
     const submitBtn = document.getElementById('submit-btn');
     const submitText = document.getElementById('submit-text');
     const submitLoading = document.getElementById('submit-loading');
+    const submissionStartedAt = document.getElementById('contact-submission-started-at');
+
+    if (submissionStartedAt instanceof HTMLInputElement) {
+      submissionStartedAt.value = Date.now().toString();
+    }
 
     // Simple form enhancement for loading state
     if (

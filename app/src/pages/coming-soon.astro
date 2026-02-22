@@ -6,6 +6,7 @@ import { getTestimonialsForPlacement, type ManagedTestimonial } from '@lib/testi
 import ExternalLinkTargetBehavior from '@components/ExternalLinkTargetBehavior.astro';
 import OptimizedImage from '@components/OptimizedImage.astro';
 import { resolveSeoMetadata } from '@lib/seo-config';
+import { getTurnstileSiteKey } from '@lib/turnstile-config';
 
 const DEFAULT_APPLICATION_SCHOOL_YEAR = '2026-2027 School Year';
 const DEFAULT_UPDATE_MESSAGE = 'Enrollment is open for the 2026-2027 school year while we work on bringing you an improved website experience.';
@@ -17,6 +18,7 @@ const DEFAULT_ADDRESS = {
   state: 'PA',
   zip: '19342'
 };
+const turnstileSiteKey = getTurnstileSiteKey();
 
 let settings: Record<string, unknown> = {};
 type GenericEntryData = Record<string, unknown>;
@@ -2040,11 +2042,13 @@ const seoMetadata = await resolveSeoMetadata({
                 <input type="hidden" name="form-name" value="coming-soon-contact">
                 <input type="hidden" name="source" value="coming-soon">
                 <input type="hidden" name="redirectTo" value="/coming-soon?submitted=1">
+                <input type="hidden" name="response" value="json">
                 <input type="hidden" name="analytics-attribution" value="">
                 <input type="hidden" name="analytics-session-id" value="">
                 <input type="hidden" name="analytics-client-id" value="">
                 <input type="hidden" name="analytics-landing-page" value="">
                 <input type="hidden" name="analytics-referrer-url" value="">
+                <input type="hidden" name="submission-started-at" id="coming-soon-submission-started-at" value="">
                 <p style="display: none;">
                   <label>Don't fill this out: <input name="bot-field"></label>
                 </p>
@@ -2115,6 +2119,15 @@ const seoMetadata = await resolveSeoMetadata({
                     <option value="other">Other</option>
                   </select>
                 </div>
+
+                <div class="form-group full-width">
+                  <div
+                    class="cf-turnstile"
+                    data-sitekey={turnstileSiteKey}
+                    data-theme="light"
+                    data-response-field-name="cf-turnstile-response"></div>
+                  <small>Security check to protect families from spam submissions.</small>
+                </div>
               
                 <button type="submit" class="submit-button">
                   <span class="button-text">Send Message</span>
@@ -2153,10 +2166,17 @@ const seoMetadata = await resolveSeoMetadata({
     </p>
   </footer>
 
+  <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
   <script>
     // Form submission handling
     const form = document.getElementById('contact-form');
     if (form instanceof HTMLFormElement) {
+      const submissionStartedAt = document.getElementById('coming-soon-submission-started-at');
+      if (submissionStartedAt instanceof HTMLInputElement) {
+        submissionStartedAt.value = Date.now().toString();
+      }
+
       const successMessage = document.getElementById('success-message');
       const errorMessage = document.getElementById('error-message');
       const submitButton = form.querySelector('.submit-button');
@@ -2197,12 +2217,25 @@ const seoMetadata = await resolveSeoMetadata({
               body
             });
 
-            if (!response.ok) {
-              throw new Error(`Form submission failed with status: ${response.status}`);
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload?.success !== true) {
+              throw new Error(
+                typeof payload?.error === 'string'
+                  ? payload.error
+                  : `Form submission failed with status: ${response.status}`
+              );
             }
 
             successMessage.style.display = 'block';
             form.reset();
+            if (submissionStartedAt instanceof HTMLInputElement) {
+              submissionStartedAt.value = Date.now().toString();
+            }
+            const turnstileApi = (window as Window & { turnstile?: { reset?: () => void } })
+              .turnstile;
+            if (turnstileApi && typeof turnstileApi.reset === 'function') {
+              turnstileApi.reset();
+            }
 
             // Scroll to success message
             successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

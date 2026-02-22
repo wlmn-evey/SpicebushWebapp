@@ -2,6 +2,12 @@ import type { APIRoute } from 'astro';
 import { query } from '@lib/db/client';
 import { recordAnalyticsEvent } from '@lib/db/analytics';
 import { sendContactSubmissionEmails } from '@lib/contact-email';
+import {
+  checkContactSubmissionRateLimit,
+  isSubmissionTooFast,
+  resolveRequestIp,
+  verifyTurnstileToken
+} from '@lib/form-security';
 import { logServerError, logServerWarn } from '@lib/server-logger';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,7 +23,7 @@ const toJson = (payload: Record<string, unknown>, status = 200) =>
     headers: { 'Content-Type': 'application/json' }
   });
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   try {
     const data = await request.json();
     const parentName = parseString(data?.parentName);
@@ -26,6 +32,17 @@ export const POST: APIRoute = async ({ request }) => {
     const childAge = parseString(data?.childAge);
     const preferredTimes = parseString(data?.preferredTimes);
     const questions = parseString(data?.questions);
+    const honeypot = parseString(data?.botField);
+    const submissionStartedAt = parseString(data?.submissionStartedAt);
+    const turnstileToken =
+      parseString(data?.turnstileToken) ||
+      parseString(data?.cfTurnstileResponse) ||
+      parseString(data?.['cf-turnstile-response']);
+    const requestIp = resolveRequestIp(request, (locals as Record<string, unknown>) ?? {});
+
+    if (honeypot || isSubmissionTooFast(submissionStartedAt)) {
+      return toJson({ success: true, message: 'Tour request submitted successfully' });
+    }
 
     if (!parentName || !email || !phone || !childAge) {
       return toJson({ error: 'Missing required fields' }, 400);
@@ -33,6 +50,40 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (!EMAIL_REGEX.test(email)) {
       return toJson({ error: 'Invalid email address' }, 400);
+    }
+
+    const turnstileResult = await verifyTurnstileToken({
+      token: turnstileToken,
+      remoteIp: requestIp
+    });
+    if (!turnstileResult.success) {
+      logServerWarn('Turnstile verification failed for tour request', {
+        route: '/api/schedule-tour',
+        ipAddress: requestIp,
+        reason: turnstileResult.reason || 'unknown'
+      });
+      return toJson({ error: 'Please complete the security check and try again.' }, 400);
+    }
+
+    const rateLimit = await checkContactSubmissionRateLimit({
+      ipAddress: requestIp,
+      email
+    });
+    if (rateLimit.blocked) {
+      logServerWarn('Tour request rate-limited', {
+        route: '/api/schedule-tour',
+        ipAddress: requestIp,
+        email,
+        reason: rateLimit.reason,
+        ipCount: rateLimit.ipCount,
+        emailCount: rateLimit.emailCount
+      });
+      return toJson(
+        {
+          error: 'You have submitted several requests recently. Please wait a few minutes and try again.'
+        },
+        429
+      );
     }
 
     const subject = `Tour Request: ${parentName}`;
@@ -67,9 +118,10 @@ export const POST: APIRoute = async ({ request }) => {
           session_id,
           client_id,
           landing_page,
-          referrer_url
+          referrer_url,
+          ip_address
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13)
       `,
       [
         parentName,
@@ -83,7 +135,8 @@ export const POST: APIRoute = async ({ request }) => {
         null,
         null,
         null,
-        null
+        null,
+        requestIp
       ]
     );
 

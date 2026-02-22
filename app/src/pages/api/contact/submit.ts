@@ -2,7 +2,15 @@ import type { APIRoute } from 'astro';
 import { query } from '@lib/db/client';
 import { recordAnalyticsEvent } from '@lib/db/analytics';
 import { sendContactSubmissionEmails, type SubmissionSource } from '@lib/contact-email';
+import {
+  checkContactSubmissionRateLimit,
+  isSubmissionTooFast,
+  resolveRequestIp,
+  verifyTurnstileToken
+} from '@lib/form-security';
 import { logServerError, logServerWarn } from '@lib/server-logger';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const parseString = (value: FormDataEntryValue | null): string => {
   if (typeof value !== 'string') return '';
@@ -180,7 +188,7 @@ const jsonResponse = (payload: Record<string, unknown>, status = 200): Response 
     headers: { 'Content-Type': 'application/json' }
   });
 
-export const POST: APIRoute = async ({ request, redirect }) => {
+export const POST: APIRoute = async ({ request, redirect, locals }) => {
   let source: SubmissionSource = 'contact';
   let wantsJson = false;
 
@@ -190,6 +198,9 @@ export const POST: APIRoute = async ({ request, redirect }) => {
     wantsJson = requestWantsJson(request, formData);
 
     const honeypot = parseString(formData.get('bot-field'));
+    const submissionStartedAt = parseString(formData.get('submission-started-at'));
+    const turnstileToken = parseString(formData.get('cf-turnstile-response'));
+    const requestIp = resolveRequestIp(request, (locals as Record<string, unknown>) ?? {});
     const requestedRedirect = parseRedirectPath(formData.get('redirectTo'));
     const successRedirect = requestedRedirect ?? successRedirectFor(source);
 
@@ -201,11 +212,43 @@ export const POST: APIRoute = async ({ request, redirect }) => {
     const referrerUrl = referrerFromForm || parseString(request.headers.get('referer')) || null;
 
     // Silently accept obvious bot submissions while skipping storage.
-    if (honeypot.length > 0) {
+    if (honeypot.length > 0 || isSubmissionTooFast(submissionStartedAt)) {
+      if (honeypot.length > 0) {
+        logServerWarn('Honeypot field triggered on contact form submission', {
+          route: '/api/contact/submit',
+          source,
+          ipAddress: requestIp
+        });
+      }
       if (wantsJson) {
         return jsonResponse({ success: true });
       }
       return redirect(successRedirect);
+    }
+
+    const turnstileResult = await verifyTurnstileToken({
+      token: turnstileToken,
+      remoteIp: requestIp
+    });
+    if (!turnstileResult.success) {
+      logServerWarn('Turnstile verification failed for contact form submission', {
+        route: '/api/contact/submit',
+        source,
+        ipAddress: requestIp,
+        reason: turnstileResult.reason || 'unknown'
+      });
+
+      if (wantsJson) {
+        return jsonResponse(
+          {
+            success: false,
+            error: 'Please complete the security check and try again.'
+          },
+          400
+        );
+      }
+
+      return redirect(errorRedirectFor(source));
     }
 
     const name =
@@ -233,6 +276,46 @@ export const POST: APIRoute = async ({ request, redirect }) => {
       return redirect(errorRedirectFor(source));
     }
 
+    if (!EMAIL_REGEX.test(email)) {
+      if (wantsJson) {
+        return jsonResponse(
+          {
+            success: false,
+            error: 'Please enter a valid email address.'
+          },
+          400
+        );
+      }
+      return redirect(errorRedirectFor(source));
+    }
+
+    const rateLimit = await checkContactSubmissionRateLimit({
+      ipAddress: requestIp,
+      email
+    });
+    if (rateLimit.blocked) {
+      logServerWarn('Contact form submission rate-limited', {
+        route: '/api/contact/submit',
+        source,
+        ipAddress: requestIp,
+        email,
+        reason: rateLimit.reason,
+        ipCount: rateLimit.ipCount,
+        emailCount: rateLimit.emailCount
+      });
+
+      if (wantsJson) {
+        return jsonResponse(
+          {
+            success: false,
+            error: 'You have submitted several requests recently. Please wait a few minutes and try again.'
+          },
+          429
+        );
+      }
+      return redirect(errorRedirectFor(source));
+    }
+
     await query(
       `
         INSERT INTO contact_form_submissions
@@ -248,9 +331,10 @@ export const POST: APIRoute = async ({ request, redirect }) => {
           session_id,
           client_id,
           landing_page,
-          referrer_url
+          referrer_url,
+          ip_address
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13)
       `,
       [
         name,
@@ -264,7 +348,8 @@ export const POST: APIRoute = async ({ request, redirect }) => {
         sessionId,
         clientId,
         landingPage,
-        referrerUrl
+        referrerUrl,
+        requestIp
       ]
     );
 

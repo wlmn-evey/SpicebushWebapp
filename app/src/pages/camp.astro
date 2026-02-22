@@ -18,6 +18,7 @@ import {
 } from 'lucide-astro';
 import { db } from '@lib/db';
 import type { CampWeekView } from '@lib/db/camp';
+import { getTurnstileSiteKey } from '@lib/turnstile-config';
 
 interface WeekAction {
   href: string;
@@ -29,6 +30,7 @@ interface WeekAction {
 
 const settings = await db.content.getAllSettings();
 const campData = await db.camp.getCampAdminData();
+const turnstileSiteKey = getTurnstileSiteKey();
 
 const asString = (value: unknown, fallback = ''): string => {
   if (typeof value !== 'string') return fallback;
@@ -1036,6 +1038,7 @@ const campFamilyNotes: Array<{
         <input type="hidden" name="subject" id="camp-ask-subject" value="" />
         <input type="hidden" name="source" value="camp" />
         <input type="hidden" name="bot-field" value="" />
+        <input type="hidden" name="submission-started-at" id="camp-ask-submission-started-at" value="" />
 
         <div>
           <label for="camp-ask-question" class="camp-ask-label">Question</label>
@@ -1092,6 +1095,17 @@ const campFamilyNotes: Array<{
         >
         </p>
 
+        <div>
+          <div
+            class="cf-turnstile"
+            data-sitekey={turnstileSiteKey}
+            data-theme="light"
+            data-response-field-name="cf-turnstile-response"></div>
+          <p class="mt-1 text-xs text-earth-brown/70">
+            Security check to protect families from spam.
+          </p>
+        </div>
+
         <div class="flex flex-wrap gap-2 border-t border-gray-200 pt-3">
           <button
             type="submit"
@@ -1129,6 +1143,8 @@ const campFamilyNotes: Array<{
       </div>
     )
   }
+
+  <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
   <script is:inline>
     function initCampAnimations() {
@@ -1179,6 +1195,7 @@ const campFamilyNotes: Array<{
       const subjectInput = document.getElementById('camp-ask-subject');
       const status = document.getElementById('camp-ask-status');
       const questionField = document.getElementById('camp-ask-question');
+      const submissionStartedAt = document.getElementById('camp-ask-submission-started-at');
       const closeButtons = Array.from(document.querySelectorAll('[data-camp-modal-close]'));
       const openButtons = Array.from(document.querySelectorAll('[data-camp-ask-button]'));
 
@@ -1219,6 +1236,9 @@ const campFamilyNotes: Array<{
         weekLabel.textContent = activeWeekTitle;
         questionField.placeholder = `What would you like to ask about ${activeWeekTitle}?`;
         setStatus('');
+        if (submissionStartedAt instanceof HTMLInputElement) {
+          submissionStartedAt.value = Date.now().toString();
+        }
 
         modal.classList.remove('hidden');
         modal.classList.add('is-open');
@@ -1259,9 +1279,14 @@ const campFamilyNotes: Array<{
         const phone = String(formData.get('phone') || '').trim();
         const email = String(formData.get('email') || '').trim();
         const name = String(formData.get('name') || '').trim();
+        const turnstileResponse = String(formData.get('cf-turnstile-response') || '').trim();
 
         if (!message || !name || !phone || !email) {
           setStatus('Please complete all fields before sending.', 'error');
+          return;
+        }
+        if (!turnstileResponse) {
+          setStatus('Please complete the security check before sending.', 'error');
           return;
         }
 
@@ -1300,6 +1325,12 @@ const campFamilyNotes: Array<{
             'success'
           );
           form.reset();
+          if (submissionStartedAt instanceof HTMLInputElement) {
+            submissionStartedAt.value = Date.now().toString();
+          }
+          if (typeof window.turnstile?.reset === 'function') {
+            window.turnstile.reset();
+          }
           setTimeout(() => {
             closeModal();
           }, 1100);
