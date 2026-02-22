@@ -227,6 +227,11 @@ const defaultTemplates: Record<DonationTemplateKey, TemplateRecord> = {
 
 const asString = (value: unknown): string => {
   if (typeof value === 'string') return value.trim();
+  if (value instanceof Date) {
+    const timestamp = value.getTime();
+    if (!Number.isFinite(timestamp)) return '';
+    return value.toISOString();
+  }
   if (typeof value === 'number' || typeof value === 'boolean') return String(value).trim();
   return '';
 };
