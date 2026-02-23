@@ -128,6 +128,11 @@ const parseEmailList = (value: unknown): string[] => {
 
 const dedupeEmails = (emails: string[]): string[] => Array.from(new Set(emails.map((entry) => entry.trim())));
 
+const hasDatabaseConnectionConfig = (): boolean => {
+  const dbUrl = asString(process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL);
+  return dbUrl.length > 0;
+};
+
 const sourceLabel = (source: SubmissionSource): string => SOURCE_CONFIG[source].label;
 
 const messageTypeFor = (
@@ -157,6 +162,12 @@ const logContactEmailMessage = async (input: {
   error?: string;
   submissionId?: string | null;
 }) => {
+  // Skip persistence logging in environments that intentionally do not provide DB credentials
+  // (for example, isolated unit tests). This keeps form-email delivery logic testable without DB setup.
+  if (!hasDatabaseConnectionConfig()) {
+    return;
+  }
+
   try {
     const recipients = dedupeEmails(input.recipients.filter((entry) => isEmail(entry)));
     await query(

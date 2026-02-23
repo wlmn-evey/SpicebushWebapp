@@ -1,5 +1,5 @@
 # Documentation Index
-*Last Updated: February 19, 2026*
+*Last Updated: February 23, 2026*
 
 ## Start Here
 - `docs/README.md`
@@ -7,6 +7,8 @@
 - `docs/roadmap.md`
 
 ## Core Areas
+- Maintainability:
+  - `docs/maintainability-sweep-2026-02-23.md`
 - Development setup:
   - `docs/development/getting-started.md`
   - `docs/development/configuration.md`
