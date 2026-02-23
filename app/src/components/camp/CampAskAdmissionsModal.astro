@@ -1,0 +1,352 @@
+---
+interface Props {
+  turnstileSiteKey: string;
+}
+
+const { turnstileSiteKey } = Astro.props as Props;
+---
+
+<div id="camp-ask-modal" class="camp-modal" aria-hidden="true">
+  <div class="camp-modal-backdrop" data-camp-modal-close></div>
+  <div
+    class="camp-modal-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="camp-ask-title"
+    aria-describedby="camp-ask-subtitle"
+  >
+    <div class="flex items-start justify-between gap-4 border-b border-gray-200 pb-3">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-earth-brown/70">
+          Ask Admissions
+        </p>
+        <h3 id="camp-ask-title" class="mt-1 text-xl font-heading font-bold text-earth-brown">
+          Quick Question
+        </h3>
+        <p id="camp-ask-subtitle" class="mt-1 text-sm text-earth-brown/80">
+          We will follow up about <span id="camp-ask-week-label" class="font-semibold text-earth-brown"
+          ></span>.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="rounded-lg border border-gray-300 px-2 py-1 text-sm font-semibold text-earth-brown hover:bg-gray-100"
+        data-camp-modal-close
+        aria-label="Close form"
+      >
+        Close
+      </button>
+    </div>
+
+    <form id="camp-ask-form" class="mt-4 space-y-3">
+      <input type="hidden" name="response" value="json" />
+      <input type="hidden" name="subject" id="camp-ask-subject" value="" />
+      <input type="hidden" name="source" value="camp" />
+      <input type="hidden" name="bot-field" value="" />
+      <input type="hidden" name="submission-started-at" id="camp-ask-submission-started-at" value="" />
+
+      <div>
+        <label for="camp-ask-question" class="camp-ask-label">Question</label>
+        <textarea
+          id="camp-ask-question"
+          name="message"
+          rows="4"
+          required
+          class="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm text-earth-brown focus:border-forest-canopy focus:outline-none focus:ring-2 focus:ring-forest-canopy/20"
+          placeholder="What would you like to ask?"></textarea>
+      </div>
+
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label for="camp-ask-name" class="camp-ask-label">Name</label>
+          <input
+            id="camp-ask-name"
+            name="name"
+            type="text"
+            required
+            class="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm text-earth-brown focus:border-forest-canopy focus:outline-none focus:ring-2 focus:ring-forest-canopy/20"
+            autocomplete="name"
+          />
+        </div>
+        <div>
+          <label for="camp-ask-phone" class="camp-ask-label">Phone Number</label>
+          <input
+            id="camp-ask-phone"
+            name="phone"
+            type="tel"
+            required
+            class="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm text-earth-brown focus:border-forest-canopy focus:outline-none focus:ring-2 focus:ring-forest-canopy/20"
+            autocomplete="tel"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="camp-ask-email" class="camp-ask-label">Email</label>
+        <input
+          id="camp-ask-email"
+          name="email"
+          type="email"
+          required
+          class="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm text-earth-brown focus:border-forest-canopy focus:outline-none focus:ring-2 focus:ring-forest-canopy/20"
+          autocomplete="email"
+        />
+      </div>
+
+      <p id="camp-ask-status" class="min-h-[1.25rem] text-sm text-earth-brown/80" aria-live="polite">
+      </p>
+
+      <div>
+        <div
+          class="cf-turnstile"
+          data-sitekey={turnstileSiteKey}
+          data-theme="light"
+          data-response-field-name="cf-turnstile-response"></div>
+        <p class="mt-1 text-xs text-earth-brown/70">
+          Security check to protect families from spam.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-2 border-t border-gray-200 pt-3">
+        <button
+          type="submit"
+          id="camp-ask-submit"
+          class="inline-flex min-h-[46px] items-center justify-center rounded-xl bg-forest-canopy px-4 py-2 text-sm font-semibold text-white transition hover:bg-moss-green"
+        >
+          Send Question
+        </button>
+        <button
+          type="button"
+          class="inline-flex min-h-[46px] items-center justify-center rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-earth-brown transition hover:bg-gray-100"
+          data-camp-modal-close
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+<script is:inline>
+  function initCampAskAdmissionsModal() {
+    if (typeof window === 'undefined') return;
+
+    const modal = document.getElementById('camp-ask-modal');
+    if (!(modal instanceof HTMLDivElement)) return;
+
+    const form = document.getElementById('camp-ask-form');
+    const submitButton = document.getElementById('camp-ask-submit');
+    const weekLabel = document.getElementById('camp-ask-week-label');
+    const subjectInput = document.getElementById('camp-ask-subject');
+    const status = document.getElementById('camp-ask-status');
+    const questionField = document.getElementById('camp-ask-question');
+    const submissionStartedAt = document.getElementById('camp-ask-submission-started-at');
+    const closeButtons = Array.from(document.querySelectorAll('[data-camp-modal-close]'));
+    const openButtons = Array.from(document.querySelectorAll('[data-camp-ask-button]'));
+
+    if (!(form instanceof HTMLFormElement)) return;
+    if (!(submitButton instanceof HTMLButtonElement)) return;
+    if (!(weekLabel instanceof HTMLSpanElement)) return;
+    if (!(subjectInput instanceof HTMLInputElement)) return;
+    if (!(status instanceof HTMLParagraphElement)) return;
+    if (!(questionField instanceof HTMLTextAreaElement)) return;
+    if (openButtons.length === 0) return;
+
+    if (modal.dataset.initialized === 'true') return;
+    modal.dataset.initialized = 'true';
+
+    let activeWeekTitle = '';
+    let activeWeekSlug = '';
+
+    const setStatus = (message, kind = 'info') => {
+      status.textContent = message;
+      status.classList.remove('text-earth-brown/80', 'text-red-700', 'text-green-700');
+      if (kind === 'error') {
+        status.classList.add('text-red-700');
+        return;
+      }
+      if (kind === 'success') {
+        status.classList.add('text-green-700');
+        return;
+      }
+      status.classList.add('text-earth-brown/80');
+    };
+
+    const openModal = (weekTitle, weekSlug) => {
+      activeWeekTitle = weekTitle || 'this camp week';
+      activeWeekSlug = weekSlug || '';
+
+      form.reset();
+      subjectInput.value = `Camp Question: ${activeWeekTitle}`;
+      weekLabel.textContent = activeWeekTitle;
+      questionField.placeholder = `What would you like to ask about ${activeWeekTitle}?`;
+      setStatus('');
+      if (submissionStartedAt instanceof HTMLInputElement) {
+        submissionStartedAt.value = Date.now().toString();
+      }
+
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('overflow-hidden');
+      questionField.focus();
+    };
+
+    const closeModal = () => {
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('overflow-hidden');
+    };
+
+    closeButtons.forEach((button) => {
+      button.addEventListener('click', closeModal);
+    });
+
+    openButtons.forEach((button) => {
+      if (!(button instanceof HTMLButtonElement)) return;
+      button.addEventListener('click', () => {
+        openModal(button.dataset.weekTitle || '', button.dataset.weekSlug || '');
+      });
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') {
+        closeModal();
+      }
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const formData = new FormData(form);
+      const message = String(formData.get('message') || '').trim();
+      const phone = String(formData.get('phone') || '').trim();
+      const email = String(formData.get('email') || '').trim();
+      const name = String(formData.get('name') || '').trim();
+      const turnstileResponse = String(formData.get('cf-turnstile-response') || '').trim();
+
+      if (!message || !name || !phone || !email) {
+        setStatus('Please complete all fields before sending.', 'error');
+        return;
+      }
+      if (!turnstileResponse) {
+        setStatus('Please complete the security check before sending.', 'error');
+        return;
+      }
+
+      formData.set(
+        'message',
+        `${message}\n\nCamp week: ${activeWeekTitle}${activeWeekSlug ? ` (${activeWeekSlug})` : ''}`
+      );
+      formData.set('subject', `Camp Question: ${activeWeekTitle}`);
+      formData.set('response', 'json');
+
+      submitButton.disabled = true;
+      submitButton.textContent = 'Sending...';
+      setStatus('Sending your question...');
+
+      try {
+        const response = await fetch('/api/contact/submit', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'x-requested-with': 'XMLHttpRequest'
+          },
+          body: formData
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload?.success !== true) {
+          throw new Error(
+            typeof payload?.error === 'string'
+              ? payload.error
+              : 'Unable to send your question right now.'
+          );
+        }
+
+        setStatus(
+          'Thanks! Admissions received your question and will follow up soon.',
+          'success'
+        );
+        form.reset();
+        if (submissionStartedAt instanceof HTMLInputElement) {
+          submissionStartedAt.value = Date.now().toString();
+        }
+        if (typeof window.turnstile?.reset === 'function') {
+          window.turnstile.reset();
+        }
+        setTimeout(() => {
+          closeModal();
+        }, 1100);
+      } catch (error) {
+        const messageText =
+          error instanceof Error ? error.message : 'Unable to send your question right now.';
+        setStatus(messageText, 'error');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Send Question';
+      }
+    });
+  }
+
+  function initCampAskModalPageInteractions() {
+    initCampAskAdmissionsModal();
+  }
+
+  initCampAskModalPageInteractions();
+  document.addEventListener('astro:page-load', initCampAskModalPageInteractions);
+</script>
+
+<style>
+  .camp-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .camp-modal[aria-hidden='true'] {
+    display: none;
+  }
+
+  .camp-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+  }
+
+  .camp-modal-panel {
+    position: relative;
+    z-index: 1;
+    width: min(40rem, 100%);
+    border-radius: 1rem;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    padding: 1rem;
+    box-shadow: 0 24px 50px rgba(15, 23, 42, 0.26);
+    max-height: min(90vh, 52rem);
+    overflow-y: auto;
+  }
+
+  .camp-ask-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #2e2e2e;
+  }
+
+  @media (max-width: 640px) {
+    .camp-modal {
+      align-items: flex-end;
+      padding: 0;
+    }
+
+    .camp-modal-panel {
+      width: 100%;
+      border-radius: 1rem 1rem 0 0;
+      max-height: 92vh;
+      padding: 0.9rem;
+    }
+  }
+</style>

@@ -2169,114 +2169,21 @@ const seoMetadata = await resolveSeoMetadata({
   <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
   <script>
-    // Form submission handling
-    const form = document.getElementById('contact-form');
-    if (form instanceof HTMLFormElement) {
-      const submissionStartedAt = document.getElementById('coming-soon-submission-started-at');
-      if (submissionStartedAt instanceof HTMLInputElement) {
-        submissionStartedAt.value = Date.now().toString();
-      }
+    const initComingSoonClient = async () => {
+      const { initComingSoonPage } = await import('../lib/coming-soon-client');
+      initComingSoonPage();
+    };
 
-      const successMessage = document.getElementById('success-message');
-      const errorMessage = document.getElementById('error-message');
-      const submitButton = form.querySelector('.submit-button');
-      const buttonText = submitButton?.querySelector('.button-text');
-      const loadingSpinner = submitButton?.querySelector('.loading');
-
-      if (
-        successMessage instanceof HTMLElement &&
-          errorMessage instanceof HTMLElement &&
-          submitButton instanceof HTMLButtonElement &&
-          buttonText instanceof HTMLElement &&
-          loadingSpinner instanceof HTMLElement
-      ) {
-        form.addEventListener('submit', async (event) => {
-          event.preventDefault();
-
-          // Show loading state
-          buttonText.style.display = 'none';
-          loadingSpinner.style.display = 'inline-block';
-          submitButton.disabled = true;
-
-          successMessage.style.display = 'none';
-          errorMessage.style.display = 'none';
-
-          try {
-            const formData = new FormData(form);
-            const body = new URLSearchParams();
-            for (const [key, value] of formData.entries()) {
-              if (typeof value === 'string') {
-                body.append(key, value);
-              }
-            }
-
-            const action = form.getAttribute('action') || window.location.pathname;
-            const response = await fetch(action, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              body
-            });
-
-            const payload = await response.json().catch(() => ({}));
-            if (!response.ok || payload?.success !== true) {
-              throw new Error(
-                typeof payload?.error === 'string'
-                  ? payload.error
-                  : `Form submission failed with status: ${response.status}`
-              );
-            }
-
-            successMessage.style.display = 'block';
-            form.reset();
-            if (submissionStartedAt instanceof HTMLInputElement) {
-              submissionStartedAt.value = Date.now().toString();
-            }
-            const turnstileApi = (window as Window & { turnstile?: { reset?: () => void } })
-              .turnstile;
-            if (turnstileApi && typeof turnstileApi.reset === 'function') {
-              turnstileApi.reset();
-            }
-
-            // Scroll to success message
-            successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-            // Hide success message after 10 seconds
-            setTimeout(() => {
-              successMessage.style.display = 'none';
-            }, 10000);
-          } catch (err) {
-            errorMessage.style.display = 'block';
-            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          } finally {
-            // Reset button
-            buttonText.style.display = 'inline';
-            loadingSpinner.style.display = 'none';
-            submitButton.disabled = false;
-          }
-        });
-      }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        void initComingSoonClient();
+      }, { once: true });
+    } else {
+      void initComingSoonClient();
     }
 
-    // Smooth scrolling for anchor links
-    const anchorLinks = document.querySelectorAll('a[href^="#"]');
-    anchorLinks.forEach((anchor) => {
-      if (!(anchor instanceof HTMLAnchorElement)) {
-        return;
-      }
-
-      anchor.addEventListener('click', (event) => {
-        event.preventDefault();
-        const href = anchor.getAttribute('href');
-        if (!href) return;
-
-        const target = document.querySelector(href);
-        if (target instanceof HTMLElement) {
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        }
-      });
+    document.addEventListener('astro:page-load', () => {
+      void initComingSoonClient();
     });
   </script>
   <ExternalLinkTargetBehavior />
