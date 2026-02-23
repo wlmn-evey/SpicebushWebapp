@@ -25,6 +25,13 @@ export default defineConfig({
       'src/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'tests/**/*.{test,spec}.{js,ts,jsx,tsx}'
     ],
-    exclude: ['node_modules', 'dist', '.astro', 'archived-directories/**', 'archive/**']
+    exclude: ['node_modules', 'dist', '.astro', 'archived-directories/**', 'archive/**'],
+    coverage: {
+      provider: 'v8',
+      all: true,
+      include: ['src/lib/**/*.ts'],
+      exclude: ['src/**/*.test.ts', 'src/test/**'],
+      reporter: ['text', 'json-summary', 'html']
+    }
   }
 });
