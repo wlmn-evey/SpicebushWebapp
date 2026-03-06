@@ -283,7 +283,7 @@ const faqEntries: Array<{ question: string; answer: string }> = [
   {
     question: 'How quickly are seat updates reflected?',
     answer:
-      'Seat counts are managed from our admin system and updates are published to this page as soon as staff records changes.'
+      'Seat counts update as soon as a change is made, so what you see here is current.'
   },
   {
     question: 'Do you help families choose the right week?',
@@ -296,9 +296,9 @@ const faqEntries: Array<{ question: string; answer: string }> = [
       'Yes. Sibling discount and subsidy options are available. Contact admissions and we will walk through what your family qualifies for.'
   },
   {
-    question: 'What are drop-off and pickup expectations?',
+    question: 'What should my child bring to camp?',
     answer:
-      'Camp runs from 8:30 AM to 4:30 PM. If you need pickup before 4:30 PM, coordinate with teacher leaders in advance.'
+      'A water bottle, sunscreen, and weather-appropriate clothing for outdoor play. Detailed packing guidance is shared after enrollment.'
   }
 ];
 
@@ -318,7 +318,7 @@ const campFamilyNotes: Array<{
   {
     title: 'Scheduling and Pickup Times',
     details:
-      'Camp day runs 8:30 AM to 4:30 PM. Early pickup before 4:30 PM can be arranged by coordinating with teacher leaders.'
+      'Camp runs 8:30 AM - 4:30 PM. Need an earlier pickup? Just let your child\'s teacher leaders know in advance.'
   }
 ];
 ---
@@ -517,7 +517,7 @@ const campFamilyNotes: Array<{
     </section>
 
     <section data-camp-animate class="camp-reveal py-4">
-      <div class="px-4 sm:px-6 lg:px-10">
+      <div class="container mx-auto px-4">
         <div class="water-play-banner relative overflow-hidden rounded-2xl border border-sky-300/40 px-5 py-6 text-white shadow-lg md:px-8">
           <!-- Animated SVG wave layers -->
           <svg class="water-svg-wave water-svg-wave-a" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg">
@@ -555,7 +555,7 @@ const campFamilyNotes: Array<{
                 Summer Update
               </span>
               <p class="text-base font-semibold leading-tight text-white sm:text-lg">
-                Water Play Available Weekly Dependent On Weather
+                Splash time every week, weather permitting
               </p>
             </div>
           </div>
@@ -643,7 +643,7 @@ const campFamilyNotes: Array<{
         <div class="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
           <div class="camp-card rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-earth-brown/70">
-              Simple Enrollment Steps
+              How It Works
             </p>
             <h2 class="mt-2 text-3xl font-heading font-bold text-earth-brown">
               Easy for Busy Parents
@@ -672,9 +672,9 @@ const campFamilyNotes: Array<{
 
               <article class="camp-card rounded-2xl border border-gray-200 bg-stone-beige/30 p-4">
                 <p class="text-xs uppercase tracking-wide text-earth-brown/70">Step 3</p>
-                <h3 class="mt-1 text-base font-semibold text-earth-brown">Get Follow-Up</h3>
+                <h3 class="mt-1 text-base font-semibold text-earth-brown">You're All Set</h3>
                 <p class="mt-1 text-sm text-earth-brown/85">
-                  Admissions confirms details and supports any questions right away.
+                  Admissions confirms your reservation and is available for any questions.
                 </p>
               </article>
             </div>
@@ -684,23 +684,23 @@ const campFamilyNotes: Array<{
             class="camp-card rounded-3xl border border-gray-200 bg-gradient-to-br from-[#ecf4ee] via-white to-[#f7f3df] p-6 shadow-sm"
           >
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-forest-canopy">
-              Helpful Highlights
+              Why Families Love Camp
             </p>
             <h3 class="mt-2 text-2xl font-heading font-bold text-earth-brown">
-              Booking made simple
+              A summer they'll remember
             </h3>
             <ul class="mt-4 space-y-3 text-sm text-earth-brown/90">
               <li class="flex items-start gap-2">
                 <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-forest-canopy" />
-                <span>Live seat updates help you plan with confidence.</span>
+                <span>Small groups led by trained Montessori guides.</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-forest-canopy" />
-                <span>One-tap enrollment links make registration simple.</span>
+                <span>Outdoor exploration every day, rain or shine.</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-forest-canopy" />
-                <span>Fast contact options are available if you need help.</span>
+                <span>Flexible multi-week enrollment — mix and match.</span>
               </li>
             </ul>
             <a
@@ -976,7 +976,7 @@ const campFamilyNotes: Array<{
               </p>
             </div>
             <h3 class="mt-2 text-2xl font-heading font-bold text-earth-brown">
-              We can help you pick weeks
+              Not sure which weeks? We'll help
             </h3>
             <p class="mt-2 text-sm text-earth-brown/85">
               If you are balancing work schedules, sibling plans, or age fit, our team can recommend
@@ -1017,8 +1017,7 @@ const campFamilyNotes: Array<{
                 <p class="font-semibold text-earth-brown">Helpful tip</p>
               </div>
               <p class="mt-1">
-                Keep this page open while you compare weeks so you can move quickly when a preferred
-                session is open.
+                Bookmark this page to check back on seat availability as you plan your summer.
               </p>
             </div>
           </aside>
@@ -1100,12 +1099,13 @@ const campFamilyNotes: Array<{
       animation: waterBannerRise 620ms cubic-bezier(0.2, 0.74, 0.25, 1);
     }
 
-    /* SVG wave layers */
+    /* SVG wave layers — pinned to edges, drift uses fixed px so wide screens stay safe */
     .water-svg-wave {
       position: absolute;
       bottom: 0;
-      left: -5%;
-      width: 210%;
+      left: -25%;
+      width: 150%;
+      max-width: none; /* Override global * { max-width: 100% } */
       height: 60%;
       pointer-events: none;
     }
@@ -1244,7 +1244,7 @@ const campFamilyNotes: Array<{
       }
 
       to {
-        transform: translateX(-24%);
+        transform: translateX(-3%);
       }
     }
 
