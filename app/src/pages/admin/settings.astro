@@ -291,7 +291,7 @@ const getSettingHelp = (key: string): SettingHelpContent =>
 <AdminLayout title="Manage Settings">
   {
     savedKey && (
-      <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+      <p data-admin-alert class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
         Saved setting: <strong>{savedKey}</strong>
       </p>
     )
@@ -306,8 +306,13 @@ const getSettingHelp = (key: string): SettingHelpContent =>
   }
 
   <div class="space-y-6">
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 class="text-lg font-semibold mb-3">Admin Preview Toggle</h2>
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold mb-3">Admin Preview Toggle</h2>
+        <a href="/" target="_blank" rel="noopener" class="text-sm font-medium text-forest-canopy hover:underline">
+          View on site ↗
+        </a>
+      </div>
       <p class="text-sm text-earth-brown/80 mb-4">
         Current preview mode: <strong>{previewMode === 'site' ? 'Full Site' : 'Coming Soon'}</strong
         >
@@ -331,7 +336,7 @@ const getSettingHelp = (key: string): SettingHelpContent =>
       </form>
     </section>
 
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="text-lg font-semibold mb-3">Core Settings</h2>
       <div class="space-y-4">
         <form method="post" action="/api/admin/settings" class="space-y-2">
@@ -344,8 +349,8 @@ const getSettingHelp = (key: string): SettingHelpContent =>
           <label class="block text-sm font-medium">
             Coming Soon Enabled
             <select name="value" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-              <option value="true" selected={comingSoonEnabled}>true</option>
-              <option value="false" selected={!comingSoonEnabled}>false</option>
+              <option value="true" selected={comingSoonEnabled}>Active</option>
+              <option value="false" selected={!comingSoonEnabled}>Inactive</option>
             </select>
           </label>
           <SettingInfo {...getSettingHelp('coming_soon_enabled')} />
@@ -484,8 +489,8 @@ const getSettingHelp = (key: string): SettingHelpContent =>
                   name="camp_promotions_enabled"
                   class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                 >
-                  <option value="true" selected={campPromotionsEnabled}>true</option>
-                  <option value="false" selected={!campPromotionsEnabled}>false</option>
+                  <option value="true" selected={campPromotionsEnabled}>Active</option>
+                  <option value="false" selected={!campPromotionsEnabled}>Inactive</option>
                 </select>
               </label>
               <SettingInfo {...getSettingHelp('camp_promotions_enabled')} />
@@ -718,8 +723,8 @@ const getSettingHelp = (key: string): SettingHelpContent =>
                   name="contact_form_confirm_submitter"
                   class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                 >
-                  <option value="true" selected={contactConfirmSubmitter}>true</option>
-                  <option value="false" selected={!contactConfirmSubmitter}>false</option>
+                  <option value="true" selected={contactConfirmSubmitter}>Active</option>
+                  <option value="false" selected={!contactConfirmSubmitter}>Inactive</option>
                 </select>
               </label>
               <SettingInfo {...getSettingHelp('contact_form_confirm_submitter')} />
@@ -732,8 +737,8 @@ const getSettingHelp = (key: string): SettingHelpContent =>
                   name="coming_soon_form_confirm_submitter"
                   class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                 >
-                  <option value="true" selected={comingSoonConfirmSubmitter}>true</option>
-                  <option value="false" selected={!comingSoonConfirmSubmitter}>false</option>
+                  <option value="true" selected={comingSoonConfirmSubmitter}>Active</option>
+                  <option value="false" selected={!comingSoonConfirmSubmitter}>Inactive</option>
                 </select>
               </label>
               <SettingInfo {...getSettingHelp('coming_soon_form_confirm_submitter')} />
@@ -746,8 +751,8 @@ const getSettingHelp = (key: string): SettingHelpContent =>
                   name="camp_form_confirm_submitter"
                   class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                 >
-                  <option value="true" selected={campConfirmSubmitter}>true</option>
-                  <option value="false" selected={!campConfirmSubmitter}>false</option>
+                  <option value="true" selected={campConfirmSubmitter}>Active</option>
+                  <option value="false" selected={!campConfirmSubmitter}>Inactive</option>
                 </select>
               </label>
               <SettingInfo {...getSettingHelp('camp_form_confirm_submitter')} />
@@ -760,8 +765,8 @@ const getSettingHelp = (key: string): SettingHelpContent =>
                   name="tour_request_confirm_submitter"
                   class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                 >
-                  <option value="true" selected={tourConfirmSubmitter}>true</option>
-                  <option value="false" selected={!tourConfirmSubmitter}>false</option>
+                  <option value="true" selected={tourConfirmSubmitter}>Active</option>
+                  <option value="false" selected={!tourConfirmSubmitter}>Inactive</option>
                 </select>
               </label>
               <SettingInfo {...getSettingHelp('tour_request_confirm_submitter')} />
@@ -832,7 +837,7 @@ const getSettingHelp = (key: string): SettingHelpContent =>
       </div>
     </section>
 
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="text-lg font-semibold mb-3">All Settings</h2>
       <div class="space-y-4">
         {
@@ -869,7 +874,7 @@ const getSettingHelp = (key: string): SettingHelpContent =>
       </div>
     </section>
 
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="text-lg font-semibold mb-3">Create New Setting</h2>
       <form method="post" action="/api/admin/settings" class="space-y-3">
         <input type="hidden" name="redirectTo" value="/admin/settings?saved=new" />

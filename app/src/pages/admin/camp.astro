@@ -169,7 +169,7 @@ const tabLabel: Record<CampTab, string> = {
 <AdminLayout title="Camp Management">
   {
     savedKey && (
-      <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+      <p data-admin-alert class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
         Saved: <strong>{savedKey}</strong>
       </p>
     )
@@ -200,7 +200,12 @@ const tabLabel: Record<CampTab, string> = {
           <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
             Camp Workspace
           </p>
-          <h2 class="text-2xl font-bold tracking-tight">Clear, Friendly Camp Operations</h2>
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-bold tracking-tight">Clear, Friendly Camp Operations</h2>
+            <a href="/camp" target="_blank" rel="noopener" class="text-sm font-medium text-white/90 hover:underline">
+              View on site ↗
+            </a>
+          </div>
           <p class="max-w-2xl text-sm text-white/90">
             Manage mode, seasons, weekly seats, and enrollment links without digging through one
             giant form.
@@ -330,10 +335,10 @@ const tabLabel: Record<CampTab, string> = {
                     class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                   >
                     <option value="true" selected={campPromotionsEnabled}>
-                      true
+                      Active
                     </option>
                     <option value="false" selected={!campPromotionsEnabled}>
-                      false
+                      Inactive
                     </option>
                   </select>
                 </label>
@@ -520,9 +525,9 @@ const tabLabel: Record<CampTab, string> = {
                   class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                 >
                   <option value="false" selected>
-                    false
+                    Inactive
                   </option>
-                  <option value="true">true</option>
+                  <option value="true">Active</option>
                 </select>
               </label>
 
@@ -626,10 +631,10 @@ const tabLabel: Record<CampTab, string> = {
                           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                         >
                           <option value="true" selected={season.isActive}>
-                            true
+                            Active
                           </option>
                           <option value="false" selected={!season.isActive}>
-                            false
+                            Inactive
                           </option>
                         </select>
                       </label>
@@ -844,9 +849,9 @@ const tabLabel: Record<CampTab, string> = {
                       class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                     >
                       <option value="true" selected>
-                        true
+                        Active
                       </option>
-                      <option value="false">false</option>
+                      <option value="false">Inactive</option>
                     </select>
                   </label>
 
@@ -857,9 +862,9 @@ const tabLabel: Record<CampTab, string> = {
                       class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                     >
                       <option value="false" selected>
-                        false
+                        Draft
                       </option>
-                      <option value="true">true</option>
+                      <option value="true">Published</option>
                     </select>
                   </label>
 
@@ -1131,10 +1136,10 @@ const tabLabel: Record<CampTab, string> = {
                               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                             >
                               <option value="true" selected={week.waitlistEnabled}>
-                                true
+                                Active
                               </option>
                               <option value="false" selected={!week.waitlistEnabled}>
-                                false
+                                Inactive
                               </option>
                             </select>
                           </label>
@@ -1146,10 +1151,10 @@ const tabLabel: Record<CampTab, string> = {
                               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                             >
                               <option value="true" selected={week.isPublished}>
-                                true
+                                Published
                               </option>
                               <option value="false" selected={!week.isPublished}>
-                                false
+                                Draft
                               </option>
                             </select>
                           </label>
@@ -1320,6 +1325,7 @@ const tabLabel: Record<CampTab, string> = {
                           method="post"
                           action="/api/admin/camp"
                           class="rounded-lg border border-red-200 bg-red-50 p-3"
+                          data-confirm="This will permanently delete this item. Are you sure?"
                         >
                           <input type="hidden" name="action" value="delete-week" />
                           <input type="hidden" name="weekId" value={week.id} />
