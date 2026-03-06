@@ -1,5 +1,5 @@
 ---
-import { Menu, Phone } from 'lucide-astro';
+import { Menu, Phone, Tent } from 'lucide-astro';
 import { db, type ContentEntry } from '@lib/db';
 import { logServerError } from '@lib/server-logger';
 import { getTourLink } from '@lib/tour-settings';
@@ -69,8 +69,8 @@ const campPromoLink = showCampPage ? '/camp' : '/camp-coming-soon';
 const campPromoMessage = toDisplayString(
   campMode.active ? settings.camp_promo_active_message : settings.camp_promo_inactive_message,
   campMode.active
-    ? 'Summer camp is open. View weekly themes and enroll now.'
-    : 'Summer camp details are coming soon. See updates and opening windows.'
+    ? 'Summer camp weeks are filling — explore themes & reserve a spot'
+    : 'Summer camp details coming soon — get notified when we open'
 );
 
 const HOURS_FALLBACK = {
@@ -140,17 +140,20 @@ const weekdayHours = {
 
   {
     campPromoEnabled && showCampEntryPoints && !isCampRoute && (
-      <div class="border-b border-forest-canopy/20 bg-forest-canopy text-white">
+      <div class="border-b border-sunlight-gold/30 bg-gradient-to-r from-forest-canopy via-[#2d7a4a] to-sunlight-gold/90 text-white">
         <div class="container mx-auto flex flex-col gap-2 px-4 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <p class="font-medium text-white/95">{campPromoMessage}</p>
+          <p class="flex items-center gap-2 font-medium text-white/95">
+            <Tent className="h-4 w-4 shrink-0 text-sunlight-gold" />
+            {campPromoMessage}
+          </p>
           <a
             href={campPromoLink}
-            class="inline-flex min-h-[40px] items-center justify-center rounded-md border border-white/30 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-white/15"
+            class="inline-flex min-h-[40px] items-center justify-center rounded-full bg-sunlight-gold px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-earth-brown shadow-sm transition hover:bg-orange-300"
             data-analytics-event="camp_promo_click"
             data-analytics-label="header-promo-bar"
             data-analytics-location="header"
           >
-            View Camp
+            Explore Camp
           </a>
         </div>
       </div>

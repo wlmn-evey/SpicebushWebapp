@@ -79,13 +79,19 @@ const statusClass = (status: CampWeekView['status']): string => {
   return 'bg-gray-200 text-gray-800 border-gray-300';
 };
 
-const availabilityText = (week: CampWeekView, isAdmin: boolean): string => {
-  if (week.status === 'draft') {
-    return isAdmin ? 'Draft week (admin preview only).' : 'Not yet available.';
-  }
-  if (week.status === 'closed') return 'Registration is currently closed.';
-  if (week.status === 'waitlist' || week.status === 'full') return 'No open seats right now.';
-  return `${week.availableSeats} seat${week.availableSeats === 1 ? '' : 's'} remaining`;
+const statusBadgeLabel = (week: CampWeekView): string => {
+  if (week.status === 'limited' && week.availableSeats > 0)
+    return `${week.availableSeats} Left`;
+  if (week.status === 'open' && week.availableSeats > 0)
+    return `${week.availableSeats} Seats Open`;
+  return statusLabel(week.status);
+};
+
+const cardTint = (status: CampWeekView['status']): string => {
+  if (status === 'limited') return 'border-amber-200/60 bg-amber-50/30';
+  if (status === 'waitlist') return 'border-blue-200/60 bg-blue-50/30';
+  if (status === 'full') return 'border-red-200/50 bg-red-50/20';
+  return 'border-gray-200 bg-white';
 };
 
 const sanitizeExternalUrl = (value: string | null | undefined): string | null => {
@@ -786,7 +792,7 @@ const campFamilyNotes: Array<{
                   <article
                     data-camp-animate
                     style={`--camp-delay: ${Math.min(index, 8) * 70}ms;`}
-                    class="camp-card camp-reveal overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm"
+                    class={`camp-card camp-reveal overflow-hidden rounded-3xl shadow-sm ${cardTint(week.status)}`}
                   >
                     <div class="grid lg:grid-cols-[330px_1fr]">
                       <div class="h-56 w-full md:h-64 lg:h-full lg:min-h-[16rem]">
@@ -822,13 +828,24 @@ const campFamilyNotes: Array<{
                           <span
                             class={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold shadow ${statusClass(week.status)} ${week.status === 'open' || week.status === 'limited' ? 'camp-status-chip' : ''}`}
                           >
-                            {statusLabel(week.status)}
+                            {statusBadgeLabel(week)}
                           </span>
                         </div>
 
-                        <p class="mt-3 text-sm font-semibold text-earth-brown">
-                          {availabilityText(week, isAdmin)}
-                        </p>
+                        {leadCopy && (
+                          <p class="mt-2 text-sm text-earth-brown/85">{leadCopy}</p>
+                        )}
+
+                        {highlights.length > 0 && (
+                          <div class="mt-2.5 flex flex-wrap gap-1.5">
+                            {highlights.map(item => (
+                              <span class="inline-flex items-center gap-1 rounded-full border border-forest-canopy/15 bg-forest-canopy/[0.06] px-2.5 py-1 text-xs font-medium text-forest-canopy">
+                                <Leaf className="h-3 w-3 shrink-0" />
+                                {item}
+                              </span>
+                            ))}
+                          </div>
+                        )}
 
                         <section class="mt-3 border-t border-gray-200 pt-3">
                           <div class="grid gap-2 text-sm sm:grid-cols-3">
@@ -862,31 +879,6 @@ const campFamilyNotes: Array<{
                           </div>
                         </section>
 
-                        {leadCopy && (
-                          <section class="mt-3 border-t border-gray-200 pt-3">
-                            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-earth-brown/70">
-                              Week Overview
-                            </p>
-                            <p class="mt-2 text-sm text-earth-brown/85">{leadCopy}</p>
-                          </section>
-                        )}
-
-                        {highlights.length > 0 && (
-                          <section class="mt-3 border-t border-gray-200 pt-3">
-                            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-earth-brown/70">
-                              Children Will Explore
-                            </p>
-                            <ul class="mt-2 grid gap-2 text-sm text-earth-brown/85 sm:grid-cols-2">
-                              {highlights.map(item => (
-                                <li class="flex items-start gap-2">
-                                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-forest-canopy" />
-                                  <span>{item}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </section>
-                        )}
-
                         {week.variants.length > 0 && (
                           <section class="mt-3 border-t border-gray-200 pt-3">
                             <p class="text-xs font-semibold uppercase tracking-wide text-earth-brown/75">
@@ -902,7 +894,7 @@ const campFamilyNotes: Array<{
                           </section>
                         )}
 
-                        <div class="mt-4 flex flex-wrap gap-3 border-t border-gray-200 pt-4">
+                        <div class="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-200 pt-4">
                           <a
                             href={action.href}
                             target={action.external ? '_blank' : undefined}
@@ -917,7 +909,7 @@ const campFamilyNotes: Array<{
                           </a>
                           <button
                             type="button"
-                            class="inline-flex min-h-[46px] items-center justify-center rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-earth-brown transition hover:bg-gray-100"
+                            class="text-sm font-medium text-earth-brown/70 underline underline-offset-2 transition hover:text-forest-canopy"
                             data-analytics-event="camp_contact_click"
                             data-analytics-label={`question-${week.slug}`}
                             data-analytics-location="camp-week-card"
@@ -925,7 +917,7 @@ const campFamilyNotes: Array<{
                             data-week-title={week.themeTitle}
                             data-week-slug={week.slug}
                           >
-                            Ask Admissions
+                            Ask a question
                           </button>
                         </div>
                       </div>
