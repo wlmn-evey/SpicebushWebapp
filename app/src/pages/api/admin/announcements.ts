@@ -48,6 +48,26 @@ const asNumber = (value: unknown): number | null => {
   return null;
 };
 
+/** Convert "HH:MM" time string or decimal number to decimal hours. */
+const asTimeDecimal = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    // Handle "HH:MM" from <input type="time">
+    const timeParts = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+    if (timeParts) {
+      const hours = Number.parseInt(timeParts[1], 10);
+      const minutes = Number.parseInt(timeParts[2], 10);
+      return hours + minutes / 60;
+    }
+    // Fallback: try parsing as a plain number (legacy decimal input)
+    const parsed = Number.parseFloat(trimmed);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+};
+
 const parseBody = async (request: Request): Promise<Record<string, unknown> | null> => {
   const contentType = request.headers.get('content-type') ?? '';
 
@@ -278,8 +298,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
       startDate: asString(body.startDate),
       endDate: asString(body.endDate),
       exceptionType: asString(body.exceptionType) as 'closed' | 'modified_hours' | undefined,
-      openTimeDecimal: asNumber(body.openTimeDecimal),
-      closeTimeDecimal: asNumber(body.closeTimeDecimal),
+      openTimeDecimal: asTimeDecimal(body.openTimeDecimal),
+      closeTimeDecimal: asTimeDecimal(body.closeTimeDecimal),
       beforeCareOffset: asNumber(body.beforeCareOffset),
       afterCareOffset: asNumber(body.afterCareOffset),
       linkedAnnouncementId: asString(body.linkedAnnouncementId) || null,
@@ -306,8 +326,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
       startDate: asString(body.startDate),
       endDate: asString(body.endDate),
       exceptionType: asString(body.exceptionType) as 'closed' | 'modified_hours' | undefined,
-      openTimeDecimal: asNumber(body.openTimeDecimal),
-      closeTimeDecimal: asNumber(body.closeTimeDecimal),
+      openTimeDecimal: asTimeDecimal(body.openTimeDecimal),
+      closeTimeDecimal: asTimeDecimal(body.closeTimeDecimal),
       beforeCareOffset: asNumber(body.beforeCareOffset),
       afterCareOffset: asNumber(body.afterCareOffset),
       linkedAnnouncementId: asString(body.linkedAnnouncementId) || null,
@@ -341,5 +361,5 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   const redirect = buildRedirect(redirectTo, 'error', 'announcement_action_invalid');
   if (redirect) return redirect;
-  return jsonResponse({ error: `Unsupported action: ${action}` }, 400);
+  return jsonResponse({ error: 'Unsupported action' }, 400);
 };

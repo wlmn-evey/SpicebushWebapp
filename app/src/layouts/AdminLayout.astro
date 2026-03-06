@@ -20,7 +20,7 @@ const userEmail = typeof locals.userEmail === 'string' ? locals.userEmail : 'Adm
     <title>{title}</title>
   </head>
   <body class="bg-stone-beige min-h-screen text-earth-brown">
-    <AdminNav />
+    <AdminNav userEmail={userEmail} />
 
     <main class="lg:ml-64 min-h-screen">
       <header class="border-b border-gray-200 bg-white/80 backdrop-blur px-6 py-5 pl-16 lg:pl-6 sticky top-0 z-20">
@@ -36,5 +36,51 @@ const userEmail = typeof locals.userEmail === 'string' ? locals.userEmail : 'Adm
       </section>
     </main>
     <ExternalLinkTargetBehavior />
+
+    <!-- Shared admin scripts: auto-dismiss alerts, submit loading, delete confirm -->
+    <script>
+      function initAdminScripts() {
+        // Auto-dismiss success messages after 6 seconds
+        // Use data-admin-alert attribute to target only flash-message alerts
+        document.querySelectorAll('[data-admin-alert]').forEach((el) => {
+          const alert = el as HTMLElement;
+          setTimeout(() => {
+            alert.style.transition = 'opacity 0.4s ease, max-height 0.4s ease, margin 0.4s ease, padding 0.4s ease';
+            alert.style.opacity = '0';
+            alert.style.maxHeight = '0';
+            alert.style.marginBottom = '0';
+            alert.style.paddingTop = '0';
+            alert.style.paddingBottom = '0';
+            alert.style.overflow = 'hidden';
+          }, 6000);
+        });
+
+        // Delete confirmation fires FIRST — before loading state
+        document.querySelectorAll('form[data-confirm]').forEach((form) => {
+          form.addEventListener('submit', (e) => {
+            const message = (form as HTMLFormElement).dataset.confirm ?? 'Are you sure?';
+            if (!window.confirm(message)) {
+              e.preventDefault();
+              e.stopImmediatePropagation();
+            }
+          });
+        });
+
+        // Submit button loading state — prevent double-submit
+        document.querySelectorAll('form').forEach((form) => {
+          form.addEventListener('submit', () => {
+            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+            if (!btn || btn.dataset.noLoading === 'true') return;
+            btn.dataset.originalText = btn.textContent?.trim() ?? '';
+            btn.disabled = true;
+            btn.textContent = btn.dataset.loadingText ?? (btn.dataset.originalText.toLowerCase().startsWith('delete') ? 'Deleting\u2026' : 'Saving\u2026');
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+          });
+        });
+      }
+
+      initAdminScripts();
+      document.addEventListener('astro:page-load', initAdminScripts);
+    </script>
   </body>
 </html>

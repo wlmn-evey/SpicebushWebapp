@@ -50,12 +50,22 @@ const defaultReminderDateTime = (() => {
   reminderDate.setMinutes(0, 0, 0);
   return toDateTimeInputValue(reminderDate.toISOString());
 })();
+
+const decimalToTime = (decimal: number | null | undefined): string => {
+  if (decimal === null || decimal === undefined || !Number.isFinite(decimal)) return '';
+  let hours = Math.floor(decimal);
+  let mins = Math.round((decimal - hours) * 60);
+  if (mins === 60) { hours += 1; mins = 0; }
+  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+};
+
+const currentTab = Astro.url.searchParams.get('tab') ?? 'announcements';
 ---
 
 <AdminLayout title="Announcements & Closures">
   {
     savedKey && (
-      <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+      <p data-admin-alert class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
         Saved: <strong>{savedKey}</strong>
       </p>
     )
@@ -69,8 +79,36 @@ const defaultReminderDateTime = (() => {
     )
   }
 
+  <!-- Tab Navigation -->
+  <div class="mb-6 flex flex-wrap gap-2 rounded-2xl border border-gray-200 bg-white/95 p-3 shadow-sm backdrop-blur" role="tablist">
+    <a
+      href="/admin/announcements?tab=announcements"
+      role="tab"
+      aria-selected={currentTab === 'announcements' ? 'true' : 'false'}
+      class={`rounded-lg px-4 py-2 text-sm font-semibold transition ${currentTab === 'announcements' ? 'bg-forest-canopy text-white' : 'text-earth-brown/80 hover:bg-gray-100'}`}
+    >
+      Announcements
+    </a>
+    <a
+      href="/admin/announcements?tab=closures"
+      role="tab"
+      aria-selected={currentTab === 'closures' ? 'true' : 'false'}
+      class={`rounded-lg px-4 py-2 text-sm font-semibold transition ${currentTab === 'closures' ? 'bg-forest-canopy text-white' : 'text-earth-brown/80 hover:bg-gray-100'}`}
+    >
+      Schedule Exceptions
+    </a>
+    <a
+      href="/admin/announcements?tab=email"
+      role="tab"
+      aria-selected={currentTab === 'email' ? 'true' : 'false'}
+      class={`rounded-lg px-4 py-2 text-sm font-semibold transition ${currentTab === 'email' ? 'bg-forest-canopy text-white' : 'text-earth-brown/80 hover:bg-gray-100'}`}
+    >
+      Email Delivery
+    </a>
+  </div>
+
   <div class="space-y-6">
-    <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    {(currentTab === 'announcements') && <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <h2 class="text-xl font-semibold text-earth-brown">Family Announcements</h2>
       <p class="mt-1 text-sm text-earth-brown/80">
         Share reminders, urgent updates, and closure notices with clear scheduling.
@@ -165,8 +203,8 @@ const defaultReminderDateTime = (() => {
             name="isPublished"
             class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
           >
-            <option value="true">true</option>
-            <option value="false">false</option>
+            <option value="true">Published</option>
+            <option value="false">Draft</option>
           </select>
         </label>
 
@@ -179,9 +217,9 @@ const defaultReminderDateTime = (() => {
           </button>
         </div>
       </form>
-    </section>
+    </section>}
 
-    <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    {(currentTab === 'email') && <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <h3 class="text-xl font-semibold text-earth-brown">Announcement Email Delivery</h3>
       <p class="mt-1 text-sm text-earth-brown/80">
         Send parent-facing announcement emails now, or schedule reminder re-sends for later.
@@ -259,7 +297,7 @@ const defaultReminderDateTime = (() => {
                       </p>
                     </div>
                     {(job.status === 'scheduled' || job.status === 'failed') && (
-                      <form method="post" action="/api/admin/announcements">
+                      <form method="post" action="/api/admin/announcements" data-confirm="Cancel this scheduled email job?">
                         <input type="hidden" name="action" value="cancel-announcement-email-job" />
                         <input type="hidden" name="jobId" value={job.id} />
                         <input type="hidden" name="redirectTo" value="/admin/announcements" />
@@ -284,9 +322,9 @@ const defaultReminderDateTime = (() => {
           )
         }
       </div>
-    </section>
+    </section>}
 
-    <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    {(currentTab === 'announcements') && <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <h3 class="text-lg font-semibold text-earth-brown">Existing Announcements</h3>
       {
         adminData.announcements.length === 0 ? (
@@ -428,10 +466,10 @@ const defaultReminderDateTime = (() => {
                         class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                       >
                         <option value="true" selected={announcement.isPublished}>
-                          true
+                          Published
                         </option>
                         <option value="false" selected={!announcement.isPublished}>
-                          false
+                          Draft
                         </option>
                       </select>
                     </label>
@@ -523,7 +561,7 @@ const defaultReminderDateTime = (() => {
                     </div>
                   </form>
 
-                  <form method="post" action="/api/admin/announcements">
+                  <form method="post" action="/api/admin/announcements" data-confirm="Delete this announcement? This cannot be undone.">
                     <input type="hidden" name="action" value="delete-announcement" />
                     <input type="hidden" name="announcementId" value={announcement.id} />
                     <input type="hidden" name="redirectTo" value="/admin/announcements" />
@@ -540,9 +578,9 @@ const defaultReminderDateTime = (() => {
           </div>
         )
       }
-    </section>
+    </section>}
 
-    <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    {(currentTab === 'closures') && <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <h2 class="text-xl font-semibold text-earth-brown">School Closures & Hour Exceptions</h2>
       <p class="mt-1 text-sm text-earth-brown/80">
         Schedule full closures or temporary hour changes for announcements and internal planning.
@@ -596,29 +634,29 @@ const defaultReminderDateTime = (() => {
         </label>
 
         <label class="block text-sm font-medium text-earth-brown">
-          Open Time (decimal)
+          Open Time
           <input
-            type="number"
+            type="time"
             name="openTimeDecimal"
-            step="0.25"
-            placeholder="8.5"
+            placeholder="08:30"
             class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
           />
+          <span class="text-xs text-earth-brown/60">e.g. 08:30 for 8:30 AM</span>
         </label>
 
         <label class="block text-sm font-medium text-earth-brown">
-          Close Time (decimal)
+          Close Time
           <input
-            type="number"
+            type="time"
             name="closeTimeDecimal"
-            step="0.25"
-            placeholder="15"
+            placeholder="15:00"
             class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
           />
+          <span class="text-xs text-earth-brown/60">e.g. 15:00 for 3:00 PM</span>
         </label>
 
         <label class="block text-sm font-medium text-earth-brown">
-          Before Care Offset (decimal)
+          Before Care Offset (hours)
           <input
             type="number"
             name="beforeCareOffset"
@@ -626,10 +664,11 @@ const defaultReminderDateTime = (() => {
             placeholder="1"
             class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
           />
+          <span class="text-xs text-earth-brown/60">Hours before open, e.g. 1</span>
         </label>
 
         <label class="block text-sm font-medium text-earth-brown">
-          After Care Offset (decimal)
+          After Care Offset (hours)
           <input
             type="number"
             name="afterCareOffset"
@@ -637,6 +676,7 @@ const defaultReminderDateTime = (() => {
             placeholder="2.5"
             class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
           />
+          <span class="text-xs text-earth-brown/60">Hours after close, e.g. 2.5</span>
         </label>
 
         <label class="block text-sm font-medium text-earth-brown lg:col-span-2">
@@ -660,8 +700,8 @@ const defaultReminderDateTime = (() => {
             name="isPublished"
             class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
           >
-            <option value="true">true</option>
-            <option value="false">false</option>
+            <option value="true">Published</option>
+            <option value="false">Draft</option>
           </select>
         </label>
 
@@ -684,9 +724,9 @@ const defaultReminderDateTime = (() => {
           </button>
         </div>
       </form>
-    </section>
+    </section>}
 
-    <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    {(currentTab === 'closures') && <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <h3 class="text-lg font-semibold text-earth-brown">Existing Closures & Hour Exceptions</h3>
       {
         adminData.scheduleExceptions.length === 0 ? (
@@ -768,27 +808,25 @@ const defaultReminderDateTime = (() => {
                       />
                     </label>
                     <label class="block text-sm font-medium text-earth-brown">
-                      Open Time (decimal)
+                      Open Time
                       <input
-                        type="number"
+                        type="time"
                         name="openTimeDecimal"
-                        step="0.25"
-                        value={exception.openTimeDecimal ?? ''}
+                        value={decimalToTime(exception.openTimeDecimal)}
                         class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                       />
                     </label>
                     <label class="block text-sm font-medium text-earth-brown">
-                      Close Time (decimal)
+                      Close Time
                       <input
-                        type="number"
+                        type="time"
                         name="closeTimeDecimal"
-                        step="0.25"
-                        value={exception.closeTimeDecimal ?? ''}
+                        value={decimalToTime(exception.closeTimeDecimal)}
                         class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                       />
                     </label>
                     <label class="block text-sm font-medium text-earth-brown">
-                      Before Care Offset
+                      Before Care Offset (hours)
                       <input
                         type="number"
                         name="beforeCareOffset"
@@ -798,7 +836,7 @@ const defaultReminderDateTime = (() => {
                       />
                     </label>
                     <label class="block text-sm font-medium text-earth-brown">
-                      After Care Offset
+                      After Care Offset (hours)
                       <input
                         type="number"
                         name="afterCareOffset"
@@ -831,10 +869,10 @@ const defaultReminderDateTime = (() => {
                         class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                       >
                         <option value="true" selected={exception.isPublished}>
-                          true
+                          Published
                         </option>
                         <option value="false" selected={!exception.isPublished}>
-                          false
+                          Draft
                         </option>
                       </select>
                     </label>
@@ -858,7 +896,7 @@ const defaultReminderDateTime = (() => {
                     </div>
                   </form>
 
-                  <form method="post" action="/api/admin/announcements">
+                  <form method="post" action="/api/admin/announcements" data-confirm="Delete this schedule exception? This cannot be undone.">
                     <input type="hidden" name="action" value="delete-exception" />
                     <input type="hidden" name="exceptionId" value={exception.id} />
                     <input type="hidden" name="redirectTo" value="/admin/announcements" />
@@ -875,6 +913,6 @@ const defaultReminderDateTime = (() => {
           </div>
         )
       }
-    </section>
+    </section>}
   </div>
 </AdminLayout>

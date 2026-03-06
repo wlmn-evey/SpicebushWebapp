@@ -267,7 +267,7 @@ const totalRates = allPrograms.reduce((count, program) => count + program.rates.
 
 <AdminLayout title="Manage Tuition">
   {savedSlug && (
-    <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+    <p data-admin-alert class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
       Saved entry: <strong>{savedSlug}</strong>
     </p>
   )}
@@ -279,8 +279,13 @@ const totalRates = allPrograms.reduce((count, program) => count + program.rates.
   )}
 
   <div class="space-y-6">
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 class="mb-2 text-lg font-semibold">Program-Centric Tuition Manager</h2>
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div class="flex items-center justify-between">
+        <h2 class="mb-2 text-lg font-semibold">Program-Centric Tuition Manager</h2>
+        <a href="/admissions" target="_blank" rel="noopener" class="text-sm font-medium text-forest-canopy hover:underline">
+          View on site ↗
+        </a>
+      </div>
       <p class="mb-4 text-sm text-earth-brown/80">
         Each program contains its own tuition levels (A/B/C/D and beyond). Edit levels directly inside the program card.
       </p>
@@ -588,7 +593,7 @@ const totalRates = allPrograms.reduce((count, program) => count + program.rates.
       </details>
     </section>
 
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="mb-2 text-lg font-semibold">Programs & Tuition Levels</h2>
       <p class="mb-4 text-sm text-earth-brown/80">Open a program card to manage all of its levels in one place.</p>
 
@@ -1082,7 +1087,7 @@ const totalRates = allPrograms.reduce((count, program) => count + program.rates.
     </section>
 
     {unlinkedRates.length > 0 && (
-      <section class="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+      <section class="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
         <h2 class="mb-2 text-lg font-semibold text-amber-900">Unlinked Tuition Levels</h2>
         <p class="mb-4 text-sm text-amber-800">
           These rates are not currently linked to a program. Reassign them below to keep the interface clean.

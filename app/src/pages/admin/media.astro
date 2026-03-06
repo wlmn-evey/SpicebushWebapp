@@ -308,7 +308,7 @@ const serializedEditorState = JSON.stringify({
 
 <AdminLayout title="Manage Media">
   {savedSlug && (
-    <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+    <p data-admin-alert class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
       Saved media settings: <strong>{savedSlug}</strong>
     </p>
   )}
@@ -320,7 +320,7 @@ const serializedEditorState = JSON.stringify({
   )}
 
   <div class="space-y-6">
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="mb-2 text-lg font-semibold">Media Manager</h2>
       <p class="mb-4 text-sm text-earth-brown/80">
         Pick an image, set the desktop focal point, and adjust mobile/tablet crop boxes as needed.
@@ -341,7 +341,7 @@ const serializedEditorState = JSON.stringify({
       </div>
     </section>
 
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="mb-2 text-lg font-semibold">Upload New Image</h2>
       <p class="mb-4 text-sm text-earth-brown/80">
         Upload an image and it will be stored, indexed, and added to this editor automatically.
@@ -409,7 +409,7 @@ const serializedEditorState = JSON.stringify({
     </section>
 
     {editableEntries.length === 0 ? (
-      <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <p class="text-sm text-earth-brown/80">No photo entries are available yet.</p>
       </section>
     ) : (
@@ -470,7 +470,7 @@ const serializedEditorState = JSON.stringify({
           </div>
         </aside>
 
-        <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <form id="media-editor-form" method="post" action="/api/admin/content" class="space-y-6">
             <input type="hidden" name="collection" value={collection} />
             <input id="media-field-slug" type="hidden" name="slug" value="" />

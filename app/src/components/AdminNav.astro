@@ -15,7 +15,14 @@ import {
   HandHeart
 } from 'lucide-astro';
 
+export interface Props {
+  userEmail?: string;
+}
+
+const { userEmail = 'Administrator' } = Astro.props;
 const currentPath = Astro.url.pathname;
+const userInitial = userEmail.charAt(0).toUpperCase();
+const displayName = userEmail.includes('@') ? userEmail.split('@')[0] : userEmail;
 ---
 
 <!-- Admin Navigation Sidebar Component -->
@@ -36,8 +43,8 @@ const currentPath = Astro.url.pathname;
     </div>
 
     <!-- Navigation Links -->
-    <div class="flex-1 overflow-y-auto py-6">
-      <div class="px-3 space-y-1">
+    <div class="flex-1 overflow-y-auto py-4">
+      <div class="px-3 space-y-0.5">
         <a
           href="/admin"
           aria-current={currentPath === '/admin' ? 'page' : undefined}
@@ -47,6 +54,8 @@ const currentPath = Astro.url.pathname;
           Dashboard
         </a>
 
+        <!-- Content -->
+        <p class="admin-nav-group-label">Content</p>
         <a
           href="/admin/hours"
           aria-current={currentPath === '/admin/hours' ? 'page' : undefined}
@@ -55,25 +64,6 @@ const currentPath = Astro.url.pathname;
           <Clock className="w-5 h-5 mr-3" />
           School Hours
         </a>
-
-        <a
-          href="/admin/tuition"
-          aria-current={currentPath === '/admin/tuition' ? 'page' : undefined}
-          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
-        >
-          <DollarSign className="w-5 h-5 mr-3" />
-          Tuition & Programs
-        </a>
-
-        <a
-          href="/admin/camp"
-          aria-current={currentPath === '/admin/camp' ? 'page' : undefined}
-          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
-        >
-          <Tent className="w-5 h-5 mr-3" />
-          Camp
-        </a>
-
         <a
           href="/admin/staff"
           aria-current={currentPath === '/admin/staff' ? 'page' : undefined}
@@ -82,7 +72,6 @@ const currentPath = Astro.url.pathname;
           <Users className="w-5 h-5 mr-3" />
           Staff
         </a>
-
         <a
           href="/admin/testimonials"
           aria-current={currentPath === '/admin/testimonials' ? 'page' : undefined}
@@ -91,52 +80,14 @@ const currentPath = Astro.url.pathname;
           <MessageSquare className="w-5 h-5 mr-3" />
           Testimonials
         </a>
-
         <a
-          href="/admin/contact-submissions"
-          aria-current={currentPath === '/admin/contact-submissions' ? 'page' : undefined}
+          href="/admin/faq"
+          aria-current={currentPath === '/admin/faq' ? 'page' : undefined}
           class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
         >
-          <Mail className="w-5 h-5 mr-3" />
-          Contact Submissions
+          <CircleHelp className="w-5 h-5 mr-3" />
+          FAQs
         </a>
-
-        <a
-          href="/admin/announcements"
-          aria-current={currentPath === '/admin/announcements' ? 'page' : undefined}
-          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
-        >
-          <Bell className="w-5 h-5 mr-3" />
-          Announcements
-        </a>
-
-        <a
-          href="/admin/donations"
-          aria-current={currentPath === '/admin/donations' ? 'page' : undefined}
-          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
-        >
-          <HandHeart className="w-5 h-5 mr-3" />
-          Donations
-        </a>
-
-        <a
-          href="/admin/seo"
-          aria-current={currentPath === '/admin/seo' ? 'page' : undefined}
-          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
-        >
-          <LineChart className="w-5 h-5 mr-3" />
-          SEO & Analytics
-        </a>
-
-        <a
-          href="/admin/settings"
-          aria-current={currentPath === '/admin/settings' ? 'page' : undefined}
-          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
-        >
-          <Settings className="w-5 h-5 mr-3" />
-          System Settings
-        </a>
-
         <a
           href="/admin/media"
           aria-current={currentPath === '/admin/media' ? 'page' : undefined}
@@ -146,13 +97,69 @@ const currentPath = Astro.url.pathname;
           Media
         </a>
 
+        <!-- Programs -->
+        <p class="admin-nav-group-label">Programs</p>
         <a
-          href="/admin/faq"
-          aria-current={currentPath === '/admin/faq' ? 'page' : undefined}
+          href="/admin/tuition"
+          aria-current={currentPath === '/admin/tuition' ? 'page' : undefined}
           class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
         >
-          <CircleHelp className="w-5 h-5 mr-3" />
-          FAQs
+          <DollarSign className="w-5 h-5 mr-3" />
+          Tuition & Programs
+        </a>
+        <a
+          href="/admin/camp"
+          aria-current={currentPath === '/admin/camp' ? 'page' : undefined}
+          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+        >
+          <Tent className="w-5 h-5 mr-3" />
+          Camp
+        </a>
+
+        <!-- Communications -->
+        <p class="admin-nav-group-label">Communications</p>
+        <a
+          href="/admin/announcements"
+          aria-current={currentPath === '/admin/announcements' ? 'page' : undefined}
+          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+        >
+          <Bell className="w-5 h-5 mr-3" />
+          Announcements
+        </a>
+        <a
+          href="/admin/contact-submissions"
+          aria-current={currentPath === '/admin/contact-submissions' ? 'page' : undefined}
+          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+        >
+          <Mail className="w-5 h-5 mr-3" />
+          Contact Submissions
+        </a>
+        <a
+          href="/admin/donations"
+          aria-current={currentPath === '/admin/donations' ? 'page' : undefined}
+          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+        >
+          <HandHeart className="w-5 h-5 mr-3" />
+          Donations
+        </a>
+
+        <!-- System -->
+        <p class="admin-nav-group-label">System</p>
+        <a
+          href="/admin/seo"
+          aria-current={currentPath === '/admin/seo' ? 'page' : undefined}
+          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+        >
+          <LineChart className="w-5 h-5 mr-3" />
+          SEO & Analytics
+        </a>
+        <a
+          href="/admin/settings"
+          aria-current={currentPath === '/admin/settings' ? 'page' : undefined}
+          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+        >
+          <Settings className="w-5 h-5 mr-3" />
+          System Settings
         </a>
       </div>
     </div>
@@ -161,10 +168,10 @@ const currentPath = Astro.url.pathname;
     <div class="p-6 border-t border-gray-200">
       <div class="flex items-center">
         <div class="w-8 h-8 bg-forest-canopy rounded-full flex items-center justify-center">
-          <span class="text-white text-sm font-medium">A</span>
+          <span class="text-white text-sm font-medium">{userInitial}</span>
         </div>
-        <div class="ml-3">
-          <p class="text-sm font-medium text-earth-brown">Admin User</p>
+        <div class="ml-3 min-w-0">
+          <p class="text-sm font-medium text-earth-brown truncate">{displayName}</p>
           <p class="text-xs text-gray-600">Administrator</p>
         </div>
       </div>
@@ -263,5 +270,9 @@ const currentPath = Astro.url.pathname;
 
   .admin-nav-link[aria-current='page'] {
     @apply bg-forest-canopy text-white;
+  }
+
+  .admin-nav-group-label {
+    @apply px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400;
   }
 </style>

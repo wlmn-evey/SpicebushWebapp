@@ -94,7 +94,7 @@ const defaultSlug = `faq-${Date.now().toString(36)}-${Math.floor(Math.random() *
 
 <AdminLayout title="Manage FAQs">
   {savedSlug && (
-    <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+    <p data-admin-alert class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
       Saved entry: <strong>{savedSlug}</strong>
     </p>
   )}
@@ -106,8 +106,13 @@ const defaultSlug = `faq-${Date.now().toString(36)}-${Math.floor(Math.random() *
   )}
 
   <div class="space-y-6">
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 class="mb-2 text-lg font-semibold">FAQ Manager</h2>
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div class="flex items-center justify-between">
+        <h2 class="mb-2 text-lg font-semibold">FAQ Manager</h2>
+        <a href="/resources" target="_blank" rel="noopener" class="text-sm font-medium text-forest-canopy hover:underline">
+          View on site ↗
+        </a>
+      </div>
       <p class="mb-4 text-sm text-earth-brown/80">
         FAQ items are grouped by section below. Use the section dropdowns to keep content organized without editing raw JSON.
       </p>
@@ -325,7 +330,7 @@ const defaultSlug = `faq-${Date.now().toString(36)}-${Math.floor(Math.random() *
       </details>
     </section>
 
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="mb-2 text-lg font-semibold">Existing FAQ Items</h2>
       <p class="mb-4 text-sm text-earth-brown/80">Items are grouped by section so updates are easier to scan and maintain.</p>
 

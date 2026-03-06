@@ -59,7 +59,7 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
 
 <AdminLayout title="Manage Testimonials">
   {savedKey && (
-    <p class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+    <p data-admin-alert class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
       Saved: <strong>{savedKey}</strong>
     </p>
   )}
@@ -71,8 +71,13 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
   )}
 
   <div class="space-y-6">
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 class="mb-2 text-lg font-semibold">Testimonial Manager</h2>
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div class="flex items-center justify-between">
+        <h2 class="mb-2 text-lg font-semibold">Testimonial Manager</h2>
+        <a href="/" target="_blank" rel="noopener" class="text-sm font-medium text-forest-canopy hover:underline">
+          View on site ↗
+        </a>
+      </div>
       <p class="mb-4 text-sm text-earth-brown/80">
         Manage testimonial content and control exactly where it appears. You can use page-level rules and per-testimonial switches together.
       </p>
@@ -236,7 +241,7 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
       </form>
     </section>
 
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="mb-2 text-lg font-semibold">Placement Preview</h2>
       <p class="mb-4 text-sm text-earth-brown/80">
         These are the testimonials that pass your current page rules right now.
@@ -503,7 +508,7 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
       </details>
     </section>
 
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm" data-testimonial-manager>
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm" data-testimonial-manager>
       <h2 class="mb-2 text-lg font-semibold">Existing Testimonials</h2>
       <p class="mb-4 text-sm text-earth-brown/80">
         Use filters to find entries quickly, then open any card to edit visibility and content.
