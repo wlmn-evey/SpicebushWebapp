@@ -518,20 +518,46 @@ const campFamilyNotes: Array<{
 
     <section data-camp-animate class="camp-reveal py-4">
       <div class="px-4 sm:px-6 lg:px-10">
-        <div
-          class="water-play-banner relative overflow-hidden rounded-2xl border border-[#8fd1e8] bg-gradient-to-r from-[#0f5f86] via-[#1b7aa7] to-[#0c4f72] px-5 py-5 text-white shadow-sm md:px-8"
-        >
-          <div class="water-play-wave water-play-wave-a" aria-hidden="true"></div>
-          <div class="water-play-wave water-play-wave-b" aria-hidden="true"></div>
-          <div class="relative z-10 flex flex-wrap items-center gap-3">
-            <span
-              class="inline-flex items-center rounded-full border border-white/35 bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white"
-            >
-              Summer Update
+        <div class="water-play-banner relative overflow-hidden rounded-2xl border border-sky-300/40 px-5 py-6 text-white shadow-lg md:px-8">
+          <!-- Animated SVG wave layers -->
+          <svg class="water-svg-wave water-svg-wave-a" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,40 C150,80 350,0 500,40 C650,80 850,0 1000,40 C1050,55 1150,20 1200,40 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.12)"/>
+          </svg>
+          <svg class="water-svg-wave water-svg-wave-b" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,60 C200,20 300,90 500,50 C700,10 900,80 1200,50 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.08)"/>
+          </svg>
+          <svg class="water-svg-wave water-svg-wave-c" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,70 C100,40 250,95 400,60 C550,25 750,85 900,55 C1050,25 1150,70 1200,55 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.06)"/>
+          </svg>
+
+          <!-- Floating bubbles -->
+          <div class="water-bubbles" aria-hidden="true">
+            <span class="water-bubble" style="--b-left:12%;--b-size:6px;--b-delay:0s;--b-dur:4.5s"></span>
+            <span class="water-bubble" style="--b-left:30%;--b-size:4px;--b-delay:1.2s;--b-dur:5s"></span>
+            <span class="water-bubble" style="--b-left:55%;--b-size:7px;--b-delay:2.4s;--b-dur:4s"></span>
+            <span class="water-bubble" style="--b-left:72%;--b-size:5px;--b-delay:0.8s;--b-dur:5.5s"></span>
+            <span class="water-bubble" style="--b-left:88%;--b-size:4px;--b-delay:3s;--b-dur:4.8s"></span>
+          </div>
+
+          <!-- Shimmer sweep -->
+          <div class="water-shimmer" aria-hidden="true"></div>
+
+          <!-- Content -->
+          <div class="relative z-10 flex flex-wrap items-center gap-3 sm:gap-4">
+            <!-- Water droplet icon -->
+            <span class="water-drop-icon inline-flex items-center justify-center rounded-full bg-white/20 p-2 backdrop-blur-sm">
+              <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69z"/>
+              </svg>
             </span>
-            <p class="text-base font-semibold leading-tight text-white sm:text-lg">
-              Water Play Available Weekly Dependent On Weather
-            </p>
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+              <span class="inline-flex items-center rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-sm">
+                Summer Update
+              </span>
+              <p class="text-base font-semibold leading-tight text-white sm:text-lg">
+                Water Play Available Weekly Dependent On Weather
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -1070,38 +1096,74 @@ const campFamilyNotes: Array<{
   <style>
     .water-play-banner {
       isolation: isolate;
+      background: linear-gradient(135deg, #0a4c6b 0%, #1278a8 35%, #0e6b94 65%, #094060 100%);
       animation: waterBannerRise 620ms cubic-bezier(0.2, 0.74, 0.25, 1);
     }
 
-    .water-play-wave {
+    /* SVG wave layers */
+    .water-svg-wave {
       position: absolute;
-      inset: auto -8% -32%;
-      height: 88%;
-      background-repeat: repeat-x;
-      opacity: 0.35;
+      bottom: 0;
+      left: -5%;
+      width: 210%;
+      height: 60%;
       pointer-events: none;
     }
 
-    .water-play-wave-a {
-      background-image: radial-gradient(
-        circle at 24px 0,
-        rgba(255, 255, 255, 0.42) 16px,
-        transparent 17px
-      );
-      background-size: 80px 44px;
-      animation: waterWaveMove 9s linear infinite;
+    .water-svg-wave-a {
+      animation: waterSvgDrift 7s ease-in-out infinite alternate;
     }
 
-    .water-play-wave-b {
-      background-image: radial-gradient(
-        circle at 34px 0,
-        rgba(255, 255, 255, 0.24) 18px,
-        transparent 19px
+    .water-svg-wave-b {
+      animation: waterSvgDrift 9s ease-in-out infinite alternate-reverse;
+      bottom: -4px;
+    }
+
+    .water-svg-wave-c {
+      animation: waterSvgDrift 11s ease-in-out infinite alternate;
+      bottom: -8px;
+    }
+
+    /* Floating bubbles */
+    .water-bubbles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .water-bubble {
+      position: absolute;
+      bottom: -10px;
+      left: var(--b-left, 50%);
+      width: var(--b-size, 5px);
+      height: var(--b-size, 5px);
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.6), rgba(255,255,255,0.15));
+      animation: waterBubbleFloat var(--b-dur, 5s) ease-in var(--b-delay, 0s) infinite;
+      opacity: 0;
+    }
+
+    /* Shimmer sweep */
+    .water-shimmer {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        105deg,
+        transparent 40%,
+        rgba(255,255,255,0.1) 45%,
+        rgba(255,255,255,0.18) 50%,
+        rgba(255,255,255,0.1) 55%,
+        transparent 60%
       );
-      background-size: 110px 56px;
-      opacity: 0.28;
-      transform: translateY(12px);
-      animation: waterWaveMoveReverse 11s linear infinite;
+      background-size: 250% 100%;
+      animation: waterShimmerSweep 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    /* Water droplet icon */
+    .water-drop-icon {
+      animation: waterDropBob 3s ease-in-out infinite;
     }
 
     .camp-reveal {
@@ -1176,23 +1238,53 @@ const campFamilyNotes: Array<{
       }
     }
 
-    @keyframes waterWaveMove {
+    @keyframes waterSvgDrift {
       from {
-        background-position-x: 0;
+        transform: translateX(0);
       }
 
       to {
-        background-position-x: 180px;
+        transform: translateX(-24%);
       }
     }
 
-    @keyframes waterWaveMoveReverse {
-      from {
-        background-position-x: 0;
+    @keyframes waterBubbleFloat {
+      0% {
+        opacity: 0;
+        transform: translateY(0) scale(0.6);
       }
 
-      to {
-        background-position-x: -220px;
+      15% {
+        opacity: 0.7;
+      }
+
+      80% {
+        opacity: 0.3;
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-80px) scale(1);
+      }
+    }
+
+    @keyframes waterShimmerSweep {
+      0%, 100% {
+        background-position: 200% center;
+      }
+
+      50% {
+        background-position: -50% center;
+      }
+    }
+
+    @keyframes waterDropBob {
+      0%, 100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-3px);
       }
     }
 
@@ -1207,8 +1299,15 @@ const campFamilyNotes: Array<{
         animation: none;
       }
 
-      .water-play-wave {
+      .water-svg-wave,
+      .water-bubble,
+      .water-shimmer,
+      .water-drop-icon {
         animation: none;
+      }
+
+      .water-bubble {
+        display: none;
       }
 
       .camp-card,
