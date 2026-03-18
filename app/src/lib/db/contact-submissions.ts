@@ -1,5 +1,6 @@
 import { logError } from '@lib/error-logger';
-import { queryFirst, queryRows } from './client';
+import { query, queryFirst, queryRows } from './client';
+import { normalizeCount, normalizePage, normalizePageSize } from './pagination';
 import type { ContactFormSubmissionRow } from './types';
 
 export interface ContactSubmissionQueryOptions {
@@ -16,47 +17,14 @@ export interface ContactSubmissionQueryResult {
   pageSize: number;
 }
 
-const DEFAULT_PAGE = 1;
-const DEFAULT_PAGE_SIZE = 50;
-const MAX_PAGE_SIZE = 200;
-
-const toSafeInteger = (value: unknown, fallback: number): number => {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return Math.trunc(value);
-  }
-
-  if (typeof value === 'string') {
-    const parsed = Number.parseInt(value.trim(), 10);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-
-  return fallback;
-};
-
-const normalizePage = (value: unknown): number => {
-  const parsed = toSafeInteger(value, DEFAULT_PAGE);
-  return parsed > 0 ? parsed : DEFAULT_PAGE;
-};
-
-const normalizePageSize = (value: unknown): number => {
-  const parsed = toSafeInteger(value, DEFAULT_PAGE_SIZE);
-  if (parsed < 1) return DEFAULT_PAGE_SIZE;
-  if (parsed > MAX_PAGE_SIZE) return MAX_PAGE_SIZE;
-  return parsed;
-};
-
-const normalizeCount = (value: unknown): number => {
-  const parsed = toSafeInteger(value, 0);
-  return parsed >= 0 ? parsed : 0;
-};
+const CONTACT_MAX_PAGE_SIZE = 200;
+const EXPORT_MAX_PAGE_SIZE = 5000;
 
 export async function getContactSubmissions(
   options: ContactSubmissionQueryOptions = {}
 ): Promise<ContactSubmissionQueryResult> {
   const page = normalizePage(options.page);
-  const pageSize = normalizePageSize(options.pageSize);
+  const pageSize = normalizePageSize(options.pageSize, CONTACT_MAX_PAGE_SIZE);
   const offset = (page - 1) * pageSize;
   const search = typeof options.search === 'string' ? options.search.trim() : '';
 
@@ -139,4 +107,73 @@ export async function getContactSubmissions(
       pageSize
     };
   }
+}
+
+export async function getContactSubmissionsForExport(
+  options: Omit<ContactSubmissionQueryOptions, 'page'> = {}
+): Promise<ContactSubmissionQueryResult> {
+  return getContactSubmissions({
+    ...options,
+    page: 1,
+    pageSize: normalizePageSize(options.pageSize ?? EXPORT_MAX_PAGE_SIZE, EXPORT_MAX_PAGE_SIZE)
+  });
+}
+
+export interface InsertContactSubmissionParams {
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string;
+  message: string;
+  childAge: string | null;
+  tourInterest: boolean;
+  attribution: Record<string, unknown>;
+  sessionId: string | null;
+  clientId: string | null;
+  landingPage: string | null;
+  referrerUrl: string | null;
+  ipAddress: string | null;
+}
+
+export async function insertContactSubmission(
+  params: InsertContactSubmissionParams
+): Promise<string | null> {
+  const result = await query<{ id: string }>(
+    `
+      INSERT INTO contact_form_submissions
+      (
+        name,
+        email,
+        phone,
+        subject,
+        message,
+        child_age,
+        tour_interest,
+        attribution,
+        session_id,
+        client_id,
+        landing_page,
+        referrer_url,
+        ip_address
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13)
+      RETURNING id
+    `,
+    [
+      params.name,
+      params.email,
+      params.phone,
+      params.subject,
+      params.message,
+      params.childAge,
+      params.tourInterest,
+      JSON.stringify(params.attribution),
+      params.sessionId,
+      params.clientId,
+      params.landingPage,
+      params.referrerUrl,
+      params.ipAddress
+    ]
+  );
+  return result.rows[0]?.id ?? null;
 }

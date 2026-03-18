@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import { query } from '@lib/db/client';
 import { recordAnalyticsEvent } from '@lib/db/analytics';
+import { insertContactSubmission } from '@lib/db/contact-submissions';
 import { sendContactSubmissionEmails, type SubmissionSource } from '@lib/contact-email';
 import {
   checkContactSubmissionRateLimit,
@@ -173,14 +173,17 @@ const successRedirectFor = (source: SubmissionSource): string =>
         ? '/contact-success'
         : '/coming-soon?submitted=1';
 
-const errorRedirectFor = (source: SubmissionSource): string =>
-  source === 'contact'
-    ? '/contact?error=submission-failed'
-    : source === 'camp'
-      ? '/camp?error=submission-failed'
-      : source === 'tour'
-        ? '/contact?error=submission-failed'
-        : '/coming-soon?error=submission-failed';
+const errorRedirectFor = (source: SubmissionSource, code = 'server-error'): string => {
+  const base =
+    source === 'contact'
+      ? '/contact'
+      : source === 'camp'
+        ? '/camp'
+        : source === 'tour'
+          ? '/contact'
+          : '/coming-soon';
+  return `${base}?error=${code}`;
+};
 
 const jsonResponse = (payload: Record<string, unknown>, status = 200): Response =>
   new Response(JSON.stringify(payload), {
@@ -248,7 +251,7 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
         );
       }
 
-      return redirect(errorRedirectFor(source));
+      return redirect(errorRedirectFor(source, 'captcha-failed'));
     }
 
     const name =
@@ -273,7 +276,7 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
           400
         );
       }
-      return redirect(errorRedirectFor(source));
+      return redirect(errorRedirectFor(source, 'missing-fields'));
     }
 
     if (!EMAIL_REGEX.test(email)) {
@@ -286,7 +289,7 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
           400
         );
       }
-      return redirect(errorRedirectFor(source));
+      return redirect(errorRedirectFor(source, 'invalid-email'));
     }
 
     const rateLimit = await checkContactSubmissionRateLimit({
@@ -313,47 +316,24 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
           429
         );
       }
-      return redirect(errorRedirectFor(source));
+      return redirect(errorRedirectFor(source, 'rate-limited'));
     }
 
-    const insertedSubmission = await query<{ id: string }>(
-      `
-        INSERT INTO contact_form_submissions
-        (
-          name,
-          email,
-          phone,
-          subject,
-          message,
-          child_age,
-          tour_interest,
-          attribution,
-          session_id,
-          client_id,
-          landing_page,
-          referrer_url,
-          ip_address
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13)
-        RETURNING id
-      `,
-      [
-        name,
-        email,
-        phoneValue || null,
-        subject,
-        message,
-        childAge,
-        tourInterest,
-        JSON.stringify(attribution),
-        sessionId,
-        clientId,
-        landingPage,
-        referrerUrl,
-        requestIp
-      ]
-    );
-    const submissionId = insertedSubmission.rows[0]?.id ?? null;
+    const submissionId = await insertContactSubmission({
+      name,
+      email,
+      phone: phoneValue || null,
+      subject,
+      message,
+      childAge,
+      tourInterest,
+      attribution,
+      sessionId,
+      clientId,
+      landingPage,
+      referrerUrl,
+      ipAddress: requestIp
+    });
 
     const eventName =
       source === 'coming-soon'

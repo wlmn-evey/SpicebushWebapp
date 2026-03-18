@@ -5,7 +5,7 @@ import { db } from '@lib/db';
 /** Escape a value for CSV: neutralize formula-injection prefixes, then RFC 4180 quote. */
 const csvEscape = (value: string): string => {
   // Prefix formula-trigger characters to prevent spreadsheet formula injection (CWE-1236)
-  let safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
   if (/[",\n\r]/.test(safe)) {
     return `"${safe.replace(/"/g, '""')}"`;
   }
@@ -39,10 +39,9 @@ export const GET: APIRoute = async ({ locals, url }) => {
   const tourInterest =
     tourParam === 'yes' ? true : tourParam === 'no' ? false : undefined;
 
-  // Fetch all matching submissions (hard cap 500 for safety)
-  const result = await db.contact.getContactSubmissions({
-    page: 1,
-    pageSize: 500,
+  // Fetch matching submissions for export (hard cap 5000)
+  const result = await db.contact.getContactSubmissionsForExport({
+    pageSize: 5000,
     search,
     tourInterest
   });

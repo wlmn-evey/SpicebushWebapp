@@ -12,7 +12,7 @@ import {
   cacheUtils
 } from './content';
 import { getRecentMessages, getCommunicationStats, getTemplates } from './communications';
-import { getContactSubmissions } from './contact-submissions';
+import { getContactSubmissions, getContactSubmissionsForExport } from './contact-submissions';
 import { recordAnalyticsEvent, getAnalyticsOverview, getRecentAnalyticsEvents } from './analytics';
 import {
   getAdSpendSummary,
@@ -64,7 +64,8 @@ export const db = {
     getTemplates
   },
   contact: {
-    getContactSubmissions
+    getContactSubmissions,
+    getContactSubmissionsForExport
   },
   analytics: {
     recordAnalyticsEvent,
@@ -127,7 +128,7 @@ export {
 } from './content';
 
 export { getRecentMessages, getCommunicationStats, getTemplates } from './communications';
-export { getContactSubmissions } from './contact-submissions';
+export { getContactSubmissions, getContactSubmissionsForExport } from './contact-submissions';
 export { recordAnalyticsEvent, getAnalyticsOverview, getRecentAnalyticsEvents } from './analytics';
 export {
   getAdSpendSummary,

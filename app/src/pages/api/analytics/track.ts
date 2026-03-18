@@ -1,7 +1,27 @@
 import type { APIRoute } from 'astro';
 import { recordAnalyticsEvent } from '@lib/db/analytics';
+import { resolveRequestIp } from '@lib/form-security';
 
 const EVENT_NAME_PATTERN = /^[a-z0-9][a-z0-9:_-]{1,79}$/i;
+
+// In-memory IP-based rate limiter (resets on cold start — acceptable for serverless)
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX = 100; // max events per IP per window
+
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
+
+const isRateLimited = (ip: string): boolean => {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now - entry.windowStart >= RATE_LIMIT_WINDOW_MS) {
+    rateLimitMap.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+
+  entry.count += 1;
+  return entry.count > RATE_LIMIT_MAX;
+};
 
 const asRecord = (value: unknown): Record<string, unknown> => {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -25,7 +45,16 @@ const asOptionalNumber = (value: unknown): number | null => {
   return null;
 };
 
-export const POST: APIRoute = async ({ request, clientAddress }) => {
+export const POST: APIRoute = async ({ request, clientAddress, locals }) => {
+  const requestIp = resolveRequestIp(request, locals as Record<string, unknown>) || clientAddress || 'unknown';
+
+  if (isRateLimited(requestIp)) {
+    return new Response(JSON.stringify({ error: 'Too many requests' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'Retry-After': '60' }
+    });
+  }
+
   const contentType = request.headers.get('content-type') ?? '';
   if (!contentType.toLowerCase().includes('application/json')) {
     return new Response(JSON.stringify({ error: 'Expected JSON body' }), {
@@ -52,8 +81,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     });
   }
 
-  const forwardedFor = asString(request.headers.get('x-forwarded-for'));
-  const ipAddress = forwardedFor?.split(',')[0]?.trim() || clientAddress || null;
+  const ipAddress = requestIp !== 'unknown' ? requestIp : null;
   const userAgent = asString(request.headers.get('user-agent'));
 
   await recordAnalyticsEvent({
