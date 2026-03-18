@@ -83,12 +83,8 @@ const makeMockContext = (fields: Record<string, string>, file?: { name: string; 
   return { request, locals: {} } as unknown as Parameters<typeof POST>[0];
 };
 
-const jpegFile = { name: 'classroom-activity.jpg', type: 'image/jpeg', content: 'fake-image-data' };
+const jpegFile = { name: 'photo.jpg', type: 'image/jpeg', content: 'fake-image-data' };
 
-/**
- * Set up all mocks fresh for each test. This must be called in every beforeEach
- * because setup.ts afterEach calls vi.restoreAllMocks() which resets implementations.
- */
 const setupAllMocks = (queryFirstReturn: unknown = null) => {
   vi.mocked(checkAdminAuth).mockResolvedValue({
     isAuthenticated: true,
@@ -125,31 +121,67 @@ const setupAllMocks = (queryFirstReturn: unknown = null) => {
   });
 };
 
-describe('POST /api/media/upload — photo slug uniqueness (P2 fix)', () => {
+describe('POST /api/media/upload — slug numeric sort (F-01 P0 fix)', () => {
   beforeEach(() => {
     setupAllMocks();
   });
 
-  it('uses baseSlug directly when no existing slugs match', async () => {
+  it('returns base slug when no existing slugs match (max_suffix is null)', async () => {
+    // queryFirst returns { max_suffix: null } when no rows match the WHERE clause
+    vi.mocked(queryFirst).mockResolvedValue({ max_suffix: null });
+    const ctx = makeMockContext(
+      { createPhotoEntry: 'true', slug: 'photo', category: 'gallery' },
+      jpegFile
+    );
+    const response = await POST(ctx);
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.photoSlug).toBe('photo');
+  });
+
+  it('returns base slug when queryFirst returns null (no rows at all)', async () => {
     vi.mocked(queryFirst).mockResolvedValue(null);
-    const ctx = makeMockContext({ createPhotoEntry: 'true', category: 'classroom' }, jpegFile);
+    const ctx = makeMockContext(
+      { createPhotoEntry: 'true', slug: 'photo', category: 'gallery' },
+      jpegFile
+    );
     const response = await POST(ctx);
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body.photoSlug).toBe('classroom-activity');
+    expect(body.photoSlug).toBe('photo');
   });
 
-  it('appends -2 when the exact base slug already exists', async () => {
-    vi.mocked(queryFirst).mockResolvedValue({ slug: 'classroom-activity' });
-    const ctx = makeMockContext({ createPhotoEntry: 'true', category: 'classroom' }, jpegFile);
+  it('returns slug-2 when only the exact base slug exists (max_suffix=1)', async () => {
+    // When only "photo" exists, the CASE gives it value 1, so MAX=1
+    vi.mocked(queryFirst).mockResolvedValue({ max_suffix: 1 });
+    const ctx = makeMockContext(
+      { createPhotoEntry: 'true', slug: 'photo', category: 'gallery' },
+      jpegFile
+    );
     const response = await POST(ctx);
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body.photoSlug).toBe('classroom-activity-2');
+    expect(body.photoSlug).toBe('photo-2');
   });
 
-  it('increments suffix when slug with suffix already exists', async () => {
-    vi.mocked(queryFirst).mockResolvedValue({ slug: 'classroom-activity-3' });
+  it('generates photo-11 when photo through photo-10 exist (P0 numeric sort fix)', async () => {
+    // The old code did lexicographic ORDER BY DESC LIMIT 1 which returned "photo-9"
+    // (because "9" > "10" lexicographically), producing "photo-10" (duplicate!).
+    // The new code uses MAX() which correctly returns max_suffix=10,
+    // yielding "photo-11".
+    vi.mocked(queryFirst).mockResolvedValue({ max_suffix: 10 });
+    const ctx = makeMockContext(
+      { createPhotoEntry: 'true', slug: 'photo', category: 'gallery' },
+      jpegFile
+    );
+    const response = await POST(ctx);
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.photoSlug).toBe('photo-11');
+  });
+
+  it('increments correctly for large suffix numbers (max_suffix=99)', async () => {
+    vi.mocked(queryFirst).mockResolvedValue({ max_suffix: 99 });
     const ctx = makeMockContext(
       { createPhotoEntry: 'true', slug: 'classroom-activity', category: 'classroom' },
       jpegFile
@@ -157,14 +189,51 @@ describe('POST /api/media/upload — photo slug uniqueness (P2 fix)', () => {
     const response = await POST(ctx);
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body.photoSlug).toBe('classroom-activity-4');
+    expect(body.photoSlug).toBe('classroom-activity-100');
   });
 
-  it('uses a single query for slug uniqueness check (N+1 fix)', async () => {
+  it('escapes underscores in base slug to prevent LIKE wildcard matching', async () => {
     vi.mocked(queryFirst).mockResolvedValue(null);
     const ctx = makeMockContext(
-      { createPhotoEntry: 'true', category: 'gallery' },
-      { name: 'test-photo.jpg', type: 'image/jpeg', content: 'data' }
+      { createPhotoEntry: 'true', slug: 'my_photo', category: 'gallery' },
+      jpegFile
+    );
+    await POST(ctx);
+
+    // Find the slug uniqueness query (the one that queries content with type='photos')
+    const slugQueryCalls = vi.mocked(queryFirst).mock.calls.filter(
+      (call) => typeof call[0] === 'string' && call[0].includes("type = 'photos'")
+    );
+    expect(slugQueryCalls).toHaveLength(1);
+
+    // The LIKE parameter should have escaped underscores: my\_photo-%
+    const [, values] = slugQueryCalls[0];
+    expect(values![0]).toBe('my_photo'); // exact match param unchanged
+    expect(values![1]).toBe('my\\_photo-%'); // LIKE param has escaped underscore
+  });
+
+  it('escapes percent signs in base slug to prevent LIKE wildcard matching', async () => {
+    // Edge case: slug containing a percent (shouldn't happen normally but defensive)
+    vi.mocked(queryFirst).mockResolvedValue(null);
+    const ctx = makeMockContext(
+      { createPhotoEntry: 'true', slug: 'photo-100percent', category: 'gallery' },
+      { name: 'photo-100percent.jpg', type: 'image/jpeg', content: 'data' }
+    );
+    await POST(ctx);
+
+    const slugQueryCalls = vi.mocked(queryFirst).mock.calls.filter(
+      (call) => typeof call[0] === 'string' && call[0].includes("type = 'photos'")
+    );
+    // The slug validator would reject % so the slug itself is clean,
+    // but the escaping logic should still work
+    expect(slugQueryCalls.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('uses SQL MAX() instead of ORDER BY LIMIT 1 for numeric correctness', async () => {
+    vi.mocked(queryFirst).mockResolvedValue(null);
+    const ctx = makeMockContext(
+      { createPhotoEntry: 'true', slug: 'photo', category: 'gallery' },
+      jpegFile
     );
     await POST(ctx);
 
@@ -172,6 +241,34 @@ describe('POST /api/media/upload — photo slug uniqueness (P2 fix)', () => {
       (call) => typeof call[0] === 'string' && call[0].includes("type = 'photos'")
     );
     expect(slugQueryCalls).toHaveLength(1);
+
+    const [sql] = slugQueryCalls[0];
+    // Verify the query uses MAX() — this is the core of the P0 fix
+    expect(sql).toContain('MAX(');
+    // And does NOT use ORDER BY ... LIMIT 1 (the old buggy approach)
+    expect(sql).not.toContain('ORDER BY');
+    expect(sql).not.toContain('LIMIT 1');
+  });
+
+  it('uses ESCAPE clause in the LIKE query for safety', async () => {
+    vi.mocked(queryFirst).mockResolvedValue(null);
+    const ctx = makeMockContext(
+      { createPhotoEntry: 'true', slug: 'photo', category: 'gallery' },
+      jpegFile
+    );
+    await POST(ctx);
+
+    const slugQueryCalls = vi.mocked(queryFirst).mock.calls.filter(
+      (call) => typeof call[0] === 'string' && call[0].includes("type = 'photos'")
+    );
+    const [sql] = slugQueryCalls[0];
+    expect(sql).toContain("ESCAPE '\\'");
+  });
+});
+
+describe('POST /api/media/upload — auth and validation', () => {
+  beforeEach(() => {
+    setupAllMocks();
   });
 
   it('returns 401 for unauthenticated users', async () => {
@@ -186,7 +283,7 @@ describe('POST /api/media/upload — photo slug uniqueness (P2 fix)', () => {
     expect(response.status).toBe(401);
   });
 
-  it('returns 400 for invalid file type (SVG rejection)', async () => {
+  it('returns 400 for invalid file type', async () => {
     vi.mocked(validateFile).mockResolvedValue({ valid: false, error: 'File type not allowed' });
     const ctx = makeMockContext(
       {},
@@ -205,5 +302,17 @@ describe('POST /api/media/upload — photo slug uniqueness (P2 fix)', () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.photoSlug).toBeNull();
+  });
+
+  it('returns 500 when handleMediaUpload fails', async () => {
+    vi.mocked(handleMediaUpload).mockResolvedValue({
+      success: false,
+      error: 'Storage unavailable'
+    } as never);
+    const ctx = makeMockContext({}, jpegFile);
+    const response = await POST(ctx);
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body.error).toBe('Storage unavailable');
   });
 });

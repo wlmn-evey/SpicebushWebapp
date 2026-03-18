@@ -23,6 +23,12 @@ export const GET: APIRoute = async ({ params }) => {
   const headers = new Headers();
   headers.set('Content-Type', blob.contentType);
   headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+  headers.set('X-Content-Type-Options', 'nosniff');
+
+  if (blob.contentType.includes('svg')) {
+    headers.set('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'");
+    headers.set('Content-Disposition', 'attachment; filename="image.svg"');
+  }
 
   if (blob.etag) {
     headers.set('ETag', blob.etag);

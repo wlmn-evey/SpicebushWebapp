@@ -14,6 +14,7 @@ import { query, queryFirst, queryRows } from '../client';
 import { logError } from '@lib/error-logger';
 import {
   getContactSubmissions,
+  getContactSubmissionsForExport,
   insertContactSubmission,
   type InsertContactSubmissionParams
 } from '../contact-submissions';
@@ -207,6 +208,84 @@ describe('getContactSubmissions — pagination (P2 fix)', () => {
     vi.mocked(queryFirst).mockRejectedValue(new Error('Connection refused'));
 
     const result = await getContactSubmissions();
+
+    expect(result.items).toEqual([]);
+    expect(result.total).toBe(0);
+    expect(logError).toHaveBeenCalledWith(
+      'db.contact-submissions',
+      expect.any(Error),
+      expect.objectContaining({ action: 'getContactSubmissions' })
+    );
+  });
+
+  it('respects custom maxPageSize override', async () => {
+    vi.mocked(queryFirst).mockResolvedValue({ count: 0 });
+    vi.mocked(queryRows).mockResolvedValue([]);
+
+    const result = await getContactSubmissions({ pageSize: 3000, maxPageSize: 5000 });
+
+    expect(result.pageSize).toBe(3000);
+  });
+
+  it('caps at custom maxPageSize when pageSize exceeds it', async () => {
+    vi.mocked(queryFirst).mockResolvedValue({ count: 0 });
+    vi.mocked(queryRows).mockResolvedValue([]);
+
+    const result = await getContactSubmissions({ pageSize: 9999, maxPageSize: 5000 });
+
+    expect(result.pageSize).toBe(5000);
+  });
+});
+
+describe('getContactSubmissionsForExport — export cap (F-03 P1 fix)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('uses EXPORT_MAX_PAGE_SIZE (5000) as both pageSize and cap', async () => {
+    vi.mocked(queryFirst).mockResolvedValue({ count: 3000 });
+    vi.mocked(queryRows).mockResolvedValue([]);
+
+    const result = await getContactSubmissionsForExport();
+
+    expect(result.pageSize).toBe(5000);
+    expect(result.page).toBe(1);
+  });
+
+  it('always forces page=1 regardless of options', async () => {
+    vi.mocked(queryFirst).mockResolvedValue({ count: 0 });
+    vi.mocked(queryRows).mockResolvedValue([]);
+
+    const result = await getContactSubmissionsForExport({ page: 5 });
+
+    expect(result.page).toBe(1);
+  });
+
+  it('passes through search and tourInterest filters', async () => {
+    vi.mocked(queryFirst).mockResolvedValue({ count: 10 });
+    vi.mocked(queryRows).mockResolvedValue([]);
+
+    await getContactSubmissionsForExport({ search: 'test', tourInterest: true });
+
+    const [countSql, countValues] = vi.mocked(queryFirst).mock.calls[0];
+    expect(countSql).toContain('ILIKE');
+    expect(countValues).toContain(true);
+  });
+
+  it('passes LIMIT 5000 to the actual query (not 200)', async () => {
+    vi.mocked(queryFirst).mockResolvedValue({ count: 500 });
+    vi.mocked(queryRows).mockResolvedValue([]);
+
+    await getContactSubmissionsForExport();
+
+    const [, dataValues] = vi.mocked(queryRows).mock.calls[0];
+    expect(dataValues).toContain(5000);
+  });
+
+  it('returns empty results on DB error without throwing', async () => {
+    vi.mocked(queryFirst).mockRejectedValue(new Error('timeout'));
+
+    const result = await getContactSubmissionsForExport();
 
     expect(result.items).toEqual([]);
     expect(result.total).toBe(0);

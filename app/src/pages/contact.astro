@@ -22,6 +22,16 @@ import ErrorMessage from '../components/ErrorMessage.astro';
 import { getTurnstileSiteKey } from '@lib/turnstile-config';
 
 const turnstileSiteKey = getTurnstileSiteKey();
+
+const errorParam = Astro.url.searchParams.get('error');
+const errorMessages: Record<string, string> = {
+  'captcha-failed': 'Security check failed. Please try again.',
+  'missing-fields': 'Please fill in all required fields.',
+  'invalid-email': 'Please enter a valid email address.',
+  'rate-limited': 'Too many submissions. Please wait a few minutes and try again.',
+  'server-error': 'Something went wrong. Please try again or contact us directly.'
+};
+const errorMessage = errorParam ? (errorMessages[errorParam] ?? errorMessages['server-error']) : null;
 ---
 
 <Layout
@@ -146,8 +156,6 @@ const turnstileSiteKey = getTurnstileSiteKey();
             <div
               id="form-success"
               class="hidden mb-6 p-4 bg-green-50 border border-green-200 rounded-lg"
-              role="alert"
-              aria-live="assertive"
             >
               <div class="flex items-center">
                 <CheckCircle className="w-5 h-5 text-green-600 mr-3" aria-hidden="true" />
@@ -158,11 +166,11 @@ const turnstileSiteKey = getTurnstileSiteKey();
               </div>
             </div>
 
-            <div id="form-error" class="hidden mb-6 p-4 bg-red-50 border border-red-200 rounded-lg" role="alert" aria-live="assertive">
+            <div id="form-error" class:list={[errorMessage ? '' : 'hidden', 'mb-6 p-4 bg-red-50 border border-red-200 rounded-lg']} role="alert" aria-live="assertive">
               <div class="flex items-center">
                 <AlertCircle className="w-5 h-5 text-red-600 mr-3" aria-hidden="true" />
                 <p class="text-red-800 font-medium">
-                  There was an error sending your message. Please try again or contact us directly.
+                  {errorMessage || 'There was an error sending your message. Please try again or contact us directly.'}
                 </p>
               </div>
             </div>
