@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import { query } from '@lib/db/client';
 import { recordAnalyticsEvent } from '@lib/db/analytics';
+import { insertContactSubmission } from '@lib/db/contact-submissions';
 import { sendContactSubmissionEmails } from '@lib/contact-email';
 import {
   checkContactSubmissionRateLimit,
@@ -103,44 +103,21 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const message = messageLines.join('\n');
 
-    const insertedSubmission = await query<{ id: string }>(
-      `
-        INSERT INTO contact_form_submissions
-        (
-          name,
-          email,
-          phone,
-          subject,
-          message,
-          child_age,
-          tour_interest,
-          attribution,
-          session_id,
-          client_id,
-          landing_page,
-          referrer_url,
-          ip_address
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13)
-        RETURNING id
-      `,
-      [
-        parentName,
-        email,
-        phone,
-        subject,
-        message,
-        childAge,
-        true,
-        JSON.stringify({}),
-        null,
-        null,
-        null,
-        null,
-        requestIp
-      ]
-    );
-    const submissionId = insertedSubmission.rows[0]?.id ?? null;
+    const submissionId = await insertContactSubmission({
+      name: parentName,
+      email,
+      phone,
+      subject,
+      message,
+      childAge,
+      tourInterest: true,
+      attribution: {},
+      sessionId: null,
+      clientId: null,
+      landingPage: null,
+      referrerUrl: null,
+      ipAddress: requestIp
+    });
 
     await recordAnalyticsEvent({
       eventName: 'tour_request_submit',

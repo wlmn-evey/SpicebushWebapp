@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
-import { queryRows } from '@lib/db/client';
+import { queryFirst, queryRows } from '@lib/db/client';
+import { normalizeCount, normalizePage, normalizePageSize } from '@lib/db/pagination';
 
 const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info', 'faq', 'testimonials', 'photos', 'media-slots']);
 
@@ -21,7 +22,17 @@ export const GET: APIRoute = async ({ url, locals }) => {
     return jsonResponse({ error: 'Collection is not allowed' }, 400);
   }
 
+  const page = normalizePage(url.searchParams.get('page'));
+  const pageSize = normalizePageSize(url.searchParams.get('pageSize'));
+  const offset = (page - 1) * pageSize;
+
   try {
+    const countRow = await queryFirst<{ count: number | string }>(
+      'SELECT COUNT(*)::int AS count FROM content WHERE type = $1',
+      [collection]
+    );
+    const total = normalizeCount(countRow?.count);
+
     const data = await queryRows<{
       type: string;
       slug: string;
@@ -34,8 +45,10 @@ export const GET: APIRoute = async ({ url, locals }) => {
         FROM content
         WHERE type = $1
         ORDER BY updated_at DESC
+        LIMIT $2
+        OFFSET $3
       `,
-      [collection]
+      [collection, pageSize, offset]
     );
     const entries = (data ?? []).map((entry) => ({
       collection: entry.type,
@@ -45,7 +58,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
       data: entry.data
     }));
 
-    return jsonResponse({ entries });
+    return jsonResponse({ entries, total, page, pageSize });
   } catch {
     return jsonResponse({ error: 'Failed to fetch entries' }, 500);
   }

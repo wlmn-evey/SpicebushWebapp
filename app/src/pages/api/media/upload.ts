@@ -85,29 +85,29 @@ const resolveCategory = (rawValue: string): string => {
 };
 
 const ensureUniquePhotoSlug = async (baseSlug: string): Promise<string> => {
-  let candidate = baseSlug;
-  let suffix = 2;
+  const existing = await queryFirst<{ slug: string }>(
+    `
+      SELECT slug
+      FROM content
+      WHERE type = 'photos' AND (slug = $1 OR slug LIKE $2)
+      ORDER BY slug DESC
+      LIMIT 1
+    `,
+    [baseSlug, `${baseSlug}-%`]
+  );
 
-  for (let attempts = 0; attempts < 500; attempts += 1) {
-    const existing = await queryFirst<{ slug: string }>(
-      `
-        SELECT slug
-        FROM content
-        WHERE type = 'photos' AND slug = $1
-        LIMIT 1
-      `,
-      [candidate]
-    );
-
-    if (!existing) {
-      return candidate;
-    }
-
-    candidate = `${baseSlug}-${suffix}`;
-    suffix += 1;
+  if (!existing) {
+    return baseSlug;
   }
 
-  throw new Error('Unable to generate unique photo slug');
+  if (existing.slug === baseSlug) {
+    return `${baseSlug}-2`;
+  }
+
+  const trailingNumber = existing.slug.slice(baseSlug.length + 1);
+  const parsed = Number.parseInt(trailingNumber, 10);
+  const nextSuffix = Number.isFinite(parsed) && parsed >= 2 ? parsed + 1 : 2;
+  return `${baseSlug}-${nextSuffix}`;
 };
 
 export const POST: APIRoute = async ({ request, locals }) => {

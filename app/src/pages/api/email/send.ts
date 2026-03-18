@@ -47,9 +47,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const result = await emailService.send(message);
 
     if (!result.success) {
-      return new Response(JSON.stringify({
-        error: result.error,
+      logServerError('Email send failed', new Error(result.error || 'Unknown'), {
+        route: '/api/email/send',
         provider: result.provider
+      });
+      return new Response(JSON.stringify({
+        error: 'Failed to send email'
       }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
@@ -69,7 +72,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     logServerError('Email send endpoint failed', error, { route: '/api/email/send', method: 'POST' });
     return new Response(JSON.stringify({
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: 'Internal error'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

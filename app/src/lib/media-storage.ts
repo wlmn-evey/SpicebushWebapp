@@ -194,9 +194,7 @@ const STORAGE_CONFIG = {
       'image/webp',
       'image/gif',
       'image/avif',
-      'image/svg+xml',
-      'application/pdf',
-      'application/octet-stream'
+      'application/pdf'
     ]
   },
   netlifyBlobs: {
@@ -526,7 +524,7 @@ export async function validateFile(
   const maxFileSize = settings.config.maxFileSize || STORAGE_CONFIG.local.maxFileSize;
 
   if (!STORAGE_CONFIG.local.allowedTypes.includes(file.mimetype)) {
-    return { valid: false, error: 'File type not allowed. Allowed types: JPG, PNG, WebP, GIF, AVIF, SVG, PDF' };
+    return { valid: false, error: 'File type not allowed. Allowed types: JPG, PNG, WebP, GIF, AVIF, PDF' };
   }
 
   if (file.size > maxFileSize) {
