@@ -85,29 +85,24 @@ const resolveCategory = (rawValue: string): string => {
 };
 
 const ensureUniquePhotoSlug = async (baseSlug: string): Promise<string> => {
-  const existing = await queryFirst<{ slug: string }>(
+  const escapedSlug = baseSlug.replace(/[%_]/g, '\\$&');
+  const existing = await queryFirst<{ max_suffix: number | null }>(
     `
-      SELECT slug
+      SELECT MAX(
+        CASE
+          WHEN slug = $1 THEN 1
+          ELSE CAST(NULLIF(substring(slug FROM '-([0-9]+)$'), '') AS INTEGER)
+        END
+      ) AS max_suffix
       FROM content
-      WHERE type = 'photos' AND (slug = $1 OR slug LIKE $2)
-      ORDER BY slug DESC
-      LIMIT 1
+      WHERE type = 'photos' AND (slug = $1 OR slug LIKE $2 ESCAPE '\\')
     `,
-    [baseSlug, `${baseSlug}-%`]
+    [baseSlug, `${escapedSlug}-%`]
   );
 
-  if (!existing) {
-    return baseSlug;
-  }
-
-  if (existing.slug === baseSlug) {
-    return `${baseSlug}-2`;
-  }
-
-  const trailingNumber = existing.slug.slice(baseSlug.length + 1);
-  const parsed = Number.parseInt(trailingNumber, 10);
-  const nextSuffix = Number.isFinite(parsed) && parsed >= 2 ? parsed + 1 : 2;
-  return `${baseSlug}-${nextSuffix}`;
+  if (!existing || existing.max_suffix === null) return baseSlug;
+  if (existing.max_suffix < 2) return `${baseSlug}-2`;
+  return `${baseSlug}-${existing.max_suffix + 1}`;
 };
 
 export const POST: APIRoute = async ({ request, locals }) => {

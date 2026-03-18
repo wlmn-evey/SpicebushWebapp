@@ -1141,7 +1141,7 @@ const uploadCategory = toSlotSlug(stringFrom(mediaCategory, category || 'gallery
 
       const fetchPhotoLibrary = async () => {
         if (state.loaded) return;
-        const response = await fetch('/api/cms/entries?collection=photos', {
+        const response = await fetch('/api/cms/entries?collection=photos&pageSize=500', {
           method: 'GET',
           credentials: 'same-origin'
         });

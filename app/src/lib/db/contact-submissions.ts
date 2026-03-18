@@ -21,10 +21,10 @@ const CONTACT_MAX_PAGE_SIZE = 200;
 const EXPORT_MAX_PAGE_SIZE = 5000;
 
 export async function getContactSubmissions(
-  options: ContactSubmissionQueryOptions = {}
+  options: ContactSubmissionQueryOptions & { maxPageSize?: number } = {}
 ): Promise<ContactSubmissionQueryResult> {
   const page = normalizePage(options.page);
-  const pageSize = normalizePageSize(options.pageSize, CONTACT_MAX_PAGE_SIZE);
+  const pageSize = normalizePageSize(options.pageSize, options.maxPageSize ?? CONTACT_MAX_PAGE_SIZE);
   const offset = (page - 1) * pageSize;
   const search = typeof options.search === 'string' ? options.search.trim() : '';
 
@@ -115,7 +115,8 @@ export async function getContactSubmissionsForExport(
   return getContactSubmissions({
     ...options,
     page: 1,
-    pageSize: normalizePageSize(options.pageSize ?? EXPORT_MAX_PAGE_SIZE, EXPORT_MAX_PAGE_SIZE)
+    pageSize: EXPORT_MAX_PAGE_SIZE,
+    maxPageSize: EXPORT_MAX_PAGE_SIZE
   });
 }
 
