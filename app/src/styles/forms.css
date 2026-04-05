@@ -25,7 +25,7 @@
 }
 
 /* Input styling with validation states */
-input:not([type="checkbox"]):not([type="radio"]),
+input:not([type='checkbox']):not([type='radio']),
 textarea,
 select {
   @apply w-full px-4 py-2 border border-gray-300 rounded-md;
@@ -36,14 +36,14 @@ select {
 /* Valid state (HTML5 validation) */
 input:valid:not(:placeholder-shown),
 textarea:valid:not(:placeholder-shown),
-select:valid:not([value=""]) {
+select:valid:not([value='']) {
   @apply border-green-300;
 }
 
 /* Invalid state (HTML5 validation) */
 input:invalid:not(:focus):not(:placeholder-shown),
 textarea:invalid:not(:focus):not(:placeholder-shown),
-select:invalid:not(:focus):not([value=""]) {
+select:invalid:not(:focus):not([value='']) {
   @apply border-red-300 bg-red-50;
 }
 
@@ -83,11 +83,11 @@ select:disabled {
 }
 
 /* Submit button states */
-button[type="submit"] {
+button[type='submit'] {
   @apply relative;
 }
 
-button[type="submit"]:disabled {
+button[type='submit']:disabled {
   @apply opacity-50 cursor-not-allowed;
 }
 
@@ -110,12 +110,12 @@ button[type="submit"]:disabled {
 }
 
 /* Accessible error announcements */
-[role="alert"] {
+[role='alert'] {
   @apply font-medium;
 }
 
 /* Phone number formatting helper */
-input[type="tel"] {
+input[type='tel'] {
   font-variant-numeric: tabular-nums;
 }
 
@@ -123,7 +123,7 @@ input[type="tel"] {
 @media (scripting: none) {
   input:invalid:not(:focus):not(:placeholder-shown),
   textarea:invalid:not(:focus):not(:placeholder-shown),
-  select:invalid:not(:focus):not([value=""]) {
+  select:invalid:not(:focus):not([value='']) {
     @apply border-gray-300 bg-white;
   }
 }

@@ -66,16 +66,28 @@ try {
             A warm community where every child can be exactly who they are.
           </p>
           <div class="flex items-center gap-3">
-            {socialMedia?.facebook && (
-              <a href={socialMedia.facebook} class="text-light-stone hover:text-sunlight-gold transition-colors" aria-label="Facebook">
-                <Facebook className="w-5 h-5" />
-              </a>
-            )}
-            {socialMedia?.instagram && (
-              <a href={socialMedia.instagram} class="text-light-stone hover:text-sunlight-gold transition-colors" aria-label="Instagram">
-                <Instagram className="w-5 h-5" />
-              </a>
-            )}
+            {
+              socialMedia?.facebook && (
+                <a
+                  href={socialMedia.facebook}
+                  class="text-light-stone hover:text-sunlight-gold transition-colors"
+                  aria-label="Facebook"
+                >
+                  <Facebook className="w-5 h-5" />
+                </a>
+              )
+            }
+            {
+              socialMedia?.instagram && (
+                <a
+                  href={socialMedia.instagram}
+                  class="text-light-stone hover:text-sunlight-gold transition-colors"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
+              )
+            }
           </div>
         </div>
 
@@ -83,31 +95,73 @@ try {
           <div class="space-y-4">
             <h3 class="text-lg font-semibold text-sunlight-gold">Quick Links</h3>
             <ul class="space-y-2 text-sm">
-              <li><a href="/about" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">About Us</a></li>
-              <li><a href="/our-principles" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Our Principles</a></li>
-              <li><a href="/admissions" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Admissions</a></li>
-              <li><a href="/admissions/tuition-calculator" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Tuition Calculator</a></li>
+              <li>
+                <a
+                  href="/about"
+                  class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5"
+                  >About Us</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/our-principles"
+                  class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5"
+                  >Our Principles</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/admissions"
+                  class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5"
+                  >Admissions</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/admissions/tuition-calculator"
+                  class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5"
+                  >Tuition Calculator</a
+                >
+              </li>
             </ul>
           </div>
 
           <div class="space-y-4">
             <h3 class="text-lg font-semibold text-sunlight-gold">Resources</h3>
             <ul class="space-y-2 text-sm">
-              <li><a href="/resources/faq" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">FAQ</a></li>
-              <li><a href="/blog" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Blog</a></li>
-              <li><a href="/contact" class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5">Contact</a></li>
+              <li>
+                <a
+                  href="/resources/faq"
+                  class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5"
+                  >FAQ</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/blog"
+                  class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5"
+                  >Blog</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/contact"
+                  class="text-light-stone hover:text-sunlight-gold transition-colors block py-0.5"
+                  >Contact</a
+                >
+              </li>
             </ul>
           </div>
         </div>
 
         <div class="space-y-4 max-w-xl">
           <h3 class="text-lg font-semibold text-sunlight-gold">Get in Touch</h3>
-          <ContactInfo 
+          <ContactInfo
             className="text-sm [&_a]:text-light-stone [&_a]:hover:text-sunlight-gold [&_address]:text-light-stone [&_svg]:text-moss-green"
           />
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-            <a 
+            <a
               href={tourLink}
               class="block text-center bg-sunlight-gold hover:bg-orange-600 text-white px-4 py-2.5 rounded-lg font-semibold transition-colors text-sm tracking-wide"
               data-analytics-event="tour_click"
@@ -116,8 +170,8 @@ try {
             >
               Come Visit
             </a>
-            <a 
-              href="/contact" 
+            <a
+              href="/contact"
               class="block text-center border border-gray-300 text-light-stone hover:border-sunlight-gold hover:text-sunlight-gold px-4 py-2 rounded-lg font-medium transition-colors text-sm tracking-wide"
               data-analytics-event="contact_cta_click"
               data-analytics-label="footer-get-in-touch"
@@ -131,28 +185,42 @@ try {
 
       <!-- Right Column: Hours Widget -->
       <div class="w-full">
-        <div class="bg-white/5 backdrop-blur-sm rounded-xl p-3 lg:p-4 border border-white/10 overflow-hidden">
+        <div
+          class="bg-white/5 backdrop-blur-sm rounded-xl p-3 lg:p-4 border border-white/10 overflow-hidden"
+        >
           <HoursWidget />
         </div>
       </div>
     </div>
-    
+
     <!-- Bottom Section -->
     <div class="border-t border-gray-600 pt-6">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div class="text-light-stone text-sm text-center lg:text-left">
           <p>&copy; {copyrightYear} Spicebush Montessori School. All rights reserved.</p>
         </div>
-        <div class="flex flex-wrap items-center justify-center lg:justify-end gap-x-5 gap-y-2 text-sm">
+        <div
+          class="flex flex-wrap items-center justify-center lg:justify-end gap-x-5 gap-y-2 text-sm"
+        >
           <a
             href={adminFooterHref}
             class="inline-flex items-center rounded-lg border border-sunlight-gold/50 bg-sunlight-gold/15 px-3 py-1.5 font-semibold text-sunlight-gold transition-colors hover:bg-sunlight-gold hover:text-white"
           >
             {adminFooterLabel}
           </a>
-          <a href="/privacy-policy" class="text-light-stone hover:text-sunlight-gold transition-colors">Privacy Policy</a>
-          <a href="/non-discrimination-policy" class="text-light-stone hover:text-sunlight-gold transition-colors">Non-Discrimination</a>
-          <a href="/accessibility" class="text-light-stone hover:text-sunlight-gold transition-colors">Accessibility</a>
+          <a
+            href="/privacy-policy"
+            class="text-light-stone hover:text-sunlight-gold transition-colors">Privacy Policy</a
+          >
+          <a
+            href="/non-discrimination-policy"
+            class="text-light-stone hover:text-sunlight-gold transition-colors"
+            >Non-Discrimination</a
+          >
+          <a
+            href="/accessibility"
+            class="text-light-stone hover:text-sunlight-gold transition-colors">Accessibility</a
+          >
         </div>
       </div>
     </div>

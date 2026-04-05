@@ -32,7 +32,7 @@ export interface PhotoMetadata {
   originalFilename: string;
   optimizedFilename: string;
   category: 'homepage' | 'about' | 'programs' | 'admissions' | 'gallery' | 'teachers' | 'blog';
-  
+
   // Dimensions and format
   originalDimensions: {
     width: number;
@@ -40,21 +40,21 @@ export interface PhotoMetadata {
   };
   aspectRatio: string; // "4:3", "16:9", etc.
   format: 'webp' | 'jpg' | 'png';
-  
+
   // Focal points and positioning
   focalPoints: FocalPoint[];
   primaryFocalPoint: FocalPoint;
   cropZones: CropZone;
-  
+
   // SEO and accessibility
   altText: string;
   seoKeywords: string[];
   contextualDescription: string;
-  
+
   // Usage tracking
   usedOn: string[]; // Array of page/component names
   primaryUse: string; // Main intended use case
-  
+
   // Performance
   compressed: boolean;
   hasWebP: boolean;

@@ -17,7 +17,9 @@ const sessionId = Astro.url.searchParams.get('session_id');
   <main id="main-content" class="bg-stone-beige/20">
     <section class="py-16 lg:py-20">
       <div class="container mx-auto px-4">
-        <div class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-sm p-8 lg:p-10 text-center">
+        <div
+          class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-sm p-8 lg:p-10 text-center"
+        >
           <div class="flex justify-center mb-5">
             <div class="w-16 h-16 rounded-full bg-moss-green/15 flex items-center justify-center">
               <CheckCircle className="w-8 h-8 text-forest-canopy" aria-hidden="true" />
@@ -29,20 +31,25 @@ const sessionId = Astro.url.searchParams.get('session_id');
           </h1>
 
           <p class="text-lg text-earth-brown/85 leading-relaxed max-w-2xl mx-auto">
-            Your gift helps keep Spicebush Montessori welcoming, inclusive, and accessible for families in our community.
-            We are deeply grateful.
+            Your gift helps keep Spicebush Montessori welcoming, inclusive, and accessible for
+            families in our community. We are deeply grateful.
           </p>
 
-          <div class="mt-8 rounded-xl border border-moss-green/20 bg-moss-green/10 px-5 py-4 text-left">
+          <div
+            class="mt-8 rounded-xl border border-moss-green/20 bg-moss-green/10 px-5 py-4 text-left"
+          >
             <p class="font-semibold text-earth-brown mb-1">What happens next</p>
             <p class="text-sm text-earth-brown/80">
-              Stripe will email your donation receipt. If you have any questions, our team is happy to help.
+              Stripe will email your donation receipt. If you have any questions, our team is happy
+              to help.
             </p>
-            {sessionId && (
-              <p class="mt-2 text-xs text-earth-brown/60 break-all">
-                Confirmation reference: {sessionId}
-              </p>
-            )}
+            {
+              sessionId && (
+                <p class="mt-2 text-xs text-earth-brown/60 break-all">
+                  Confirmation reference: {sessionId}
+                </p>
+              )
+            }
           </div>
 
           <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
