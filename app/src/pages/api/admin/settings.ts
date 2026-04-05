@@ -47,7 +47,7 @@ export const GET: APIRoute = async ({ locals }) => {
       `
     );
     const settings: Record<string, unknown> = {};
-    data?.forEach((row) => {
+    data?.forEach(row => {
       settings[row.key] = row.value;
     });
 
@@ -118,11 +118,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
             value = EXCLUDED.value,
             updated_at = EXCLUDED.updated_at
         `,
-        [
-          normalizedKey,
-          JSON.stringify(updates[key]),
-          new Date().toISOString()
-        ]
+        [normalizedKey, JSON.stringify(updates[key]), new Date().toISOString()]
       );
     }
 

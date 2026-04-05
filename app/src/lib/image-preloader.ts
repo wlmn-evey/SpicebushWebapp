@@ -42,8 +42,10 @@ export function generatePreloadLinks(images: PreloadImage[]): string {
         img.type ? `type="${img.type}"` : '',
         img.media ? `media="${img.media}"` : '',
         img.fetchpriority ? `fetchpriority="${img.fetchpriority}"` : ''
-      ].filter(Boolean).join(' ');
-      
+      ]
+        .filter(Boolean)
+        .join(' ');
+
       return `<link ${attrs} />`;
     })
     .join('\n');
@@ -61,10 +63,10 @@ export function preloadImages(images: PreloadImage[]): Promise<void[]> {
         if (img.type) link.type = img.type;
         if (img.media) link.media = img.media;
         if (img.fetchpriority) link.fetchPriority = img.fetchpriority;
-        
+
         link.onload = () => resolve();
         link.onerror = () => reject(new Error(`Failed to preload ${img.src}`));
-        
+
         document.head.appendChild(link);
       });
     })
@@ -72,13 +74,16 @@ export function preloadImages(images: PreloadImage[]): Promise<void[]> {
 }
 
 // Generate responsive image srcset for WebP with fallback
-export function generateResponsiveSrcSet(basePath: string, imageName: string): {
+export function generateResponsiveSrcSet(
+  basePath: string,
+  imageName: string
+): {
   webp: string;
   fallback: string;
   sizes: string;
 } {
   const optimizedPath = `/images/optimized/${basePath}`;
-  
+
   return {
     webp: [
       `${optimizedPath}/${imageName}-320w.webp 320w`,
@@ -105,7 +110,7 @@ export function getOptimizedImagePath(photoSlug: string, size = '1280w', format 
   else if (photoSlug.includes('programs-')) category = 'programs';
   else if (photoSlug.includes('teachers-')) category = 'teachers';
   else if (photoSlug.includes('gallery-')) category = 'gallery';
-  
+
   return `/images/optimized/${category}/${photoSlug}-${size}.${format}`;
 }
 
@@ -118,7 +123,7 @@ export function createResponsiveImage(
 ): string {
   const srcSet = generateResponsiveSrcSet('', photoSlug);
   const fallbackSrc = getOptimizedImagePath(photoSlug, '1280w', 'jpg');
-  
+
   return `
     <picture>
       <source 

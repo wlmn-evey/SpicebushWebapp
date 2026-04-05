@@ -60,7 +60,7 @@ export function enhanceForm(form: HTMLFormElement, options: FormEnhanceOptions =
   }
 
   // Enhance form submission
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', e => {
     let hasErrors = false;
 
     // Validate all fields
@@ -90,7 +90,7 @@ export function enhanceForm(form: HTMLFormElement, options: FormEnhanceOptions =
  */
 function updateFieldState(field: HTMLElement, error: string | null) {
   const fieldName = field.getAttribute('name');
-  
+
   if (error) {
     field.setAttribute('aria-invalid', 'true');
     field.setAttribute('aria-describedby', `${fieldName}-error`);
@@ -113,7 +113,7 @@ function defaultDisplayError(fieldName: string, error: string | null) {
   if (errorElement) {
     errorElement.textContent = error || '';
     errorElement.style.display = error ? 'block' : 'none';
-    
+
     // Ensure proper ARIA attributes for screen reader announcements
     if (error) {
       errorElement.setAttribute('aria-live', 'assertive');

@@ -43,21 +43,28 @@ const escapeHtml = (value: string): string =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
-const compactAddress = ({ street, city, state, zip }: Pick<SchoolEmailContactInfo, 'street' | 'city' | 'state' | 'zip'>): string => {
-  const locationBits = [city, state].filter((part) => part.length > 0);
+const compactAddress = ({
+  street,
+  city,
+  state,
+  zip
+}: Pick<SchoolEmailContactInfo, 'street' | 'city' | 'state' | 'zip'>): string => {
+  const locationBits = [city, state].filter(part => part.length > 0);
   const location = [locationBits.join(', '), zip].filter(Boolean).join(' ').trim();
   return [street, location].filter(Boolean).join(', ').trim();
 };
 
-const multiLineAddress = ({ street, city, state, zip }: Pick<SchoolEmailContactInfo, 'street' | 'city' | 'state' | 'zip'>): string => {
+const multiLineAddress = ({
+  street,
+  city,
+  state,
+  zip
+}: Pick<SchoolEmailContactInfo, 'street' | 'city' | 'state' | 'zip'>): string => {
   const lineTwo = [[city, state].filter(Boolean).join(', '), zip].filter(Boolean).join(' ').trim();
   return [street, lineTwo].filter(Boolean).join('\n');
 };
 
-const buildDirectionsUrl = (
-  providedUrl: string,
-  addressFallback: string
-): string => {
+const buildDirectionsUrl = (providedUrl: string, addressFallback: string): string => {
   if (isHttpUrl(providedUrl)) {
     return providedUrl;
   }
@@ -78,7 +85,7 @@ export const resolveSchoolEmailContactInfo = (
     DEFAULT_SCHOOL_EMAIL
   ];
 
-  const email = emailCandidates.find((candidate) => isEmail(candidate)) || DEFAULT_SCHOOL_EMAIL;
+  const email = emailCandidates.find(candidate => isEmail(candidate)) || DEFAULT_SCHOOL_EMAIL;
 
   const phone =
     asString(settings.school_phone) || asString(settings.contact_phone) || DEFAULT_SCHOOL_PHONE;

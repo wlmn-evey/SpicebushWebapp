@@ -5,7 +5,7 @@ import { logServerError } from '@lib/server-logger';
 
 /**
  * API endpoint for sending emails using the configured email service
- * 
+ *
  * This endpoint is used internally by the application to send transactional emails
  * such as contact form notifications, tour scheduling confirmations, etc.
  */
@@ -21,15 +21,18 @@ export const POST: APIRoute = async ({ request, locals }) => {
   try {
     // Parse request body
     const body = await request.json();
-    
+
     // Validate required fields
     if (!body.to || !body.subject || (!body.text && !body.html)) {
-      return new Response(JSON.stringify({
-        error: 'Missing required fields. Required: to, subject, and either text or html'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({
+          error: 'Missing required fields. Required: to, subject, and either text or html'
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // Prepare email message
@@ -51,32 +54,43 @@ export const POST: APIRoute = async ({ request, locals }) => {
         route: '/api/email/send',
         provider: result.provider
       });
-      return new Response(JSON.stringify({
-        error: 'Failed to send email'
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({
+          error: 'Failed to send email'
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      messageId: result.messageId,
-      provider: result.provider
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-
+    return new Response(
+      JSON.stringify({
+        success: true,
+        messageId: result.messageId,
+        provider: result.provider
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   } catch (error) {
-    logServerError('Email send endpoint failed', error, { route: '/api/email/send', method: 'POST' });
-    return new Response(JSON.stringify({
-      error: 'Internal server error',
-      details: 'Internal error'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
+    logServerError('Email send endpoint failed', error, {
+      route: '/api/email/send',
+      method: 'POST'
     });
+    return new Response(
+      JSON.stringify({
+        error: 'Internal server error',
+        details: 'Internal error'
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 };
 
@@ -97,23 +111,31 @@ export const GET: APIRoute = async ({ locals }) => {
     const configured = Object.values(status).some(v => v);
     const configuredProviders = emailService.getConfiguredProviderNames();
 
-    return new Response(JSON.stringify({
-      configured,
-      providers: status,
-      configuredProviders,
-      preferredProvider: emailService.getPreferredProvider()
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-
+    return new Response(
+      JSON.stringify({
+        configured,
+        providers: status,
+        configuredProviders,
+        preferredProvider: emailService.getPreferredProvider()
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   } catch (error) {
-    logServerError('Email status endpoint failed', error, { route: '/api/email/send', method: 'GET' });
-    return new Response(JSON.stringify({
-      error: 'Failed to check email service status'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
+    logServerError('Email status endpoint failed', error, {
+      route: '/api/email/send',
+      method: 'GET'
     });
+    return new Response(
+      JSON.stringify({
+        error: 'Failed to check email service status'
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 };

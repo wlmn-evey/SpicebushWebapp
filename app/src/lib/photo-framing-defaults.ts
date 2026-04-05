@@ -21,7 +21,8 @@ export type PhotoFramingDefaults = {
 
 const roundToTenth = (value: number): number => Math.round(value * 10) / 10;
 
-const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, value));
 
 const normalizedNumber = (value: number | null | undefined, fallback: number): number => {
   if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
@@ -30,12 +31,7 @@ const normalizedNumber = (value: number | null | undefined, fallback: number): n
   return fallback;
 };
 
-const normalizeCropBox = (crop: {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}) => {
+const normalizeCropBox = (crop: { x: number; y: number; width: number; height: number }) => {
   const width = clamp(crop.width, 10, 100);
   const height = clamp(crop.height, 10, 100);
   const x = clamp(crop.x, 0, 100 - width);
@@ -55,8 +51,12 @@ export const getPhotoFramingDefaults = ({
   height,
   slug
 }: PhotoFramingDefaultsInput): PhotoFramingDefaults => {
-  const normalizedCategory = String(category ?? '').trim().toLowerCase();
-  const normalizedSlug = String(slug ?? '').trim().toLowerCase();
+  const normalizedCategory = String(category ?? '')
+    .trim()
+    .toLowerCase();
+  const normalizedSlug = String(slug ?? '')
+    .trim()
+    .toLowerCase();
 
   const safeWidth = normalizedNumber(width, 1200);
   const safeHeight = normalizedNumber(height, 800);

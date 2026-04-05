@@ -205,7 +205,6 @@ try {
   hasDataError = true;
   hoursPayload = DAY_ORDER.map(day => FALLBACK_CONFIGURATION[day]);
 }
-
 ---
 
 <div
@@ -657,39 +656,39 @@ try {
             </div>
             <div class="relative h-3 bg-gray-200 rounded-full overflow-hidden">
               ${
-    beforeCareWidth > 0
-      ? `
+                beforeCareWidth > 0
+                  ? `
                 <div class="absolute h-full bg-moss-green flex items-center justify-center text-xs text-white font-medium" 
                      style="width: ${beforeCareWidth}%; left: 0%">
                   ${beforeCareWidth > 15 ? formatTime(beforeCareStart) : ''}
                 </div>
               `
-      : ''
-  }
+                  : ''
+              }
               <div class="absolute h-full bg-forest-canopy flex items-center justify-center text-xs text-white font-medium" 
                    style="width: ${regularWidth}%; left: ${beforeCareWidth}%; min-width: 20%;">
                 ${regularWidth > 20 ? formatTime(effectiveInfo.start) : ''}
               </div>
               ${
-    afterCareWidth > 0
-      ? `
+                afterCareWidth > 0
+                  ? `
                 <div class="absolute h-full bg-sunlight-gold flex items-center justify-center text-xs text-white font-medium" 
                      style="width: ${afterCareWidth}%; left: ${beforeCareWidth + regularWidth}%">
                   ${afterCareWidth > 15 ? formatTime(effectiveInfo.end) : ''}
                 </div>
               `
-      : ''
-  }
+                  : ''
+              }
             </div>
             ${
-    !aftercareAvailable
-      ? `
+              !aftercareAvailable
+                ? `
               <div class="text-xs text-center mt-1 opacity-60">
                 ${day === 'Friday' ? '⏰ Closes at 3:00 PM' : '🚫 No aftercare available'}
               </div>
             `
-      : ''
-  }
+                : ''
+            }
           `;
 
           // Add current time indicator for today

@@ -57,6 +57,10 @@ class ErrorLogger {
 export const errorLogger = new ErrorLogger();
 
 // Helper function for easy logging
-export function logError(component: string, error: Error | unknown, context?: Record<string, unknown>) {
+export function logError(
+  component: string,
+  error: Error | unknown,
+  context?: Record<string, unknown>
+) {
   errorLogger.log(component, error, context);
 }

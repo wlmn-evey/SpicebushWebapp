@@ -92,12 +92,12 @@ describe('insertContactSubmission', () => {
     expect(result).toBe('uuid-2');
 
     const [, values] = vi.mocked(query).mock.calls[0];
-    expect(values![2]).toBeNull();  // phone
-    expect(values![5]).toBeNull();  // childAge
+    expect(values![2]).toBeNull(); // phone
+    expect(values![5]).toBeNull(); // childAge
     expect(values![6]).toBe(false); // tourInterest
-    expect(values![7]).toBe('{}');  // attribution serialized
-    expect(values![8]).toBeNull();  // sessionId
-    expect(values![9]).toBeNull();  // clientId
+    expect(values![7]).toBe('{}'); // attribution serialized
+    expect(values![8]).toBeNull(); // sessionId
+    expect(values![9]).toBeNull(); // clientId
     expect(values![10]).toBeNull(); // landingPage
     expect(values![11]).toBeNull(); // referrerUrl
     expect(values![12]).toBeNull(); // ipAddress

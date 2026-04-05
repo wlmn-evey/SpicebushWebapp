@@ -59,7 +59,7 @@ const asRecord = (value: unknown): Record<string, unknown> => {
 
 const photoEntries = await db.content.getCollection('photos');
 const resolvePhotoSlug = buildPhotoSlugResolver(
-  photoEntries.map((entry) => toPhotoLookupEntry(entry.slug, asRecord(entry.data)))
+  photoEntries.map(entry => toPhotoLookupEntry(entry.slug, asRecord(entry.data)))
 );
 
 const createStaffCard = (entry: ContentEntry): StaffCard | null => {
@@ -75,20 +75,21 @@ const createStaffCard = (entry: ContentEntry): StaffCard | null => {
   const order = normalizeNumber(data.order) ?? 999;
   const certificationBadge = normalizeString(data.certificationBadge);
 
-  const startYearValue = normalizeString(data.startYear) ?? normalizeNumber(data.startYear)?.toString();
+  const startYearValue =
+    normalizeString(data.startYear) ?? normalizeNumber(data.startYear)?.toString();
   const startYearLabel = startYearValue ? `Since ${startYearValue}` : undefined;
 
   const bodyText = typeof entry.body === 'string' ? entry.body : '';
   const firstSentence = bodyText
     .split('.')
-    .map((sentence) => sentence.trim())
+    .map(sentence => sentence.trim())
     .filter(Boolean)[0];
   const bioSnippet = firstSentence ? `${firstSentence}.` : undefined;
 
   const initials = name
     .split(' ')
     .filter(Boolean)
-    .map((segment) => segment.charAt(0).toUpperCase())
+    .map(segment => segment.charAt(0).toUpperCase())
     .join('')
     .slice(0, 3);
 
@@ -133,74 +134,66 @@ try {
         Experienced Montessori guides who see the unique light in every child
       </p>
     </div>
-    
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-      {featuredStaff.length > 0 ? (
-        featuredStaff.map((teacher) => (
-          <div class="text-center">
-            <div class="mb-6 relative inline-block">
-              {teacher.photo ? (
-                teacher.photoSlug ? (
-                  <OptimizedImage
-                    photoSlug={teacher.photoSlug}
-                    alt={`${teacher.name}${teacher.role ? `, ${teacher.role}` : ''} at Spicebush Montessori School`}
-                    className="w-48 h-48 rounded-full object-cover mx-auto shadow-lg"
-                    slotId={`featured-teachers-${teacher.id}`}
-                    mediaCategory="teachers"
-                  />
+      {
+        featuredStaff.length > 0 ? (
+          featuredStaff.map(teacher => (
+            <div class="text-center">
+              <div class="mb-6 relative inline-block">
+                {teacher.photo ? (
+                  teacher.photoSlug ? (
+                    <OptimizedImage
+                      photoSlug={teacher.photoSlug}
+                      alt={`${teacher.name}${teacher.role ? `, ${teacher.role}` : ''} at Spicebush Montessori School`}
+                      className="w-48 h-48 rounded-full object-cover mx-auto shadow-lg"
+                      slotId={`featured-teachers-${teacher.id}`}
+                      mediaCategory="teachers"
+                    />
+                  ) : (
+                    <img
+                      src={teacher.photo}
+                      alt={`${teacher.name}${teacher.role ? `, ${teacher.role}` : ''} at Spicebush Montessori School`}
+                      class="w-48 h-48 rounded-full object-cover mx-auto shadow-lg"
+                      loading="lazy"
+                    />
+                  )
                 ) : (
-                  <img
-                    src={teacher.photo}
-                    alt={`${teacher.name}${teacher.role ? `, ${teacher.role}` : ''} at Spicebush Montessori School`}
-                    class="w-48 h-48 rounded-full object-cover mx-auto shadow-lg"
-                    loading="lazy"
-                  />
-                )
-              ) : (
-                <div class="w-48 h-48 rounded-full bg-gradient-to-br from-forest-canopy to-moss-green flex items-center justify-center mx-auto shadow-lg">
-                  <span class="text-white text-4xl font-bold">
-                    {teacher.initials}
-                  </span>
-                </div>
+                  <div class="w-48 h-48 rounded-full bg-gradient-to-br from-forest-canopy to-moss-green flex items-center justify-center mx-auto shadow-lg">
+                    <span class="text-white text-4xl font-bold">{teacher.initials}</span>
+                  </div>
+                )}
+                {teacher.certificationBadge && (
+                  <div class="absolute -bottom-2 -right-2 bg-sunlight-gold text-white rounded-full w-12 h-12 flex items-center justify-center text-xs font-bold shadow-md">
+                    {teacher.certificationBadge}
+                  </div>
+                )}
+              </div>
+
+              <h3 class="text-xl font-semibold text-earth-brown mb-1">{teacher.name}</h3>
+              {teacher.role && <p class="text-forest-canopy font-medium mb-2">{teacher.role}</p>}
+              {teacher.startYearLabel && (
+                <p class="text-sm text-earth-brown/80 mb-3">{teacher.startYearLabel}</p>
               )}
-              {teacher.certificationBadge && (
-                <div class="absolute -bottom-2 -right-2 bg-sunlight-gold text-white rounded-full w-12 h-12 flex items-center justify-center text-xs font-bold shadow-md">
-                  {teacher.certificationBadge}
-                </div>
+
+              {teacher.bioSnippet && (
+                <p class="text-earth-brown leading-relaxed text-sm max-w-sm mx-auto">
+                  {teacher.bioSnippet}
+                </p>
               )}
             </div>
-          
-            <h3 class="text-xl font-semibold text-earth-brown mb-1">
-              {teacher.name}
-            </h3>
-            {teacher.role && (
-              <p class="text-forest-canopy font-medium mb-2">
-                {teacher.role}
-              </p>
-            )}
-            {teacher.startYearLabel && (
-              <p class="text-sm text-earth-brown/80 mb-3">
-                {teacher.startYearLabel}
-              </p>
-            )}
-
-            {teacher.bioSnippet && (
-              <p class="text-earth-brown leading-relaxed text-sm max-w-sm mx-auto">
-                {teacher.bioSnippet}
-              </p>
-            )}
+          ))
+        ) : (
+          <div class="col-span-3 text-center py-12">
+            <p class="text-earth-brown/60">Teacher information is temporarily unavailable.</p>
           </div>
-        ))
-      ) : (
-        <div class="col-span-3 text-center py-12">
-          <p class="text-earth-brown/60">Teacher information is temporarily unavailable.</p>
-        </div>
-      )}
+        )
+      }
     </div>
-    
+
     <div class="text-center">
-      <a 
-        href="/about#teachers" 
+      <a
+        href="/about#teachers"
         class="inline-flex items-center text-forest-canopy hover:text-moss-green transition-colors font-semibold text-lg"
       >
         Meet Our Full Team

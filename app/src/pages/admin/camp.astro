@@ -70,39 +70,39 @@ const seasonOptions = campData.seasons;
 
 const statusClass = (week: CampWeekView): string => {
   switch (week.status) {
-  case 'open':
-    return 'bg-green-100 text-green-800 border-green-200';
-  case 'limited':
-    return 'bg-amber-100 text-amber-800 border-amber-200';
-  case 'full':
-    return 'bg-red-100 text-red-800 border-red-200';
-  case 'waitlist':
-    return 'bg-blue-100 text-blue-800 border-blue-200';
-  case 'closed':
-    return 'bg-gray-200 text-gray-800 border-gray-300';
-  case 'draft':
-    return 'bg-purple-100 text-purple-800 border-purple-200';
-  default:
-    return 'bg-gray-100 text-gray-700 border-gray-200';
+    case 'open':
+      return 'bg-green-100 text-green-800 border-green-200';
+    case 'limited':
+      return 'bg-amber-100 text-amber-800 border-amber-200';
+    case 'full':
+      return 'bg-red-100 text-red-800 border-red-200';
+    case 'waitlist':
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'closed':
+      return 'bg-gray-200 text-gray-800 border-gray-300';
+    case 'draft':
+      return 'bg-purple-100 text-purple-800 border-purple-200';
+    default:
+      return 'bg-gray-100 text-gray-700 border-gray-200';
   }
 };
 
 const statusLabel = (week: CampWeekView): string => {
   switch (week.status) {
-  case 'open':
-    return 'Open';
-  case 'limited':
-    return 'Limited';
-  case 'full':
-    return 'Full';
-  case 'waitlist':
-    return 'Waitlist';
-  case 'closed':
-    return 'Closed';
-  case 'draft':
-    return 'Draft';
-  default:
-    return 'Unknown';
+    case 'open':
+      return 'Open';
+    case 'limited':
+      return 'Limited';
+    case 'full':
+      return 'Full';
+    case 'waitlist':
+      return 'Waitlist';
+    case 'closed':
+      return 'Closed';
+    case 'draft':
+      return 'Draft';
+    default:
+      return 'Unknown';
   }
 };
 
@@ -169,7 +169,10 @@ const tabLabel: Record<CampTab, string> = {
 <AdminLayout title="Camp Management">
   {
     savedKey && (
-      <p data-admin-alert class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+      <p
+        data-admin-alert
+        class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800"
+      >
         Saved: <strong>{savedKey}</strong>
       </p>
     )
@@ -202,7 +205,12 @@ const tabLabel: Record<CampTab, string> = {
           </p>
           <div class="flex items-center justify-between">
             <h2 class="text-2xl font-bold tracking-tight">Clear, Friendly Camp Operations</h2>
-            <a href="/camp" target="_blank" rel="noopener" class="text-sm font-medium text-white/90 hover:underline">
+            <a
+              href="/camp"
+              target="_blank"
+              rel="noopener"
+              class="text-sm font-medium text-white/90 hover:underline"
+            >
               View on site ↗
             </a>
           </div>

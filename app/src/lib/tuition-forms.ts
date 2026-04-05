@@ -80,9 +80,12 @@ export function createProgramForm(program: Program | null = null): string {
 }
 
 export function createRateForm(rate: TuitionRate | null = null, programs: Program[] = []): string {
-  const programOptions = programs.map(p => 
-    `<option value="${p.id}" ${rate?.program_id === p.id ? 'selected' : ''}>${p.name}</option>`
-  ).join('');
+  const programOptions = programs
+    .map(
+      p =>
+        `<option value="${p.id}" ${rate?.program_id === p.id ? 'selected' : ''}>${p.name}</option>`
+    )
+    .join('');
 
   return `
     <form id="rate-form" class="space-y-4">
@@ -112,12 +115,16 @@ export function createRateForm(rate: TuitionRate | null = null, programs: Progra
       <div>
         <h4 class="text-md font-semibold text-earth-brown mb-3">Income Thresholds by Family Size</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          ${[2, 3, 4, 5, 6, 7].map(size => `
+          ${[2, 3, 4, 5, 6, 7]
+            .map(
+              size => `
             <div>
               <label class="block text-sm font-medium text-earth-brown mb-2">Family Size ${size} ($)</label>
               <input type="number" id="rate-threshold-${size}" value="${rate?.[`income_threshold_family_${size}` as keyof TuitionRate] || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent" />
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
           <div>
             <label class="block text-sm font-medium text-earth-brown mb-2">Family Size 8+ ($)</label>
             <input type="number" id="rate-threshold-8" value="${rate?.income_threshold_family_8_plus || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent" />
@@ -172,7 +179,7 @@ export function createRateForm(rate: TuitionRate | null = null, programs: Progra
 export function renderPrograms(programs: Program[]): void {
   const container = document.getElementById('programs-list');
   if (!container) return;
-  
+
   container.innerHTML = '';
 
   programs.forEach(program => {
@@ -199,7 +206,7 @@ export function renderPrograms(programs: Program[]): void {
 export function renderRates(rates: TuitionRate[], programs: Program[]): void {
   const tbody = document.getElementById('rates-table-body');
   if (!(tbody instanceof HTMLTableSectionElement)) return;
-  
+
   tbody.innerHTML = '';
 
   rates.forEach(rate => {
@@ -210,16 +217,14 @@ export function renderRates(rates: TuitionRate[], programs: Program[]): void {
       <td class="px-6 py-4 whitespace-nowrap text-sm text-earth-brown">${program?.name || 'Unknown'}</td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-earth-brown">$${rate.tuition_price?.toLocaleString()}</td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-earth-brown">
-        ${rate.income_threshold_family_4 ? 
-    `${rate.income_threshold_type === 'Less Than' ? '<' : '≥'} $${rate.income_threshold_family_4.toLocaleString()}` : 
-    'N/A'
-}
+        ${
+          rate.income_threshold_family_4
+            ? `${rate.income_threshold_type === 'Less Than' ? '<' : '≥'} $${rate.income_threshold_family_4.toLocaleString()}`
+            : 'N/A'
+        }
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-earth-brown">
-        ${rate.extended_care_available ? 
-    `$${rate.extended_care_price || 0}` : 
-    'No'
-}
+        ${rate.extended_care_available ? `$${rate.extended_care_price || 0}` : 'No'}
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-earth-brown">
         <div class="flex space-x-2">
@@ -243,11 +248,13 @@ export function populateSettings(settings: Record<string, unknown>): void {
 
   if (schoolYearInput) {
     const schoolYear = settings.current_school_year;
-    schoolYearInput.value = typeof schoolYear === 'string' && schoolYear.trim()
-      ? schoolYear
-      : '2025-2026';
+    schoolYearInput.value =
+      typeof schoolYear === 'string' && schoolYear.trim() ? schoolYear : '2025-2026';
   }
-  if (upfrontDiscountInput) upfrontDiscountInput.value = String(toNumber(settings.upfront_discount_rate, 0.05) * 100);
-  if (siblingDiscountInput) siblingDiscountInput.value = String(toNumber(settings.sibling_discount_rate, 0.1) * 100);
-  if (annualIncreaseInput) annualIncreaseInput.value = String(toNumber(settings.annual_increase_rate, 0.04) * 100);
+  if (upfrontDiscountInput)
+    upfrontDiscountInput.value = String(toNumber(settings.upfront_discount_rate, 0.05) * 100);
+  if (siblingDiscountInput)
+    siblingDiscountInput.value = String(toNumber(settings.sibling_discount_rate, 0.1) * 100);
+  if (annualIncreaseInput)
+    annualIncreaseInput.value = String(toNumber(settings.annual_increase_rate, 0.04) * 100);
 }

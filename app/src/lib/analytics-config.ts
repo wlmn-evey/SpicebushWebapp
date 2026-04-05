@@ -41,15 +41,15 @@ export async function getAnalyticsConfig(): Promise<AnalyticsConfig> {
     db.content.getSetting('ga4_property_id')
   ]);
 
-  const measurementId = toStringValue(settingMeasurementId)
-    || readEnv('PUBLIC_GA4_MEASUREMENT_ID')
-    || readEnv('GA4_MEASUREMENT_ID');
+  const measurementId =
+    toStringValue(settingMeasurementId) ||
+    readEnv('PUBLIC_GA4_MEASUREMENT_ID') ||
+    readEnv('GA4_MEASUREMENT_ID');
 
-  const propertyId = toStringValue(settingPropertyId)
-    || readEnv('GA4_PROPERTY_ID');
+  const propertyId = toStringValue(settingPropertyId) || readEnv('GA4_PROPERTY_ID');
 
-  const explicitEnabled = parseBoolean(settingEnabled)
-    || parseBoolean(readEnv('PUBLIC_GA4_ENABLED'));
+  const explicitEnabled =
+    parseBoolean(settingEnabled) || parseBoolean(readEnv('PUBLIC_GA4_ENABLED'));
 
   return {
     enabled: explicitEnabled || measurementId.length > 0,

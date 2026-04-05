@@ -1,13 +1,13 @@
 ---
-type: "rate"
-rate_label: "Tuition C"
-program_id: "full-day-3-days-twr"
+type: 'rate'
+rate_label: 'Tuition C'
+program_id: 'full-day-3-days-twr'
 tuition_price: 6783
 extended_care_price: 3400
 extended_care_available: true
 is_constant_rate: false
-school_year: "2025-2026"
-income_threshold_type: "Greater Than or Equal To"
+school_year: '2025-2026'
+income_threshold_type: 'Greater Than or Equal To'
 income_threshold_family_2: 34480
 income_threshold_family_3: 43440
 income_threshold_family_4: 52400
@@ -21,16 +21,20 @@ active: true
 
 # Tuition C - Full Day 3 Days (TWR)
 
-Substantial tuition assistance for lower-middle income families seeking our three-day program.
+Substantial tuition assistance for lower-middle income families seeking our
+three-day program.
 
 ## Tuition Rate
+
 - **Annual Tuition:** $6,783
 - **Extended Care:** $3,400 annually (available Tuesday-Thursday)
 - **Program:** Full Day - 3 Days (Tuesday-Thursday, 8:30 AM - 3:00 PM)
 - **School Year:** 2025-2026
 
 ## Income Qualifications
+
 This rate applies to families with household income at or above:
+
 - **2-person household:** $34,480
 - **3-person household:** $43,440
 - **4-person household:** $52,400
@@ -40,6 +44,7 @@ This rate applies to families with household income at or above:
 - **8+ person household:** $88,240
 
 ## What's Included
+
 - Complete three-hour morning work cycle
 - Lunch and rest period
 - Afternoon activities and outdoor time
@@ -47,6 +52,9 @@ This rate applies to families with household income at or above:
 - Progress assessments and conferences
 
 ## Extended Care Option
-Extended care is available Tuesday through Thursday from 3:00 PM to 5:30 PM for an additional $3,400 annually.
 
-This rate makes quality Montessori education accessible to more families while maintaining our three-day flexibility.
+Extended care is available Tuesday through Thursday from 3:00 PM to 5:30 PM for
+an additional $3,400 annually.
+
+This rate makes quality Montessori education accessible to more families while
+maintaining our three-day flexibility.

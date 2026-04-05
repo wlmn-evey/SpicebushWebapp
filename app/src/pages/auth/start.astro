@@ -40,7 +40,11 @@ const cookieOptions = {
 
 Astro.cookies.set(AUTH0_STATE_COOKIE_NAME, loginRequest.state, cookieOptions);
 Astro.cookies.set(AUTH0_NONCE_COOKIE_NAME, loginRequest.nonce, cookieOptions);
-Astro.cookies.set(AUTH0_NEXT_PATH_COOKIE_NAME, normalizeInternalPath(loginRequest.nextPath), cookieOptions);
+Astro.cookies.set(
+  AUTH0_NEXT_PATH_COOKIE_NAME,
+  normalizeInternalPath(loginRequest.nextPath),
+  cookieOptions
+);
 
 return Astro.redirect(loginRequest.authorizeUrl);
 ---

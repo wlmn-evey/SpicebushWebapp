@@ -3,10 +3,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
 describe('OptimizedImage.astro — photo picker fetch URL (F-02 P1 fix)', () => {
-  const componentSource = readFileSync(
-    resolve(__dirname, 'OptimizedImage.astro'),
-    'utf-8'
-  );
+  const componentSource = readFileSync(resolve(__dirname, 'OptimizedImage.astro'), 'utf-8');
 
   it('fetches photos with pageSize=500 to retrieve all entries', () => {
     // The old URL was '/api/cms/entries?collection=photos' which used server default (50).

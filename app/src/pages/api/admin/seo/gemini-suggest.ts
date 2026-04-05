@@ -109,10 +109,10 @@ const extractGeminiResponseText = (payload: GeminiResponsePayload): string => {
   }
 
   const textSegments: string[] = [];
-  payload.candidates.forEach((candidate) => {
+  payload.candidates.forEach(candidate => {
     const parts = candidate.content?.parts;
     if (!Array.isArray(parts)) return;
-    parts.forEach((part) => {
+    parts.forEach(part => {
       if (typeof part?.text === 'string' && part.text.trim().length > 0) {
         textSegments.push(part.text.trim());
       }
@@ -199,17 +199,18 @@ const extractFirstMatch = (html: string, regex: RegExp): string => {
   return match[1].trim();
 };
 
-const stripTags = (html: string): string => html
-  .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-  .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-  .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
-  .replace(/<[^>]+>/g, ' ')
-  .replace(/&nbsp;/gi, ' ')
-  .replace(/&amp;/gi, '&')
-  .replace(/&quot;/gi, '"')
-  .replace(/&#39;/gi, "'")
-  .replace(/\s+/g, ' ')
-  .trim();
+const stripTags = (html: string): string =>
+  html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const extractPageSignals = (html: string): PageSignals => {
   const title = extractFirstMatch(html, /<title[^>]*>([\s\S]*?)<\/title>/i);
@@ -218,14 +219,12 @@ const extractPageSignals = (html: string): PageSignals => {
     /<meta[^>]+name=["']description["'][^>]+content=["']([\s\S]*?)["'][^>]*>/i
   );
 
-  const headingMatches = Array.from(
-    html.matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi)
-  );
+  const headingMatches = Array.from(html.matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi));
   const headings = headingMatches
-    .map((match) => stripTags(match[1] ?? ''))
+    .map(match => stripTags(match[1] ?? ''))
     .filter(Boolean)
     .slice(0, 8)
-    .map((heading) => limitLength(heading, 140));
+    .map(heading => limitLength(heading, 140));
 
   const mainMatch = extractFirstMatch(html, /<main[^>]*>([\s\S]*?)<\/main>/i);
   const bodyMatch = extractFirstMatch(html, /<body[^>]*>([\s\S]*?)<\/body>/i);
@@ -276,14 +275,14 @@ const fetchPageSignals = async (pagePath: string, requestUrl: URL): Promise<Page
 const parseKeywords = (value: unknown): string[] => {
   if (Array.isArray(value)) {
     return value
-      .map((item) => asString(item))
+      .map(item => asString(item))
       .filter(Boolean)
       .slice(0, 12);
   }
   if (typeof value === 'string') {
     return value
       .split(/[,;\n]/)
-      .map((item) => item.trim())
+      .map(item => item.trim())
       .filter(Boolean)
       .slice(0, 12);
   }
@@ -302,9 +301,8 @@ const sanitizeSuggestedFields = (
   const noIndex = asBoolean(suggestion.noIndex);
 
   const canonicalPathCandidate = normalizeSeoPagePath(asString(suggestion.canonicalPath)) || path;
-  const canonicalUrl = canonicalPathCandidate === path
-    ? ''
-    : new URL(canonicalPathCandidate, siteOrigin).toString();
+  const canonicalUrl =
+    canonicalPathCandidate === path ? '' : new URL(canonicalPathCandidate, siteOrigin).toString();
 
   return {
     title,
@@ -320,25 +318,26 @@ const buildGeminiPrompt = (
   pageLabel: string,
   signals: PageSignals,
   existingOverride: SeoPageOverride | undefined
-): string => [
-  'You are an SEO specialist for a Montessori school website.',
-  'Analyze the page context and return only JSON.',
-  'Return JSON keys: title, description, keywords, noIndex, canonicalPath, rationale.',
-  'Rules:',
-  '- title: 45-65 chars, clear and local-intent friendly.',
-  '- description: 130-160 chars, compelling and specific.',
-  '- keywords: array of 5-12 keyword phrases.',
-  '- noIndex: true only for utility pages (for example post-submit pages).',
-  '- canonicalPath: normally same as input path.',
-  '- avoid keyword stuffing and avoid claims not grounded in the page content.',
-  `Target path: ${pagePath}`,
-  `Page label: ${pageLabel}`,
-  `Current override: ${JSON.stringify(existingOverride ?? null)}`,
-  `Current title tag: ${signals.title}`,
-  `Current meta description: ${signals.metaDescription}`,
-  `Headings: ${JSON.stringify(signals.headings)}`,
-  `Content snippet: ${signals.textSnippet}`
-].join('\n');
+): string =>
+  [
+    'You are an SEO specialist for a Montessori school website.',
+    'Analyze the page context and return only JSON.',
+    'Return JSON keys: title, description, keywords, noIndex, canonicalPath, rationale.',
+    'Rules:',
+    '- title: 45-65 chars, clear and local-intent friendly.',
+    '- description: 130-160 chars, compelling and specific.',
+    '- keywords: array of 5-12 keyword phrases.',
+    '- noIndex: true only for utility pages (for example post-submit pages).',
+    '- canonicalPath: normally same as input path.',
+    '- avoid keyword stuffing and avoid claims not grounded in the page content.',
+    `Target path: ${pagePath}`,
+    `Page label: ${pageLabel}`,
+    `Current override: ${JSON.stringify(existingOverride ?? null)}`,
+    `Current title tag: ${signals.title}`,
+    `Current meta description: ${signals.metaDescription}`,
+    `Headings: ${JSON.stringify(signals.headings)}`,
+    `Content snippet: ${signals.textSnippet}`
+  ].join('\n');
 
 const requestGeminiSuggestion = async (
   apiKey: string,
@@ -382,11 +381,12 @@ const requestGeminiSuggestion = async (
       }
     );
 
-    const responsePayload = await response.json().catch(() => ({})) as GeminiResponsePayload;
+    const responsePayload = (await response.json().catch(() => ({}))) as GeminiResponsePayload;
     if (!response.ok) {
-      const errorMessage = typeof responsePayload.error?.message === 'string'
-        ? responsePayload.error.message
-        : `Gemini request failed (${response.status})`;
+      const errorMessage =
+        typeof responsePayload.error?.message === 'string'
+          ? responsePayload.error.message
+          : `Gemini request failed (${response.status})`;
       throw new Error(errorMessage);
     }
 
@@ -452,7 +452,7 @@ const applyGeminiForPage = async (
   model: string,
   pageOverrides: Record<string, SeoPageOverride>
 ): Promise<SeoPageOverride> => {
-  const managedPage = SEO_MANAGED_PAGES.find((page) => page.path === pagePath);
+  const managedPage = SEO_MANAGED_PAGES.find(page => page.path === pagePath);
   if (!managedPage) {
     throw new Error('Page is not in managed SEO list');
   }
@@ -500,19 +500,27 @@ export const POST: APIRoute = async ({ request, locals, url }) => {
   const model = getRuntimeEnvValue('GEMINI_MODEL') || GEMINI_DEFAULT_MODEL;
 
   try {
-    const pageOverrides = parseSeoPageOverrides(await db.content.getSetting(SEO_PAGE_OVERRIDES_KEY));
+    const pageOverrides = parseSeoPageOverrides(
+      await db.content.getSetting(SEO_PAGE_OVERRIDES_KEY)
+    );
     const baseUrl = new URL(url.toString());
 
     if (action === 'apply-page') {
       const pagePath = normalizeSeoPagePath(asString(formData.get('path')));
-      if (!pagePath || !SEO_MANAGED_PAGES.some((page) => page.path === pagePath)) {
+      if (!pagePath || !SEO_MANAGED_PAGES.some(page => page.path === pagePath)) {
         return new Response(null, {
           status: 303,
           headers: { Location: toRedirectWithQuery(redirectTo, 'error', 'invalid_page_path') }
         });
       }
 
-      const nextOverride = await applyGeminiForPage(pagePath, baseUrl, geminiApiKey, model, pageOverrides);
+      const nextOverride = await applyGeminiForPage(
+        pagePath,
+        baseUrl,
+        geminiApiKey,
+        model,
+        pageOverrides
+      );
       pageOverrides[pagePath] = nextOverride;
       await upsertPageOverrides(pageOverrides);
 
@@ -567,7 +575,11 @@ export const POST: APIRoute = async ({ request, locals, url }) => {
 
       await upsertPageOverrides(pageOverrides);
 
-      const withSaved = toRedirectWithQuery(redirectTo, 'saved', `seo_gemini_all_${applied}_${failed}`);
+      const withSaved = toRedirectWithQuery(
+        redirectTo,
+        'saved',
+        `seo_gemini_all_${applied}_${failed}`
+      );
       if (failed > 0) {
         return new Response(null, {
           status: 303,

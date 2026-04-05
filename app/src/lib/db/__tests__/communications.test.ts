@@ -13,11 +13,7 @@ vi.mock('@lib/error-logger', () => ({
   logError: logErrorMock
 }));
 
-import {
-  getCommunicationStats,
-  getRecentMessages,
-  getTemplates
-} from '../communications';
+import { getCommunicationStats, getRecentMessages, getTemplates } from '../communications';
 
 describe('db.communications facade', () => {
   beforeEach(() => {
@@ -33,7 +29,10 @@ describe('db.communications facade', () => {
 
     const messages = await getRecentMessages(5);
     expect(messages).toHaveLength(2);
-    expect(queryRowsMock).toHaveBeenCalledWith(expect.stringContaining('FROM communications_messages'), [5]);
+    expect(queryRowsMock).toHaveBeenCalledWith(
+      expect.stringContaining('FROM communications_messages'),
+      [5]
+    );
   });
 
   it('computes communication stats from the last 30 days', async () => {
@@ -93,6 +92,8 @@ describe('db.communications facade', () => {
 
     const templates = await getTemplates();
     expect(templates).toHaveLength(2);
-    expect(queryRowsMock).toHaveBeenCalledWith(expect.stringContaining('FROM communications_templates'));
+    expect(queryRowsMock).toHaveBeenCalledWith(
+      expect.stringContaining('FROM communications_templates')
+    );
   });
 });

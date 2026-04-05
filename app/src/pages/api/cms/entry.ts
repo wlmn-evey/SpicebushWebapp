@@ -2,7 +2,17 @@ import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
 import { query, queryFirst } from '@lib/db/client';
 
-const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info', 'faq', 'testimonials', 'photos', 'media-slots']);
+const ALLOWED_COLLECTIONS = new Set([
+  'hours',
+  'staff',
+  'tuition',
+  'settings',
+  'school-info',
+  'faq',
+  'testimonials',
+  'photos',
+  'media-slots'
+]);
 
 type EntryPayload = {
   collection?: string;
@@ -24,7 +34,9 @@ const parseCollection = (payload: EntryPayload, url: URL): string =>
   String(payload.collection ?? payload.type ?? url.searchParams.get('collection') ?? '').trim();
 
 const parseSlug = (payload: EntryPayload, url: URL): string =>
-  String(payload.slug ?? url.searchParams.get('slug') ?? '').trim().toLowerCase();
+  String(payload.slug ?? url.searchParams.get('slug') ?? '')
+    .trim()
+    .toLowerCase();
 
 const parseData = (payload: EntryPayload): Record<string, unknown> | null => {
   if (payload.data && typeof payload.data === 'object') return payload.data;
@@ -83,7 +95,9 @@ export const GET: APIRoute = async ({ url, locals }) => {
   }
 
   const collection = String(url.searchParams.get('collection') ?? '').trim();
-  const slug = String(url.searchParams.get('slug') ?? '').trim().toLowerCase();
+  const slug = String(url.searchParams.get('slug') ?? '')
+    .trim()
+    .toLowerCase();
 
   if (!ALLOWED_COLLECTIONS.has(collection) || !slug) {
     return jsonResponse({ error: 'Collection and slug are required' }, 400);
@@ -192,8 +206,14 @@ export const DELETE: APIRoute = async ({ request, url, locals }) => {
   }
 
   const payload = await parseRequestPayload(request);
-  const collection = payload ? parseCollection(payload, url) : String(url.searchParams.get('collection') ?? '').trim();
-  const slug = payload ? parseSlug(payload, url) : String(url.searchParams.get('slug') ?? '').trim().toLowerCase();
+  const collection = payload
+    ? parseCollection(payload, url)
+    : String(url.searchParams.get('collection') ?? '').trim();
+  const slug = payload
+    ? parseSlug(payload, url)
+    : String(url.searchParams.get('slug') ?? '')
+        .trim()
+        .toLowerCase();
 
   if (!ALLOWED_COLLECTIONS.has(collection) || !slug) {
     return jsonResponse({ error: 'Collection and slug are required' }, 400);

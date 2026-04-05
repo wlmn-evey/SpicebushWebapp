@@ -15,13 +15,7 @@ vi.mock('@lib/error-logger', () => ({
   logError: logErrorMock
 }));
 
-import {
-  cacheUtils,
-  getAllSettings,
-  getCollection,
-  getEntry,
-  getSetting
-} from '../content';
+import { cacheUtils, getAllSettings, getCollection, getEntry, getSetting } from '../content';
 
 describe('db.content facade', () => {
   beforeEach(() => {
@@ -56,9 +50,7 @@ describe('db.content facade', () => {
       created_at: '2024-02-01T00:00:00.000Z'
     };
 
-    queryRowsMock
-      .mockResolvedValueOnce([firstRow])
-      .mockResolvedValueOnce([secondRow]);
+    queryRowsMock.mockResolvedValueOnce([firstRow]).mockResolvedValueOnce([secondRow]);
 
     const initial = await getCollection('blog');
     expect(initial).toEqual([
@@ -75,7 +67,9 @@ describe('db.content facade', () => {
     ]);
 
     expect(queryRowsMock).toHaveBeenCalledTimes(1);
-    expect(queryRowsMock).toHaveBeenNthCalledWith(1, expect.stringContaining('FROM content'), ['blog']);
+    expect(queryRowsMock).toHaveBeenNthCalledWith(1, expect.stringContaining('FROM content'), [
+      'blog'
+    ]);
 
     // Second call uses cached value
     const cached = await getCollection('blog');
@@ -114,7 +108,7 @@ describe('db.content facade', () => {
     expect(entry?.body).toBe('Entry body');
 
     expect(queryFirstMock).toHaveBeenCalledWith(
-      expect.stringContaining('WHERE type = $1 AND slug = $2 AND status = \'published\''),
+      expect.stringContaining("WHERE type = $1 AND slug = $2 AND status = 'published'"),
       ['blog', 'welcome']
     );
   });

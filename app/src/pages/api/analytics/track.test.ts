@@ -166,10 +166,7 @@ describe('POST /api/analytics/track', () => {
 
       // Exhaust the limit using x-forwarded-for
       for (let i = 0; i < 101; i++) {
-        const request = makeRequest(
-          { eventName: 'rate_test' },
-          { 'x-forwarded-for': forwardedIp }
-        );
+        const request = makeRequest({ eventName: 'rate_test' }, { 'x-forwarded-for': forwardedIp });
         await POST(makeContext(request, '127.0.0.1'));
       }
 

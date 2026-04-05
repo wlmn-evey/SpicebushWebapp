@@ -18,7 +18,9 @@ vi.mock('@lib/contact-email', () => ({
 }));
 
 vi.mock('@lib/form-security', () => ({
-  checkContactSubmissionRateLimit: vi.fn().mockResolvedValue({ blocked: false, ipCount: 0, emailCount: 0 }),
+  checkContactSubmissionRateLimit: vi
+    .fn()
+    .mockResolvedValue({ blocked: false, ipCount: 0, emailCount: 0 }),
   isSubmissionTooFast: vi.fn().mockReturnValue(false),
   resolveRequestIp: vi.fn().mockReturnValue('127.0.0.1'),
   verifyTurnstileToken: vi.fn().mockResolvedValue({ success: true })
@@ -29,10 +31,7 @@ vi.mock('@lib/server-logger', () => ({
   logServerWarn: vi.fn()
 }));
 
-import {
-  checkContactSubmissionRateLimit,
-  verifyTurnstileToken
-} from '@lib/form-security';
+import { checkContactSubmissionRateLimit, verifyTurnstileToken } from '@lib/form-security';
 import { POST } from './submit';
 
 const makeFormData = (fields: Record<string, string>) => {
@@ -76,7 +75,11 @@ describe('POST /api/contact/submit — error code specificity (P2 fix)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(verifyTurnstileToken).mockResolvedValue({ success: true });
-    vi.mocked(checkContactSubmissionRateLimit).mockResolvedValue({ blocked: false, ipCount: 0, emailCount: 0 });
+    vi.mocked(checkContactSubmissionRateLimit).mockResolvedValue({
+      blocked: false,
+      ipCount: 0,
+      emailCount: 0
+    });
   });
 
   it('redirects to success page on valid contact submission', async () => {

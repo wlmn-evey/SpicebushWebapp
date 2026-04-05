@@ -19,37 +19,39 @@ const asNumberString = (value: number): string => String(value);
 const categoryLabel = (category: string): string =>
   category
     .split('-')
-    .filter((part) => part.length > 0)
-    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .filter(part => part.length > 0)
+    .map(part => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
     .join(' ');
 
 const categoryListLabel = (categories: string[]): string =>
-  categories.map((category) => categoryLabel(category)).join(', ');
+  categories.map(category => categoryLabel(category)).join(', ');
 
 const builtInCategorySet = new Set<string>(TESTIMONIAL_CATEGORY_OPTIONS);
-const customCategories = [...new Set(
-  testimonials
-    .flatMap((item) => item.categories)
-    .filter((category) => category.length > 0 && !builtInCategorySet.has(category))
-)]
-  .sort((a, b) => a.localeCompare(b));
+const customCategories = [
+  ...new Set(
+    testimonials
+      .flatMap(item => item.categories)
+      .filter(category => category.length > 0 && !builtInCategorySet.has(category))
+  )
+].sort((a, b) => a.localeCompare(b));
 
 const availableCategories = [...TESTIMONIAL_CATEGORY_OPTIONS, ...customCategories];
 const availableCategoryCsv = availableCategories.join(', ');
-const categoryInputSuggestions = availableCategories.map((category) => categoryLabel(category));
+const categoryInputSuggestions = availableCategories.map(category => categoryLabel(category));
 const categoryInputHint = categoryInputSuggestions.join(', ');
 
 const homepageVisible = filterTestimonialsForPlacement(testimonials, rules, 'homepage');
 const comingSoonVisible = filterTestimonialsForPlacement(testimonials, rules, 'coming-soon');
 
-const homepageVisibleSet = new Set(homepageVisible.map((item) => item.slug));
-const comingSoonVisibleSet = new Set(comingSoonVisible.map((item) => item.slug));
+const homepageVisibleSet = new Set(homepageVisible.map(item => item.slug));
+const comingSoonVisibleSet = new Set(comingSoonVisible.map(item => item.slug));
 
-const activeCount = testimonials.filter((item) => item.active).length;
-const featuredCount = testimonials.filter((item) => item.featured).length;
-const averageRating = testimonials.length > 0
-  ? testimonials.reduce((total, item) => total + item.rating, 0) / testimonials.length
-  : 0;
+const activeCount = testimonials.filter(item => item.active).length;
+const featuredCount = testimonials.filter(item => item.featured).length;
+const averageRating =
+  testimonials.length > 0
+    ? testimonials.reduce((total, item) => total + item.rating, 0) / testimonials.length
+    : 0;
 
 const defaultSlug = `testimonial-${Date.now().toString(36)}-${Math.floor(Math.random() * 9000 + 1000)}`;
 
@@ -58,28 +60,41 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
 ---
 
 <AdminLayout title="Manage Testimonials">
-  {savedKey && (
-    <p data-admin-alert class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
-      Saved: <strong>{savedKey}</strong>
-    </p>
-  )}
+  {
+    savedKey && (
+      <p
+        data-admin-alert
+        class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800"
+      >
+        Saved: <strong>{savedKey}</strong>
+      </p>
+    )
+  }
 
-  {errorMessage && (
-    <p class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-      {errorMessage}
-    </p>
-  )}
+  {
+    errorMessage && (
+      <p class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        {errorMessage}
+      </p>
+    )
+  }
 
   <div class="space-y-6">
     <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <div class="flex items-center justify-between">
         <h2 class="mb-2 text-lg font-semibold">Testimonial Manager</h2>
-        <a href="/" target="_blank" rel="noopener" class="text-sm font-medium text-forest-canopy hover:underline">
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener"
+          class="text-sm font-medium text-forest-canopy hover:underline"
+        >
           View on site ↗
         </a>
       </div>
       <p class="mb-4 text-sm text-earth-brown/80">
-        Manage testimonial content and control exactly where it appears. You can use page-level rules and per-testimonial switches together.
+        Manage testimonial content and control exactly where it appears. You can use page-level
+        rules and per-testimonial switches together.
       </p>
       <div class="grid gap-3 md:grid-cols-4">
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -104,16 +119,25 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
     </section>
 
     <section class="grid gap-4 lg:grid-cols-2">
-      <form method="post" action="/api/admin/settings" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
+      <form
+        method="post"
+        action="/api/admin/settings"
+        class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4"
+      >
         <input type="hidden" name="redirectTo" value="/admin/testimonials?saved=homepage-rules" />
         <h3 class="text-base font-semibold">Homepage Display Rules</h3>
         <p class="text-sm text-earth-brown/80">
-          Currently showing <strong>{homepageVisible.length}</strong> testimonial{homepageVisible.length === 1 ? '' : 's'} on the homepage.
+          Currently showing <strong>{homepageVisible.length}</strong> testimonial{
+            homepageVisible.length === 1 ? '' : 's'
+          } on the homepage.
         </p>
         <div class="grid gap-3 md:grid-cols-2">
           <label class="block text-sm font-medium">
             Show Testimonials
-            <select name="testimonials_home_enabled" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+            <select
+              name="testimonials_home_enabled"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            >
               <option value="true" selected={rules.homepage.enabled}>Yes</option>
               <option value="false" selected={!rules.homepage.enabled}>No</option>
             </select>
@@ -147,7 +171,10 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
 
           <label class="block text-sm font-medium">
             Featured Only
-            <select name="testimonials_home_require_featured" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+            <select
+              name="testimonials_home_require_featured"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            >
               <option value="false" selected={!rules.homepage.requireFeatured}>No</option>
               <option value="true" selected={rules.homepage.requireFeatured}>Yes</option>
             </select>
@@ -167,21 +194,37 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
         <p class="text-xs text-earth-brown/70">
           Available categories: {availableCategoryCsv || 'general'}
         </p>
-        <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
+        <button
+          type="submit"
+          class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green"
+        >
           Save Homepage Rules
         </button>
       </form>
 
-      <form method="post" action="/api/admin/settings" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
-        <input type="hidden" name="redirectTo" value="/admin/testimonials?saved=coming-soon-rules" />
+      <form
+        method="post"
+        action="/api/admin/settings"
+        class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4"
+      >
+        <input
+          type="hidden"
+          name="redirectTo"
+          value="/admin/testimonials?saved=coming-soon-rules"
+        />
         <h3 class="text-base font-semibold">Coming Soon Display Rules</h3>
         <p class="text-sm text-earth-brown/80">
-          Currently showing <strong>{comingSoonVisible.length}</strong> testimonial{comingSoonVisible.length === 1 ? '' : 's'} on the coming-soon page.
+          Currently showing <strong>{comingSoonVisible.length}</strong> testimonial{
+            comingSoonVisible.length === 1 ? '' : 's'
+          } on the coming-soon page.
         </p>
         <div class="grid gap-3 md:grid-cols-2">
           <label class="block text-sm font-medium">
             Show Testimonials
-            <select name="testimonials_coming_soon_enabled" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+            <select
+              name="testimonials_coming_soon_enabled"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            >
               <option value="true" selected={rules['coming-soon'].enabled}>Yes</option>
               <option value="false" selected={!rules['coming-soon'].enabled}>No</option>
             </select>
@@ -215,7 +258,10 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
 
           <label class="block text-sm font-medium">
             Featured Only
-            <select name="testimonials_coming_soon_require_featured" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+            <select
+              name="testimonials_coming_soon_require_featured"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            >
               <option value="false" selected={!rules['coming-soon'].requireFeatured}>No</option>
               <option value="true" selected={rules['coming-soon'].requireFeatured}>Yes</option>
             </select>
@@ -235,7 +281,10 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
         <p class="text-xs text-earth-brown/70">
           Available categories: {availableCategoryCsv || 'general'}
         </p>
-        <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
+        <button
+          type="submit"
+          class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green"
+        >
           Save Coming Soon Rules
         </button>
       </form>
@@ -249,27 +298,35 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
       <div class="grid gap-3 md:grid-cols-2">
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
           <h3 class="text-sm font-semibold text-earth-brown">Homepage</h3>
-          {homepageVisible.length === 0 ? (
-            <p class="mt-2 text-sm text-earth-brown/75">No testimonials currently visible.</p>
-          ) : (
-            <ul class="mt-2 space-y-1 text-sm text-earth-brown/85">
-              {homepageVisible.map((item) => (
-                <li>{item.author} ({starsFor(item.rating)})</li>
-              ))}
-            </ul>
-          )}
+          {
+            homepageVisible.length === 0 ? (
+              <p class="mt-2 text-sm text-earth-brown/75">No testimonials currently visible.</p>
+            ) : (
+              <ul class="mt-2 space-y-1 text-sm text-earth-brown/85">
+                {homepageVisible.map(item => (
+                  <li>
+                    {item.author} ({starsFor(item.rating)})
+                  </li>
+                ))}
+              </ul>
+            )
+          }
         </div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
           <h3 class="text-sm font-semibold text-earth-brown">Coming Soon</h3>
-          {comingSoonVisible.length === 0 ? (
-            <p class="mt-2 text-sm text-earth-brown/75">No testimonials currently visible.</p>
-          ) : (
-            <ul class="mt-2 space-y-1 text-sm text-earth-brown/85">
-              {comingSoonVisible.map((item) => (
-                <li>{item.author} ({starsFor(item.rating)})</li>
-              ))}
-            </ul>
-          )}
+          {
+            comingSoonVisible.length === 0 ? (
+              <p class="mt-2 text-sm text-earth-brown/75">No testimonials currently visible.</p>
+            ) : (
+              <ul class="mt-2 space-y-1 text-sm text-earth-brown/85">
+                {comingSoonVisible.map(item => (
+                  <li>
+                    {item.author} ({starsFor(item.rating)})
+                  </li>
+                ))}
+              </ul>
+            )
+          }
         </div>
       </div>
     </section>
@@ -316,13 +373,15 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
                   rows="4"
                   required
                   placeholder="Write the testimonial quote here."
-                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                ></textarea>
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"></textarea>
               </label>
 
               <label class="block text-sm font-medium">
                 Star Rating
-                <select name="data.rating" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                <select
+                  name="data.rating"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                >
                   <option value="5">5 stars</option>
                   <option value="4">4 stars</option>
                   <option value="3">3 stars</option>
@@ -340,12 +399,17 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
                   placeholder="general, teachers"
                   class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                 />
-                <p class="mt-1 text-xs text-earth-brown/70">Suggested categories: {categoryInputHint || 'general, teachers'}</p>
+                <p class="mt-1 text-xs text-earth-brown/70">
+                  Suggested categories: {categoryInputHint || 'general, teachers'}
+                </p>
               </label>
 
               <label class="block text-sm font-medium">
                 Active
-                <select name="data.active" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                <select
+                  name="data.active"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                >
                   <option value="true">Yes</option>
                   <option value="false">No</option>
                 </select>
@@ -353,7 +417,10 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
 
               <label class="block text-sm font-medium">
                 Featured
-                <select name="data.featured" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                <select
+                  name="data.featured"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                >
                   <option value="false">No</option>
                   <option value="true">Yes</option>
                 </select>
@@ -361,7 +428,10 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
 
               <label class="block text-sm font-medium">
                 Show on Homepage
-                <select name="data.show_on_homepage" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                <select
+                  name="data.show_on_homepage"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                >
                   <option value="true">Yes</option>
                   <option value="false">No</option>
                 </select>
@@ -369,7 +439,10 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
 
               <label class="block text-sm font-medium">
                 Show on Coming Soon
-                <select name="data.show_on_coming_soon" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                <select
+                  name="data.show_on_coming_soon"
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                >
                   <option value="false">No</option>
                   <option value="true">Yes</option>
                 </select>
@@ -384,11 +457,21 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
                   placeholder="/images/testimonials/author.jpg"
                   class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                 />
-                <input type="hidden" name="data.authorPhotoSlug" data-author-photo-slug-input value="" />
+                <input
+                  type="hidden"
+                  name="data.authorPhotoSlug"
+                  data-author-photo-slug-input
+                  value=""
+                />
               </label>
 
-              <div class="rounded-lg border border-gray-200 bg-gray-50 p-3 md:col-span-2" data-testimonial-upload>
-                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-earth-brown/70">Upload Author Photo</p>
+              <div
+                class="rounded-lg border border-gray-200 bg-gray-50 p-3 md:col-span-2"
+                data-testimonial-upload
+              >
+                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-earth-brown/70">
+                  Upload Author Photo
+                </p>
                 <div class="flex flex-wrap items-center gap-2">
                   <input
                     type="file"
@@ -422,7 +505,9 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
             </div>
 
             <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-              <summary class="cursor-pointer text-sm font-semibold text-earth-brown">Advanced Options</summary>
+              <summary class="cursor-pointer text-sm font-semibold text-earth-brown"
+                >Advanced Options</summary
+              >
               <div class="mt-3 grid gap-3 md:grid-cols-2">
                 <label class="block text-sm font-medium">
                   URL Slug
@@ -456,7 +541,10 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
                 </label>
                 <label class="block text-sm font-medium">
                   Publish Status
-                  <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                  <select
+                    name="status"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  >
                     <option value="published">Published</option>
                     <option value="draft">Draft</option>
                   </select>
@@ -500,7 +588,10 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
               </div>
             </details>
 
-            <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
+            <button
+              type="submit"
+              class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green"
+            >
               Add Testimonial
             </button>
           </form>
@@ -508,356 +599,457 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
       </details>
     </section>
 
-    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm" data-testimonial-manager>
+    <section
+      class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+      data-testimonial-manager
+    >
       <h2 class="mb-2 text-lg font-semibold">Existing Testimonials</h2>
       <p class="mb-4 text-sm text-earth-brown/80">
         Use filters to find entries quickly, then open any card to edit visibility and content.
       </p>
 
-      {testimonials.length > 0 && (
-        <div class="mb-4 grid gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 md:grid-cols-5">
-          <label class="block text-sm font-medium md:col-span-2">
-            Search
-            <input
-              type="search"
-              data-filter-search
-              placeholder="Search by author or quote"
-              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="block text-sm font-medium">
-            Placement
-            <select data-filter-placement class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-              <option value="all">All</option>
-              <option value="homepage">Homepage enabled</option>
-              <option value="coming-soon">Coming soon enabled</option>
-            </select>
-          </label>
-          <label class="block text-sm font-medium">
-            Status
-            <select data-filter-status class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-              <option value="all">All</option>
-              <option value="active">Active only</option>
-              <option value="inactive">Inactive only</option>
-            </select>
-          </label>
-          <label class="block text-sm font-medium">
-            Category
-            <select data-filter-category class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-              <option value="all">All</option>
-              {availableCategories.map((category) => (
-                <option value={category}>{categoryLabel(category)}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-      )}
+      {
+        testimonials.length > 0 && (
+          <div class="mb-4 grid gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 md:grid-cols-5">
+            <label class="block text-sm font-medium md:col-span-2">
+              Search
+              <input
+                type="search"
+                data-filter-search
+                placeholder="Search by author or quote"
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm font-medium">
+              Placement
+              <select
+                data-filter-placement
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              >
+                <option value="all">All</option>
+                <option value="homepage">Homepage enabled</option>
+                <option value="coming-soon">Coming soon enabled</option>
+              </select>
+            </label>
+            <label class="block text-sm font-medium">
+              Status
+              <select
+                data-filter-status
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              >
+                <option value="all">All</option>
+                <option value="active">Active only</option>
+                <option value="inactive">Inactive only</option>
+              </select>
+            </label>
+            <label class="block text-sm font-medium">
+              Category
+              <select
+                data-filter-category
+                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              >
+                <option value="all">All</option>
+                {availableCategories.map(category => (
+                  <option value={category}>{categoryLabel(category)}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )
+      }
 
-      {testimonials.length === 0 ? (
-        <p class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-earth-brown/80">
-          No testimonials found yet.
-        </p>
-      ) : (
-        <div class="space-y-3" data-testimonial-list>
-          {testimonials.map((testimonial) => (
-            <details
-              class="rounded-lg border border-gray-200 bg-gray-50"
-              data-testimonial-card
-              data-search={`${testimonial.author} ${testimonial.relationship} ${testimonial.body} ${testimonial.categories.join(' ')}`.toLowerCase()}
-              data-placement-homepage={testimonial.showOnHomepage ? 'true' : 'false'}
-              data-placement-coming-soon={testimonial.showOnComingSoon ? 'true' : 'false'}
-              data-status-active={testimonial.active ? 'true' : 'false'}
-              data-categories={testimonial.categories.join(',')}
-            >
-              <summary class="cursor-pointer px-4 py-3">
-                <div class="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <p class="font-semibold text-earth-brown">{testimonial.author}</p>
-                    <p class="text-xs text-earth-brown/75">
-                      {starsFor(testimonial.rating)} | {categoryListLabel(testimonial.categories)} | {testimonial.relationship || 'Parent'}
-                    </p>
-                  </div>
-                  <div class="flex flex-wrap gap-2 text-xs">
-                    <span class={`rounded-full border px-2 py-1 ${testimonial.active ? 'border-green-200 bg-green-50 text-green-800' : 'border-gray-200 bg-white text-earth-brown'}`}>
-                      {testimonial.active ? 'active' : 'inactive'}
-                    </span>
-                    <span class={`rounded-full border px-2 py-1 ${testimonial.featured ? 'border-yellow-200 bg-yellow-50 text-yellow-800' : 'border-gray-200 bg-white text-earth-brown'}`}>
-                      {testimonial.featured ? 'featured' : 'standard'}
-                    </span>
-                    <span class={`rounded-full border px-2 py-1 ${homepageVisibleSet.has(testimonial.slug) ? 'border-green-200 bg-green-50 text-green-800' : 'border-gray-200 bg-white text-earth-brown'}`}>
-                      home {homepageVisibleSet.has(testimonial.slug) ? 'visible' : 'hidden'}
-                    </span>
-                    <span class={`rounded-full border px-2 py-1 ${comingSoonVisibleSet.has(testimonial.slug) ? 'border-green-200 bg-green-50 text-green-800' : 'border-gray-200 bg-white text-earth-brown'}`}>
-                      coming soon {comingSoonVisibleSet.has(testimonial.slug) ? 'visible' : 'hidden'}
-                    </span>
-                  </div>
-                </div>
-              </summary>
-
-              <div class="border-t border-gray-200 bg-white p-4">
-                <form method="post" action="/api/admin/content" class="space-y-4">
-                  <input type="hidden" name="collection" value="testimonials" />
-                  <input type="hidden" name="slug" value={testimonial.slug} />
-                  <input type="hidden" name="redirectTo" value={`/admin/testimonials?saved=${encodeURIComponent(testimonial.slug)}`} />
-                  <input
-                    type="hidden"
-                    name="baseDataJson"
-                    value={JSON.stringify({
-                      title: testimonial.title,
-                      body: testimonial.body,
-                      author: testimonial.author,
-                      authorTitle: testimonial.authorTitle,
-                      relationship: testimonial.relationship,
-                      authorPhoto: testimonial.authorPhoto ?? '',
-                      authorPhotoSlug: testimonial.authorPhotoSlug ?? '',
-                      rating: testimonial.rating,
-                      featured: testimonial.featured,
-                      active: testimonial.active,
-                      show_on_homepage: testimonial.showOnHomepage,
-                      show_on_coming_soon: testimonial.showOnComingSoon,
-                      display_order: testimonial.displayOrder,
-                      category: testimonial.category,
-                      categories: testimonial.categories,
-                      childAge: testimonial.childAge ?? '',
-                      yearsAtSpicebush: testimonial.yearsAtSpicebush ?? null,
-                      date: testimonial.dateLabel ?? ''
-                    })}
-                  />
-
-                  <div class="grid gap-3 md:grid-cols-2">
-                    <label class="block text-sm font-medium">
-                      Author Name
-                      <input
-                        type="text"
-                        name="data.author"
-                        required
-                        value={testimonial.author}
-                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                      />
-                    </label>
-
-                    <label class="block text-sm font-medium">
-                      Role / Relationship
-                      <input
-                        type="text"
-                        name="data.relationship"
-                        value={testimonial.relationship}
-                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                      />
-                    </label>
-
-                    <label class="block text-sm font-medium md:col-span-2">
-                      Quote
-                      <textarea
-                        name="data.body"
-                        rows="4"
-                        required
-                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                      >{testimonial.body}</textarea>
-                    </label>
-
-                    <label class="block text-sm font-medium">
-                      Star Rating
-                      <select name="data.rating" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                        <option value="5" selected={testimonial.rating === 5}>5 stars</option>
-                        <option value="4" selected={testimonial.rating === 4}>4 stars</option>
-                        <option value="3" selected={testimonial.rating === 3}>3 stars</option>
-                        <option value="2" selected={testimonial.rating === 2}>2 stars</option>
-                        <option value="1" selected={testimonial.rating === 1}>1 star</option>
-                      </select>
-                    </label>
-
-                    <label class="block text-sm font-medium">
-                      Categories (comma-separated)
-                      <input
-                        type="text"
-                        name="data.categories_csv"
-                        value={categoriesValueFrom(testimonial.categories)}
-                        placeholder="general, teachers"
-                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                      />
-                      <p class="mt-1 text-xs text-earth-brown/70">Suggested categories: {categoryInputHint || 'general, teachers'}</p>
-                    </label>
-
-                    <label class="block text-sm font-medium">
-                      Active
-                      <select name="data.active" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                        <option value="true" selected={testimonial.active}>Yes</option>
-                        <option value="false" selected={!testimonial.active}>No</option>
-                      </select>
-                    </label>
-
-                    <label class="block text-sm font-medium">
-                      Featured
-                      <select name="data.featured" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                        <option value="true" selected={testimonial.featured}>Yes</option>
-                        <option value="false" selected={!testimonial.featured}>No</option>
-                      </select>
-                    </label>
-
-                    <label class="block text-sm font-medium">
-                      Show on Homepage
-                      <select name="data.show_on_homepage" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                        <option value="true" selected={testimonial.showOnHomepage}>Yes</option>
-                        <option value="false" selected={!testimonial.showOnHomepage}>No</option>
-                      </select>
-                    </label>
-
-                    <label class="block text-sm font-medium">
-                      Show on Coming Soon
-                      <select name="data.show_on_coming_soon" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                        <option value="true" selected={testimonial.showOnComingSoon}>Yes</option>
-                        <option value="false" selected={!testimonial.showOnComingSoon}>No</option>
-                      </select>
-                    </label>
-
-                    <label class="block text-sm font-medium md:col-span-2">
-                      Author Photo URL
-                      <input
-                        type="text"
-                        name="data.authorPhoto"
-                        data-author-photo-url-input
-                        value={testimonial.authorPhoto ?? ''}
-                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                      />
-                      <input
-                        type="hidden"
-                        name="data.authorPhotoSlug"
-                        data-author-photo-slug-input
-                        value={testimonial.authorPhotoSlug ?? ''}
-                      />
-                    </label>
-
-                    <div
-                      class="rounded-lg border border-gray-200 bg-gray-50 p-3 md:col-span-2"
-                      data-testimonial-upload
-                      data-entry-slug={testimonial.slug}
-                    >
-                      <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-earth-brown/70">Upload Author Photo</p>
-                      <div class="flex flex-wrap items-center gap-2">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          data-upload-file
-                          class="max-w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs"
-                        />
-                        <button
-                          type="button"
-                          data-upload-button
-                          class="rounded-lg bg-forest-canopy px-3 py-2 text-xs font-semibold text-white hover:bg-moss-green"
-                        >
-                          Upload and Attach
-                        </button>
-                        <a
-                          href={testimonial.authorPhotoSlug ? `/admin/media?slug=${encodeURIComponent(testimonial.authorPhotoSlug)}` : '/admin/media'}
-                          data-upload-crop-link
-                          class={`rounded-lg border border-forest-canopy bg-white px-3 py-2 text-xs font-semibold text-forest-canopy hover:bg-forest-canopy hover:text-white ${testimonial.authorPhotoSlug ? '' : 'hidden'}`}
-                        >
-                          Edit Crop &amp; Focal Point
-                        </a>
-                        <a
-                          href="/admin/media"
-                          class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-earth-brown hover:bg-gray-50"
-                        >
-                          Open Media Manager
-                        </a>
-                      </div>
-                      <p data-upload-status class="mt-2 hidden rounded-md border px-2 py-1 text-xs"></p>
+      {
+        testimonials.length === 0 ? (
+          <p class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-earth-brown/80">
+            No testimonials found yet.
+          </p>
+        ) : (
+          <div class="space-y-3" data-testimonial-list>
+            {testimonials.map(testimonial => (
+              <details
+                class="rounded-lg border border-gray-200 bg-gray-50"
+                data-testimonial-card
+                data-search={`${testimonial.author} ${testimonial.relationship} ${testimonial.body} ${testimonial.categories.join(' ')}`.toLowerCase()}
+                data-placement-homepage={testimonial.showOnHomepage ? 'true' : 'false'}
+                data-placement-coming-soon={testimonial.showOnComingSoon ? 'true' : 'false'}
+                data-status-active={testimonial.active ? 'true' : 'false'}
+                data-categories={testimonial.categories.join(',')}
+              >
+                <summary class="cursor-pointer px-4 py-3">
+                  <div class="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p class="font-semibold text-earth-brown">{testimonial.author}</p>
+                      <p class="text-xs text-earth-brown/75">
+                        {starsFor(testimonial.rating)} | {categoryListLabel(testimonial.categories)}{' '}
+                        | {testimonial.relationship || 'Parent'}
+                      </p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                      <span
+                        class={`rounded-full border px-2 py-1 ${testimonial.active ? 'border-green-200 bg-green-50 text-green-800' : 'border-gray-200 bg-white text-earth-brown'}`}
+                      >
+                        {testimonial.active ? 'active' : 'inactive'}
+                      </span>
+                      <span
+                        class={`rounded-full border px-2 py-1 ${testimonial.featured ? 'border-yellow-200 bg-yellow-50 text-yellow-800' : 'border-gray-200 bg-white text-earth-brown'}`}
+                      >
+                        {testimonial.featured ? 'featured' : 'standard'}
+                      </span>
+                      <span
+                        class={`rounded-full border px-2 py-1 ${homepageVisibleSet.has(testimonial.slug) ? 'border-green-200 bg-green-50 text-green-800' : 'border-gray-200 bg-white text-earth-brown'}`}
+                      >
+                        home {homepageVisibleSet.has(testimonial.slug) ? 'visible' : 'hidden'}
+                      </span>
+                      <span
+                        class={`rounded-full border px-2 py-1 ${comingSoonVisibleSet.has(testimonial.slug) ? 'border-green-200 bg-green-50 text-green-800' : 'border-gray-200 bg-white text-earth-brown'}`}
+                      >
+                        coming soon{' '}
+                        {comingSoonVisibleSet.has(testimonial.slug) ? 'visible' : 'hidden'}
+                      </span>
                     </div>
                   </div>
+                </summary>
 
-                  <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                    <summary class="cursor-pointer text-sm font-semibold text-earth-brown">Advanced Options</summary>
-                    <div class="mt-3 grid gap-3 md:grid-cols-2">
+                <div class="border-t border-gray-200 bg-white p-4">
+                  <form method="post" action="/api/admin/content" class="space-y-4">
+                    <input type="hidden" name="collection" value="testimonials" />
+                    <input type="hidden" name="slug" value={testimonial.slug} />
+                    <input
+                      type="hidden"
+                      name="redirectTo"
+                      value={`/admin/testimonials?saved=${encodeURIComponent(testimonial.slug)}`}
+                    />
+                    <input
+                      type="hidden"
+                      name="baseDataJson"
+                      value={JSON.stringify({
+                        title: testimonial.title,
+                        body: testimonial.body,
+                        author: testimonial.author,
+                        authorTitle: testimonial.authorTitle,
+                        relationship: testimonial.relationship,
+                        authorPhoto: testimonial.authorPhoto ?? '',
+                        authorPhotoSlug: testimonial.authorPhotoSlug ?? '',
+                        rating: testimonial.rating,
+                        featured: testimonial.featured,
+                        active: testimonial.active,
+                        show_on_homepage: testimonial.showOnHomepage,
+                        show_on_coming_soon: testimonial.showOnComingSoon,
+                        display_order: testimonial.displayOrder,
+                        category: testimonial.category,
+                        categories: testimonial.categories,
+                        childAge: testimonial.childAge ?? '',
+                        yearsAtSpicebush: testimonial.yearsAtSpicebush ?? null,
+                        date: testimonial.dateLabel ?? ''
+                      })}
+                    />
+
+                    <div class="grid gap-3 md:grid-cols-2">
                       <label class="block text-sm font-medium">
-                        URL Slug
+                        Author Name
                         <input
                           type="text"
-                          name="slug"
-                          value={testimonial.slug}
+                          name="data.author"
+                          required
+                          value={testimonial.author}
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+
+                      <label class="block text-sm font-medium">
+                        Role / Relationship
+                        <input
+                          type="text"
+                          name="data.relationship"
+                          value={testimonial.relationship}
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                      </label>
+
+                      <label class="block text-sm font-medium md:col-span-2">
+                        Quote
+                        <textarea
+                          name="data.body"
+                          rows="4"
                           required
                           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                        />
+                        >
+                          {testimonial.body}
+                        </textarea>
                       </label>
+
                       <label class="block text-sm font-medium">
-                        Internal Title
-                        <input
-                          type="text"
-                          name="title"
-                          value={testimonial.title}
+                        Star Rating
+                        <select
+                          name="data.rating"
                           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                        />
-                      </label>
-                      <label class="block text-sm font-medium">
-                        Display Order
-                        <input
-                          type="number"
-                          name="data.display_order"
-                          min="1"
-                          step="1"
-                          value={asNumberString(testimonial.displayOrder)}
-                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                        />
-                      </label>
-                      <label class="block text-sm font-medium">
-                        Publish Status
-                        <select name="status" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
-                          <option value="published">Published</option>
-                          <option value="draft">Draft</option>
+                        >
+                          <option value="5" selected={testimonial.rating === 5}>
+                            5 stars
+                          </option>
+                          <option value="4" selected={testimonial.rating === 4}>
+                            4 stars
+                          </option>
+                          <option value="3" selected={testimonial.rating === 3}>
+                            3 stars
+                          </option>
+                          <option value="2" selected={testimonial.rating === 2}>
+                            2 stars
+                          </option>
+                          <option value="1" selected={testimonial.rating === 1}>
+                            1 star
+                          </option>
                         </select>
                       </label>
-                      <label class="block text-sm font-medium">
-                        Author Title
-                        <input
-                          type="text"
-                          name="data.authorTitle"
-                          value={testimonial.authorTitle}
-                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                        />
-                      </label>
-                      <label class="block text-sm font-medium">
-                        Child Age
-                        <input
-                          type="text"
-                          name="data.childAge"
-                          value={testimonial.childAge ?? ''}
-                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                        />
-                      </label>
-                      <label class="block text-sm font-medium">
-                        Years at Spicebush
-                        <input
-                          type="number"
-                          name="data.yearsAtSpicebush"
-                          min="0"
-                          step="1"
-                          value={testimonial.yearsAtSpicebush !== undefined ? asNumberString(testimonial.yearsAtSpicebush) : ''}
-                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                        />
-                      </label>
-                      <label class="block text-sm font-medium">
-                        Date
-                        <input
-                          type="date"
-                          name="data.date"
-                          value={testimonial.dateValue ? testimonial.dateValue.toISOString().slice(0, 10) : ''}
-                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                        />
-                      </label>
-                    </div>
-                  </details>
 
-                  <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
-                    Save Testimonial
-                  </button>
-                </form>
-              </div>
-            </details>
-          ))}
-        </div>
-      )}
+                      <label class="block text-sm font-medium">
+                        Categories (comma-separated)
+                        <input
+                          type="text"
+                          name="data.categories_csv"
+                          value={categoriesValueFrom(testimonial.categories)}
+                          placeholder="general, teachers"
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                        <p class="mt-1 text-xs text-earth-brown/70">
+                          Suggested categories: {categoryInputHint || 'general, teachers'}
+                        </p>
+                      </label>
+
+                      <label class="block text-sm font-medium">
+                        Active
+                        <select
+                          name="data.active"
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        >
+                          <option value="true" selected={testimonial.active}>
+                            Yes
+                          </option>
+                          <option value="false" selected={!testimonial.active}>
+                            No
+                          </option>
+                        </select>
+                      </label>
+
+                      <label class="block text-sm font-medium">
+                        Featured
+                        <select
+                          name="data.featured"
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        >
+                          <option value="true" selected={testimonial.featured}>
+                            Yes
+                          </option>
+                          <option value="false" selected={!testimonial.featured}>
+                            No
+                          </option>
+                        </select>
+                      </label>
+
+                      <label class="block text-sm font-medium">
+                        Show on Homepage
+                        <select
+                          name="data.show_on_homepage"
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        >
+                          <option value="true" selected={testimonial.showOnHomepage}>
+                            Yes
+                          </option>
+                          <option value="false" selected={!testimonial.showOnHomepage}>
+                            No
+                          </option>
+                        </select>
+                      </label>
+
+                      <label class="block text-sm font-medium">
+                        Show on Coming Soon
+                        <select
+                          name="data.show_on_coming_soon"
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        >
+                          <option value="true" selected={testimonial.showOnComingSoon}>
+                            Yes
+                          </option>
+                          <option value="false" selected={!testimonial.showOnComingSoon}>
+                            No
+                          </option>
+                        </select>
+                      </label>
+
+                      <label class="block text-sm font-medium md:col-span-2">
+                        Author Photo URL
+                        <input
+                          type="text"
+                          name="data.authorPhoto"
+                          data-author-photo-url-input
+                          value={testimonial.authorPhoto ?? ''}
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                        <input
+                          type="hidden"
+                          name="data.authorPhotoSlug"
+                          data-author-photo-slug-input
+                          value={testimonial.authorPhotoSlug ?? ''}
+                        />
+                      </label>
+
+                      <div
+                        class="rounded-lg border border-gray-200 bg-gray-50 p-3 md:col-span-2"
+                        data-testimonial-upload
+                        data-entry-slug={testimonial.slug}
+                      >
+                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-earth-brown/70">
+                          Upload Author Photo
+                        </p>
+                        <div class="flex flex-wrap items-center gap-2">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            data-upload-file
+                            class="max-w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs"
+                          />
+                          <button
+                            type="button"
+                            data-upload-button
+                            class="rounded-lg bg-forest-canopy px-3 py-2 text-xs font-semibold text-white hover:bg-moss-green"
+                          >
+                            Upload and Attach
+                          </button>
+                          <a
+                            href={
+                              testimonial.authorPhotoSlug
+                                ? `/admin/media?slug=${encodeURIComponent(testimonial.authorPhotoSlug)}`
+                                : '/admin/media'
+                            }
+                            data-upload-crop-link
+                            class={`rounded-lg border border-forest-canopy bg-white px-3 py-2 text-xs font-semibold text-forest-canopy hover:bg-forest-canopy hover:text-white ${testimonial.authorPhotoSlug ? '' : 'hidden'}`}
+                          >
+                            Edit Crop &amp; Focal Point
+                          </a>
+                          <a
+                            href="/admin/media"
+                            class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-earth-brown hover:bg-gray-50"
+                          >
+                            Open Media Manager
+                          </a>
+                        </div>
+                        <p
+                          data-upload-status
+                          class="mt-2 hidden rounded-md border px-2 py-1 text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                      <summary class="cursor-pointer text-sm font-semibold text-earth-brown">
+                        Advanced Options
+                      </summary>
+                      <div class="mt-3 grid gap-3 md:grid-cols-2">
+                        <label class="block text-sm font-medium">
+                          URL Slug
+                          <input
+                            type="text"
+                            name="slug"
+                            value={testimonial.slug}
+                            required
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                          />
+                        </label>
+                        <label class="block text-sm font-medium">
+                          Internal Title
+                          <input
+                            type="text"
+                            name="title"
+                            value={testimonial.title}
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                          />
+                        </label>
+                        <label class="block text-sm font-medium">
+                          Display Order
+                          <input
+                            type="number"
+                            name="data.display_order"
+                            min="1"
+                            step="1"
+                            value={asNumberString(testimonial.displayOrder)}
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                          />
+                        </label>
+                        <label class="block text-sm font-medium">
+                          Publish Status
+                          <select
+                            name="status"
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                          >
+                            <option value="published">Published</option>
+                            <option value="draft">Draft</option>
+                          </select>
+                        </label>
+                        <label class="block text-sm font-medium">
+                          Author Title
+                          <input
+                            type="text"
+                            name="data.authorTitle"
+                            value={testimonial.authorTitle}
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                          />
+                        </label>
+                        <label class="block text-sm font-medium">
+                          Child Age
+                          <input
+                            type="text"
+                            name="data.childAge"
+                            value={testimonial.childAge ?? ''}
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                          />
+                        </label>
+                        <label class="block text-sm font-medium">
+                          Years at Spicebush
+                          <input
+                            type="number"
+                            name="data.yearsAtSpicebush"
+                            min="0"
+                            step="1"
+                            value={
+                              testimonial.yearsAtSpicebush !== undefined
+                                ? asNumberString(testimonial.yearsAtSpicebush)
+                                : ''
+                            }
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                          />
+                        </label>
+                        <label class="block text-sm font-medium">
+                          Date
+                          <input
+                            type="date"
+                            name="data.date"
+                            value={
+                              testimonial.dateValue
+                                ? testimonial.dateValue.toISOString().slice(0, 10)
+                                : ''
+                            }
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                          />
+                        </label>
+                      </div>
+                    </details>
+
+                    <button
+                      type="submit"
+                      class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green"
+                    >
+                      Save Testimonial
+                    </button>
+                  </form>
+                </div>
+              </details>
+            ))}
+          </div>
+        )
+      }
       <p class="mt-3 text-xs text-earth-brown/70">
-        <span data-visible-count>{testimonials.length}</span> of {testimonials.length} testimonials shown in this list.
+        <span data-visible-count>{testimonials.length}</span> of {testimonials.length} testimonials shown
+        in this list.
       </p>
     </section>
   </div>
@@ -872,9 +1064,8 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
       const categorySelect = manager.querySelector('[data-filter-category]');
       const visibleCountEl = manager.querySelector('[data-visible-count]');
 
-      const safeValue = (el: Element | null): string => (
-        el instanceof HTMLInputElement || el instanceof HTMLSelectElement ? el.value : ''
-      );
+      const safeValue = (el: Element | null): string =>
+        el instanceof HTMLInputElement || el instanceof HTMLSelectElement ? el.value : '';
 
       const applyFilters = () => {
         const search = safeValue(searchInput).trim().toLowerCase();
@@ -884,23 +1075,25 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
 
         let visibleCount = 0;
 
-        cards.forEach((card) => {
+        cards.forEach(card => {
           const searchText = (card.getAttribute('data-search') || '').toLowerCase();
           const active = card.getAttribute('data-status-active') === 'true';
           const showOnHomepage = card.getAttribute('data-placement-homepage') === 'true';
           const showOnComingSoon = card.getAttribute('data-placement-coming-soon') === 'true';
           const cardCategories = (card.getAttribute('data-categories') || '')
             .split(',')
-            .map((value) => value.trim())
-            .filter((value) => value.length > 0);
+            .map(value => value.trim())
+            .filter(value => value.length > 0);
 
           const searchMatch = search.length === 0 || searchText.includes(search);
-          const placementMatch = placement === 'all'
-            || (placement === 'homepage' && showOnHomepage)
-            || (placement === 'coming-soon' && showOnComingSoon);
-          const statusMatch = status === 'all'
-            || (status === 'active' && active)
-            || (status === 'inactive' && !active);
+          const placementMatch =
+            placement === 'all' ||
+            (placement === 'homepage' && showOnHomepage) ||
+            (placement === 'coming-soon' && showOnComingSoon);
+          const statusMatch =
+            status === 'all' ||
+            (status === 'active' && active) ||
+            (status === 'inactive' && !active);
           const categoryMatch = category === 'all' || cardCategories.includes(category);
 
           const visible = searchMatch && placementMatch && statusMatch && categoryMatch;
@@ -913,7 +1106,7 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
         }
       };
 
-      [searchInput, placementSelect, statusSelect, categorySelect].forEach((input) => {
+      [searchInput, placementSelect, statusSelect, categorySelect].forEach(input => {
         if (!input) return;
         input.addEventListener('input', applyFilters);
         input.addEventListener('change', applyFilters);
@@ -924,11 +1117,12 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
 
     const uploadCards = Array.from(document.querySelectorAll('[data-testimonial-upload]'));
     if (uploadCards.length > 0) {
-      const slugify = (value: string) => String(value || '')
-        .toLowerCase()
-        .replace(/[^a-z0-9-_]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .slice(0, 80);
+      const slugify = (value: string) =>
+        String(value || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9-_]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 80);
 
       const setStatus = (node: Element | null, message: string, isError = false) => {
         if (!(node instanceof HTMLElement)) return;
@@ -950,7 +1144,7 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
         }
       };
 
-      uploadCards.forEach((card) => {
+      uploadCards.forEach(card => {
         if (!(card instanceof HTMLElement)) return;
         const form = card.closest('form');
         if (!form) return;
@@ -967,9 +1161,9 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
         const entrySlug = card.getAttribute('data-entry-slug') || '';
 
         if (
-          !(fileInput instanceof HTMLInputElement)
-          || !(uploadButton instanceof HTMLButtonElement)
-          || !(photoInput instanceof HTMLInputElement)
+          !(fileInput instanceof HTMLInputElement) ||
+          !(uploadButton instanceof HTMLButtonElement) ||
+          !(photoInput instanceof HTMLInputElement)
         ) {
           return;
         }
@@ -981,8 +1175,10 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
             return;
           }
 
-          const authorValue = authorInput instanceof HTMLInputElement ? authorInput.value.trim() : '';
-          const slugValue = slugInput instanceof HTMLInputElement ? slugInput.value.trim() : entrySlug;
+          const authorValue =
+            authorInput instanceof HTMLInputElement ? authorInput.value.trim() : '';
+          const slugValue =
+            slugInput instanceof HTMLInputElement ? slugInput.value.trim() : entrySlug;
           const authorName = authorValue || slugValue || 'Author';
           const requestedSlug = slugify(`testimonial-author-${slugValue || authorName}`);
 
@@ -1028,7 +1224,10 @@ const categoriesValueFrom = (categories: string[]): string => categories.join(',
               cropLink.classList.remove('hidden');
             }
 
-            setStatus(statusNode, 'Author photo uploaded and attached. Save testimonial to keep this URL.');
+            setStatus(
+              statusNode,
+              'Author photo uploaded and attached. Save testimonial to keep this URL.'
+            );
           } catch (error) {
             const message = error instanceof Error ? error.message : 'Unexpected upload error';
             setStatus(statusNode, message, true);

@@ -172,7 +172,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
     if (!result.success) {
       const redirect = buildRedirect(redirectTo, 'error', 'donation_thank_you_send_failed');
       if (redirect) return redirect;
-      return jsonResponse({ error: result.error || 'Failed to send donation thank-you email' }, 400);
+      return jsonResponse(
+        { error: result.error || 'Failed to send donation thank-you email' },
+        400
+      );
     }
 
     const redirect = buildRedirect(redirectTo, 'saved', 'donation_thank_you_sent');
@@ -197,7 +200,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
     if (!scheduled.id) {
       const redirect = buildRedirect(redirectTo, 'error', 'donation_reminder_schedule_failed');
       if (redirect) return redirect;
-      return jsonResponse({ error: scheduled.error || 'Failed to schedule donation reminder' }, 400);
+      return jsonResponse(
+        { error: scheduled.error || 'Failed to schedule donation reminder' },
+        400
+      );
     }
 
     const redirect = buildRedirect(redirectTo, 'saved', 'donation_reminder_scheduled');

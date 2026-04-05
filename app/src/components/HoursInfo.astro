@@ -36,37 +36,42 @@ const containerClass = inline ? 'flex flex-wrap gap-4 items-center' : 'space-y-2
 
 <div class={`${containerClass} ${className}`}>
   {showIcon && <Clock className="w-4 h-4 text-forest-canopy" />}
-  
-  {showAllDays ? (
-    <div class="space-y-1">
-      {sortedHours.map((hour) => (
-        <div class="flex justify-between gap-4 text-sm">
-          <span class="font-medium text-earth-brown">{hour.data.day}:</span>
-          {hour.data.is_closed ? (
-            <span class="text-earth-brown/70">Closed</span>
+
+  {
+    showAllDays ? (
+      <div class="space-y-1">
+        {sortedHours.map(hour => (
+          <div class="flex justify-between gap-4 text-sm">
+            <span class="font-medium text-earth-brown">{hour.data.day}:</span>
+            {hour.data.is_closed ? (
+              <span class="text-earth-brown/70">Closed</span>
+            ) : (
+              <span class="text-earth-brown">
+                {formatTime(hour.data.open_time)} - {formatTime(hour.data.close_time)}
+                {hour.data.note && <span class="text-earth-brown/70 ml-1">({hour.data.note})</span>}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div class="text-earth-brown">
+        {todayHours ? (
+          todayHours.data.is_closed ? (
+            <span>Closed today</span>
           ) : (
-            <span class="text-earth-brown">
-              {formatTime(hour.data.open_time)} - {formatTime(hour.data.close_time)}
-              {hour.data.note && <span class="text-earth-brown/70 ml-1">({hour.data.note})</span>}
+            <span>
+              Today: {formatTime(todayHours.data.open_time)} -{' '}
+              {formatTime(todayHours.data.close_time)}
+              {todayHours.data.note && (
+                <span class="text-earth-brown/70 ml-1">({todayHours.data.note})</span>
+              )}
             </span>
-          )}
-        </div>
-      ))}
-    </div>
-  ) : (
-    <div class="text-earth-brown">
-      {todayHours ? (
-        todayHours.data.is_closed ? (
-          <span>Closed today</span>
+          )
         ) : (
-          <span>
-            Today: {formatTime(todayHours.data.open_time)} - {formatTime(todayHours.data.close_time)}
-            {todayHours.data.note && <span class="text-earth-brown/70 ml-1">({todayHours.data.note})</span>}
-          </span>
-        )
-      ) : (
-        <span>Hours not available</span>
-      )}
-    </div>
-  )}
+          <span>Hours not available</span>
+        )}
+      </div>
+    )
+  }
 </div>

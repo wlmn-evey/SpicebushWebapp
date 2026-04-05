@@ -26,7 +26,8 @@ function readEnv(key: string, { required = false }: { required?: boolean } = {})
     return envCache.get(key) as string;
   }
 
-  const value = importMetaEnv[key] ?? (typeof process !== 'undefined' ? process.env?.[key] : undefined);
+  const value =
+    importMetaEnv[key] ?? (typeof process !== 'undefined' ? process.env?.[key] : undefined);
 
   if (!value) {
     if (required) {

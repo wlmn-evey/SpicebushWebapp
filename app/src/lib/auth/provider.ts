@@ -26,4 +26,5 @@ export const getAdminAuthProvider = (): AdminAuthProvider => {
 };
 
 export const isAuth0Provider = (): boolean => getAdminAuthProvider() === AUTH0_PROVIDER;
-export const isMagicLinkProvider = (): boolean => getAdminAuthProvider() === MAGIC_LINK_AUTH_PROVIDER;
+export const isMagicLinkProvider = (): boolean =>
+  getAdminAuthProvider() === MAGIC_LINK_AUTH_PROVIDER;

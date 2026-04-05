@@ -33,7 +33,7 @@ const requireAdmin = (locals: Record<string, unknown>): Response | null => {
   return null;
 };
 
-const handleToggle: APIRoute = async (context) => {
+const handleToggle: APIRoute = async context => {
   const locals = context.locals as unknown as Record<string, unknown>;
   const authError = requireAdmin(locals);
   if (authError) return authError;

@@ -23,7 +23,9 @@ const userEmail = typeof locals.userEmail === 'string' ? locals.userEmail : 'Adm
     <AdminNav userEmail={userEmail} />
 
     <main class="lg:ml-64 min-h-screen">
-      <header class="border-b border-gray-200 bg-white/80 backdrop-blur px-6 py-5 pl-16 lg:pl-6 sticky top-0 z-20">
+      <header
+        class="border-b border-gray-200 bg-white/80 backdrop-blur px-6 py-5 pl-16 lg:pl-6 sticky top-0 z-20"
+      >
         <div class="flex flex-wrap items-center justify-between gap-3">
           <h1 class="text-2xl font-heading font-bold tracking-tight">{title}</h1>
           <div class="text-sm text-earth-brown/80">
@@ -42,10 +44,11 @@ const userEmail = typeof locals.userEmail === 'string' ? locals.userEmail : 'Adm
       function initAdminScripts() {
         // Auto-dismiss success messages after 6 seconds
         // Use data-admin-alert attribute to target only flash-message alerts
-        document.querySelectorAll('[data-admin-alert]').forEach((el) => {
+        document.querySelectorAll('[data-admin-alert]').forEach(el => {
           const alert = el as HTMLElement;
           setTimeout(() => {
-            alert.style.transition = 'opacity 0.4s ease, max-height 0.4s ease, margin 0.4s ease, padding 0.4s ease';
+            alert.style.transition =
+              'opacity 0.4s ease, max-height 0.4s ease, margin 0.4s ease, padding 0.4s ease';
             alert.style.opacity = '0';
             alert.style.maxHeight = '0';
             alert.style.marginBottom = '0';
@@ -56,8 +59,8 @@ const userEmail = typeof locals.userEmail === 'string' ? locals.userEmail : 'Adm
         });
 
         // Delete confirmation fires FIRST — before loading state
-        document.querySelectorAll('form[data-confirm]').forEach((form) => {
-          form.addEventListener('submit', (e) => {
+        document.querySelectorAll('form[data-confirm]').forEach(form => {
+          form.addEventListener('submit', e => {
             const message = (form as HTMLFormElement).dataset.confirm ?? 'Are you sure?';
             if (!window.confirm(message)) {
               e.preventDefault();
@@ -67,13 +70,17 @@ const userEmail = typeof locals.userEmail === 'string' ? locals.userEmail : 'Adm
         });
 
         // Submit button loading state — prevent double-submit
-        document.querySelectorAll('form').forEach((form) => {
+        document.querySelectorAll('form').forEach(form => {
           form.addEventListener('submit', () => {
             const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
             if (!btn || btn.dataset.noLoading === 'true') return;
             btn.dataset.originalText = btn.textContent?.trim() ?? '';
             btn.disabled = true;
-            btn.textContent = btn.dataset.loadingText ?? (btn.dataset.originalText.toLowerCase().startsWith('delete') ? 'Deleting\u2026' : 'Saving\u2026');
+            btn.textContent =
+              btn.dataset.loadingText ??
+              (btn.dataset.originalText.toLowerCase().startsWith('delete')
+                ? 'Deleting\u2026'
+                : 'Saving\u2026');
             btn.classList.add('opacity-70', 'cursor-not-allowed');
           });
         });

@@ -82,15 +82,17 @@ const toNumber = (value: unknown, fallback: number): number => {
   return fallback;
 };
 
-const normalizeToken = (value: string): string => value
-  .trim()
-  .toLowerCase()
-  .replace(/[^a-z0-9-_]+/g, '-')
-  .replace(/-{2,}/g, '-')
-  .replace(/^-+|-+$/g, '')
-  .slice(0, 80);
+const normalizeToken = (value: string): string =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-_]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
 
-const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, value));
 const roundTenth = (value: number): number => Math.round(value * 10) / 10;
 
 const withContextDimensionFallbacks = (
@@ -225,7 +227,7 @@ const fetchImageBuffer = async (
 
     const contentTypeHeader = response.headers.get('content-type');
     const mimeType = contentTypeHeader
-      ? contentTypeHeader.split(';')[0]?.trim().toLowerCase() ?? null
+      ? (contentTypeHeader.split(';')[0]?.trim().toLowerCase() ?? null)
       : null;
 
     const arrayBuffer = await response.arrayBuffer();
@@ -258,12 +260,16 @@ const buildBaseSuggestion = (
       desktopFocalY: slotOverrides.desktopFocalY ?? photoData.desktopFocalY ?? primaryFocalY,
       mobileCropX: slotOverrides.mobileCropX ?? photoData.mobileCropX ?? defaults.mobileCropX,
       mobileCropY: slotOverrides.mobileCropY ?? photoData.mobileCropY ?? defaults.mobileCropY,
-      mobileCropWidth: slotOverrides.mobileCropWidth ?? photoData.mobileCropWidth ?? defaults.mobileCropWidth,
-      mobileCropHeight: slotOverrides.mobileCropHeight ?? photoData.mobileCropHeight ?? defaults.mobileCropHeight,
+      mobileCropWidth:
+        slotOverrides.mobileCropWidth ?? photoData.mobileCropWidth ?? defaults.mobileCropWidth,
+      mobileCropHeight:
+        slotOverrides.mobileCropHeight ?? photoData.mobileCropHeight ?? defaults.mobileCropHeight,
       tabletCropX: slotOverrides.tabletCropX ?? photoData.tabletCropX ?? defaults.tabletCropX,
       tabletCropY: slotOverrides.tabletCropY ?? photoData.tabletCropY ?? defaults.tabletCropY,
-      tabletCropWidth: slotOverrides.tabletCropWidth ?? photoData.tabletCropWidth ?? defaults.tabletCropWidth,
-      tabletCropHeight: slotOverrides.tabletCropHeight ?? photoData.tabletCropHeight ?? defaults.tabletCropHeight
+      tabletCropWidth:
+        slotOverrides.tabletCropWidth ?? photoData.tabletCropWidth ?? defaults.tabletCropWidth,
+      tabletCropHeight:
+        slotOverrides.tabletCropHeight ?? photoData.tabletCropHeight ?? defaults.tabletCropHeight
     },
     {
       desktopFocalX: defaults.primaryFocalX,
@@ -281,7 +287,7 @@ const buildBaseSuggestion = (
 };
 
 const getRuntimeEnvValue = (key: string): string => {
-  const runtimeEnv = (typeof process !== 'undefined' && process.env) ? process.env : undefined;
+  const runtimeEnv = typeof process !== 'undefined' && process.env ? process.env : undefined;
   const value = runtimeEnv?.[key];
   return typeof value === 'string' ? value.trim() : '';
 };
@@ -297,12 +303,12 @@ const extractOpenAiResponseText = (payload: OpenAiResponsePayload): string => {
 
   const textSegments: string[] = [];
 
-  payload.output.forEach((item) => {
+  payload.output.forEach(item => {
     const outputItem = asRecord(item);
     const content = outputItem.content;
     if (!Array.isArray(content)) return;
 
-    content.forEach((contentPart) => {
+    content.forEach(contentPart => {
       const part = asRecord(contentPart);
       const text = part.text;
       if (typeof text === 'string' && text.trim().length > 0) {
@@ -321,11 +327,11 @@ const extractGeminiResponseText = (payload: GeminiResponsePayload): string => {
 
   const textSegments: string[] = [];
 
-  payload.candidates.forEach((candidate) => {
+  payload.candidates.forEach(candidate => {
     const parts = candidate.content?.parts;
     if (!Array.isArray(parts)) return;
 
-    parts.forEach((part) => {
+    parts.forEach(part => {
       if (typeof part?.text === 'string' && part.text.trim().length > 0) {
         textSegments.push(part.text.trim());
       }
@@ -338,19 +344,20 @@ const extractGeminiResponseText = (payload: GeminiResponsePayload): string => {
 const buildSmartAdjustPrompt = (
   baseSuggestion: PlacementSuggestion,
   context: SmartAdjustContext
-): string => [
-  'Return JSON with keys:',
-  'desktopFocalX, desktopFocalY, mobileCropX, mobileCropY, mobileCropWidth, mobileCropHeight, tabletCropX, tabletCropY, tabletCropWidth, tabletCropHeight.',
-  'Rules:',
-  '- coordinates are percentages from 0 to 100.',
-  '- crop width/height must be 10 to 100.',
-  '- crop x <= (100 - crop width), crop y <= (100 - crop height).',
-  '- prioritize the true subject of the image and avoid empty background areas.',
-  '- avoid overlap regions where text/buttons cover the image.',
-  '- preserve composition close to current placement unless that causes empty-space framing or overlap.',
-  `Current placement: ${JSON.stringify(baseSuggestion)}`,
-  `Context: ${JSON.stringify(context)}`
-].join('\n');
+): string =>
+  [
+    'Return JSON with keys:',
+    'desktopFocalX, desktopFocalY, mobileCropX, mobileCropY, mobileCropWidth, mobileCropHeight, tabletCropX, tabletCropY, tabletCropWidth, tabletCropHeight.',
+    'Rules:',
+    '- coordinates are percentages from 0 to 100.',
+    '- crop width/height must be 10 to 100.',
+    '- crop x <= (100 - crop width), crop y <= (100 - crop height).',
+    '- prioritize the true subject of the image and avoid empty background areas.',
+    '- avoid overlap regions where text/buttons cover the image.',
+    '- preserve composition close to current placement unless that causes empty-space framing or overlap.',
+    `Current placement: ${JSON.stringify(baseSuggestion)}`,
+    `Context: ${JSON.stringify(context)}`
+  ].join('\n');
 
 const tryParseJsonText = (text: string): Record<string, unknown> | null => {
   const trimmed = text.trim();
@@ -438,7 +445,11 @@ const requestOpenAiSuggestion = async (
   imageUrl: string | null
 ): Promise<PlacementSuggestion> => {
   const promptText = buildSmartAdjustPrompt(baseSuggestion, context);
-  const userContent: Array<{ type: 'input_text' | 'input_image'; text?: string; image_url?: string }> = [
+  const userContent: Array<{
+    type: 'input_text' | 'input_image';
+    text?: string;
+    image_url?: string;
+  }> = [
     {
       type: 'input_text',
       text: promptText
@@ -486,12 +497,13 @@ const requestOpenAiSuggestion = async (
       signal: controller.signal
     });
 
-    const payload = await response.json().catch(() => ({})) as OpenAiResponsePayload;
+    const payload = (await response.json().catch(() => ({}))) as OpenAiResponsePayload;
 
     if (!response.ok) {
-      const errorMessage = typeof payload.error?.message === 'string'
-        ? payload.error.message
-        : 'Smart Adjust AI request failed';
+      const errorMessage =
+        typeof payload.error?.message === 'string'
+          ? payload.error.message
+          : 'Smart Adjust AI request failed';
       throw new Error(errorMessage);
     }
 
@@ -516,16 +528,17 @@ const requestGeminiSuggestion = async (
 ): Promise<PlacementSuggestion> => {
   const MAX_INLINE_IMAGE_BYTES = 2_000_000;
   const promptText = buildSmartAdjustPrompt(baseSuggestion, context);
-  const imagePart = (
-    imageData?.buffer
-    && imageData.buffer.length > 0
-    && imageData.buffer.length <= MAX_INLINE_IMAGE_BYTES
-  ) ? {
-      inlineData: {
-        mimeType: imageData.mimeType || 'image/jpeg',
-        data: imageData.buffer.toString('base64')
-      }
-    } : null;
+  const imagePart =
+    imageData?.buffer &&
+    imageData.buffer.length > 0 &&
+    imageData.buffer.length <= MAX_INLINE_IMAGE_BYTES
+      ? {
+          inlineData: {
+            mimeType: imageData.mimeType || 'image/jpeg',
+            data: imageData.buffer.toString('base64')
+          }
+        }
+      : null;
 
   const timeoutMs = (() => {
     const raw = getRuntimeEnvValue('SMART_ADJUST_GEMINI_TIMEOUT_MS');
@@ -539,7 +552,9 @@ const requestGeminiSuggestion = async (
   const fallbackModel = getRuntimeEnvValue('GEMINI_FALLBACK_MODEL') || 'gemini-2.0-flash';
   const isAbortError = (error: unknown): boolean => {
     const message = error instanceof Error ? error.message.toLowerCase() : '';
-    return message.includes('aborted') || message.includes('timeout') || message.includes('timed out');
+    return (
+      message.includes('aborted') || message.includes('timeout') || message.includes('timed out')
+    );
   };
 
   const runGemini = async (
@@ -593,11 +608,12 @@ const requestGeminiSuggestion = async (
         }
       );
 
-      const responsePayload = await response.json().catch(() => ({})) as GeminiResponsePayload;
+      const responsePayload = (await response.json().catch(() => ({}))) as GeminiResponsePayload;
       if (!response.ok) {
-        const errorMessage = typeof responsePayload.error?.message === 'string'
-          ? responsePayload.error.message
-          : `Smart Adjust Gemini request failed (${response.status})`;
+        const errorMessage =
+          typeof responsePayload.error?.message === 'string'
+            ? responsePayload.error.message
+            : `Smart Adjust Gemini request failed (${response.status})`;
         throw new Error(errorMessage);
       }
 
@@ -672,11 +688,7 @@ const enforcePortraitLandscapeFocus = (
 
   const portraitSeverity = clamp((1 - naturalRatio) / 0.45, 0, 1);
   const landscapeSeverity = clamp((renderedRatio - 1.2) / 0.8, 0, 1);
-  const minDesktopY = clamp(
-    68 + (portraitSeverity * 8) + (landscapeSeverity * 8),
-    68,
-    82
-  );
+  const minDesktopY = clamp(68 + portraitSeverity * 8 + landscapeSeverity * 8, 68, 82);
 
   if (suggestion.desktopFocalY >= minDesktopY) {
     return suggestion;
@@ -685,7 +697,7 @@ const enforcePortraitLandscapeFocus = (
   const desktopFocalY = roundTenth(minDesktopY);
   const toAdjustedCropY = (height: number): number => {
     const cropHeight = clamp(height, 10, 100);
-    return roundTenth(clamp(desktopFocalY - (cropHeight / 2), 0, 100 - cropHeight));
+    return roundTenth(clamp(desktopFocalY - cropHeight / 2, 0, 100 - cropHeight));
   };
 
   return {
@@ -697,9 +709,7 @@ const enforcePortraitLandscapeFocus = (
 };
 
 const formatErrorMessage = (error: unknown, fallback: string): string =>
-  error instanceof Error && error.message.trim().length > 0
-    ? error.message
-    : fallback;
+  error instanceof Error && error.message.trim().length > 0 ? error.message : fallback;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const auth = await checkAdminAuth({ locals });
@@ -740,11 +750,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const slotData = slotEntry?.data ? asRecord(slotEntry.data) : {};
 
     const baseSuggestion = buildBaseSuggestion(photoData, slotData, defaults);
-    const context = withContextDimensionFallbacks(
-      sanitizeSmartAdjustContext(body.context),
-      { width, height }
-    );
-    if (typeof body.pagePath === 'string' && body.pagePath.trim().length > 0 && context.pagePath === '/') {
+    const context = withContextDimensionFallbacks(sanitizeSmartAdjustContext(body.context), {
+      width,
+      height
+    });
+    if (
+      typeof body.pagePath === 'string' &&
+      body.pagePath.trim().length > 0 &&
+      context.pagePath === '/'
+    ) {
       context.pagePath = body.pagePath.trim().slice(0, 180);
     }
 
@@ -777,7 +791,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
       attemptedProviders.push('gemini');
       try {
-        suggestion = await requestGeminiSuggestion(geminiKey, geminiModel, baseSuggestion, context, imageData);
+        suggestion = await requestGeminiSuggestion(
+          geminiKey,
+          geminiModel,
+          baseSuggestion,
+          context,
+          imageData
+        );
         source = 'gemini';
         return true;
       } catch (error) {
@@ -801,7 +821,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
       attemptedProviders.push('openai');
       try {
-        suggestion = await requestOpenAiSuggestion(openAiKey, openAiModel, baseSuggestion, context, imageUrl);
+        suggestion = await requestOpenAiSuggestion(
+          openAiKey,
+          openAiModel,
+          baseSuggestion,
+          context,
+          imageUrl
+        );
         source = 'openai';
         return true;
       } catch (error) {

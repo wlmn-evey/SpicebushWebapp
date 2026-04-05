@@ -36,8 +36,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
   const search = url.searchParams.get('q')?.trim() ?? '';
   const tourParam = url.searchParams.get('tour');
-  const tourInterest =
-    tourParam === 'yes' ? true : tourParam === 'no' ? false : undefined;
+  const tourInterest = tourParam === 'yes' ? true : tourParam === 'no' ? false : undefined;
 
   // Fetch matching submissions for export (hard cap 5000)
   const result = await db.contact.getContactSubmissionsForExport({
@@ -53,14 +52,11 @@ export const GET: APIRoute = async ({ locals, url }) => {
     return {};
   };
 
-  const rows = result.items.map((item) => {
+  const rows = result.items.map(item => {
     const attr = asRecord(item.attribution);
-    const utmSource =
-      typeof attr.utm_source === 'string' ? attr.utm_source : '';
-    const utmMedium =
-      typeof attr.utm_medium === 'string' ? attr.utm_medium : '';
-    const utmCampaign =
-      typeof attr.utm_campaign === 'string' ? attr.utm_campaign : '';
+    const utmSource = typeof attr.utm_source === 'string' ? attr.utm_source : '';
+    const utmMedium = typeof attr.utm_medium === 'string' ? attr.utm_medium : '';
+    const utmCampaign = typeof attr.utm_campaign === 'string' ? attr.utm_campaign : '';
 
     return [
       item.submitted_at,
@@ -79,7 +75,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
     ].map(csvEscape);
   });
 
-  const csvContent = [CSV_HEADERS.join(','), ...rows.map((r) => r.join(','))].join('\n');
+  const csvContent = [CSV_HEADERS.join(','), ...rows.map(r => r.join(','))].join('\n');
 
   const dateStamp = new Date().toISOString().slice(0, 10);
   const filename = `contact-submissions-${dateStamp}.csv`;

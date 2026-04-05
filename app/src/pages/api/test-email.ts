@@ -25,7 +25,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
   }
 
   const url = new URL(request.url);
-  const requestedEmail = String(url.searchParams.get('email') || auth.user?.email || DEFAULT_TEST_EMAIL).trim();
+  const requestedEmail = String(
+    url.searchParams.get('email') || auth.user?.email || DEFAULT_TEST_EMAIL
+  ).trim();
   const testEmail = EMAIL_REGEX.test(requestedEmail) ? requestedEmail : DEFAULT_TEST_EMAIL;
 
   try {
@@ -53,7 +55,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
     return jsonResponse(result.success ? 200 : 500, {
       success: result.success,
-      message: result.success ? `Test email sent to ${testEmail}` : `Failed to send email: ${result.error}`,
+      message: result.success
+        ? `Test email sent to ${testEmail}`
+        : `Failed to send email: ${result.error}`,
       provider: result.provider,
       messageId: result.messageId,
       serviceStatus: status,

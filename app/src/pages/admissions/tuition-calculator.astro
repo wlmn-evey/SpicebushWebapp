@@ -75,11 +75,11 @@ try {
   ]);
 
   programs = tuitionEntries
-    .filter((entry) => {
+    .filter(entry => {
       const data = entry.data as Record<string, unknown>;
       return stringFrom(data.type) === 'program' && data.active !== false;
     })
-    .map((entry) => {
+    .map(entry => {
       const data = entry.data as Record<string, unknown>;
       return {
         id: stringFrom(data.program_id, entry.slug),
@@ -87,23 +87,30 @@ try {
         name: stringFrom(data.name ?? data.title, entry.slug),
         description: stringFrom(data.description, ''),
         programType: stringFrom(data.program_type),
-        daysPerWeek: Number.isFinite(Number(data.days_per_week)) ? Number(data.days_per_week) : undefined,
-        dailyHours: Number.isFinite(Number(data.daily_hours)) ? Number(data.daily_hours) : undefined,
+        daysPerWeek: Number.isFinite(Number(data.days_per_week))
+          ? Number(data.days_per_week)
+          : undefined,
+        dailyHours: Number.isFinite(Number(data.daily_hours))
+          ? Number(data.daily_hours)
+          : undefined,
         displayOrder: numberFrom(data.display_order, 999)
       } satisfies ProgramRecord;
     })
     .sort((a, b) => a.displayOrder - b.displayOrder || a.name.localeCompare(b.name));
 
   rates = tuitionEntries
-    .filter((entry) => {
+    .filter(entry => {
       const data = entry.data as Record<string, unknown>;
       return stringFrom(data.type) === 'rate' && data.active !== false;
     })
-    .map((entry) => {
+    .map(entry => {
       const data = entry.data as Record<string, unknown>;
       const thresholds: RateRecord['thresholds'] = {};
-      ['2', '3', '4', '5', '6', '7', '8_plus'].forEach((sizeKey) => {
-        const fieldName = sizeKey === '8_plus' ? 'income_threshold_family_8_plus' : `income_threshold_family_${sizeKey}`;
+      ['2', '3', '4', '5', '6', '7', '8_plus'].forEach(sizeKey => {
+        const fieldName =
+          sizeKey === '8_plus'
+            ? 'income_threshold_family_8_plus'
+            : `income_threshold_family_${sizeKey}`;
         thresholds[sizeKey] = optionalNumberFrom(data[fieldName]);
       });
 
@@ -115,7 +122,9 @@ try {
         extendedCarePrice: optionalNumberFrom(data.extended_care_price),
         extendedCareAvailable: data.extended_care_available !== false,
         isConstantRate: data.is_constant_rate === true,
-        incomeThresholdType: data.income_threshold_type ? stringFrom(data.income_threshold_type) : null,
+        incomeThresholdType: data.income_threshold_type
+          ? stringFrom(data.income_threshold_type)
+          : null,
         thresholds,
         displayOrder: numberFrom(data.display_order, 999),
         schoolYear: stringFrom(data.school_year, '')
@@ -138,7 +147,8 @@ try {
   logServerError('Failed to load tuition calculator data', error, {
     page: '/admissions/tuition-calculator'
   });
-  loadError = 'We are updating our tuition calculator. Please contact admissions for personalized tuition guidance.';
+  loadError =
+    'We are updating our tuition calculator. Please contact admissions for personalized tuition guidance.';
 }
 ---
 
@@ -154,30 +164,41 @@ try {
           Tuition & Sliding Scale Calculator
         </h1>
         <p class="text-lg text-earth-brown/80 leading-relaxed max-w-3xl mx-auto">
-          Enter your family size and household income to view tuition options for each program. Our calculator applies the current sliding-scale tiers and highlights tuition assistance programs automatically.
+          Enter your family size and household income to view tuition options for each program. Our
+          calculator applies the current sliding-scale tiers and highlights tuition assistance
+          programs automatically.
         </p>
       </div>
 
-      {loadError ? (
-        <div class="bg-white border border-orange-200 text-orange-800 rounded-2xl p-8 shadow-sm text-center">
-          <h2 class="text-2xl font-semibold mb-3">Calculator Unavailable</h2>
-          <p class="mb-4 text-lg">
-            {loadError}
-          </p>
-          <p class="text-sm text-earth-brown/70">
-            Call <a class="underline font-medium" href="tel:14842020712">(484) 202-0712</a> or email
-            <a class="underline font-medium ml-1" href="mailto:information@spicebushmontessori.org">information@spicebushmontessori.org</a>
-            for immediate assistance.
-          </p>
-        </div>
-      ) : (
-        <TuitionCalculatorComponent
-          client:load
-          programs={programs}
-          rates={rates}
-          settings={calculatorSettings}
-        />
-      )}
+      {
+        loadError ? (
+          <div class="bg-white border border-orange-200 text-orange-800 rounded-2xl p-8 shadow-sm text-center">
+            <h2 class="text-2xl font-semibold mb-3">Calculator Unavailable</h2>
+            <p class="mb-4 text-lg">{loadError}</p>
+            <p class="text-sm text-earth-brown/70">
+              Call{' '}
+              <a class="underline font-medium" href="tel:14842020712">
+                (484) 202-0712
+              </a>{' '}
+              or email
+              <a
+                class="underline font-medium ml-1"
+                href="mailto:information@spicebushmontessori.org"
+              >
+                information@spicebushmontessori.org
+              </a>
+              for immediate assistance.
+            </p>
+          </div>
+        ) : (
+          <TuitionCalculatorComponent
+            client:load
+            programs={programs}
+            rates={rates}
+            settings={calculatorSettings}
+          />
+        )
+      }
     </section>
   </main>
   <Footer />

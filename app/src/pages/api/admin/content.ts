@@ -3,7 +3,17 @@ import { checkAdminAuth } from '@lib/admin-auth-check';
 import { db } from '@lib/db';
 import { query } from '@lib/db/client';
 
-const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info', 'photos', 'faq', 'testimonials', 'media-slots']);
+const ALLOWED_COLLECTIONS = new Set([
+  'hours',
+  'staff',
+  'tuition',
+  'settings',
+  'school-info',
+  'photos',
+  'faq',
+  'testimonials',
+  'media-slots'
+]);
 
 type ContentPayload = {
   collection: string;
@@ -35,8 +45,8 @@ const parseSimpleValue = (value: string): unknown => {
   }
 
   if (
-    (trimmed.startsWith('{') && trimmed.endsWith('}'))
-    || (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+    (trimmed.startsWith('[') && trimmed.endsWith(']'))
   ) {
     try {
       return JSON.parse(trimmed);
@@ -59,16 +69,16 @@ const parseCsvList = (value: FormDataEntryValue): string[] => {
   if (typeof value !== 'string') return [];
   return value
     .split(/[\n,]/)
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
+    .map(item => item.trim())
+    .filter(item => item.length > 0);
 };
 
 const parseLineList = (value: FormDataEntryValue): string[] => {
   if (typeof value !== 'string') return [];
   return value
     .split(/\n/)
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
+    .map(item => item.trim())
+    .filter(item => item.length > 0);
 };
 
 const parseFormDataPayload = (formData: FormData): ContentPayload => {
@@ -206,10 +216,12 @@ const parseBooleanValue = (value: unknown, fallback: boolean): boolean => {
 
 const normalizeFaqData = (data: Record<string, unknown>): Record<string, unknown> => {
   const normalized: Record<string, unknown> = { ...data };
-  const sectionValue = typeof normalized.section_title === 'string' ? normalized.section_title.trim() : '';
-  const customSectionValue = typeof normalized.section_title_custom === 'string'
-    ? normalized.section_title_custom.trim()
-    : '';
+  const sectionValue =
+    typeof normalized.section_title === 'string' ? normalized.section_title.trim() : '';
+  const customSectionValue =
+    typeof normalized.section_title_custom === 'string'
+      ? normalized.section_title_custom.trim()
+      : '';
 
   if (sectionValue === '__new__') {
     if (customSectionValue.length > 0) {
@@ -223,7 +235,8 @@ const normalizeFaqData = (data: Record<string, unknown>): Record<string, unknown
 
   delete normalized.section_title_custom;
 
-  const listStyle = typeof normalized.list_style === 'string' ? normalized.list_style.trim().toLowerCase() : '';
+  const listStyle =
+    typeof normalized.list_style === 'string' ? normalized.list_style.trim().toLowerCase() : '';
   if (listStyle === 'ordered' || listStyle === 'unordered' || listStyle === 'none') {
     normalized.list_style = listStyle;
   } else {
@@ -232,8 +245,8 @@ const normalizeFaqData = (data: Record<string, unknown>): Record<string, unknown
 
   if (Array.isArray(normalized.bullets)) {
     normalized.bullets = normalized.bullets
-      .map((bullet) => (typeof bullet === 'string' ? bullet.trim() : ''))
-      .filter((bullet) => bullet.length > 0);
+      .map(bullet => (typeof bullet === 'string' ? bullet.trim() : ''))
+      .filter(bullet => bullet.length > 0);
   }
 
   const sectionOrder = parseIntegerValue(normalized.section_order);
@@ -292,12 +305,12 @@ const normalizeTestimonialsData = (data: Record<string, unknown>): Record<string
     };
 
     if (Array.isArray(normalized.categories)) {
-      normalized.categories.forEach((value) => pushCategory(value));
+      normalized.categories.forEach(value => pushCategory(value));
     } else if (typeof normalized.categories === 'string') {
       normalized.categories
         .split(/[\n,]/)
-        .map((value) => value.trim())
-        .forEach((value) => pushCategory(value));
+        .map(value => value.trim())
+        .forEach(value => pushCategory(value));
     }
 
     pushCategory(normalized.category);
@@ -348,7 +361,11 @@ const normalizeTestimonialsData = (data: Record<string, unknown>): Record<string
   return normalized;
 };
 
-const responseByFormat = (redirectTo: string | null, payload: Record<string, unknown>, status = 200) => {
+const responseByFormat = (
+  redirectTo: string | null,
+  payload: Record<string, unknown>,
+  status = 200
+) => {
   if (redirectTo) {
     if (status >= 400) {
       const errorValue = typeof payload.error === 'string' ? payload.error : 'Request failed';
@@ -404,7 +421,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 
   if (!slug || !/^[a-z0-9-_]+$/.test(slug)) {
-    return responseByFormat(redirectTo, { error: 'Slug must contain only lowercase letters, numbers, hyphen, or underscore' }, 400);
+    return responseByFormat(
+      redirectTo,
+      { error: 'Slug must contain only lowercase letters, numbers, hyphen, or underscore' },
+      400
+    );
   }
 
   const rawData = parseDataPayload(payload);
@@ -425,7 +446,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const answer = typeof data.answer === 'string' ? data.answer.trim() : '';
 
     if (!sectionTitle || !question || !answer) {
-      return responseByFormat(redirectTo, { error: 'FAQ entries require section, question, and answer' }, 400);
+      return responseByFormat(
+        redirectTo,
+        { error: 'FAQ entries require section, question, and answer' },
+        400
+      );
     }
   }
 
@@ -434,7 +459,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const body = typeof data.body === 'string' ? data.body.trim() : '';
 
     if (!author || !body) {
-      return responseByFormat(redirectTo, { error: 'Testimonial entries require an author and quote' }, 400);
+      return responseByFormat(
+        redirectTo,
+        { error: 'Testimonial entries require an author and quote' },
+        400
+      );
     }
   }
 
@@ -489,7 +518,9 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
   try {
     const body = await request.json();
     collection = String(body.collection ?? '').trim();
-    slug = String(body.slug ?? '').trim().toLowerCase();
+    slug = String(body.slug ?? '')
+      .trim()
+      .toLowerCase();
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid request body' }), {
       status: 400,

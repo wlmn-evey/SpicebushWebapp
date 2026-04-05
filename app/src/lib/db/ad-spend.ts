@@ -1,7 +1,8 @@
 import { logError } from '@lib/error-logger';
 import { query, queryRows } from './client';
 
-const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, value));
 
 const asString = (value: unknown, fallback = ''): string => {
   if (typeof value !== 'string') return fallback;
@@ -190,7 +191,7 @@ export async function getRecentAdSpendEntries(limit = 30): Promise<AdSpendEntryV
       [safeLimit]
     );
 
-    return rows.map((row) => ({
+    return rows.map(row => ({
       id: row.id,
       spendDate: row.spend_date,
       channel: row.channel,
@@ -217,7 +218,10 @@ export async function getAdSpendSummary(windowDays = 30): Promise<AdSpendSummary
   };
 
   try {
-    const totalRows = await queryRows<{ total_spend: number | string; entry_count: number | string }>(
+    const totalRows = await queryRows<{
+      total_spend: number | string;
+      entry_count: number | string;
+    }>(
       `
         SELECT
           COALESCE(SUM(amount), 0)::text AS total_spend,
@@ -246,7 +250,7 @@ export async function getAdSpendSummary(windowDays = 30): Promise<AdSpendSummary
       windowDays: safeWindowDays,
       totalSpend: asAmount(totalRow?.total_spend),
       entryCount: Number.parseInt(String(totalRow?.entry_count ?? 0), 10) || 0,
-      byChannel: channelRows.map((row) => ({
+      byChannel: channelRows.map(row => ({
         channel: row.channel,
         spend: asAmount(row.spend)
       }))
@@ -300,7 +304,7 @@ export async function getCampaignValueRows(windowDays = 30): Promise<CampaignVal
       [safeWindowDays]
     );
 
-    return rows.map((row) => ({
+    return rows.map(row => ({
       campaign: row.campaign,
       spend: asAmount(row.spend),
       leads: Number.parseInt(String(row.leads), 10) || 0,

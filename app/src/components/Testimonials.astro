@@ -9,7 +9,7 @@ const initialsFromAuthor = (author: string): string => {
   const initials = author
     .split(' ')
     .filter(Boolean)
-    .map((segment) => segment.charAt(0).toUpperCase())
+    .map(segment => segment.charAt(0).toUpperCase())
     .join('')
     .slice(0, 3);
 
@@ -21,9 +21,7 @@ const initialsFromAuthor = (author: string): string => {
 <section class="py-16 bg-stone-beige">
   <div class="container mx-auto px-4">
     <div class="text-center mb-12">
-      <h2 class="text-3xl lg:text-4xl font-bold text-earth-brown mb-4">
-        What Families Are Saying
-      </h2>
+      <h2 class="text-3xl lg:text-4xl font-bold text-earth-brown mb-4">What Families Are Saying</h2>
       <div class="flex justify-center items-center space-x-2 mb-6">
         <div class="flex space-x-1">
           <Star className="w-5 h-5 text-yellow-400 fill-current" />
@@ -35,52 +33,58 @@ const initialsFromAuthor = (author: string): string => {
         <span class="text-earth-brown">Based on caregiver feedback</span>
       </div>
     </div>
-    
+
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {displayTestimonials.map((testimonial, index) => (
-        <div class="bg-white p-8 rounded-lg shadow-sm hover:shadow-md transition-shadow" role="article" aria-labelledby={`testimonial-${index + 1}-name`}>
-          <div class="flex space-x-1 mb-4">
-            {Array.from({ length: testimonial.rating }, () => (
-              <Star className="w-4 h-4 text-yellow-400 fill-current" />
-            ))}
-          </div>
-          {testimonial.body && (
-            <div class="text-earth-brown mb-4 italic" set:html={testimonial.body} />
-          )}
-          <div class="flex items-center space-x-3">
-            {testimonial.authorPhotoSlug ? (
-              <OptimizedImage
-                photoSlug={testimonial.authorPhotoSlug}
-                alt={`Portrait of ${testimonial.author}`}
-                className="w-10 h-10 rounded-full object-cover"
-                slotId={`homepage-testimonial-author-${testimonial.slug}`}
-                mediaCategory="testimonials"
-                loading="lazy"
-              />
-            ) : testimonial.authorPhoto ? (
-              <img 
-                src={testimonial.authorPhoto}
-                alt={`Portrait of ${testimonial.author}`}
-                class="w-10 h-10 rounded-full object-cover"
-                loading="lazy"
-              />
-            ) : (
-              <div class="w-10 h-10 rounded-full bg-forest-canopy text-white flex items-center justify-center text-sm font-semibold">
-                {initialsFromAuthor(testimonial.author)}
-              </div>
+      {
+        displayTestimonials.map((testimonial, index) => (
+          <div
+            class="bg-white p-8 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+            role="article"
+            aria-labelledby={`testimonial-${index + 1}-name`}
+          >
+            <div class="flex space-x-1 mb-4">
+              {Array.from({ length: testimonial.rating }, () => (
+                <Star className="w-4 h-4 text-yellow-400 fill-current" />
+              ))}
+            </div>
+            {testimonial.body && (
+              <div class="text-earth-brown mb-4 italic" set:html={testimonial.body} />
             )}
-            <div>
-              <div class="font-semibold text-earth-brown" id={`testimonial-${index + 1}-name`}>
-                {testimonial.author}
-              </div>
-              <div class="text-sm text-earth-brown">
-                {testimonial.relationship || 'Parent'}
-                {testimonial.childAge && ` of ${testimonial.childAge}`}
+            <div class="flex items-center space-x-3">
+              {testimonial.authorPhotoSlug ? (
+                <OptimizedImage
+                  photoSlug={testimonial.authorPhotoSlug}
+                  alt={`Portrait of ${testimonial.author}`}
+                  className="w-10 h-10 rounded-full object-cover"
+                  slotId={`homepage-testimonial-author-${testimonial.slug}`}
+                  mediaCategory="testimonials"
+                  loading="lazy"
+                />
+              ) : testimonial.authorPhoto ? (
+                <img
+                  src={testimonial.authorPhoto}
+                  alt={`Portrait of ${testimonial.author}`}
+                  class="w-10 h-10 rounded-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div class="w-10 h-10 rounded-full bg-forest-canopy text-white flex items-center justify-center text-sm font-semibold">
+                  {initialsFromAuthor(testimonial.author)}
+                </div>
+              )}
+              <div>
+                <div class="font-semibold text-earth-brown" id={`testimonial-${index + 1}-name`}>
+                  {testimonial.author}
+                </div>
+                <div class="text-sm text-earth-brown">
+                  {testimonial.relationship || 'Parent'}
+                  {testimonial.childAge && ` of ${testimonial.childAge}`}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))
+      }
     </div>
   </div>
 </section>

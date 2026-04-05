@@ -48,7 +48,10 @@ const tuitionCollection = defineCollection({
     extended_care_available: z.boolean().default(false).optional(),
     is_constant_rate: z.boolean().default(false).optional(),
     school_year: z.string().default('2025-2026').optional(),
-    income_threshold_type: z.enum(['Greater Than or Equal To', 'Less Than']).default('Greater Than or Equal To').optional(),
+    income_threshold_type: z
+      .enum(['Greater Than or Equal To', 'Less Than'])
+      .default('Greater Than or Equal To')
+      .optional(),
     income_threshold_family_2: z.number().optional(),
     income_threshold_family_3: z.number().optional(),
     income_threshold_family_4: z.number().optional(),
@@ -119,19 +122,21 @@ const schoolInfoCollection = defineCollection({
       state: z.string(),
       zip: z.string()
     }),
-    
+
     // School Details
     agesServed: z.string(),
     schoolYear: z.string(),
     extendedCareUntil: z.string().optional(),
-    
+
     // Social Media
-    socialMedia: z.object({
-      facebook: z.string().url().optional(),
-      instagram: z.string().url().optional(),
-      twitter: z.string().url().optional()
-    }).optional(),
-    
+    socialMedia: z
+      .object({
+        facebook: z.string().url().optional(),
+        instagram: z.string().url().optional(),
+        twitter: z.string().url().optional()
+      })
+      .optional(),
+
     // Other Info
     founded: z.number().optional(),
     ein: z.string().optional(),
@@ -145,46 +150,62 @@ const photosCollection = defineCollection({
     // File information
     originalFilename: z.string(),
     optimizedFilename: z.string(),
-    category: z.enum(['homepage', 'about', 'programs', 'admissions', 'gallery', 'teachers', 'blog', 'art', 'classroom', 'events', 'group', 'individual', 'materials', 'outdoor', 'practical']),
-    
+    category: z.enum([
+      'homepage',
+      'about',
+      'programs',
+      'admissions',
+      'gallery',
+      'teachers',
+      'blog',
+      'art',
+      'classroom',
+      'events',
+      'group',
+      'individual',
+      'materials',
+      'outdoor',
+      'practical'
+    ]),
+
     // Dimensions and format
     originalWidth: z.number(),
     originalHeight: z.number(),
     aspectRatio: z.string(),
     format: z.enum(['webp', 'jpg', 'png']).default('webp'),
-    
+
     // Focal points (0-100 scale)
     primaryFocalX: z.number().min(0).max(100),
     primaryFocalY: z.number().min(0).max(100),
     primaryFocalWeight: z.number().min(1).max(10).default(10),
     primaryFocalDescription: z.string(),
-    
+
     // Secondary focal point (optional)
     secondaryFocalX: z.number().min(0).max(100).optional(),
     secondaryFocalY: z.number().min(0).max(100).optional(),
     secondaryFocalWeight: z.number().min(1).max(10).default(5).optional(),
     secondaryFocalDescription: z.string().optional(),
-    
+
     // Crop zones for responsive display
     mobileCropX: z.number().min(0).max(100).default(0),
     mobileCropY: z.number().min(0).max(100).default(0),
     mobileCropWidth: z.number().min(10).max(100).default(100),
     mobileCropHeight: z.number().min(10).max(100).default(100),
-    
+
     tabletCropX: z.number().min(0).max(100).default(0),
     tabletCropY: z.number().min(0).max(100).default(0),
     tabletCropWidth: z.number().min(10).max(100).default(100),
     tabletCropHeight: z.number().min(10).max(100).default(100),
-    
+
     // SEO and accessibility
     altText: z.string(),
     seoKeywords: z.array(z.string()),
     contextualDescription: z.string(),
-    
+
     // Usage and classification
     usedOn: z.array(z.string()).default([]),
     primaryUse: z.string(),
-    
+
     // Analysis metadata
     hasHumanFaces: z.boolean().default(false),
     hasChildren: z.boolean().default(false),
@@ -192,8 +213,22 @@ const photosCollection = defineCollection({
     dominantColors: z.array(z.string()).default([]),
     lighting: z.enum(['natural', 'indoor', 'mixed']).default('natural'),
     activity: z.string(),
-    setting: z.enum(['classroom', 'outdoor', 'mixed', 'portrait', 'art area', 'outdoor classroom', 'montessori classroom', 'school event', 'outdoor playground', 'outdoor space', 'school gathering']).default('classroom'),
-    
+    setting: z
+      .enum([
+        'classroom',
+        'outdoor',
+        'mixed',
+        'portrait',
+        'art area',
+        'outdoor classroom',
+        'montessori classroom',
+        'school event',
+        'outdoor playground',
+        'outdoor space',
+        'school gathering'
+      ])
+      .default('classroom'),
+
     // Performance flags
     compressed: z.boolean().default(true),
     hasWebP: z.boolean().default(true),

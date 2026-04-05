@@ -1,13 +1,21 @@
 type LogLevel = 'info' | 'warn' | 'error';
 
-const REDACTED_KEY_PARTS = ['password', 'token', 'authorization', 'cookie', 'secret', 'apikey', 'api_key'];
+const REDACTED_KEY_PARTS = [
+  'password',
+  'token',
+  'authorization',
+  'cookie',
+  'secret',
+  'apikey',
+  'api_key'
+];
 const MAX_STRING_LENGTH = 400;
 const MAX_DEPTH = 4;
 const isDevelopmentEnvironment = (): boolean => process.env.NODE_ENV !== 'production';
 
 const shouldRedact = (key: string): boolean => {
   const normalized = key.toLowerCase();
-  return REDACTED_KEY_PARTS.some((part) => normalized.includes(part));
+  return REDACTED_KEY_PARTS.some(part => normalized.includes(part));
 };
 
 const sanitizeValue = (value: unknown, depth = 0): unknown => {
@@ -39,7 +47,7 @@ const sanitizeValue = (value: unknown, depth = 0): unknown => {
   }
 
   if (Array.isArray(value)) {
-    return value.slice(0, 20).map((item) => sanitizeValue(item, depth + 1));
+    return value.slice(0, 20).map(item => sanitizeValue(item, depth + 1));
   }
 
   if (typeof value === 'object') {

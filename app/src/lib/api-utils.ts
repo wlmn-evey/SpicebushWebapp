@@ -2,24 +2,18 @@ import { logServerError } from '@lib/server-logger';
 
 // Simple error response helper
 export function errorResponse(message: string, status = 400) {
-  return new Response(
-    JSON.stringify({ error: message }),
-    { 
-      status, 
-      headers: { 'Content-Type': 'application/json' } 
-    }
-  );
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
 }
 
 // Success response helper
 export function successResponse(data: unknown, status = 200) {
-  return new Response(
-    JSON.stringify(data),
-    { 
-      status, 
-      headers: { 'Content-Type': 'application/json' } 
-    }
-  );
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
 }
 
 // Basic validation helpers
@@ -44,15 +38,13 @@ export function validateRequired(data: Record<string, unknown>, fields: string[]
 }
 
 // Simple error wrapper for consistent error handling
-export async function handleApiRequest<T>(
-  handler: () => Promise<T>
-): Promise<Response> {
+export async function handleApiRequest<T>(handler: () => Promise<T>): Promise<Response> {
   try {
     const result = await handler();
     return successResponse(result);
   } catch (error) {
     logServerError('API request failed', error);
-    
+
     // Handle known error types
     if (error instanceof Error) {
       if (error.message.includes('Unauthorized')) {
@@ -62,7 +54,7 @@ export async function handleApiRequest<T>(
         return errorResponse('Resource not found', 404);
       }
     }
-    
+
     // Generic error
     return errorResponse('Internal server error', 500);
   }

@@ -47,7 +47,9 @@ const parseAmount = (value: unknown): number | null => {
 const normalizeFrequency = (value: unknown): DonationFrequency | null => {
   if (typeof value !== 'string') return null;
   const normalized = value.trim().toLowerCase();
-  return ALLOWED_FREQUENCIES.has(normalized as DonationFrequency) ? (normalized as DonationFrequency) : null;
+  return ALLOWED_FREQUENCIES.has(normalized as DonationFrequency)
+    ? (normalized as DonationFrequency)
+    : null;
 };
 
 const normalizeDonationLink = (value: unknown): string | null => {
@@ -89,7 +91,10 @@ const buildStripeCheckoutBody = (params: {
   requestBody.set('line_items[0][quantity]', '1');
   requestBody.set('line_items[0][price_data][currency]', 'usd');
   requestBody.set('line_items[0][price_data][unit_amount]', String(amountCents));
-  requestBody.set('line_items[0][price_data][product_data][name]', 'Donation to Spicebush Montessori School');
+  requestBody.set(
+    'line_items[0][price_data][product_data][name]',
+    'Donation to Spicebush Montessori School'
+  );
   requestBody.set(
     'line_items[0][price_data][product_data][description]',
     'Support accessible Montessori education through our nonprofit school community.'
@@ -145,7 +150,8 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResponse({ error: 'Please enter a valid donation amount.' }, 400);
   }
 
-  const stripeApiKey = process.env.STRIPE_RESTRICTED_KEY?.trim() || process.env.STRIPE_SECRET_KEY?.trim();
+  const stripeApiKey =
+    process.env.STRIPE_RESTRICTED_KEY?.trim() || process.env.STRIPE_SECRET_KEY?.trim();
   if (!stripeApiKey) {
     const fallbackUrl = await getFallbackDonationUrl();
     if (fallbackUrl) {
@@ -153,7 +159,10 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     return jsonResponse(
-      { error: 'Donations are temporarily unavailable online. Please contact the school for assistance.' },
+      {
+        error:
+          'Donations are temporarily unavailable online. Please contact the school for assistance.'
+      },
       503
     );
   }
@@ -191,8 +200,8 @@ export const POST: APIRoute = async ({ request }) => {
       return jsonResponse(
         {
           error:
-            (responsePayload as StripeErrorPayload).error?.message
-            || 'Unable to start secure checkout. Please try again.'
+            (responsePayload as StripeErrorPayload).error?.message ||
+            'Unable to start secure checkout. Please try again.'
         },
         502
       );

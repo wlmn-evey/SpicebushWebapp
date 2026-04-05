@@ -35,9 +35,10 @@ Astro.cookies.set(ADMIN_SESSION_COOKIE_NAME, session.sessionToken, {
   maxAge: ADMIN_SESSION_MAX_AGE_SECONDS
 });
 
-const safeNextPath = nextPathParam && nextPathParam.startsWith('/') && !nextPathParam.startsWith('//')
-  ? nextPathParam
-  : '/admin';
+const safeNextPath =
+  nextPathParam && nextPathParam.startsWith('/') && !nextPathParam.startsWith('//')
+    ? nextPathParam
+    : '/admin';
 
 if (safeNextPath === '/admin') {
   return Astro.redirect('/admin');

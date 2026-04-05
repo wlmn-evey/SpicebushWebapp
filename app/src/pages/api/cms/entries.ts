@@ -3,7 +3,17 @@ import { checkAdminAuth } from '@lib/admin-auth-check';
 import { queryFirst, queryRows } from '@lib/db/client';
 import { normalizeCount, normalizePage, normalizePageSize } from '@lib/db/pagination';
 
-const ALLOWED_COLLECTIONS = new Set(['hours', 'staff', 'tuition', 'settings', 'school-info', 'faq', 'testimonials', 'photos', 'media-slots']);
+const ALLOWED_COLLECTIONS = new Set([
+  'hours',
+  'staff',
+  'tuition',
+  'settings',
+  'school-info',
+  'faq',
+  'testimonials',
+  'photos',
+  'media-slots'
+]);
 
 const jsonResponse = (payload: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(payload), {
@@ -50,7 +60,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
       `,
       [collection, pageSize, offset]
     );
-    const entries = (data ?? []).map((entry) => ({
+    const entries = (data ?? []).map(entry => ({
       collection: entry.type,
       slug: entry.slug,
       title: entry.title,

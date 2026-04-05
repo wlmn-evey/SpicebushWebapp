@@ -65,7 +65,9 @@ describe('EmailService', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('https://api.sendgrid.com/v3/mail/send');
-    expect(String((request.headers as Record<string, string>).Authorization)).toContain('SG.test-key');
+    expect(String((request.headers as Record<string, string>).Authorization)).toContain(
+      'SG.test-key'
+    );
   });
 
   it('falls back to Unione when SendGrid fails', async () => {

@@ -80,7 +80,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
       });
       return toJson(
         {
-          error: 'You have submitted several requests recently. Please wait a few minutes and try again.'
+          error:
+            'You have submitted several requests recently. Please wait a few minutes and try again.'
         },
         429
       );

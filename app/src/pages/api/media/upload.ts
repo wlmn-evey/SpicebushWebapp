@@ -35,11 +35,12 @@ const parseBoolean = (value: FormDataEntryValue | null): boolean => {
   return ['1', 'true', 'yes', 'on'].includes(normalized);
 };
 
-const slugify = (value: string): string => value
-  .toLowerCase()
-  .replace(/[^a-z0-9]+/g, '-')
-  .replace(/^-+|-+$/g, '')
-  .slice(0, 80);
+const slugify = (value: string): string =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
 
 const isValidSlug = (slug: string): boolean => /^[a-z0-9-_]+$/.test(slug);
 
@@ -140,7 +141,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const createPhotoEntry = parseBoolean(formData.get('createPhotoEntry'));
 
     const requestedTitle = String(formData.get('title') ?? '').trim();
-    const requestedSlug = String(formData.get('slug') ?? '').trim().toLowerCase();
+    const requestedSlug = String(formData.get('slug') ?? '')
+      .trim()
+      .toLowerCase();
     const requestedCategory = resolveCategory(String(formData.get('category') ?? 'gallery'));
 
     if (createPhotoEntry && !PHOTO_CATEGORIES.has(requestedCategory)) {
@@ -151,10 +154,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     if (requestedSlug && !isValidSlug(requestedSlug)) {
-      return new Response(JSON.stringify({ error: 'Slug must contain only lowercase letters, numbers, hyphen, or underscore' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({
+          error: 'Slug must contain only lowercase letters, numbers, hyphen, or underscore'
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -262,22 +270,25 @@ export const POST: APIRoute = async ({ request, locals }) => {
       photoSlug = uniqueSlug;
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      url: result.url,
-      mediaId: result.mediaId,
-      storagePath: result.storagePath,
-      provider: result.provider,
-      width: result.width,
-      height: result.height,
-      mimeType: result.mimeType,
-      originalFilename: result.originalFilename,
-      photoSlug,
-      message: photoSlug ? 'File uploaded and photo entry created' : 'File uploaded successfully'
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        url: result.url,
+        mediaId: result.mediaId,
+        storagePath: result.storagePath,
+        provider: result.provider,
+        width: result.width,
+        height: result.height,
+        mimeType: result.mimeType,
+        originalFilename: result.originalFilename,
+        photoSlug,
+        message: photoSlug ? 'File uploaded and photo entry created' : 'File uploaded successfully'
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   } catch (error) {
     logServerError('Media upload endpoint failed', error, { route: '/api/media/upload' });
     return new Response(JSON.stringify({ error: 'Internal server error' }), {

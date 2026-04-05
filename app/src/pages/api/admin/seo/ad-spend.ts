@@ -37,7 +37,7 @@ const parseCsvEntries = (csvText: string, createdBy: string | null) => {
     trim: true
   }) as Array<Record<string, unknown>>;
 
-  return records.map((row) => {
+  return records.map(row => {
     const spendDate = asString(row.spend_date) || asString(row.date) || asString(row.spendDate);
     const channel = asString(row.channel) || asString(row.platform);
     const campaign = asString(row.campaign) || asString(row.campaign_name);
@@ -70,10 +70,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   if (contentType.includes('application/json')) {
     try {
-      const payload = await request.json() as Record<string, unknown>;
+      const payload = (await request.json()) as Record<string, unknown>;
       const entries = Array.isArray(payload.entries) ? payload.entries : [];
 
-      const normalized = entries.map((entry) => {
+      const normalized = entries.map(entry => {
         const row = entry as Record<string, unknown>;
         return {
           spendDate: asString(row.spendDate),
@@ -104,7 +104,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
       const entryId = asString(formData.get('entryId'));
       const deleted = await db.adSpend.deleteAdSpendEntry(entryId);
       if (!deleted) {
-        const failureTarget = redirectTo ? `${redirectTo}${redirectTo.includes('?') ? '&' : '?'}error=delete-failed` : null;
+        const failureTarget = redirectTo
+          ? `${redirectTo}${redirectTo.includes('?') ? '&' : '?'}error=delete-failed`
+          : null;
         if (failureTarget) {
           return new Response(null, { status: 303, headers: { Location: failureTarget } });
         }
@@ -144,7 +146,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const inserted = await db.adSpend.insertAdSpendEntries([singleEntry]);
     if (inserted === 0) {
-      const failureTarget = redirectTo ? `${redirectTo}${redirectTo.includes('?') ? '&' : '?'}error=ad_spend_invalid` : null;
+      const failureTarget = redirectTo
+        ? `${redirectTo}${redirectTo.includes('?') ? '&' : '?'}error=ad_spend_invalid`
+        : null;
       if (failureTarget) {
         return new Response(null, { status: 303, headers: { Location: failureTarget } });
       }
