@@ -1,0 +1,35 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Build & Deploy to Netlify
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+        cache-dependency-path: 'app/package-lock.json'
+
+    - name: Install dependencies
+      # --force needed: lockfile contains platform-specific @rollup packages from macOS
+      run: cd app && npm ci --force
+
+    - name: Build
+      # Astro SSR defers DB connections to request time — no DATABASE_URL needed at build
+      run: cd app && npm run build
+
+    - name: Deploy to Netlify
+      run: npx netlify deploy --prod --dir=app/dist --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
+      env:
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
