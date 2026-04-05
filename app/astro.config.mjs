@@ -27,8 +27,7 @@ export default defineConfig({
         '@layouts': fileURLToPath(new URL('./src/layouts', import.meta.url)),
         '@lib': fileURLToPath(new URL('./src/lib', import.meta.url)),
         '@utils': fileURLToPath(new URL('./src/utils', import.meta.url)),
-        '@styles': fileURLToPath(new URL('./src/styles', import.meta.url)),
-        '@content': fileURLToPath(new URL('./src/content', import.meta.url))
+        '@styles': fileURLToPath(new URL('./src/styles', import.meta.url))
       }
     },
     build: {
