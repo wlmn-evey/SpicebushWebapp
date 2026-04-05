@@ -154,6 +154,9 @@ pip-delete-this-directory.txt
 # Blog backend (separate repo)
 blog-backend/
 
+# Audit findings (local-only)
+audit-findings/
+
 # Local Netlify folder
 .netlify
 Website Photos, Spicebush Montessori School 2/
