@@ -2,7 +2,8 @@ import type { APIRoute } from 'astro';
 
 const ALLOWED_RELATIVE_PREFIXES = ['/images/', '/uploads/', '/api/media/blob/'];
 
-const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, value));
 
 const parsePercent = (value: string | null, fallback: number): number => {
   if (!value) return fallback;
@@ -11,11 +12,7 @@ const parsePercent = (value: string | null, fallback: number): number => {
   return parsed;
 };
 
-const parseIntRange = (
-  value: string | null,
-  min: number,
-  max: number
-): number | null => {
+const parseIntRange = (value: string | null, min: number, max: number): number | null => {
   if (!value) return null;
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed)) return null;
@@ -28,9 +25,9 @@ const parseQuality = (value: string | null): number => {
 };
 
 const isAllowedAbsoluteHost = (hostname: string, requestHostname: string): boolean =>
-  hostname === requestHostname
-  || hostname === 'spicebushmontessori.org'
-  || (hostname.endsWith('.netlify.app') && hostname.includes('spicebush'));
+  hostname === requestHostname ||
+  hostname === 'spicebushmontessori.org' ||
+  (hostname.endsWith('.netlify.app') && hostname.includes('spicebush'));
 
 const resolveSourceUrl = (rawSrc: string, requestUrl: URL): URL | null => {
   if (!rawSrc) return null;
@@ -38,7 +35,7 @@ const resolveSourceUrl = (rawSrc: string, requestUrl: URL): URL | null => {
   if (!src) return null;
 
   if (src.startsWith('/')) {
-    const allowed = ALLOWED_RELATIVE_PREFIXES.some((prefix) => src.startsWith(prefix));
+    const allowed = ALLOWED_RELATIVE_PREFIXES.some(prefix => src.startsWith(prefix));
     if (!allowed) {
       return null;
     }
@@ -72,7 +69,7 @@ let sharpFactoryPromise: Promise<SharpFactory | null> | null = null;
 const getSharpFactory = async (): Promise<SharpFactory | null> => {
   if (!sharpFactoryPromise) {
     sharpFactoryPromise = import('sharp')
-      .then((module) => module.default as SharpFactory)
+      .then(module => module.default as SharpFactory)
       .catch(() => null);
   }
   return sharpFactoryPromise;
@@ -196,14 +193,12 @@ export const GET: APIRoute = async ({ request, url }) => {
     const cropXPx = clamp(Math.round((cropX / 100) * sourceWidth), 0, cropXMax);
     const cropYPx = clamp(Math.round((cropY / 100) * sourceHeight), 0, cropYMax);
 
-    let pipeline = sharpFactory(image.buffer)
-      .rotate()
-      .extract({
-        left: cropXPx,
-        top: cropYPx,
-        width: cropWidthPx,
-        height: cropHeightPx
-      });
+    let pipeline = sharpFactory(image.buffer).rotate().extract({
+      left: cropXPx,
+      top: cropYPx,
+      width: cropWidthPx,
+      height: cropHeightPx
+    });
 
     if (outputWidth || outputHeight) {
       pipeline = pipeline.resize({

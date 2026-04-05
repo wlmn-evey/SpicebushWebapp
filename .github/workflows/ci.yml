@@ -1,48 +1,41 @@
-name: CI Pipeline
+name: CI
 
 on:
-  push:
-    branches: [main, develop]
   pull_request:
     branches: [main]
 
 jobs:
-  lint-and-test:
-    name: Lint and Test
+  ci:
+    name: Lint, Typecheck, Test, Build
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
+    - name: Checkout
       uses: actions/checkout@v4
-    
-    - name: Setup Node.js
+
+    - name: Setup Node.js 22
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
         cache: 'npm'
         cache-dependency-path: 'app/package-lock.json'
-    
+
     - name: Install dependencies
-      run: |
-        cd app
-        npm ci
-    
-    - name: Run linters
-      run: |
-        cd app
-        npm run lint
-        npm run format:check
-    
-    - name: Type check
-      run: |
-        cd app
-        npm run typecheck
-    
-    - name: Run unit tests
-      run: |
-        cd app
-        npm run test
-      env:
-        # Using non-sensitive test database
-        PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
-        PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+      # --force needed: lockfile contains platform-specific @rollup packages from macOS
+      run: cd app && npm ci --force
+
+    - name: Lint (zero warnings)
+      run: cd app && npm run lint -- --max-warnings=0
+
+    - name: Format check
+      run: cd app && npm run format:check
+
+    - name: Typecheck
+      run: cd app && npm run typecheck
+
+    - name: Unit tests
+      run: cd app && npm run test
+
+    - name: Build
+      # Astro SSR defers DB connections to request time — no DATABASE_URL needed at build
+      run: cd app && npm run build

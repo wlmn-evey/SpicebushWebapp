@@ -49,7 +49,8 @@ type Rect = {
   height: number;
 };
 
-const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, value));
 const roundTenth = (value: number): number => Math.round(value * 10) / 10;
 
 const asRecord = (value: unknown): Record<string, unknown> => {
@@ -109,8 +110,12 @@ export const normalizePlacementSuggestion = (
 ): PlacementSuggestion => {
   const raw = asRecord(rawInput);
 
-  const desktopFocalX = roundTenth(clamp(toNumber(raw.desktopFocalX, fallback.desktopFocalX), 0, 100));
-  const desktopFocalY = roundTenth(clamp(toNumber(raw.desktopFocalY, fallback.desktopFocalY), 0, 100));
+  const desktopFocalX = roundTenth(
+    clamp(toNumber(raw.desktopFocalX, fallback.desktopFocalX), 0, 100)
+  );
+  const desktopFocalY = roundTenth(
+    clamp(toNumber(raw.desktopFocalY, fallback.desktopFocalY), 0, 100)
+  );
 
   const mobileRect = normalizeCropRect(
     raw.mobileCropX,
@@ -180,7 +185,7 @@ export const sanitizeSmartAdjustContext = (input: unknown): SmartAdjustContext =
 
   const overlapRegionsRaw = Array.isArray(value.overlapRegions) ? value.overlapRegions : [];
   const overlapRegions = overlapRegionsRaw
-    .map((region) => normalizeRegion(region))
+    .map(region => normalizeRegion(region))
     .filter((region): region is SmartAdjustRegion => Boolean(region))
     .slice(0, 20);
 
@@ -216,10 +221,10 @@ export const sanitizeSmartAdjustContext = (input: unknown): SmartAdjustContext =
 };
 
 const pointInRect = (point: { x: number; y: number }, rect: Rect): boolean =>
-  point.x >= rect.x
-  && point.x <= rect.x + rect.width
-  && point.y >= rect.y
-  && point.y <= rect.y + rect.height;
+  point.x >= rect.x &&
+  point.x <= rect.x + rect.width &&
+  point.y >= rect.y &&
+  point.y <= rect.y + rect.height;
 
 const pointToRectDistance = (point: { x: number; y: number }, rect: Rect): number => {
   const right = rect.x + rect.width;
@@ -273,7 +278,7 @@ const optimizeFocus = (
     const overlapPenalty = overlapRegions.reduce((sum, region) => {
       const weight = regionWeight(region);
       if (pointInRect(candidate, region)) {
-        return sum + (2.6 * weight);
+        return sum + 2.6 * weight;
       }
 
       const distance = pointToRectDistance(candidate, region);
@@ -282,9 +287,10 @@ const optimizeFocus = (
       return sum + edgePenalty;
     }, 0);
 
-    const baseDistancePenalty = Math.hypot(candidate.x - baseFocus.x, candidate.y - baseFocus.y) / 100;
+    const baseDistancePenalty =
+      Math.hypot(candidate.x - baseFocus.x, candidate.y - baseFocus.y) / 100;
     const centerBiasPenalty = Math.hypot(candidate.x - 50, candidate.y - 50) / 250;
-    const score = overlapPenalty + (0.42 * baseDistancePenalty) + (0.08 * centerBiasPenalty);
+    const score = overlapPenalty + 0.42 * baseDistancePenalty + 0.08 * centerBiasPenalty;
 
     if (score < bestScore) {
       bestScore = score;
@@ -310,8 +316,8 @@ const optimizeCrop = (
   const maxY = Math.max(0, 100 - height);
 
   const centeredCandidate = {
-    x: clamp(focus.x - (width / 2), 0, maxX),
-    y: clamp(focus.y - (height / 2), 0, maxY)
+    x: clamp(focus.x - width / 2, 0, maxX),
+    y: clamp(focus.y - height / 2, 0, maxY)
   };
 
   const candidates: Array<{ x: number; y: number }> = [
@@ -351,17 +357,17 @@ const optimizeCrop = (
       const weight = regionWeight(region);
       const area = overlapArea(rect, region);
       if (area <= 0) return sum;
-      return sum + ((area / cropArea) * weight * 3.6);
+      return sum + (area / cropArea) * weight * 3.6;
     }, 0);
 
     const center = {
-      x: rect.x + (rect.width / 2),
-      y: rect.y + (rect.height / 2)
+      x: rect.x + rect.width / 2,
+      y: rect.y + rect.height / 2
     };
 
     const focusDistancePenalty = Math.hypot(center.x - focus.x, center.y - focus.y) / 100;
     const baseDistancePenalty = Math.hypot(rect.x - baseCrop.x, rect.y - baseCrop.y) / 100;
-    const score = overlapPenalty + (0.62 * focusDistancePenalty) + (0.12 * baseDistancePenalty);
+    const score = overlapPenalty + 0.62 * focusDistancePenalty + 0.12 * baseDistancePenalty;
 
     if (score < bestScore) {
       bestScore = score;
@@ -382,12 +388,12 @@ export const createHeuristicSmartAdjustSuggestion = (
   context: SmartAdjustContext
 ): PlacementSuggestion => {
   const normalizedBase = normalizePlacementSuggestion(baseSuggestion, baseSuggestion);
-  const naturalRatio = context.image.naturalHeight > 0
-    ? context.image.naturalWidth / context.image.naturalHeight
-    : 1;
-  const renderedRatio = context.image.renderedHeight > 0
-    ? context.image.renderedWidth / context.image.renderedHeight
-    : 1;
+  const naturalRatio =
+    context.image.naturalHeight > 0 ? context.image.naturalWidth / context.image.naturalHeight : 1;
+  const renderedRatio =
+    context.image.renderedHeight > 0
+      ? context.image.renderedWidth / context.image.renderedHeight
+      : 1;
   const portraitLandscapeBiasY = (() => {
     if (naturalRatio >= 0.95 || renderedRatio <= 1.2) {
       return null;
@@ -396,23 +402,23 @@ export const createHeuristicSmartAdjustSuggestion = (
     // Portrait source shown in a landscape frame often needs a lower vertical focal point.
     const portraitSeverity = clamp((1 - naturalRatio) / 0.45, 0, 1);
     const landscapeSeverity = clamp((renderedRatio - 1.2) / 0.8, 0, 1);
-    const downwardShift = 8 + (10 * portraitSeverity * landscapeSeverity);
+    const downwardShift = 8 + 10 * portraitSeverity * landscapeSeverity;
     return clamp(60 + downwardShift, 60, 78);
   })();
 
   const detailHint = context.imageDetailHint;
   const blendedFocus = detailHint
     ? (() => {
-      const blend = clamp(0.25 + (detailHint.confidence * 0.5), 0.2, 0.8);
-      return {
-        x: (normalizedBase.desktopFocalX * (1 - blend)) + (detailHint.x * blend),
-        y: (normalizedBase.desktopFocalY * (1 - blend)) + (detailHint.y * blend)
-      };
-    })()
+        const blend = clamp(0.25 + detailHint.confidence * 0.5, 0.2, 0.8);
+        return {
+          x: normalizedBase.desktopFocalX * (1 - blend) + detailHint.x * blend,
+          y: normalizedBase.desktopFocalY * (1 - blend) + detailHint.y * blend
+        };
+      })()
     : {
-      x: normalizedBase.desktopFocalX,
-      y: normalizedBase.desktopFocalY
-    };
+        x: normalizedBase.desktopFocalX,
+        y: normalizedBase.desktopFocalY
+      };
   if (portraitLandscapeBiasY !== null && context.overlapRegions.length === 0) {
     blendedFocus.y = Math.max(blendedFocus.y, portraitLandscapeBiasY);
   }

@@ -196,7 +196,9 @@ export const buildAuth0LogoutUrl = (params: {
   }
 
   const origin = getSiteOrigin(params.requestUrl);
-  const safeReturnPath = normalizeInternalPath(params.returnPath || '/auth/sign-in?notice=signed-out');
+  const safeReturnPath = normalizeInternalPath(
+    params.returnPath || '/auth/sign-in?notice=signed-out'
+  );
   const returnTo = config.logoutReturnTo || `${origin}${safeReturnPath}`;
 
   const logoutUrl = new URL(`https://${config.domain}/v2/logout`);

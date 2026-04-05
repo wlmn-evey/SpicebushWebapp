@@ -133,10 +133,12 @@ const requestAccessToken = async (credentials: ServiceAccountCredentials): Promi
 
   if (!tokenResponse.ok) {
     const detail = await tokenResponse.text().catch(() => '');
-    throw new Error(`Failed to obtain GA4 access token (${tokenResponse.status}): ${detail.slice(0, 180)}`);
+    throw new Error(
+      `Failed to obtain GA4 access token (${tokenResponse.status}): ${detail.slice(0, 180)}`
+    );
   }
 
-  const payload = await tokenResponse.json() as { access_token?: unknown };
+  const payload = (await tokenResponse.json()) as { access_token?: unknown };
   const accessToken = asString(payload.access_token);
   if (!accessToken) {
     throw new Error('GA4 access token response was missing access_token');
@@ -187,7 +189,7 @@ const runGa4Report = async (
     throw new Error(`GA4 runReport failed (${response.status}): ${detail.slice(0, 220)}`);
   }
 
-  return await response.json() as RunReportResponse;
+  return (await response.json()) as RunReportResponse;
 };
 
 const defaultReport = (windowDays: number, message: string): Ga4OverviewReport => ({
@@ -277,11 +279,11 @@ export async function getGa4OverviewReport(
         pageViews: toInteger(summaryMetrics[3]?.value),
         eventCount: toInteger(summaryMetrics[4]?.value)
       },
-      topPages: (topPagesReport.rows ?? []).map((row) => ({
+      topPages: (topPagesReport.rows ?? []).map(row => ({
         pagePath: asString(row.dimensionValues?.[0]?.value) || '(not set)',
         views: toInteger(row.metricValues?.[0]?.value)
       })),
-      topCampaigns: (campaignsReport.rows ?? []).map((row) => ({
+      topCampaigns: (campaignsReport.rows ?? []).map(row => ({
         campaign: asString(row.dimensionValues?.[0]?.value) || '(not set)',
         sourceMedium: asString(row.dimensionValues?.[1]?.value) || '(not set)',
         sessions: toInteger(row.metricValues?.[0]?.value),

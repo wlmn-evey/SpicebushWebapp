@@ -24,7 +24,10 @@ export async function getContactSubmissions(
   options: ContactSubmissionQueryOptions & { maxPageSize?: number } = {}
 ): Promise<ContactSubmissionQueryResult> {
   const page = normalizePage(options.page);
-  const pageSize = normalizePageSize(options.pageSize, options.maxPageSize ?? CONTACT_MAX_PAGE_SIZE);
+  const pageSize = normalizePageSize(
+    options.pageSize,
+    options.maxPageSize ?? CONTACT_MAX_PAGE_SIZE
+  );
   const offset = (page - 1) * pageSize;
   const search = typeof options.search === 'string' ? options.search.trim() : '';
 

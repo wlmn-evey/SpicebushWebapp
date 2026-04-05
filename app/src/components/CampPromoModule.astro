@@ -153,10 +153,25 @@ const badgeClass = showCampPage
   promoEnabled && showCampEntryPoints && (
     <section class="py-10">
       <div class="container mx-auto px-4">
-        <div class={`relative overflow-hidden rounded-2xl border p-6 shadow-sm lg:p-8 ${shellClass}`}>
-          <svg class="pointer-events-none absolute -right-8 -top-8 h-36 w-36 text-sunlight-gold/[0.06]" viewBox="0 0 120 120" fill="currentColor" aria-hidden="true">
+        <div
+          class={`relative overflow-hidden rounded-2xl border p-6 shadow-sm lg:p-8 ${shellClass}`}
+        >
+          <svg
+            class="pointer-events-none absolute -right-8 -top-8 h-36 w-36 text-sunlight-gold/[0.06]"
+            viewBox="0 0 120 120"
+            fill="currentColor"
+            aria-hidden="true"
+          >
             <circle cx="60" cy="60" r="40" />
-            <circle cx="60" cy="60" r="56" stroke="currentColor" stroke-width="2" fill="none" opacity="0.5" />
+            <circle
+              cx="60"
+              cy="60"
+              r="56"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+              opacity="0.5"
+            />
           </svg>
           <div class="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div class="max-w-3xl">
@@ -182,7 +197,9 @@ const badgeClass = showCampPage
             </div>
 
             <div class="flex w-full flex-col gap-3 sm:w-auto">
-              <span class={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass}`}>
+              <span
+                class={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass}`}
+              >
                 {showCampPage ? (
                   <span class="relative flex h-2 w-2">
                     <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />

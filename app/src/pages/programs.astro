@@ -71,8 +71,8 @@ const parseScheduleBullet = (bullet: string): DayScheduleEntry | null => {
 
 const faqScheduleEntries = scheduleFaqItem
   ? scheduleFaqItem.bullets
-    .map(parseScheduleBullet)
-    .filter((entry): entry is DayScheduleEntry => entry !== null)
+      .map(parseScheduleBullet)
+      .filter((entry): entry is DayScheduleEntry => entry !== null)
   : [];
 
 const defaultScheduleEntries: DayScheduleEntry[] = [

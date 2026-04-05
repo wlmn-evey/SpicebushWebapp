@@ -24,8 +24,9 @@ const { turnstileSiteKey } = Astro.props as Props;
           Quick Question
         </h3>
         <p id="camp-ask-subtitle" class="mt-1 text-sm text-earth-brown/80">
-          We will follow up about <span id="camp-ask-week-label" class="font-semibold text-earth-brown"
-          ></span>.
+          We will follow up about <span
+            id="camp-ask-week-label"
+            class="font-semibold text-earth-brown"></span>.
         </p>
       </div>
       <button
@@ -43,7 +44,12 @@ const { turnstileSiteKey } = Astro.props as Props;
       <input type="hidden" name="subject" id="camp-ask-subject" value="" />
       <input type="hidden" name="source" value="camp" />
       <input type="hidden" name="bot-field" value="" />
-      <input type="hidden" name="submission-started-at" id="camp-ask-submission-started-at" value="" />
+      <input
+        type="hidden"
+        name="submission-started-at"
+        id="camp-ask-submission-started-at"
+        value=""
+      />
 
       <div>
         <label for="camp-ask-question" class="camp-ask-label">Question</label>
@@ -93,7 +99,11 @@ const { turnstileSiteKey } = Astro.props as Props;
         />
       </div>
 
-      <p id="camp-ask-status" class="min-h-[1.25rem] text-sm text-earth-brown/80" aria-live="polite">
+      <p
+        id="camp-ask-status"
+        class="min-h-[1.25rem] text-sm text-earth-brown/80"
+        aria-live="polite"
+      >
       </p>
 
       <div>
@@ -101,7 +111,9 @@ const { turnstileSiteKey } = Astro.props as Props;
           class="cf-turnstile"
           data-sitekey={turnstileSiteKey}
           data-theme="light"
-          data-response-field-name="cf-turnstile-response"></div>
+          data-response-field-name="cf-turnstile-response"
+        >
+        </div>
         <p class="mt-1 text-xs text-earth-brown/70">
           Security check to protect families from spam.
         </p>
@@ -197,24 +209,24 @@ const { turnstileSiteKey } = Astro.props as Props;
       document.body.classList.remove('overflow-hidden');
     };
 
-    closeButtons.forEach((button) => {
+    closeButtons.forEach(button => {
       button.addEventListener('click', closeModal);
     });
 
-    openButtons.forEach((button) => {
+    openButtons.forEach(button => {
       if (!(button instanceof HTMLButtonElement)) return;
       button.addEventListener('click', () => {
         openModal(button.dataset.weekTitle || '', button.dataset.weekSlug || '');
       });
     });
 
-    document.addEventListener('keydown', (event) => {
+    document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') {
         closeModal();
       }
     });
 
-    form.addEventListener('submit', async (event) => {
+    form.addEventListener('submit', async event => {
       event.preventDefault();
 
       const formData = new FormData(form);
@@ -263,10 +275,7 @@ const { turnstileSiteKey } = Astro.props as Props;
           );
         }
 
-        setStatus(
-          'Thanks! Admissions received your question and will follow up soon.',
-          'success'
-        );
+        setStatus('Thanks! Admissions received your question and will follow up soon.', 'success');
         form.reset();
         if (submissionStartedAt instanceof HTMLInputElement) {
           submissionStartedAt.value = Date.now().toString();

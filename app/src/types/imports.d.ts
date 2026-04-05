@@ -15,21 +15,21 @@ declare module '@lib/email-service' {
       contentType?: string;
     }>;
   }
-  
+
   export interface EmailResult {
     success: boolean;
     messageId?: string;
     error?: string;
     provider?: string;
   }
-  
+
   export class EmailService {
     send(message: EmailMessage): Promise<EmailResult>;
     getStatus(): Record<string, boolean>;
     getConfiguredProviderNames(): string[];
     getPreferredProvider(): string;
   }
-  
+
   export const emailService: EmailService;
 }
 

@@ -4,7 +4,7 @@ import path from 'path';
 import { queryFirst } from '@lib/db/client';
 import { logServerError, logServerWarn } from '@lib/server-logger';
 
-export const GET: APIRoute = async (context) => {
+export const GET: APIRoute = async context => {
   try {
     // Check admin authentication via middleware.
     const locals = context.locals as unknown as Record<string, unknown>;
@@ -17,19 +17,19 @@ export const GET: APIRoute = async (context) => {
         headers: { 'Content-Type': 'application/json' }
       });
     }
-    
+
     // Get storage stats
     const uploadDir = './public/uploads';
     let totalSize = 0;
     let fileCount = 0;
-    
+
     try {
       const files = await fs.readdir(uploadDir);
-      
+
       for (const file of files) {
         const filePath = path.join(uploadDir, file);
         const stats = await fs.stat(filePath);
-        
+
         if (stats.isFile()) {
           totalSize += stats.size;
           fileCount++;
@@ -41,7 +41,7 @@ export const GET: APIRoute = async (context) => {
         error
       });
     }
-    
+
     // Also get database stats
     const countRow = await queryFirst<{ count: number }>(
       `
@@ -49,16 +49,18 @@ export const GET: APIRoute = async (context) => {
         FROM media
       `
     );
-    
-    return new Response(JSON.stringify({
-      totalSize,
-      fileCount,
-      dbCount: countRow?.count || 0
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
+
+    return new Response(
+      JSON.stringify({
+        totalSize,
+        fileCount,
+        dbCount: countRow?.count || 0
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   } catch (error) {
     logServerError('Storage stats endpoint failed', error, { route: '/api/storage/stats' });
     return new Response(JSON.stringify({ error: 'Internal server error' }), {

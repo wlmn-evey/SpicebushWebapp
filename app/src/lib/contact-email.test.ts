@@ -30,7 +30,8 @@ describe('sendContactSubmissionEmails', () => {
   it('routes contact notifications and sends confirmation with configured templates', async () => {
     getAllSettingsMock.mockResolvedValue({
       school_email: 'information@spicebushmontessori.org',
-      contact_form_notify_emails: 'admin@spicebushmontessori.org, admissions@spicebushmontessori.org',
+      contact_form_notify_emails:
+        'admin@spicebushmontessori.org, admissions@spicebushmontessori.org',
       contact_form_notify_subject: 'Contact alert - {{name}}',
       contact_form_confirm_submitter: true,
       contact_form_confirm_subject: 'Thanks {{name}}'

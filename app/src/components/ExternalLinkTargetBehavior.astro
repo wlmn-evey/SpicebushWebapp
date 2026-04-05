@@ -2,10 +2,10 @@
   (() => {
     const EXTERNAL_LINK_ATTR = 'data-external-link-processed';
 
-    const addSecurityRel = (anchor) => {
+    const addSecurityRel = anchor => {
       const existing = (anchor.getAttribute('rel') || '')
         .split(/\s+/)
-        .map((token) => token.trim())
+        .map(token => token.trim())
         .filter(Boolean);
       const relValues = new Set(existing);
       relValues.add('noopener');
@@ -13,7 +13,7 @@
       anchor.setAttribute('rel', Array.from(relValues).join(' '));
     };
 
-    const shouldOpenInNewTab = (anchor) => {
+    const shouldOpenInNewTab = anchor => {
       const href = anchor.getAttribute('href');
       if (!href || href.startsWith('#')) {
         return false;
@@ -37,7 +37,7 @@
       return parsed.origin !== window.location.origin;
     };
 
-    const processAnchor = (anchor) => {
+    const processAnchor = anchor => {
       if (!(anchor instanceof HTMLAnchorElement)) return;
       if (anchor.getAttribute(EXTERNAL_LINK_ATTR) === 'true') return;
 
@@ -49,22 +49,22 @@
       anchor.setAttribute(EXTERNAL_LINK_ATTR, 'true');
     };
 
-    const processRoot = (root) => {
+    const processRoot = root => {
       if (root instanceof HTMLAnchorElement) {
         processAnchor(root);
       }
 
       if (root instanceof Element) {
-        root.querySelectorAll('a[href]').forEach((anchor) => processAnchor(anchor));
+        root.querySelectorAll('a[href]').forEach(anchor => processAnchor(anchor));
       }
     };
 
     const initialize = () => {
       processRoot(document.body);
 
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          mutation.addedNodes.forEach((node) => {
+      const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+          mutation.addedNodes.forEach(node => {
             if (node instanceof Element) {
               processRoot(node);
             }

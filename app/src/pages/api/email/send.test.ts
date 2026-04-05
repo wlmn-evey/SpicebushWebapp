@@ -96,7 +96,8 @@ describe('POST /api/email/send — error sanitization (P1 fix)', () => {
 
   it('does not leak stack traces in error responses', async () => {
     const errorWithStack = new Error('DB connection pool exhausted');
-    errorWithStack.stack = 'Error: DB connection pool exhausted\n    at Pool.connect (/app/node_modules/pg/lib/pool.js:123:11)';
+    errorWithStack.stack =
+      'Error: DB connection pool exhausted\n    at Pool.connect (/app/node_modules/pg/lib/pool.js:123:11)';
 
     vi.mocked(emailService.send).mockRejectedValue(errorWithStack);
 

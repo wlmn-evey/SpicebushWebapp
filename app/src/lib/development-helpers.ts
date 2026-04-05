@@ -1,6 +1,6 @@
 /**
  * Development Helper Utilities
- * 
+ *
  * This module provides utility functions for development and testing environments,
  * including test email detection, enhanced error messaging, and environment checks.
  */
@@ -19,10 +19,10 @@ const TEST_DOMAINS = [
 
 /**
  * Determines if an email address belongs to a test/development account
- * 
+ *
  * @param email - The email address to check
  * @returns true if the email is from a test domain, false otherwise
- * 
+ *
  * @example
  * ```typescript
  * isTestEmail('user@spicebushmontessori.test') // returns true
@@ -35,20 +35,18 @@ export function isTestEmail(email: string): boolean {
   }
 
   const normalizedEmail = email.toLowerCase().trim();
-  
-  return TEST_DOMAINS.some(domain => 
-    normalizedEmail.endsWith(domain.toLowerCase())
-  );
+
+  return TEST_DOMAINS.some(domain => normalizedEmail.endsWith(domain.toLowerCase()));
 }
 
 /**
  * Enhanced error message formatter for authentication errors
  * Provides user-friendly error messages with special handling for test accounts
- * 
+ *
  * @param error - The error object from authentication operations
  * @param email - Optional email address for context-specific messaging
  * @returns A user-friendly error message string
- * 
+ *
  * @example
  * ```typescript
  * const message = getAuthErrorMessage(authError, 'user@test.com');
@@ -62,7 +60,7 @@ export function getAuthErrorMessage(error: unknown, email?: string): string {
 
   // Extract error message from various error formats
   let errorMessage: string;
-  
+
   if (typeof error === 'string') {
     errorMessage = error;
   } else if (error instanceof Error) {
@@ -71,7 +69,8 @@ export function getAuthErrorMessage(error: unknown, email?: string): string {
     // Handle provider error formats with message + optional description.
     const providerError = error as { message?: unknown; error_description?: unknown };
     const message = typeof providerError.message === 'string' ? providerError.message : '';
-    const description = typeof providerError.error_description === 'string' ? providerError.error_description : '';
+    const description =
+      typeof providerError.error_description === 'string' ? providerError.error_description : '';
     errorMessage = message || description || 'Unknown error';
   } else {
     errorMessage = 'An unexpected error occurred';
@@ -79,50 +78,55 @@ export function getAuthErrorMessage(error: unknown, email?: string): string {
 
   // Normalize error message for consistent handling
   const normalizedError = errorMessage.toLowerCase();
-  
+
   // Enhanced error messages based on error type
-  if (normalizedError.includes('invalid login credentials') || 
-      normalizedError.includes('invalid_credentials')) {
+  if (
+    normalizedError.includes('invalid login credentials') ||
+    normalizedError.includes('invalid_credentials')
+  ) {
     if (email && isTestEmail(email)) {
-      return 'Invalid credentials. For test accounts, ensure you\'ve registered first or check your password.';
+      return "Invalid credentials. For test accounts, ensure you've registered first or check your password.";
     }
     return 'Invalid email or password. Please check your credentials and try again.';
   }
-  
-  if (normalizedError.includes('email not confirmed') || 
-      normalizedError.includes('email_not_confirmed')) {
+
+  if (
+    normalizedError.includes('email not confirmed') ||
+    normalizedError.includes('email_not_confirmed')
+  ) {
     if (email && isTestEmail(email)) {
       return 'Email not confirmed. Test accounts should be auto-confirmed - please try signing in again or contact support.';
     }
     return 'Please check your email and click the confirmation link before signing in.';
   }
-  
-  if (normalizedError.includes('user not found') || 
-      normalizedError.includes('user_not_found')) {
+
+  if (normalizedError.includes('user not found') || normalizedError.includes('user_not_found')) {
     return 'No account found with this email address. Please register first.';
   }
-  
-  if (normalizedError.includes('signup_disabled') || 
-      normalizedError.includes('signups not allowed')) {
+
+  if (
+    normalizedError.includes('signup_disabled') ||
+    normalizedError.includes('signups not allowed')
+  ) {
     return 'Account registration is currently disabled. Please contact an administrator.';
   }
-  
+
   if (normalizedError.includes('password') && normalizedError.includes('weak')) {
     return 'Password is too weak. Please use at least 6 characters with a mix of letters and numbers.';
   }
-  
+
   if (normalizedError.includes('rate limit') || normalizedError.includes('too many')) {
     return 'Too many attempts. Please wait a few minutes before trying again.';
   }
-  
+
   if (normalizedError.includes('network') || normalizedError.includes('fetch')) {
     return 'Network connection issue. Please check your internet connection and try again.';
   }
-  
+
   if (normalizedError.includes('invalid email')) {
     return 'Please enter a valid email address.';
   }
-  
+
   if (normalizedError.includes('password too short')) {
     return 'Password must be at least 6 characters long.';
   }
@@ -134,16 +138,16 @@ export function getAuthErrorMessage(error: unknown, email?: string): string {
       return `Authentication error: ${errorMessage}. Check browser console for details.`;
     }
   }
-  
+
   // Fallback to original message, cleaned up
   return errorMessage.charAt(0).toUpperCase() + errorMessage.slice(1);
 }
 
 /**
  * Determines if the application is running in development mode
- * 
+ *
  * @returns true if in development environment, false otherwise
- * 
+ *
  * @example
  * ```typescript
  * if (isDevEnvironment()) {
@@ -158,34 +162,37 @@ export function isDevEnvironment(): boolean {
     if (import.meta.env.DEV === true) {
       return true;
     }
-    
+
     // Check NODE_ENV
     if (import.meta.env.NODE_ENV === 'development') {
       return true;
     }
-    
+
     // Check for explicit local database environment values.
     const databaseUrl = import.meta.env.DATABASE_URL ?? import.meta.env.NETLIFY_DATABASE_URL;
-    if (databaseUrl && (
-      databaseUrl.includes('localhost') ||
-      databaseUrl.includes('127.0.0.1') ||
-      databaseUrl.includes('.local')
-    )) {
+    if (
+      databaseUrl &&
+      (databaseUrl.includes('localhost') ||
+        databaseUrl.includes('127.0.0.1') ||
+        databaseUrl.includes('.local'))
+    ) {
       return true;
     }
   }
-  
+
   // Fallback checks for browser environment
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    if (hostname === 'localhost' || 
-        hostname === '127.0.0.1' || 
-        hostname.endsWith('.local') ||
-        hostname.endsWith('.test')) {
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.endsWith('.local') ||
+      hostname.endsWith('.test')
+    ) {
       return true;
     }
   }
-  
+
   // Default to production mode for safety
   return false;
 }
@@ -193,7 +200,7 @@ export function isDevEnvironment(): boolean {
 /**
  * Development utility: Get test account domains
  * Used internally and for testing purposes
- * 
+ *
  * @returns Array of test domain strings
  */
 export function getTestDomains(): readonly string[] {
@@ -202,12 +209,13 @@ export function getTestDomains(): readonly string[] {
 
 /**
  * Development utility: Check if verbose logging should be enabled
- * 
+ *
  * @returns true if verbose logging should be enabled
  */
 export function shouldEnableVerboseLogging(): boolean {
-  return isDevEnvironment() && (
-    typeof import.meta !== 'undefined' && 
+  return (
+    isDevEnvironment() &&
+    typeof import.meta !== 'undefined' &&
     import.meta.env?.VITE_VERBOSE_LOGGING === 'true'
   );
 }

@@ -113,8 +113,8 @@ const isEmail = (value: string): boolean => EMAIL_REGEX.test(value.trim());
 const parseEmailList = (value: unknown): string[] => {
   if (Array.isArray(value)) {
     return value
-      .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
-      .filter((entry) => isEmail(entry));
+      .map(entry => (typeof entry === 'string' ? entry.trim() : ''))
+      .filter(entry => isEmail(entry));
   }
 
   const raw = asString(value);
@@ -122,11 +122,12 @@ const parseEmailList = (value: unknown): string[] => {
 
   return raw
     .split(/[\n,;]+/)
-    .map((entry) => entry.trim())
-    .filter((entry) => isEmail(entry));
+    .map(entry => entry.trim())
+    .filter(entry => isEmail(entry));
 };
 
-const dedupeEmails = (emails: string[]): string[] => Array.from(new Set(emails.map((entry) => entry.trim())));
+const dedupeEmails = (emails: string[]): string[] =>
+  Array.from(new Set(emails.map(entry => entry.trim())));
 
 const hasDatabaseConnectionConfig = (): boolean => {
   const dbUrl = asString(process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL);
@@ -169,7 +170,7 @@ const logContactEmailMessage = async (input: {
   }
 
   try {
-    const recipients = dedupeEmails(input.recipients.filter((entry) => isEmail(entry)));
+    const recipients = dedupeEmails(input.recipients.filter(entry => isEmail(entry)));
     await query(
       `
         INSERT INTO communications_messages (
@@ -282,7 +283,7 @@ const buildNotificationEmail = (
 ) => {
   const rows = toLines(input)
     .map(
-      (row) => `
+      row => `
         <tr>
           <td style="padding:8px 0;color:#5a6a62;font-size:13px;font-weight:700;vertical-align:top;width:190px;">${escapeHtml(row.label)}</td>
           <td style="padding:8px 0;color:#2f3a34;font-size:14px;">${escapeHtml(row.value)}</td>

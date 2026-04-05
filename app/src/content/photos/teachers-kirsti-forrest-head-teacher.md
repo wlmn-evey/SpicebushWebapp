@@ -1,13 +1,13 @@
 ---
-originalFilename: "kirsti-forrest.jpg"
-optimizedFilename: "teachers-kirsti-forrest-head-teacher-800x800.webp"
-category: "teachers"
+originalFilename: 'kirsti-forrest.jpg'
+optimizedFilename: 'teachers-kirsti-forrest-head-teacher-800x800.webp'
+category: 'teachers'
 
 # Dimensions and format
 originalWidth: 800
 originalHeight: 800
-aspectRatio: "1:1"
-format: "webp"
+aspectRatio: '1:1'
+format: 'webp'
 
 # Primary focal point - Face
 primaryFocalX: 50
@@ -19,7 +19,7 @@ primaryFocalDescription: "Kirsti's warm, welcoming expression"
 secondaryFocalX: 50
 secondaryFocalY: 60
 secondaryFocalWeight: 5
-secondaryFocalDescription: "Professional presentation"
+secondaryFocalDescription: 'Professional presentation'
 
 # Mobile crop zone (focus on face)
 mobileCropX: 20
@@ -34,22 +34,34 @@ tabletCropWidth: 80
 tabletCropHeight: 80
 
 # SEO and accessibility
-altText: "Kirsti Forrest, Head Teacher at Spicebush Montessori School, warm professional portrait"
-seoKeywords: ["kirsti forrest", "head teacher", "montessori teacher", "spicebush staff", "lead educator", "school leadership"]
-contextualDescription: "Professional portrait of Kirsti Forrest, Head Teacher, showing warmth and approachability"
+altText:
+  'Kirsti Forrest, Head Teacher at Spicebush Montessori School, warm
+  professional portrait'
+seoKeywords:
+  [
+    'kirsti forrest',
+    'head teacher',
+    'montessori teacher',
+    'spicebush staff',
+    'lead educator',
+    'school leadership'
+  ]
+contextualDescription:
+  'Professional portrait of Kirsti Forrest, Head Teacher, showing warmth and
+  approachability'
 
 # Usage tracking
-usedOn: ["staff-page", "about-leadership"]
-primaryUse: "Staff directory page"
+usedOn: ['staff-page', 'about-leadership']
+primaryUse: 'Staff directory page'
 
 # Analysis metadata
 hasHumanFaces: true
 hasChildren: false
 hasMonressoriMaterials: false
-dominantColors: ["professional-attire", "warm-lighting", "neutral-background"]
-lighting: "indoor"
-activity: "portrait"
-setting: "portrait"
+dominantColors: ['professional-attire', 'warm-lighting', 'neutral-background']
+lighting: 'indoor'
+activity: 'portrait'
+setting: 'portrait'
 
 # Performance flags
 priority: false
@@ -61,15 +73,18 @@ lazyLoad: true
 
 # Head Teacher: Kirsti Forrest
 
-Professional portrait of Kirsti Forrest, our experienced Head Teacher who brings warmth and expertise to Spicebush Montessori School's leadership.
+Professional portrait of Kirsti Forrest, our experienced Head Teacher who brings
+warmth and expertise to Spicebush Montessori School's leadership.
 
 ## Visual Analysis
+
 - **Emotional Impact**: Approachable, professional, caring
 - **Educational Content**: School leadership representation
 - **Composition**: Classic professional portrait
 - **Symbolism**: Trusted educational leadership
 
 ## Usage Guidelines
+
 - **Primary Use**: Staff directory page
 - **Secondary Use**: About page leadership section
 - **Focal Point**: Warm, welcoming expression

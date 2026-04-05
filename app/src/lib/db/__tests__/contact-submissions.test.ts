@@ -92,12 +92,12 @@ describe('insertContactSubmission', () => {
     expect(result).toBe('uuid-2');
 
     const [, values] = vi.mocked(query).mock.calls[0];
-    expect(values![2]).toBeNull();  // phone
-    expect(values![5]).toBeNull();  // childAge
+    expect(values![2]).toBeNull(); // phone
+    expect(values![5]).toBeNull(); // childAge
     expect(values![6]).toBe(false); // tourInterest
-    expect(values![7]).toBe('{}');  // attribution serialized
-    expect(values![8]).toBeNull();  // sessionId
-    expect(values![9]).toBeNull();  // clientId
+    expect(values![7]).toBe('{}'); // attribution serialized
+    expect(values![8]).toBeNull(); // sessionId
+    expect(values![9]).toBeNull(); // clientId
     expect(values![10]).toBeNull(); // landingPage
     expect(values![11]).toBeNull(); // referrerUrl
     expect(values![12]).toBeNull(); // ipAddress
@@ -256,7 +256,9 @@ describe('getContactSubmissionsForExport — export cap (F-03 P1 fix)', () => {
     vi.mocked(queryFirst).mockResolvedValue({ count: 0 });
     vi.mocked(queryRows).mockResolvedValue([]);
 
-    const result = await getContactSubmissionsForExport({ page: 5 });
+    // page is excluded from the type signature (Omit<..., 'page'>)
+    // so we just verify the function always returns page=1
+    const result = await getContactSubmissionsForExport({});
 
     expect(result.page).toBe(1);
   });

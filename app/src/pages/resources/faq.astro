@@ -12,8 +12,8 @@ const faqSections = await getManagedFaqSections();
 const paragraphParts = (value: string): string[] =>
   value
     .split(/\n{2,}/)
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0);
+    .map(part => part.trim())
+    .filter(part => part.length > 0);
 ---
 
 <Layout
@@ -31,7 +31,8 @@ const paragraphParts = (value: string): string[] =>
             Frequently Asked Questions
           </h1>
           <p class="text-lg lg:text-xl text-earth-brown max-w-3xl mx-auto">
-            Find answers to common questions about our school, programs, and enrollment process. Can't find what you're looking for? We're happy to help!
+            Find answers to common questions about our school, programs, and enrollment process.
+            Can't find what you're looking for? We're happy to help!
           </p>
         </div>
       </div>
@@ -40,68 +41,86 @@ const paragraphParts = (value: string): string[] =>
     <section class="py-16 bg-white">
       <div class="container mx-auto px-4">
         <div class="max-w-4xl mx-auto">
-          {faqSections.length === 0 ? (
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center text-earth-brown/80">
-              FAQ content is being updated. Please check back shortly.
-            </div>
-          ) : (
-            faqSections.map((section) => (
-              <div class="mb-12">
-                <h2 class="text-2xl lg:text-3xl font-bold text-earth-brown mb-8">{section.title}</h2>
-                <div class="space-y-4">
-                  {section.items.map((item) => (
-                    <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
-                      <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
-                        <span class="font-semibold text-earth-brown">{item.question}</span>
-                        <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
-                      </button>
-
-                      <div class="faq-content hidden px-6 pb-4">
-                        {paragraphParts(item.answer).map((paragraph, index) => (
-                          <p class={`text-earth-brown/80 ${index > 0 ? 'mt-2' : ''}`}>{paragraph}</p>
-                        ))}
-
-                        {item.bullets.length > 0 && item.listStyle === 'ordered' && (
-                          <ol class="list-decimal list-inside mt-2 space-y-2 text-earth-brown/80">
-                            {item.bullets.map((bullet) => (
-                              <li>{bullet}</li>
-                            ))}
-                          </ol>
-                        )}
-
-                        {item.bullets.length > 0 && item.listStyle === 'unordered' && (
-                          <ul class="list-disc list-inside mt-2 space-y-1 text-earth-brown/80">
-                            {item.bullets.map((bullet) => (
-                              <li>{bullet}</li>
-                            ))}
-                          </ul>
-                        )}
-
-                        {item.note && <p class="text-earth-brown/80 mt-2">{item.note}</p>}
-
-                        {item.ctaUrl && item.ctaLabel && (
-                          <p class="mt-3">
-                            <a href={item.ctaUrl} class="text-forest-canopy hover:underline font-semibold">
-                              {item.ctaLabel}
-                            </a>
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          {
+            faqSections.length === 0 ? (
+              <div class="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center text-earth-brown/80">
+                FAQ content is being updated. Please check back shortly.
               </div>
-            ))
-          )}
+            ) : (
+              faqSections.map(section => (
+                <div class="mb-12">
+                  <h2 class="text-2xl lg:text-3xl font-bold text-earth-brown mb-8">
+                    {section.title}
+                  </h2>
+                  <div class="space-y-4">
+                    {section.items.map(item => (
+                      <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
+                        <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                          <span class="font-semibold text-earth-brown">{item.question}</span>
+                          <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                        </button>
+
+                        <div class="faq-content hidden px-6 pb-4">
+                          {paragraphParts(item.answer).map((paragraph, index) => (
+                            <p class={`text-earth-brown/80 ${index > 0 ? 'mt-2' : ''}`}>
+                              {paragraph}
+                            </p>
+                          ))}
+
+                          {item.bullets.length > 0 && item.listStyle === 'ordered' && (
+                            <ol class="list-decimal list-inside mt-2 space-y-2 text-earth-brown/80">
+                              {item.bullets.map(bullet => (
+                                <li>{bullet}</li>
+                              ))}
+                            </ol>
+                          )}
+
+                          {item.bullets.length > 0 && item.listStyle === 'unordered' && (
+                            <ul class="list-disc list-inside mt-2 space-y-1 text-earth-brown/80">
+                              {item.bullets.map(bullet => (
+                                <li>{bullet}</li>
+                              ))}
+                            </ul>
+                          )}
+
+                          {item.note && <p class="text-earth-brown/80 mt-2">{item.note}</p>}
+
+                          {item.ctaUrl && item.ctaLabel && (
+                            <p class="mt-3">
+                              <a
+                                href={item.ctaUrl}
+                                class="text-forest-canopy hover:underline font-semibold"
+                              >
+                                {item.ctaLabel}
+                              </a>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )
+          }
 
           <div class="bg-moss-green/10 rounded-lg p-8 mt-12 text-center">
             <h3 class="text-2xl font-bold text-earth-brown mb-4">Still Have Questions?</h3>
-            <p class="text-earth-brown/80 mb-6">We're here to help! Contact us directly or schedule a tour to learn more about our school.</p>
+            <p class="text-earth-brown/80 mb-6">
+              We're here to help! Contact us directly or schedule a tour to learn more about our
+              school.
+            </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href={tourLink} class="bg-sunlight-gold hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+              <a
+                href={tourLink}
+                class="bg-sunlight-gold hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              >
                 Schedule a Tour
               </a>
-              <a href="/contact" class="bg-white hover:bg-gray-50 text-earth-brown border border-earth-brown px-6 py-3 rounded-lg font-semibold transition-colors">
+              <a
+                href="/contact"
+                class="bg-white hover:bg-gray-50 text-earth-brown border border-earth-brown px-6 py-3 rounded-lg font-semibold transition-colors"
+              >
                 Contact Us
               </a>
             </div>
@@ -118,7 +137,7 @@ const paragraphParts = (value: string): string[] =>
   document.addEventListener('DOMContentLoaded', () => {
     const faqItems = document.querySelectorAll('.faq-item');
 
-    faqItems.forEach((item) => {
+    faqItems.forEach(item => {
       const toggle = item.querySelector('.faq-toggle');
       const content = item.querySelector('.faq-content');
       const icon = toggle?.querySelector('svg');
@@ -126,7 +145,7 @@ const paragraphParts = (value: string): string[] =>
       toggle?.addEventListener('click', () => {
         const isOpen = !content?.classList.contains('hidden');
 
-        faqItems.forEach((otherItem) => {
+        faqItems.forEach(otherItem => {
           const otherContent = otherItem.querySelector('.faq-content');
           const otherIcon = otherItem.querySelector('.faq-toggle svg');
           if (otherItem !== item) {

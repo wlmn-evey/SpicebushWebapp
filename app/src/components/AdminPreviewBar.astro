@@ -12,7 +12,8 @@ const parseBoolean = (value: unknown): boolean => {
 
 const locals = Astro.locals as unknown as Record<string, unknown>;
 const isAdmin = locals.isAdmin === true;
-const previewMode = Astro.cookies.get('sbms-preview-mode')?.value === 'site' ? 'site' : 'coming-soon';
+const previewMode =
+  Astro.cookies.get('sbms-preview-mode')?.value === 'site' ? 'site' : 'coming-soon';
 
 let isComingSoonEnabled = false;
 try {
@@ -32,20 +33,20 @@ const redirectTarget = enableSitePreview ? '/' : '/coming-soon';
 const formAction = `/api/admin/preview-mode?mode=${encodeURIComponent(toggleMode)}&redirect=${encodeURIComponent(redirectTarget)}`;
 ---
 
-{showBar && (
-  <div class="admin-preview-bar" role="status" aria-live="polite">
-    <div class="admin-preview-content">
-      <span class="admin-preview-text">
-        Admin Preview: {statusLabel}
-      </span>
-      <form method="post" action={formAction}>
-        <button type="submit" class="admin-preview-button">
-          {buttonLabel}
-        </button>
-      </form>
+{
+  showBar && (
+    <div class="admin-preview-bar" role="status" aria-live="polite">
+      <div class="admin-preview-content">
+        <span class="admin-preview-text">Admin Preview: {statusLabel}</span>
+        <form method="post" action={formAction}>
+          <button type="submit" class="admin-preview-button">
+            {buttonLabel}
+          </button>
+        </form>
+      </div>
     </div>
-  </div>
-)}
+  )
+}
 
 <style>
   .admin-preview-bar {

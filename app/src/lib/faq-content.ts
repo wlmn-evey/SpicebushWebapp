@@ -77,15 +77,15 @@ const listStyleFrom = (value: unknown): FaqListStyle => {
 const stringArrayFrom = (value: unknown): string[] => {
   if (Array.isArray(value)) {
     return value
-      .map((item) => (typeof item === 'string' ? item.trim() : ''))
-      .filter((item) => item.length > 0);
+      .map(item => (typeof item === 'string' ? item.trim() : ''))
+      .filter(item => item.length > 0);
   }
 
   if (typeof value === 'string') {
     return value
       .split('\n')
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0);
+      .map(item => item.trim())
+      .filter(item => item.length > 0);
   }
 
   return [];
@@ -327,7 +327,7 @@ export const DEFAULT_FAQ_ITEMS: readonly FaqSeedItem[] = [
     title: 'Do children learn academics like reading and math?',
     question: 'Do children learn academics like reading and math?',
     answer:
-      'Yes! Montessori children often learn to read and work with mathematical concepts earlier than in traditional settings because the materials make these concepts tangible and engaging. However, we follow each child\'s readiness and interest. Some children may be reading at 4, while others begin at 6 - both timelines are perfectly normal. Our materials cover language, mathematics, sensorial exploration, practical life, and cultural studies (science, geography, art, music).',
+      "Yes! Montessori children often learn to read and work with mathematical concepts earlier than in traditional settings because the materials make these concepts tangible and engaging. However, we follow each child's readiness and interest. Some children may be reading at 4, while others begin at 6 - both timelines are perfectly normal. Our materials cover language, mathematics, sensorial exploration, practical life, and cultural studies (science, geography, art, music).",
     sectionTitle: 'Educational Approach',
     sectionOrder: 4,
     itemOrder: 3,
@@ -549,7 +549,9 @@ export const getManagedFaqItems = async (): Promise<FaqItem[]> => {
   await ensureFaqSeeded();
 
   try {
-    const entries = (await db.content.getCollection('faq')) as ContentEntry<Record<string, unknown>>[];
+    const entries = (await db.content.getCollection('faq')) as ContentEntry<
+      Record<string, unknown>
+    >[];
     const normalized = sortFaqItems(entries.map(normalizeFaqEntry));
 
     if (normalized.length > 0) {

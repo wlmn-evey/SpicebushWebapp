@@ -46,7 +46,8 @@ const asOptionalNumber = (value: unknown): number | null => {
 };
 
 export const POST: APIRoute = async ({ request, clientAddress, locals }) => {
-  const requestIp = resolveRequestIp(request, locals as Record<string, unknown>) || clientAddress || 'unknown';
+  const requestIp =
+    resolveRequestIp(request, locals as Record<string, unknown>) || clientAddress || 'unknown';
 
   if (isRateLimited(requestIp)) {
     return new Response(JSON.stringify({ error: 'Too many requests' }), {

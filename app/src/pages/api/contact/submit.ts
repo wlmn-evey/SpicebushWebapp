@@ -311,7 +311,8 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
         return jsonResponse(
           {
             success: false,
-            error: 'You have submitted several requests recently. Please wait a few minutes and try again.'
+            error:
+              'You have submitted several requests recently. Please wait a few minutes and try again.'
           },
           429
         );
@@ -365,14 +366,12 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
       }
     });
 
-    let emailResult:
-      | {
-          notificationSent: boolean;
-          confirmationSent: boolean;
-          notifiedRecipients: string[];
-          errors: string[];
-        }
-      | null = null;
+    let emailResult: {
+      notificationSent: boolean;
+      confirmationSent: boolean;
+      notifiedRecipients: string[];
+      errors: string[];
+    } | null = null;
 
     try {
       emailResult = await sendContactSubmissionEmails({

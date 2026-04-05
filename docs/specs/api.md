@@ -193,8 +193,11 @@ accessible to unauthenticated users.
 
 Requests a magic-link sign-in email. Accepts form-encoded or JSON body with
 `email`. Validates against an allowlist of admin email domains
-(`isAllowedAdminLoginEmail`). Returns a generic success message regardless of
-whether the email is authorized (to prevent enumeration).
+(`isAllowedAdminLoginEmail`). For disallowed domains: JSON requests receive a
+`403` with a domain-specific error message; form requests are redirected with an
+`invalid-domain` error query parameter. This is a known enumeration vector
+(P3 audit finding) since the response distinguishes allowed from disallowed
+domains.
 
 Rejects with `400` if Auth0 provider is enabled (magic links disabled).
 

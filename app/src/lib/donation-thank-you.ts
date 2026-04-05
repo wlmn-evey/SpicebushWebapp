@@ -269,9 +269,7 @@ const isUuid = (value: string): boolean => UUID_REGEX.test(value);
 
 const parseEmailList = (value: unknown): string[] => {
   if (Array.isArray(value)) {
-    return value
-      .map((entry) => asString(entry).toLowerCase())
-      .filter((entry) => isEmail(entry));
+    return value.map(entry => asString(entry).toLowerCase()).filter(entry => isEmail(entry));
   }
 
   const raw = asString(value);
@@ -279,14 +277,15 @@ const parseEmailList = (value: unknown): string[] => {
 
   return raw
     .split(/[\n,;]+/)
-    .map((entry) => entry.trim().toLowerCase())
-    .filter((entry) => isEmail(entry));
+    .map(entry => entry.trim().toLowerCase())
+    .filter(entry => isEmail(entry));
 };
 
 const dedupeEmails = (emails: string[]): string[] => Array.from(new Set(emails));
 
 const formatCurrency = (amountCents: number | null, currency: string | null): string => {
-  if (typeof amountCents !== 'number' || !Number.isFinite(amountCents) || amountCents < 0) return 'an amount';
+  if (typeof amountCents !== 'number' || !Number.isFinite(amountCents) || amountCents < 0)
+    return 'an amount';
   const normalizedCurrency = (currency || DEFAULT_CURRENCY).toUpperCase();
   try {
     return new Intl.NumberFormat('en-US', {
@@ -425,7 +424,9 @@ const loadSettingsAndContactInfo = async (): Promise<DonationThankYouSettings> =
   return {
     enabled: asBoolean(settings.donation_thank_you_enabled, true),
     sendRecurringRenewals: asBoolean(settings.donation_thank_you_send_recurring_renewals, false),
-    defaultReminderHours: normalizeReminderHours(settings.donation_thank_you_default_reminder_hours),
+    defaultReminderHours: normalizeReminderHours(
+      settings.donation_thank_you_default_reminder_hours
+    ),
     sendInternalNotifications: asBoolean(settings.donation_internal_notify_enabled, true),
     internalNotificationRecipients:
       configuredNotificationRecipients.length > 0
@@ -465,7 +466,7 @@ const loadTemplateMap = async (): Promise<Record<DonationTemplateKey, TemplateRe
       [messageTypes]
     );
 
-    rows.forEach((row) => {
+    rows.forEach(row => {
       const type = asString(row.message_type);
       const key =
         type === defaultTemplates['one-time'].messageType
@@ -726,7 +727,7 @@ const logDonationMessage = async (input: {
   metadata?: Record<string, unknown>;
 }) => {
   const recipients = Array.isArray(input.recipient)
-    ? dedupeEmails(input.recipient.filter((entry) => isEmail(entry)))
+    ? dedupeEmails(input.recipient.filter(entry => isEmail(entry)))
     : input.recipient && isEmail(input.recipient)
       ? [input.recipient]
       : [];
@@ -824,7 +825,13 @@ const sendDonationNotificationEmail = async (input: {
   event: DonationEventSummary;
   settings: DonationThankYouSettings;
   source: 'stripe_webhook';
-}): Promise<{ sent: boolean; recipients: string[]; subject: string; error?: string; skipped?: string }> => {
+}): Promise<{
+  sent: boolean;
+  recipients: string[];
+  subject: string;
+  error?: string;
+  skipped?: string;
+}> => {
   if (!input.settings.sendInternalNotifications) {
     return { sent: false, recipients: [], subject: '', skipped: 'notifications_disabled' };
   }
@@ -846,7 +853,8 @@ const sendDonationNotificationEmail = async (input: {
     html: notification.html,
     text: notification.text,
     fromName: BRAND_NAME,
-    replyTo: input.event.donorEmail && isEmail(input.event.donorEmail) ? input.event.donorEmail : undefined
+    replyTo:
+      input.event.donorEmail && isEmail(input.event.donorEmail) ? input.event.donorEmail : undefined
   });
 
   if (sendResult.success) {
@@ -904,7 +912,9 @@ const createRetryJob = async (input: {
   hoursFromNow?: number;
   scheduledFor?: string;
 }) => {
-  const scheduledFor = new Date(Date.now() + Math.max(1, input.hoursFromNow ?? 1) * 60 * 60 * 1000).toISOString();
+  const scheduledFor = new Date(
+    Date.now() + Math.max(1, input.hoursFromNow ?? 1) * 60 * 60 * 1000
+  ).toISOString();
   await query(
     `
       INSERT INTO donation_email_jobs (
@@ -980,7 +990,9 @@ const insertDonationEvent = async (
   return { insertedId: null, existingId: existing?.id ?? null };
 };
 
-const parseStripeDonationEvent = (event: StripeWebhookEvent): DonationEventInsert | { ignore: string } => {
+const parseStripeDonationEvent = (
+  event: StripeWebhookEvent
+): DonationEventInsert | { ignore: string } => {
   const eventId = asString(event.id);
   const eventType = asString(event.type);
   const object = event.data?.object;
@@ -1006,7 +1018,9 @@ const parseStripeDonationEvent = (event: StripeWebhookEvent): DonationEventInser
     const donorName =
       asString((object.customer_details as Record<string, unknown> | undefined)?.name) || null;
     const amountCents =
-      asNumber(object.amount_total) === null ? null : Math.round(asNumber(object.amount_total) as number);
+      asNumber(object.amount_total) === null
+        ? null
+        : Math.round(asNumber(object.amount_total) as number);
 
     const metadataObject =
       object.metadata && typeof object.metadata === 'object'
@@ -1184,7 +1198,9 @@ export const saveDonationThankYouSettings = async (input: {
   const nextRenewals = asBoolean(input.sendRecurringRenewals, false);
   const nextReminderHours = normalizeReminderHours(input.defaultReminderHours);
   const nextSendInternalNotifications = asBoolean(input.sendInternalNotifications, true);
-  const nextNotificationRecipients = dedupeEmails(parseEmailList(input.internalNotificationRecipients)).join(', ');
+  const nextNotificationRecipients = dedupeEmails(
+    parseEmailList(input.internalNotificationRecipients)
+  ).join(', ');
   const nextNotificationSubject =
     asString(input.internalNotificationSubjectTemplate) || DEFAULT_NOTIFICATION_SUBJECT;
 
@@ -1215,7 +1231,7 @@ export const saveDonationThankYouSettings = async (input: {
 export const getDonationTemplates = async (): Promise<DonationTemplateSummary[]> => {
   const map = await loadTemplateMap();
   const keys: DonationTemplateKey[] = ['one-time', 'recurring-start', 'recurring-renewal'];
-  return keys.map((key) => ({
+  return keys.map(key => ({
     key,
     name: map[key].name,
     subjectTemplate: map[key].subjectTemplate,
@@ -1296,7 +1312,9 @@ export const getRecentDonationEvents = async (limit = 40): Promise<DonationEvent
   return rows.map(toEventSummary);
 };
 
-export const getRecentDonationEmailJobs = async (limit = 40): Promise<DonationEmailJobSummary[]> => {
+export const getRecentDonationEmailJobs = async (
+  limit = 40
+): Promise<DonationEmailJobSummary[]> => {
   const boundedLimit = Math.max(1, Math.min(limit, 200));
   const rows = await queryRows<DonationEmailJobRow>(
     `
@@ -1497,7 +1515,9 @@ export const cancelDonationEmailJob = async (jobId: string): Promise<boolean> =>
   return (result.rowCount ?? 0) > 0;
 };
 
-export const processDueDonationEmailJobs = async (limit = 20): Promise<ProcessDonationJobsSummary> => {
+export const processDueDonationEmailJobs = async (
+  limit = 20
+): Promise<ProcessDonationJobsSummary> => {
   const claimedJobs = await claimDueJobs(limit);
   if (claimedJobs.length === 0) {
     return { claimed: 0, processed: 0, sent: 0, failed: 0 };
@@ -1720,7 +1740,9 @@ export const saveDefaultDonationReminderForEvent = async (input: {
   createdBy?: string | null;
 }): Promise<{ id: string | null; error?: string }> => {
   const settings = await getDonationThankYouSettings();
-  const scheduledFor = new Date(Date.now() + settings.defaultReminderHours * 60 * 60 * 1000).toISOString();
+  const scheduledFor = new Date(
+    Date.now() + settings.defaultReminderHours * 60 * 60 * 1000
+  ).toISOString();
 
   return scheduleDonationEmailReminder({
     eventId: input.eventId,

@@ -8,33 +8,38 @@ import { Home, ArrowLeft } from 'lucide-astro';
     <div class="max-w-lg w-full text-center">
       <!-- Error Code -->
       <h1 class="text-9xl font-bold text-forest-canopy mb-4">404</h1>
-      
+
       <!-- Message -->
-      <h2 class="text-3xl font-semibold text-earth-brown mb-4">
-        Oops! Page Not Found
-      </h2>
-      
+      <h2 class="text-3xl font-semibold text-earth-brown mb-4">Oops! Page Not Found</h2>
+
       <p class="text-lg text-gray-600 mb-8">
-        It seems like you've wandered off the path. The page you're looking for doesn't exist or has been moved.
+        It seems like you've wandered off the path. The page you're looking for doesn't exist or has
+        been moved.
       </p>
-      
+
       <!-- Illustration -->
       <div class="mb-8">
-        <svg class="w-64 h-64 mx-auto text-moss-green opacity-20" viewBox="0 0 200 200" fill="currentColor">
-          <path d="M100 20 L130 80 L190 80 L145 120 L165 180 L100 140 L35 180 L55 120 L10 80 L70 80 Z"/>
+        <svg
+          class="w-64 h-64 mx-auto text-moss-green opacity-20"
+          viewBox="0 0 200 200"
+          fill="currentColor"
+        >
+          <path
+            d="M100 20 L130 80 L190 80 L145 120 L165 180 L100 140 L35 180 L55 120 L10 80 L70 80 Z"
+          ></path>
         </svg>
       </div>
-      
+
       <!-- Action Buttons -->
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a 
-          href="/" 
+        <a
+          href="/"
           class="inline-flex items-center justify-center gap-2 bg-forest-canopy hover:bg-moss-green text-white px-6 py-3 rounded-lg font-semibold transition-colors"
         >
           <Home className="w-5 h-5" />
           Go Home
         </a>
-        
+
         <button
           onclick="history.back()"
           class="inline-flex items-center justify-center gap-2 bg-white hover:bg-stone-beige text-forest-canopy border-2 border-forest-canopy px-6 py-3 rounded-lg font-semibold transition-colors"
@@ -43,7 +48,7 @@ import { Home, ArrowLeft } from 'lucide-astro';
           Go Back
         </button>
       </div>
-      
+
       <!-- Helpful Links -->
       <div class="mt-12 pt-8 border-t border-gray-200">
         <p class="text-sm text-gray-600 mb-4">Here are some helpful links:</p>

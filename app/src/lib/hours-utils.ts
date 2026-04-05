@@ -29,12 +29,12 @@ interface DatabaseHoursRow {
 // Format time helper with improved formatting
 export function formatTime(value: number): string {
   if (value === 0) return '';
-  
+
   const hours = Math.floor(value);
   const minutes = Math.round((value - hours) * 60);
   const ampm = hours >= 12 ? 'PM' : 'AM';
   const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-  
+
   if (minutes === 0) {
     return `${displayHour} ${ampm}`;
   } else {
@@ -61,27 +61,26 @@ export async function fetchUpcomingHolidays(): Promise<Holiday[]> {
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(today.getDate() + 7);
     sevenDaysFromNow.setHours(23, 59, 59, 999);
-    
+
     const response = await fetch(`https://date.nager.at/api/v3/publicholidays/${currentYear}/US`);
-    
+
     if (!response.ok) {
       return getFallbackHolidays(today, sevenDaysFromNow);
     }
-    
+
     const allHolidays = await response.json();
     return allHolidays.filter((holiday: Holiday) => {
       const [year, month, day] = holiday.date.split('-').map(Number);
       const holidayDate = new Date(year, month - 1, day);
       return holidayDate >= today && holidayDate <= sevenDaysFromNow;
     });
-    
   } catch {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(today.getDate() + 7);
     sevenDaysFromNow.setHours(23, 59, 59, 999);
-    
+
     return getFallbackHolidays(today, sevenDaysFromNow);
   }
 }
@@ -89,7 +88,7 @@ export async function fetchUpcomingHolidays(): Promise<Holiday[]> {
 // Fallback holiday data
 function getFallbackHolidays(today: Date, sevenDaysFromNow: Date): Holiday[] {
   const currentYear = today.getFullYear();
-  
+
   const commonHolidays = [
     { date: `${currentYear}-01-01`, name: "New Year's Day" },
     { date: `${currentYear}-01-15`, name: 'Martin Luther King Jr. Day' },
@@ -102,7 +101,7 @@ function getFallbackHolidays(today: Date, sevenDaysFromNow: Date): Holiday[] {
     { date: `${currentYear}-11-28`, name: 'Thanksgiving Day' },
     { date: `${currentYear}-12-25`, name: 'Christmas Day' }
   ];
-  
+
   return commonHolidays.filter(holiday => {
     const [year, month, day] = holiday.date.split('-').map(Number);
     const holidayDate = new Date(year, month - 1, day);
@@ -175,7 +174,7 @@ export function getDefaultHoursData(): Record<string, HoursData> {
 // Helper function to get appropriate emoji for holidays
 export function getHolidayEmoji(holidayName: string): string {
   const name = holidayName.toLowerCase();
-  
+
   if (name.includes('new year')) return '🎊';
   if (name.includes('martin luther king')) return '✊';
   if (name.includes('president')) return '🇺🇸';
@@ -186,7 +185,7 @@ export function getHolidayEmoji(holidayName: string): string {
   if (name.includes('veteran')) return '🇺🇸';
   if (name.includes('thanksgiving')) return '🦃';
   if (name.includes('christmas')) return '🎄';
-  
+
   return '🎉'; // Default holiday emoji
 }
 
@@ -194,32 +193,39 @@ export function getHolidayEmoji(holidayName: string): string {
 export function formatHolidayDate(dateString: string): string {
   const [year, month, day] = dateString.split('-').map(Number);
   const date = new Date(year, month - 1, day);
-  
+
   const today = new Date();
   const tomorrow = new Date();
   tomorrow.setDate(today.getDate() + 1);
-  
+
   const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const tomorrowMidnight = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
+  const tomorrowMidnight = new Date(
+    tomorrow.getFullYear(),
+    tomorrow.getMonth(),
+    tomorrow.getDate()
+  );
   const dateMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  
+
   if (dateMidnight.getTime() === todayMidnight.getTime()) {
     return 'Today';
   } else if (dateMidnight.getTime() === tomorrowMidnight.getTime()) {
     return 'Tomorrow';
   } else {
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
-      month: 'short', 
-      day: 'numeric' 
+      month: 'short',
+      day: 'numeric'
     });
   }
 }
 
 // Convert database hours to local format
-export function processHoursData(dbHours: DatabaseHoursRow[], days: string[]): Record<string, HoursData> {
+export function processHoursData(
+  dbHours: DatabaseHoursRow[],
+  days: string[]
+): Record<string, HoursData> {
   const hoursData: Record<string, HoursData> = {};
-  
+
   if (dbHours && dbHours.length > 0) {
     dbHours.forEach(hour => {
       const closed = hour.closed || false;
@@ -234,7 +240,7 @@ export function processHoursData(dbHours: DatabaseHoursRow[], days: string[]): R
         closed
       };
     });
-    
+
     // Fill in any missing days with sensible defaults
     days.forEach(day => {
       if (!hoursData[day]) {
@@ -249,7 +255,7 @@ export function processHoursData(dbHours: DatabaseHoursRow[], days: string[]): R
         };
       }
     });
-    
+
     return hoursData;
   } else {
     return getDefaultHoursData();

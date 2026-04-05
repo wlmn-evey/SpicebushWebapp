@@ -7,13 +7,13 @@ import TeachersSection from '../components/TeachersSection.astro';
 import OptimizedImage from '../components/OptimizedImage.astro';
 ---
 
-<Layout 
+<Layout
   title="About Us - Spicebush Montessori School"
   description="Learn about Spicebush Montessori School's mission, vision, and commitment to inclusive education for children ages 3-6."
   keywords="about Montessori school, inclusive education mission, neurodiversity support, authentic Montessori"
 >
   <Header />
-  
+
   <main id="main-content">
     <!-- Hero Image Section -->
     <section class="relative">
@@ -27,25 +27,36 @@ import OptimizedImage from '../components/OptimizedImage.astro';
           slotId="about-hero-image"
           mediaCategory="about"
         />
-        <div class="absolute inset-0 bg-gradient-to-b from-forest-canopy/20 via-forest-canopy/30 to-forest-canopy/50"></div>
+        <div
+          class="absolute inset-0 bg-gradient-to-b from-forest-canopy/20 via-forest-canopy/30 to-forest-canopy/50"
+        >
+        </div>
       </div>
       <div class="container mx-auto px-4">
-        <div class="text-center relative -mt-24 bg-white rounded-lg shadow-xl p-10 max-w-3xl mx-auto">
-          <h1 class="text-4xl lg:text-5xl font-heading font-bold text-earth-brown mb-6 relative z-10 tracking-tight">
+        <div
+          class="text-center relative -mt-24 bg-white rounded-lg shadow-xl p-10 max-w-3xl mx-auto"
+        >
+          <h1
+            class="text-4xl lg:text-5xl font-heading font-bold text-earth-brown mb-6 relative z-10 tracking-tight"
+          >
             Our Story at Spicebush
           </h1>
           <p class="text-lg text-earth-brown relative z-10 leading-relaxed-plus font-medium">
-            We're a small community of families and teachers who believe deeply in children's natural wisdom and capacity for joy. Come learn about what we've discovered together.
+            We're a small community of families and teachers who believe deeply in children's
+            natural wisdom and capacity for joy. Come learn about what we've discovered together.
           </p>
           <!-- Decorative element -->
-          <div class="absolute top-0 right-0 w-20 h-20 bg-sunlight-gold/20 rounded-full -mr-10 -mt-10 z-0"></div>
+          <div
+            class="absolute top-0 right-0 w-20 h-20 bg-sunlight-gold/20 rounded-full -mr-10 -mt-10 z-0"
+          >
+          </div>
         </div>
       </div>
     </section>
-    
+
     <!-- Our Story Section -->
-    <PhotoFeature 
-      title="How We Began" 
+    <PhotoFeature
+      title="How We Began"
       content="In 2021, our founding teachers came together with a dream: to create a place where every child could be celebrated for exactly who they are. After decades of working with children, we'd seen how beautifully they learn when they feel truly accepted and free to explore. We named our school after the native Spicebush plant—a humble shrub that provides food and shelter for many different creatures, just as we hope to nurture all the different ways children grow and bloom. Our name and mission are also grounded in the Quaker values of SPICES: Social Justice, Peace, Inclusion, Community, Environment, and Simplicity."
       photoSlug="individual-montessori-concentration-img-7291-1770x1931"
       slotId="about-story-image"
@@ -53,17 +64,17 @@ import OptimizedImage from '../components/OptimizedImage.astro';
       imagePosition="left"
       bgColor="bg-stone-beige"
     />
-    
+
     <!-- Our Mission Section -->
-    <PhotoFeature 
-      title="What We Believe" 
+    <PhotoFeature
+      title="What We Believe"
       content="We see each child as a whole person—curious, capable, and deserving of deep respect. In our community, children grow in independence not through pressure, but through the gentle confidence that comes from being truly known and supported. We believe beautiful education should be possible for every family, regardless of income, and that differences in how children learn and move through the world make our community richer and more alive."
       photoSlug="about-montessori-sound-cylinders-auditory-discrimination"
       slotId="about-beliefs-image"
       mediaCategory="about"
       imagePosition="right"
     />
-    
+
     <!-- Our Values Image Grid -->
     <section class="py-16 bg-moss-green/10">
       <div class="container mx-auto px-4">
@@ -73,68 +84,105 @@ import OptimizedImage from '../components/OptimizedImage.astro';
             These principles guide everything we do at Spicebush Montessori School
           </p>
         </div>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <!-- Value 1 -->
-          <div class="bg-white p-6 rounded-lg shadow-md text-center transform transition-transform hover:-translate-y-1 hover:shadow-lg">
-            <div class="w-16 h-16 bg-forest-canopy rounded-full mx-auto mb-4 flex items-center justify-center">
+          <div
+            class="bg-white p-6 rounded-lg shadow-md text-center transform transition-transform hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div
+              class="w-16 h-16 bg-forest-canopy rounded-full mx-auto mb-4 flex items-center justify-center"
+            >
               <span class="text-white text-2xl font-bold">1</span>
             </div>
             <h3 class="text-xl font-bold text-earth-brown mb-2">Respect for the Child</h3>
-            <p class="text-earth-brown">We honor each child's unique development, interests, and pace of learning.</p>
+            <p class="text-earth-brown">
+              We honor each child's unique development, interests, and pace of learning.
+            </p>
           </div>
-          
+
           <!-- Value 2 -->
-          <div class="bg-white p-6 rounded-lg shadow-md text-center transform transition-transform hover:-translate-y-1 hover:shadow-lg">
-            <div class="w-16 h-16 bg-forest-canopy rounded-full mx-auto mb-4 flex items-center justify-center">
+          <div
+            class="bg-white p-6 rounded-lg shadow-md text-center transform transition-transform hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div
+              class="w-16 h-16 bg-forest-canopy rounded-full mx-auto mb-4 flex items-center justify-center"
+            >
               <span class="text-white text-2xl font-bold">2</span>
             </div>
             <h3 class="text-xl font-bold text-earth-brown mb-2">Inclusive Community</h3>
-            <p class="text-earth-brown">We celebrate neurodiversity and ensure our environment is accessible to all learners.</p>
+            <p class="text-earth-brown">
+              We celebrate neurodiversity and ensure our environment is accessible to all learners.
+            </p>
           </div>
-          
+
           <!-- Value 3 -->
-          <div class="bg-white p-6 rounded-lg shadow-md text-center transform transition-transform hover:-translate-y-1 hover:shadow-lg">
-            <div class="w-16 h-16 bg-forest-canopy rounded-full mx-auto mb-4 flex items-center justify-center">
+          <div
+            class="bg-white p-6 rounded-lg shadow-md text-center transform transition-transform hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div
+              class="w-16 h-16 bg-forest-canopy rounded-full mx-auto mb-4 flex items-center justify-center"
+            >
               <span class="text-white text-2xl font-bold">3</span>
             </div>
             <h3 class="text-xl font-bold text-earth-brown mb-2">Environmental Stewardship</h3>
-            <p class="text-earth-brown">We foster a deep connection to nature and teach responsibility for our environment.</p>
+            <p class="text-earth-brown">
+              We foster a deep connection to nature and teach responsibility for our environment.
+            </p>
           </div>
-          
+
           <!-- Value 4 -->
-          <div class="bg-white p-6 rounded-lg shadow-md text-center transform transition-transform hover:-translate-y-1 hover:shadow-lg">
-            <div class="w-16 h-16 bg-forest-canopy rounded-full mx-auto mb-4 flex items-center justify-center">
+          <div
+            class="bg-white p-6 rounded-lg shadow-md text-center transform transition-transform hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div
+              class="w-16 h-16 bg-forest-canopy rounded-full mx-auto mb-4 flex items-center justify-center"
+            >
               <span class="text-white text-2xl font-bold">4</span>
             </div>
             <h3 class="text-xl font-bold text-earth-brown mb-2">Economic Diversity</h3>
-            <p class="text-earth-brown">We are committed to making quality education accessible to families of all economic backgrounds.</p>
+            <p class="text-earth-brown">
+              We are committed to making quality education accessible to families of all economic
+              backgrounds.
+            </p>
           </div>
-          
+
           <!-- Value 5 -->
-          <div class="bg-white p-6 rounded-lg shadow-md text-center transform transition-transform hover:-translate-y-1 hover:shadow-lg">
-            <div class="w-16 h-16 bg-forest-canopy rounded-full mx-auto mb-4 flex items-center justify-center">
+          <div
+            class="bg-white p-6 rounded-lg shadow-md text-center transform transition-transform hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div
+              class="w-16 h-16 bg-forest-canopy rounded-full mx-auto mb-4 flex items-center justify-center"
+            >
               <span class="text-white text-2xl font-bold">5</span>
             </div>
             <h3 class="text-xl font-bold text-earth-brown mb-2">Authentic Montessori</h3>
-            <p class="text-earth-brown">We adhere to Maria Montessori's proven educational philosophy and methodology.</p>
+            <p class="text-earth-brown">
+              We adhere to Maria Montessori's proven educational philosophy and methodology.
+            </p>
           </div>
-          
+
           <!-- Value 6 -->
-          <div class="bg-white p-6 rounded-lg shadow-md text-center transform transition-transform hover:-translate-y-1 hover:shadow-lg">
-            <div class="w-16 h-16 bg-forest-canopy rounded-full mx-auto mb-4 flex items-center justify-center">
+          <div
+            class="bg-white p-6 rounded-lg shadow-md text-center transform transition-transform hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div
+              class="w-16 h-16 bg-forest-canopy rounded-full mx-auto mb-4 flex items-center justify-center"
+            >
               <span class="text-white text-2xl font-bold">6</span>
             </div>
             <h3 class="text-xl font-bold text-earth-brown mb-2">Community Partnerships</h3>
-            <p class="text-earth-brown">We actively collaborate with local organizations to enrich our children's experiences.</p>
+            <p class="text-earth-brown">
+              We actively collaborate with local organizations to enrich our children's experiences.
+            </p>
           </div>
         </div>
       </div>
     </section>
-    
+
     <!-- Teachers Section -->
     <TeachersSection />
   </main>
-  
+
   <Footer />
 </Layout>

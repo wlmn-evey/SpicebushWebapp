@@ -123,8 +123,8 @@ describe('GET /api/cms/entries — pagination (P2 fix)', () => {
     const [, values] = vi.mocked(queryRows).mock.calls[0];
     // values should be [collection, pageSize, offset]
     expect(values![0]).toBe('testimonials');
-    expect(values![1]).toBe(20);  // pageSize
-    expect(values![2]).toBe(40);  // offset = (3-1) * 20
+    expect(values![1]).toBe(20); // pageSize
+    expect(values![2]).toBe(40); // offset = (3-1) * 20
   });
 
   it('returns 500 on DB query failure', async () => {
@@ -144,8 +144,15 @@ describe('GET /api/cms/entries — pagination (P2 fix)', () => {
     vi.mocked(queryRows).mockResolvedValue([]);
 
     const validCollections = [
-      'hours', 'staff', 'tuition', 'settings', 'school-info',
-      'faq', 'testimonials', 'photos', 'media-slots'
+      'hours',
+      'staff',
+      'tuition',
+      'settings',
+      'school-info',
+      'faq',
+      'testimonials',
+      'photos',
+      'media-slots'
     ];
 
     for (const collection of validCollections) {

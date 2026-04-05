@@ -96,7 +96,7 @@ export const verifyTurnstileToken = async (input: {
     }
 
     const errors = Array.isArray(payload['error-codes'])
-      ? payload['error-codes'].map((entry) => asString(entry)).filter(Boolean)
+      ? payload['error-codes'].map(entry => asString(entry)).filter(Boolean)
       : [];
     if (errors.length > 0) {
       return { success: false, reason: errors.join(',') };

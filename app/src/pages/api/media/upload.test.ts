@@ -17,11 +17,12 @@ vi.mock('@lib/media-storage', () => ({
 }));
 
 vi.mock('@lib/api-utils', () => ({
-  errorResponse: vi.fn((msg: string, status: number) =>
-    new Response(JSON.stringify({ error: msg }), {
-      status,
-      headers: { 'Content-Type': 'application/json' }
-    })
+  errorResponse: vi.fn(
+    (msg: string, status: number) =>
+      new Response(JSON.stringify({ error: msg }), {
+        status,
+        headers: { 'Content-Type': 'application/json' }
+      })
   )
 }));
 
@@ -63,13 +64,19 @@ const makeTestFile = (content: string, name: string, type: string): File => {
   if (typeof file.arrayBuffer !== 'function') {
     (file as unknown as Record<string, unknown>).arrayBuffer = () =>
       Promise.resolve(
-        nodeBuffer.buffer.slice(nodeBuffer.byteOffset, nodeBuffer.byteOffset + nodeBuffer.byteLength)
+        nodeBuffer.buffer.slice(
+          nodeBuffer.byteOffset,
+          nodeBuffer.byteOffset + nodeBuffer.byteLength
+        )
       );
   }
   return file;
 };
 
-const makeMockContext = (fields: Record<string, string>, file?: { name: string; type: string; content: string }) => {
+const makeMockContext = (
+  fields: Record<string, string>,
+  file?: { name: string; type: string; content: string }
+) => {
   const fd = new FormData();
   if (file) {
     fd.set('file', makeTestFile(file.content, file.name, file.type));
@@ -201,9 +208,11 @@ describe('POST /api/media/upload — slug numeric sort (F-01 P0 fix)', () => {
     await POST(ctx);
 
     // Find the slug uniqueness query (the one that queries content with type='photos')
-    const slugQueryCalls = vi.mocked(queryFirst).mock.calls.filter(
-      (call) => typeof call[0] === 'string' && call[0].includes("type = 'photos'")
-    );
+    const slugQueryCalls = vi
+      .mocked(queryFirst)
+      .mock.calls.filter(
+        call => typeof call[0] === 'string' && call[0].includes("type = 'photos'")
+      );
     expect(slugQueryCalls).toHaveLength(1);
 
     // The LIKE parameter should have escaped underscores: my\_photo-%
@@ -221,9 +230,11 @@ describe('POST /api/media/upload — slug numeric sort (F-01 P0 fix)', () => {
     );
     await POST(ctx);
 
-    const slugQueryCalls = vi.mocked(queryFirst).mock.calls.filter(
-      (call) => typeof call[0] === 'string' && call[0].includes("type = 'photos'")
-    );
+    const slugQueryCalls = vi
+      .mocked(queryFirst)
+      .mock.calls.filter(
+        call => typeof call[0] === 'string' && call[0].includes("type = 'photos'")
+      );
     // The slug validator would reject % so the slug itself is clean,
     // but the escaping logic should still work
     expect(slugQueryCalls.length).toBeGreaterThanOrEqual(1);
@@ -237,9 +248,11 @@ describe('POST /api/media/upload — slug numeric sort (F-01 P0 fix)', () => {
     );
     await POST(ctx);
 
-    const slugQueryCalls = vi.mocked(queryFirst).mock.calls.filter(
-      (call) => typeof call[0] === 'string' && call[0].includes("type = 'photos'")
-    );
+    const slugQueryCalls = vi
+      .mocked(queryFirst)
+      .mock.calls.filter(
+        call => typeof call[0] === 'string' && call[0].includes("type = 'photos'")
+      );
     expect(slugQueryCalls).toHaveLength(1);
 
     const [sql] = slugQueryCalls[0];
@@ -258,9 +271,11 @@ describe('POST /api/media/upload — slug numeric sort (F-01 P0 fix)', () => {
     );
     await POST(ctx);
 
-    const slugQueryCalls = vi.mocked(queryFirst).mock.calls.filter(
-      (call) => typeof call[0] === 'string' && call[0].includes("type = 'photos'")
-    );
+    const slugQueryCalls = vi
+      .mocked(queryFirst)
+      .mock.calls.filter(
+        call => typeof call[0] === 'string' && call[0].includes("type = 'photos'")
+      );
     const [sql] = slugQueryCalls[0];
     expect(sql).toContain("ESCAPE '\\'");
   });

@@ -14,13 +14,7 @@ export interface Props {
   slotIdPrefix?: string;
 }
 
-const { 
-  title, 
-  subtitle,
-  images,
-  columns = 3,
-  slotIdPrefix = 'image-grid'
-} = Astro.props;
+const { title, subtitle, images, columns = 3, slotIdPrefix = 'image-grid' } = Astro.props;
 
 const gridClass = {
   2: 'grid-cols-1 sm:grid-cols-2',
@@ -31,42 +25,44 @@ const gridClass = {
 
 <section class="py-16 bg-white" id="gallery">
   <div class="container mx-auto px-4">
-    {title && (
-      <div class="text-center mb-12">
-        <h2 class="text-3xl lg:text-4xl font-bold text-forest-canopy mb-4">
-          {title}
-        </h2>
-        {subtitle && <p class="text-lg text-earth-brown max-w-3xl mx-auto">{subtitle}</p>}
-      </div>
-    )}
-    
-    <div class={`grid ${gridClass[columns]} gap-6`}>
-      {images.map((image, index) => (
-        <div class="group overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-xl relative aspect-[4/3] border-2 border-stone-beige">
-          {image.photoSlug ? (
-            <OptimizedImage
-              photoSlug={image.photoSlug}
-              className="w-full h-full transition-transform duration-500 group-hover:scale-105"
-              objectFit="cover"
-              loading="lazy"
-              slotId={`${slotIdPrefix}-${index + 1}`}
-            />
-          ) : (
-            <img 
-              src={image.src} 
-              alt={image.alt} 
-              class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-              loading="lazy"
-              decoding="async"
-            />
-          )}
-          {image.caption && (
-            <div class="absolute inset-0 bg-gradient-to-t from-moss-green/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-              <p class="text-white font-medium">{image.caption}</p>
-            </div>
-          )}
+    {
+      title && (
+        <div class="text-center mb-12">
+          <h2 class="text-3xl lg:text-4xl font-bold text-forest-canopy mb-4">{title}</h2>
+          {subtitle && <p class="text-lg text-earth-brown max-w-3xl mx-auto">{subtitle}</p>}
         </div>
-      ))}
+      )
+    }
+
+    <div class={`grid ${gridClass[columns]} gap-6`}>
+      {
+        images.map((image, index) => (
+          <div class="group overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-xl relative aspect-[4/3] border-2 border-stone-beige">
+            {image.photoSlug ? (
+              <OptimizedImage
+                photoSlug={image.photoSlug}
+                className="w-full h-full transition-transform duration-500 group-hover:scale-105"
+                objectFit="cover"
+                loading="lazy"
+                slotId={`${slotIdPrefix}-${index + 1}`}
+              />
+            ) : (
+              <img
+                src={image.src}
+                alt={image.alt}
+                class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+                decoding="async"
+              />
+            )}
+            {image.caption && (
+              <div class="absolute inset-0 bg-gradient-to-t from-moss-green/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                <p class="text-white font-medium">{image.caption}</p>
+              </div>
+            )}
+          </div>
+        ))
+      }
     </div>
   </div>
 </section>

@@ -35,7 +35,8 @@ let cacheMisses = 0;
 
 const toContentEntry = (row: ContentRow): ContentEntry => {
   const dataRecord = { ...(row.data ?? {}) } as Record<string, unknown>;
-  const originalTitle = typeof dataRecord['title'] === 'string' ? (dataRecord['title'] as string) : undefined;
+  const originalTitle =
+    typeof dataRecord['title'] === 'string' ? (dataRecord['title'] as string) : undefined;
   const mergedData = {
     ...dataRecord,
     title: row.title ?? originalTitle
@@ -113,21 +114,24 @@ async function fetchEntry(collection: string, slug: string): Promise<ContentEntr
 
 function getCollectionTtl(collection: string, fallback: number): number {
   switch (collection) {
-  case 'settings':
-    return SETTINGS_TTL;
-  case 'staff':
-  case 'tuition':
-    return 15 * 60 * 1000;
-  case 'announcements':
-  case 'events':
-  case 'blog':
-    return 5 * 60 * 1000;
-  default:
-    return fallback;
+    case 'settings':
+      return SETTINGS_TTL;
+    case 'staff':
+    case 'tuition':
+      return 15 * 60 * 1000;
+    case 'announcements':
+    case 'events':
+    case 'blog':
+      return 5 * 60 * 1000;
+    default:
+      return fallback;
   }
 }
 
-export async function getCollection(collection: string, maxAge = DEFAULT_COLLECTION_TTL): Promise<ContentEntry[]> {
+export async function getCollection(
+  collection: string,
+  maxAge = DEFAULT_COLLECTION_TTL
+): Promise<ContentEntry[]> {
   const cacheKey = `collection:${collection}`;
   queryCount++;
 
@@ -222,7 +226,7 @@ export async function getAllSettings(maxAge = SETTINGS_TTL): Promise<Record<stri
     );
 
     const settings: Record<string, unknown> = {};
-    rows.forEach((row) => {
+    rows.forEach(row => {
       settings[row.key] = parseSettingValue(row.value);
     });
 
@@ -234,9 +238,11 @@ export async function getAllSettings(maxAge = SETTINGS_TTL): Promise<Record<stri
   }
 }
 
-export async function getBatchedPageData(collections: string[]): Promise<Record<string, ContentEntry[]>> {
+export async function getBatchedPageData(
+  collections: string[]
+): Promise<Record<string, ContentEntry[]>> {
   const results = await Promise.all(
-    collections.map(async (collection) => [collection, await getCollection(collection)] as const)
+    collections.map(async collection => [collection, await getCollection(collection)] as const)
   );
   return Object.fromEntries(results);
 }
@@ -305,12 +311,15 @@ export const cacheUtils = {
 };
 
 if (typeof setInterval === 'function') {
-  setInterval(() => {
-    const stats = calculateCacheStats(cache);
-    if (stats.expiredEntries > 0) {
-      cache.clear();
-    }
-  }, 10 * 60 * 1000);
+  setInterval(
+    () => {
+      const stats = calculateCacheStats(cache);
+      if (stats.expiredEntries > 0) {
+        cache.clear();
+      }
+    },
+    10 * 60 * 1000
+  );
 }
 
 export {

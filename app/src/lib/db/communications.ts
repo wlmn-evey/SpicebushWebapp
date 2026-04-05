@@ -86,11 +86,13 @@ export async function getCommunicationStats(): Promise<CommunicationStatsSummary
       [thirtyDaysAgo.toISOString()]
     );
 
-    const messagesSent = rows.filter((row) => row.sent_at !== null).length;
-    const activeCampaigns = rows.filter((row) => ['scheduled', 'sending'].includes((row.status || '').toLowerCase())).length;
+    const messagesSent = rows.filter(row => row.sent_at !== null).length;
+    const activeCampaigns = rows.filter(row =>
+      ['scheduled', 'sending'].includes((row.status || '').toLowerCase())
+    ).length;
 
     const openRates = rows
-      .map((row) => {
+      .map(row => {
         const stats = toRecord(row.delivery_stats);
         const rate = stats['open_rate'] ?? stats['openRate'];
         const numeric = toNumber(rate, -1);
@@ -98,9 +100,11 @@ export async function getCommunicationStats(): Promise<CommunicationStatsSummary
       })
       .filter((rate): rate is number => rate !== null);
 
-    const avgOpenRate = openRates.length > 0
-      ? Math.round((openRates.reduce((sum, rate) => sum + rate, 0) / openRates.length) * 100) / 100
-      : 89;
+    const avgOpenRate =
+      openRates.length > 0
+        ? Math.round((openRates.reduce((sum, rate) => sum + rate, 0) / openRates.length) * 100) /
+          100
+        : 89;
 
     const familiesReachedEstimate = rows.reduce((total, row) => {
       if (typeof row.recipient_count === 'number' && row.recipient_count > 0) {

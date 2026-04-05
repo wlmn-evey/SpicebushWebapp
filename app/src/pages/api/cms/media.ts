@@ -3,7 +3,7 @@ import { query, queryRows, queryFirst } from '@lib/db/client';
 import { deleteStoredMediaAsset } from '@lib/media-storage';
 import { logServerError } from '@lib/server-logger';
 
-export const GET: APIRoute = async (context) => {
+export const GET: APIRoute = async context => {
   try {
     // Check admin authentication via middleware.
     const locals = context.locals as unknown as Record<string, unknown>;
@@ -35,7 +35,6 @@ export const GET: APIRoute = async (context) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
-
   } catch (error) {
     logServerError('Failed to fetch media', error, { route: '/api/cms/media' });
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
@@ -45,7 +44,7 @@ export const GET: APIRoute = async (context) => {
   }
 };
 
-export const DELETE: APIRoute = async (context) => {
+export const DELETE: APIRoute = async context => {
   try {
     // Check admin authentication via middleware.
     const locals = context.locals as unknown as Record<string, unknown>;
@@ -107,14 +106,16 @@ export const DELETE: APIRoute = async (context) => {
       metadata: mediaRecord.metadata
     });
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Photo deleted successfully'
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Photo deleted successfully'
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   } catch (error) {
     logServerError('Failed to delete media', error, { route: '/api/cms/media' });
     return new Response(JSON.stringify({ error: 'Internal server error' }), {

@@ -1,13 +1,13 @@
 ---
-type: "rate"
-rate_label: "Tuition D"
-program_id: "full-day-5-days"
+type: 'rate'
+rate_label: 'Tuition D'
+program_id: 'full-day-5-days'
 tuition_price: 5397
 extended_care_price: 0
 extended_care_available: true
 is_constant_rate: false
-school_year: "2025-2026"
-income_threshold_type: "Less Than"
+school_year: '2025-2026'
+income_threshold_type: 'Less Than'
 income_threshold_family_2: 34480
 income_threshold_family_3: 43440
 income_threshold_family_4: 52400
@@ -24,13 +24,16 @@ active: true
 Maximum tuition assistance for families with the greatest financial need.
 
 ## Tuition Rate
+
 - **Annual Tuition:** $5,397
 - **Extended Care:** Included at no additional cost (available Monday-Thursday)
 - **Program:** Full Day - 5 Days (Monday-Friday, 8:30 AM - 3:00 PM)
 - **School Year:** 2025-2026
 
 ## Income Qualifications
+
 This rate applies to families with household income **less than**:
+
 - **2-person household:** $34,480
 - **3-person household:** $43,440
 - **4-person household:** $52,400
@@ -40,6 +43,7 @@ This rate applies to families with household income **less than**:
 - **8+ person household:** $88,240
 
 ## What's Included
+
 - Complete three-hour morning work cycle
 - Lunch and rest period
 - Afternoon activities and outdoor time
@@ -48,6 +52,11 @@ This rate applies to families with household income **less than**:
 - **Extended care at no additional charge** (Monday-Thursday until 5:30 PM)
 
 ## Extended Care Benefit
-Families qualifying for Tuition D receive extended care at no additional cost Monday through Thursday from 3:00 PM to 5:30 PM. Friday pickup is at 3:00 PM sharp.
 
-This rate ensures that financial constraints do not prevent access to quality Montessori education. Our commitment to economic diversity means every child deserves the same exceptional educational experience.
+Families qualifying for Tuition D receive extended care at no additional cost
+Monday through Thursday from 3:00 PM to 5:30 PM. Friday pickup is at 3:00 PM
+sharp.
+
+This rate ensures that financial constraints do not prevent access to quality
+Montessori education. Our commitment to economic diversity means every child
+deserves the same exceptional educational experience.

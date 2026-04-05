@@ -202,7 +202,7 @@ export async function consumeAdminMagicLink({
 
   const tokenHash = hashToken(token);
 
-  return withTransaction(async (client) => {
+  return withTransaction(async client => {
     const consumed = await client.query<{ email: string }>(
       `
         UPDATE admin_login_tokens
@@ -262,7 +262,9 @@ export async function createAdminSession({
   };
 }
 
-export async function validateAdminSession(token: string | null | undefined): Promise<AdminSessionIdentity | null> {
+export async function validateAdminSession(
+  token: string | null | undefined
+): Promise<AdminSessionIdentity | null> {
   if (!token) {
     return null;
   }

@@ -7,14 +7,16 @@ export interface Props {
 const { error, fieldId } = Astro.props;
 ---
 
-{error && (
-  <span 
-    id={`${fieldId}-error`}
-    role="alert"
-    aria-live="assertive"
-    aria-atomic="true"
-    class="error-message text-sm text-red-600 mt-1 block"
-  >
-    {error}
-  </span>
-)}
+{
+  error && (
+    <span
+      id={`${fieldId}-error`}
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+      class="error-message text-sm text-red-600 mt-1 block"
+    >
+      {error}
+    </span>
+  )
+}

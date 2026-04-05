@@ -27,10 +27,7 @@ export type AnnouncementEmailJobStatus =
 export type AnnouncementEmailJobKind = 'initial' | 'reminder';
 
 const TEMPLATE_KEYS: AnnouncementEmailTemplateKey[] = ['info', 'reminder', 'urgent', 'closure'];
-const REQUESTED_TEMPLATE_KEYS: AnnouncementEmailRequestedTemplateKey[] = [
-  'auto',
-  ...TEMPLATE_KEYS
-];
+const REQUESTED_TEMPLATE_KEYS: AnnouncementEmailRequestedTemplateKey[] = ['auto', ...TEMPLATE_KEYS];
 
 const MESSAGE_TYPE_BY_KEY: Record<AnnouncementEmailTemplateKey, string> = {
   info: 'announcement_email_info',
@@ -209,9 +206,7 @@ const isEmail = (value: string): boolean => EMAIL_REGEX.test(value);
 
 const parseEmailList = (value: unknown): string[] => {
   if (Array.isArray(value)) {
-    return value
-      .map((entry) => asString(entry))
-      .filter((entry) => isEmail(entry));
+    return value.map(entry => asString(entry)).filter(entry => isEmail(entry));
   }
 
   const raw = asString(value);
@@ -219,13 +214,11 @@ const parseEmailList = (value: unknown): string[] => {
 
   return raw
     .split(/[\n,;]+/)
-    .map((entry) => entry.trim())
-    .filter((entry) => isEmail(entry));
+    .map(entry => entry.trim())
+    .filter(entry => isEmail(entry));
 };
 
-const normalizeRequestedTemplateKey = (
-  value: unknown
-): AnnouncementEmailRequestedTemplateKey => {
+const normalizeRequestedTemplateKey = (value: unknown): AnnouncementEmailRequestedTemplateKey => {
   const normalized = asString(value).toLowerCase();
   if (REQUESTED_TEMPLATE_KEYS.includes(normalized as AnnouncementEmailRequestedTemplateKey)) {
     return normalized as AnnouncementEmailRequestedTemplateKey;
@@ -266,7 +259,7 @@ const formatTimestamp = (value: string | null): string => {
 
 const normalizeRecipients = (recipients: string[]): string[] => {
   const deduped = new Set<string>();
-  recipients.forEach((entry) => {
+  recipients.forEach(entry => {
     const lowered = entry.trim().toLowerCase();
     if (isEmail(lowered)) deduped.add(lowered);
   });
@@ -298,9 +291,14 @@ const loadAnnouncementById = async (id: string): Promise<AnnouncementRow | null>
 };
 
 const interpolateTemplate = (template: string, replacements: Record<string, string>): string =>
-  template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key: string) => replacements[key] ?? '');
+  template.replace(
+    /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g,
+    (_match, key: string) => replacements[key] ?? ''
+  );
 
-const loadTemplateMap = async (): Promise<Record<AnnouncementEmailTemplateKey, AnnouncementEmailTemplateRecord>> => {
+const loadTemplateMap = async (): Promise<
+  Record<AnnouncementEmailTemplateKey, AnnouncementEmailTemplateRecord>
+> => {
   const templates = { ...DEFAULT_TEMPLATES };
 
   try {
@@ -318,9 +316,11 @@ const loadTemplateMap = async (): Promise<Record<AnnouncementEmailTemplateKey, A
       [Object.values(MESSAGE_TYPE_BY_KEY)]
     );
 
-    rows.forEach((row) => {
+    rows.forEach(row => {
       const type = asString(row.message_type);
-      const match = Object.entries(MESSAGE_TYPE_BY_KEY).find(([, messageType]) => messageType === type);
+      const match = Object.entries(MESSAGE_TYPE_BY_KEY).find(
+        ([, messageType]) => messageType === type
+      );
       if (!match) return;
       const [key] = match;
       templates[key as AnnouncementEmailTemplateKey] = {
@@ -374,7 +374,8 @@ const buildAnnouncementEmailContent = (
     school_name: BRAND_NAME
   };
 
-  const subject = interpolateTemplate(template.subjectTemplate, replacements).trim() || announcement.title;
+  const subject =
+    interpolateTemplate(template.subjectTemplate, replacements).trim() || announcement.title;
   const contentText = interpolateTemplate(template.contentTemplate, replacements).trim();
 
   const ctaHtml =
@@ -541,7 +542,9 @@ export const getAnnouncementEmailSettings = async (): Promise<AnnouncementEmailS
   };
 };
 
-export const saveAnnouncementEmailRecipients = async (rawRecipients: unknown): Promise<string[]> => {
+export const saveAnnouncementEmailRecipients = async (
+  rawRecipients: unknown
+): Promise<string[]> => {
   const parsed = parseEmailList(rawRecipients);
   const fallbackSettings = await db.content.getAllSettings();
   const fallbackEmail = resolveSchoolEmailContactInfo(fallbackSettings).email || DEFAULT_RECIPIENT;
@@ -564,7 +567,7 @@ export const getAnnouncementEmailTemplateSummaries = async (): Promise<
   AnnouncementEmailTemplateSummary[]
 > => {
   const map = await loadTemplateMap();
-  return TEMPLATE_KEYS.map((key) => {
+  return TEMPLATE_KEYS.map(key => {
     const template = map[key] ?? DEFAULT_TEMPLATES[key];
     return {
       key,
@@ -832,9 +835,9 @@ const markJobResult = async (input: {
   );
 };
 
-export const processDueAnnouncementEmailJobs = async (
-  options?: { limit?: number }
-): Promise<ProcessAnnouncementEmailJobsResult> => {
+export const processDueAnnouncementEmailJobs = async (options?: {
+  limit?: number;
+}): Promise<ProcessAnnouncementEmailJobsResult> => {
   const claimedJobs = await claimDueJobs(options?.limit ?? 20);
   if (claimedJobs.length === 0) {
     return { claimed: 0, processed: 0, sent: 0, failed: 0 };
@@ -860,7 +863,9 @@ export const processDueAnnouncementEmailJobs = async (
       continue;
     }
 
-    const recipients = normalizeRecipients(job.recipients.length > 0 ? job.recipients : settings.recipients);
+    const recipients = normalizeRecipients(
+      job.recipients.length > 0 ? job.recipients : settings.recipients
+    );
     const sendResult = await sendRenderedAnnouncementEmail({
       announcement,
       requestedTemplateKey: job.templateKey,

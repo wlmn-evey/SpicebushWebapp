@@ -234,7 +234,10 @@ const errorMessage = mapErrorMessage(errorCode);
 <AdminLayout title="SEO & Analytics">
   {
     savedMessage && (
-      <p data-admin-alert class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+      <p
+        data-admin-alert
+        class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800"
+      >
         {savedMessage}
       </p>
     )
@@ -341,7 +344,12 @@ const errorMessage = mapErrorMessage(errorCode);
       <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold mb-2">SEO Management</h2>
-          <a href="/" target="_blank" rel="noopener" class="text-sm font-medium text-forest-canopy hover:underline">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener"
+            class="text-sm font-medium text-forest-canopy hover:underline"
+          >
             View on site ↗
           </a>
         </div>
@@ -1375,7 +1383,11 @@ const errorMessage = mapErrorMessage(errorCode);
                         {formatDate(entry.createdAt)}
                       </td>
                       <td class="border border-gray-200 px-3 py-2">
-                        <form method="post" action="/api/admin/seo/ad-spend" data-confirm="This will permanently delete this item. Are you sure?">
+                        <form
+                          method="post"
+                          action="/api/admin/seo/ad-spend"
+                          data-confirm="This will permanently delete this item. Are you sure?"
+                        >
                           <input type="hidden" name="action" value="delete" />
                           <input type="hidden" name="entryId" value={entry.id} />
                           <input type="hidden" name="redirectTo" value={redirectBase} />

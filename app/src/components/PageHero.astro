@@ -14,11 +14,13 @@ const { title, description } = Astro.props;
       <h1 class="text-4xl lg:text-5xl font-heading font-bold text-white mb-6 tracking-tight">
         {title}
       </h1>
-      {description && (
-        <p class="text-lg lg:text-xl text-green-100 max-w-3xl mx-auto leading-relaxed-plus font-light">
-          {description}
-        </p>
-      )}
+      {
+        description && (
+          <p class="text-lg lg:text-xl text-green-100 max-w-3xl mx-auto leading-relaxed-plus font-light">
+            {description}
+          </p>
+        )
+      }
     </div>
   </div>
 </section>

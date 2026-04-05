@@ -10,7 +10,7 @@ Live site: https://spicebushmontessori.org
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| Framework | Astro 5.2.5 | `output: 'server'` (SSR) |
+| Framework | Astro 5 (^5.2.5) | `output: 'server'` (SSR) |
 | Adapter | `@astrojs/netlify` | Deployed as Netlify Functions |
 | Styling | Tailwind CSS 3 | Custom brand theme |
 | Icons | `lucide-astro` | |
@@ -59,7 +59,6 @@ SpicebushWebapp/              (repo root -- deploy from here)
 @lib        -> src/lib/
 @utils      -> src/utils/
 @styles     -> src/styles/
-@content    -> src/content/
 ```
 
 ---

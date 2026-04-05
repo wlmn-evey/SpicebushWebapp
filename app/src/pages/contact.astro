@@ -31,7 +31,9 @@ const errorMessages: Record<string, string> = {
   'rate-limited': 'Too many submissions. Please wait a few minutes and try again.',
   'server-error': 'Something went wrong. Please try again or contact us directly.'
 };
-const errorMessage = errorParam ? (errorMessages[errorParam] ?? errorMessages['server-error']) : null;
+const errorMessage = errorParam
+  ? (errorMessages[errorParam] ?? errorMessages['server-error'])
+  : null;
 ---
 
 <Layout
@@ -166,11 +168,22 @@ const errorMessage = errorParam ? (errorMessages[errorParam] ?? errorMessages['s
               </div>
             </div>
 
-            <div id="form-error" class:list={[errorMessage ? '' : 'hidden', 'mb-6 p-4 bg-red-50 border border-red-200 rounded-lg']} role="alert" aria-live="assertive">
+            <div
+              id="form-error"
+              class:list={[
+                errorMessage ? '' : 'hidden',
+                'mb-6 p-4 bg-red-50 border border-red-200 rounded-lg'
+              ]}
+              role="alert"
+              aria-live="assertive"
+            >
               <div class="flex items-center">
                 <AlertCircle className="w-5 h-5 text-red-600 mr-3" aria-hidden="true" />
                 <p class="text-red-800 font-medium">
-                  {errorMessage || 'There was an error sending your message. Please try again or contact us directly.'}
+                  {
+                    errorMessage ||
+                      'There was an error sending your message. Please try again or contact us directly.'
+                  }
                 </p>
               </div>
             </div>
@@ -333,7 +346,7 @@ const errorMessage = errorParam ? (errorMessages[errorParam] ?? errorMessages['s
                     class="mr-3 text-forest-canopy focus:ring-forest-canopy"
                   />
                   <span class="text-earth-brown"
-                  >Yes, I'd like to schedule a tour of your school</span
+                    >Yes, I'd like to schedule a tour of your school</span
                   >
                 </label>
               </div>
@@ -343,10 +356,10 @@ const errorMessage = errorParam ? (errorMessages[errorParam] ?? errorMessages['s
                   class="cf-turnstile"
                   data-sitekey={turnstileSiteKey}
                   data-theme="light"
-                  data-response-field-name="cf-turnstile-response"></div>
-                <p class="text-xs text-gray-600">
-                  Security check to protect families from spam.
-                </p>
+                  data-response-field-name="cf-turnstile-response"
+                >
+                </div>
+                <p class="text-xs text-gray-600">Security check to protect families from spam.</p>
               </div>
 
               <!-- Submit Button -->

@@ -35,7 +35,10 @@ export async function getTourLink(): Promise<string> {
   return normalized ?? TOUR_CTA_DESTINATION;
 }
 
-export async function getTourSettings(): Promise<{ tourLink: string; tourSchedulingEnabled: boolean }> {
+export async function getTourSettings(): Promise<{
+  tourLink: string;
+  tourSchedulingEnabled: boolean;
+}> {
   const [tourExternalLinkSetting, tourSchedulingEnabledSetting] = await Promise.all([
     db.content.getSetting('tour_external_link'),
     db.content.getSetting('tour_scheduling_enabled')

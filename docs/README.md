@@ -16,7 +16,7 @@
 | [auth.md](specs/auth.md) | Magic-link auth flow, sessions, protected routes |
 | [camp-system.md](specs/camp-system.md) | Camp mode state machine, seat logic, promotions |
 | [email.md](specs/email.md) | Email providers, types, templates, routing |
-| [api.md](specs/api.md) | All 35 API endpoints with auth requirements |
+| [api.md](specs/api.md) | All 29 API endpoints with auth requirements |
 
 ## Architecture Decision Records (`adr/`)
 

@@ -6,3 +6,10 @@ package-lock.json
 *.min.js
 *.min.css
 CHANGELOG.md
+
+# Prettier parser fails on inline scripts with define:vars or TypeScript in these Astro files
+src/components/OptimizedImage.astro
+src/layouts/Layout.astro
+src/layouts/NetlifyAuthLayout.astro
+src/pages/admin/media.astro
+src/pages/coming-soon.astro

@@ -38,7 +38,7 @@ const endIndex = result.total === 0 ? 0 : Math.min(result.total, currentPage * r
 
 const hasFilters = search.length > 0 || tourFilter !== 'all';
 const activeFilterCount = [search.length > 0, tourFilter !== 'all'].filter(Boolean).length;
-const tourRequestsOnPage = result.items.filter((submission) => submission.tour_interest).length;
+const tourRequestsOnPage = result.items.filter(submission => submission.tour_interest).length;
 const asRecord = (value: unknown): Record<string, unknown> => {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return value as Record<string, unknown>;
@@ -50,7 +50,8 @@ const getAttributionSummary = (submission: (typeof result.items)[number]): strin
   const attribution = asRecord(submission.attribution);
   const source = typeof attribution.utm_source === 'string' ? attribution.utm_source.trim() : '';
   const medium = typeof attribution.utm_medium === 'string' ? attribution.utm_medium.trim() : '';
-  const campaign = typeof attribution.utm_campaign === 'string' ? attribution.utm_campaign.trim() : '';
+  const campaign =
+    typeof attribution.utm_campaign === 'string' ? attribution.utm_campaign.trim() : '';
   const gclid = typeof attribution.gclid === 'string' ? attribution.gclid.trim() : '';
   const gbraid = typeof attribution.gbraid === 'string' ? attribution.gbraid.trim() : '';
   const wbraid = typeof attribution.wbraid === 'string' ? attribution.wbraid.trim() : '';
@@ -64,9 +65,9 @@ const getAttributionSummary = (submission: (typeof result.items)[number]): strin
     : `${sourceMedium} • ${campaignLabel}`;
 };
 
-const attributedLeadsOnPage = result.items.filter((submission) => {
+const attributedLeadsOnPage = result.items.filter(submission => {
   const attribution = asRecord(submission.attribution);
-  return ['utm_source', 'utm_campaign', 'gclid', 'gbraid', 'wbraid'].some((key) => {
+  return ['utm_source', 'utm_campaign', 'gclid', 'gbraid', 'wbraid'].some(key => {
     const value = attribution[key];
     return typeof value === 'string' && value.trim().length > 0;
   });
@@ -116,7 +117,8 @@ const clearFiltersHref = '/admin/contact-submissions';
         </a>
       </div>
       <p class="mb-4 text-sm text-earth-brown/80">
-        Review inquiries from the website contact form. Use filters below to quickly find a family message.
+        Review inquiries from the website contact form. Use filters below to quickly find a family
+        message.
       </p>
       <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -133,14 +135,19 @@ const clearFiltersHref = '/admin/contact-submissions';
           <p class="text-2xl font-semibold text-earth-brown">{tourRequestsOnPage}</p>
         </div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <p class="text-xs uppercase tracking-wide text-earth-brown/70">Attributed Leads (on page)</p>
+          <p class="text-xs uppercase tracking-wide text-earth-brown/70">
+            Attributed Leads (on page)
+          </p>
           <p class="text-2xl font-semibold text-earth-brown">{attributedLeadsOnPage}</p>
         </div>
       </div>
     </section>
 
     <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <form method="get" class="grid gap-3 md:grid-cols-[minmax(0,2fr)_minmax(180px,1fr)_auto] md:items-end">
+      <form
+        method="get"
+        class="grid gap-3 md:grid-cols-[minmax(0,2fr)_minmax(180px,1fr)_auto] md:items-end"
+      >
         <label class="block text-sm font-medium">
           Search
           <input
@@ -161,161 +168,219 @@ const clearFiltersHref = '/admin/contact-submissions';
           </select>
         </label>
 
-        <button type="submit" class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green">
+        <button
+          type="submit"
+          class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green"
+        >
           Apply Filters
         </button>
       </form>
 
-      {hasFilters && (
-        <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
-          <span class="rounded-full border border-forest-canopy/20 bg-forest-canopy/10 px-2 py-1 text-forest-canopy">
-            {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
-          </span>
-          <a href={clearFiltersHref} class="text-forest-canopy hover:underline">Clear filters</a>
-        </div>
-      )}
+      {
+        hasFilters && (
+          <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+            <span class="rounded-full border border-forest-canopy/20 bg-forest-canopy/10 px-2 py-1 text-forest-canopy">
+              {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
+            </span>
+            <a href={clearFiltersHref} class="text-forest-canopy hover:underline">
+              Clear filters
+            </a>
+          </div>
+        )
+      }
     </section>
 
     <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="mb-2 text-lg font-semibold">Submission Log</h2>
       <p class="mb-4 text-sm text-earth-brown/80">Newest messages appear first.</p>
 
-      {result.items.length === 0 ? (
-        <p class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-earth-brown/80">
-          No contact form submissions found for the current filters.
-        </p>
-      ) : (
-        <>
-          <div class="hidden overflow-x-auto lg:block">
-            <table class="min-w-[980px] w-full border-collapse text-sm">
-              <thead>
-                <tr class="bg-gray-50 text-left text-xs uppercase tracking-wide text-earth-brown/70">
-                  <th class="border border-gray-200 px-3 py-2">Submitted</th>
-                  <th class="border border-gray-200 px-3 py-2">Name & Child</th>
-                  <th class="border border-gray-200 px-3 py-2">Contact</th>
-                  <th class="border border-gray-200 px-3 py-2">Subject & Message</th>
-                  <th class="border border-gray-200 px-3 py-2">Attribution</th>
-                  <th class="border border-gray-200 px-3 py-2">Tour</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.items.map((submission) => {
-                  const phoneHref = submission.phone ? normalizePhoneHref(submission.phone) : '';
+      {
+        result.items.length === 0 ? (
+          <p class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-earth-brown/80">
+            No contact form submissions found for the current filters.
+          </p>
+        ) : (
+          <>
+            <div class="hidden overflow-x-auto lg:block">
+              <table class="min-w-[980px] w-full border-collapse text-sm">
+                <thead>
+                  <tr class="bg-gray-50 text-left text-xs uppercase tracking-wide text-earth-brown/70">
+                    <th class="border border-gray-200 px-3 py-2">Submitted</th>
+                    <th class="border border-gray-200 px-3 py-2">Name & Child</th>
+                    <th class="border border-gray-200 px-3 py-2">Contact</th>
+                    <th class="border border-gray-200 px-3 py-2">Subject & Message</th>
+                    <th class="border border-gray-200 px-3 py-2">Attribution</th>
+                    <th class="border border-gray-200 px-3 py-2">Tour</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.items.map(submission => {
+                    const phoneHref = submission.phone ? normalizePhoneHref(submission.phone) : '';
 
-                  return (
-                    <tr class="align-top">
-                      <td class="border border-gray-200 px-3 py-3 text-xs text-earth-brown/80">
-                        {formatSubmittedAt(submission.submitted_at)}
-                      </td>
-                      <td class="border border-gray-200 px-3 py-3">
-                        <p class="font-semibold text-earth-brown">{submission.name}</p>
-                        <p class="mt-1 text-xs text-earth-brown/70">
-                          {submission.child_age ? `Child age: ${submission.child_age}` : 'Child age not provided'}
-                        </p>
-                      </td>
-                      <td class="border border-gray-200 px-3 py-3">
-                        <a href={`mailto:${submission.email}`} class="text-forest-canopy hover:underline">{submission.email}</a>
-                        {submission.phone && phoneHref ? (
-                          <p class="mt-1">
-                            <a href={`tel:${phoneHref}`} class="text-forest-canopy hover:underline">{submission.phone}</a>
+                    return (
+                      <tr class="align-top">
+                        <td class="border border-gray-200 px-3 py-3 text-xs text-earth-brown/80">
+                          {formatSubmittedAt(submission.submitted_at)}
+                        </td>
+                        <td class="border border-gray-200 px-3 py-3">
+                          <p class="font-semibold text-earth-brown">{submission.name}</p>
+                          <p class="mt-1 text-xs text-earth-brown/70">
+                            {submission.child_age
+                              ? `Child age: ${submission.child_age}`
+                              : 'Child age not provided'}
                           </p>
-                        ) : (
-                          <p class="mt-1 text-xs text-earth-brown/70">No phone provided</p>
-                        )}
-                      </td>
-                      <td class="border border-gray-200 px-3 py-3">
-                        <p class="font-semibold text-earth-brown">{submission.subject || 'No subject'}</p>
-                        <p class="mt-1 whitespace-pre-wrap text-xs text-earth-brown/80">{truncate(submission.message || '', 220)}</p>
-                      </td>
-                      <td class="border border-gray-200 px-3 py-3 text-xs text-earth-brown/80">
-                        {getAttributionSummary(submission)}
-                        {submission.landing_page && (
-                          <p class="mt-1 text-earth-brown/60">Landing: {submission.landing_page}</p>
-                        )}
-                      </td>
-                      <td class="border border-gray-200 px-3 py-3">
-                        {submission.tour_interest ? (
-                          <span class="inline-flex rounded-full border border-green-200 bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">
-                            Yes
-                          </span>
-                        ) : (
-                          <span class="inline-flex rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-xs font-semibold text-earth-brown/70">
-                            No
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                        <td class="border border-gray-200 px-3 py-3">
+                          <a
+                            href={`mailto:${submission.email}`}
+                            class="text-forest-canopy hover:underline"
+                          >
+                            {submission.email}
+                          </a>
+                          {submission.phone && phoneHref ? (
+                            <p class="mt-1">
+                              <a
+                                href={`tel:${phoneHref}`}
+                                class="text-forest-canopy hover:underline"
+                              >
+                                {submission.phone}
+                              </a>
+                            </p>
+                          ) : (
+                            <p class="mt-1 text-xs text-earth-brown/70">No phone provided</p>
+                          )}
+                        </td>
+                        <td class="border border-gray-200 px-3 py-3">
+                          <p class="font-semibold text-earth-brown">
+                            {submission.subject || 'No subject'}
+                          </p>
+                          <p class="mt-1 whitespace-pre-wrap text-xs text-earth-brown/80">
+                            {truncate(submission.message || '', 220)}
+                          </p>
+                        </td>
+                        <td class="border border-gray-200 px-3 py-3 text-xs text-earth-brown/80">
+                          {getAttributionSummary(submission)}
+                          {submission.landing_page && (
+                            <p class="mt-1 text-earth-brown/60">
+                              Landing: {submission.landing_page}
+                            </p>
+                          )}
+                        </td>
+                        <td class="border border-gray-200 px-3 py-3">
+                          {submission.tour_interest ? (
+                            <span class="inline-flex rounded-full border border-green-200 bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">
+                              Yes
+                            </span>
+                          ) : (
+                            <span class="inline-flex rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-xs font-semibold text-earth-brown/70">
+                              No
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-          <div class="space-y-3 lg:hidden">
-            {result.items.map((submission) => {
-              const phoneHref = submission.phone ? normalizePhoneHref(submission.phone) : '';
+            <div class="space-y-3 lg:hidden">
+              {result.items.map(submission => {
+                const phoneHref = submission.phone ? normalizePhoneHref(submission.phone) : '';
 
-              return (
-                <article class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                  <div class="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <p class="font-semibold text-earth-brown">{submission.name}</p>
-                      <p class="text-xs text-earth-brown/70">{formatSubmittedAt(submission.submitted_at)}</p>
+                return (
+                  <article class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <div class="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p class="font-semibold text-earth-brown">{submission.name}</p>
+                        <p class="text-xs text-earth-brown/70">
+                          {formatSubmittedAt(submission.submitted_at)}
+                        </p>
+                      </div>
+                      {submission.tour_interest ? (
+                        <span class="inline-flex rounded-full border border-green-200 bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">
+                          Tour requested
+                        </span>
+                      ) : (
+                        <span class="inline-flex rounded-full border border-gray-200 bg-white px-2 py-1 text-xs font-semibold text-earth-brown/70">
+                          No tour request
+                        </span>
+                      )}
                     </div>
-                    {submission.tour_interest ? (
-                      <span class="inline-flex rounded-full border border-green-200 bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">
-                        Tour requested
-                      </span>
-                    ) : (
-                      <span class="inline-flex rounded-full border border-gray-200 bg-white px-2 py-1 text-xs font-semibold text-earth-brown/70">
-                        No tour request
-                      </span>
-                    )}
-                  </div>
 
-                  <p class="mt-2 text-sm font-semibold text-earth-brown">{submission.subject || 'No subject'}</p>
-                  <p class="mt-1 text-sm text-earth-brown/80 whitespace-pre-wrap">{truncate(submission.message || '', 240)}</p>
-
-                  <div class="mt-3 text-sm">
-                    <p>
-                      <a href={`mailto:${submission.email}`} class="text-forest-canopy hover:underline">{submission.email}</a>
+                    <p class="mt-2 text-sm font-semibold text-earth-brown">
+                      {submission.subject || 'No subject'}
                     </p>
-                    {submission.phone && phoneHref ? (
-                      <p class="mt-1">
-                        <a href={`tel:${phoneHref}`} class="text-forest-canopy hover:underline">{submission.phone}</a>
+                    <p class="mt-1 text-sm text-earth-brown/80 whitespace-pre-wrap">
+                      {truncate(submission.message || '', 240)}
+                    </p>
+
+                    <div class="mt-3 text-sm">
+                      <p>
+                        <a
+                          href={`mailto:${submission.email}`}
+                          class="text-forest-canopy hover:underline"
+                        >
+                          {submission.email}
+                        </a>
                       </p>
-                    ) : null}
-                    {submission.child_age ? <p class="mt-1 text-earth-brown/70">Child age: {submission.child_age}</p> : null}
-                    <p class="mt-1 text-earth-brown/70">Attribution: {getAttributionSummary(submission)}</p>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </>
-      )}
+                      {submission.phone && phoneHref ? (
+                        <p class="mt-1">
+                          <a href={`tel:${phoneHref}`} class="text-forest-canopy hover:underline">
+                            {submission.phone}
+                          </a>
+                        </p>
+                      ) : null}
+                      {submission.child_age ? (
+                        <p class="mt-1 text-earth-brown/70">Child age: {submission.child_age}</p>
+                      ) : null}
+                      <p class="mt-1 text-earth-brown/70">
+                        Attribution: {getAttributionSummary(submission)}
+                      </p>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </>
+        )
+      }
 
-      {totalPages > 1 && (
-        <nav class="mt-5 flex items-center justify-between border-t border-gray-200 pt-4 text-sm">
-          {currentPage > 1 ? (
-            <a href={pageHref(currentPage - 1)} class="rounded-lg border border-gray-300 px-3 py-2 text-earth-brown hover:bg-gray-50">
-              Previous
-            </a>
-          ) : (
-            <span class="rounded-lg border border-gray-200 px-3 py-2 text-earth-brown/50">Previous</span>
-          )}
+      {
+        totalPages > 1 && (
+          <nav class="mt-5 flex items-center justify-between border-t border-gray-200 pt-4 text-sm">
+            {currentPage > 1 ? (
+              <a
+                href={pageHref(currentPage - 1)}
+                class="rounded-lg border border-gray-300 px-3 py-2 text-earth-brown hover:bg-gray-50"
+              >
+                Previous
+              </a>
+            ) : (
+              <span class="rounded-lg border border-gray-200 px-3 py-2 text-earth-brown/50">
+                Previous
+              </span>
+            )}
 
-          <span class="text-earth-brown/80">Page {currentPage} of {totalPages}</span>
+            <span class="text-earth-brown/80">
+              Page {currentPage} of {totalPages}
+            </span>
 
-          {currentPage < totalPages ? (
-            <a href={pageHref(currentPage + 1)} class="rounded-lg border border-gray-300 px-3 py-2 text-earth-brown hover:bg-gray-50">
-              Next
-            </a>
-          ) : (
-            <span class="rounded-lg border border-gray-200 px-3 py-2 text-earth-brown/50">Next</span>
-          )}
-        </nav>
-      )}
+            {currentPage < totalPages ? (
+              <a
+                href={pageHref(currentPage + 1)}
+                class="rounded-lg border border-gray-300 px-3 py-2 text-earth-brown hover:bg-gray-50"
+              >
+                Next
+              </a>
+            ) : (
+              <span class="rounded-lg border border-gray-200 px-3 py-2 text-earth-brown/50">
+                Next
+              </span>
+            )}
+          </nav>
+        )
+      }
     </section>
   </div>
 </AdminLayout>

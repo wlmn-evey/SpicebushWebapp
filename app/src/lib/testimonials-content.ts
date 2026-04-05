@@ -200,7 +200,8 @@ const integerFrom = (value: unknown, fallback: number): number => {
   return Math.trunc(numeric);
 };
 
-const clamp = (value: number, min: number, max: number): number => Math.min(Math.max(value, min), max);
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(Math.max(value, min), max);
 
 const normalizeCategory = (value: unknown, fallback = 'general'): string => {
   const normalized = stringFrom(value, fallback)
@@ -230,9 +231,7 @@ const parseDate = (value: unknown): Date | undefined => {
 
 const parseCategoryList = (value: unknown): string[] => {
   if (Array.isArray(value)) {
-    return value
-      .map((item) => normalizeCategory(item, ''))
-      .filter((item) => item.length > 0);
+    return value.map(item => normalizeCategory(item, '')).filter(item => item.length > 0);
   }
 
   if (typeof value === 'string') {
@@ -243,9 +242,7 @@ const parseCategoryList = (value: unknown): string[] => {
       try {
         const parsed = JSON.parse(trimmed);
         if (Array.isArray(parsed)) {
-          return parsed
-            .map((item) => normalizeCategory(item, ''))
-            .filter((item) => item.length > 0);
+          return parsed.map(item => normalizeCategory(item, '')).filter(item => item.length > 0);
         }
       } catch {
         // Fall through to CSV parsing.
@@ -254,8 +251,8 @@ const parseCategoryList = (value: unknown): string[] => {
 
     return trimmed
       .split(/[\n,]/)
-      .map((item) => normalizeCategory(item, ''))
-      .filter((item) => item.length > 0);
+      .map(item => normalizeCategory(item, ''))
+      .filter(item => item.length > 0);
   }
 
   return [];
@@ -312,7 +309,8 @@ const toContentDataFromSeed = (seed: TestimonialSeedItem): Record<string, unknow
   show_on_homepage: seed.showOnHomepage,
   show_on_coming_soon: seed.showOnComingSoon,
   display_order: seed.displayOrder,
-  category: getNormalizedCategories(seed.categories, seed.category)[0] ?? normalizeCategory(seed.category),
+  category:
+    getNormalizedCategories(seed.categories, seed.category)[0] ?? normalizeCategory(seed.category),
   date: seed.date,
   childAge: seed.childAge ?? '',
   yearsAtSpicebush: seed.yearsAtSpicebush ?? null
@@ -347,7 +345,9 @@ const toManagedFromSeed = (seed: TestimonialSeedItem): ManagedTestimonial => {
   };
 };
 
-export const normalizeTestimonialEntry = (entry: ContentEntry<Record<string, unknown>>): ManagedTestimonial | null => {
+export const normalizeTestimonialEntry = (
+  entry: ContentEntry<Record<string, unknown>>
+): ManagedTestimonial | null => {
   const data = asRecord(entry.data);
 
   const author = stringFrom(data.author, stringFrom(data.name, ''));
@@ -429,7 +429,8 @@ const parsePlacementRulesFromSettings = (
 export const getTestimonialDisplayRules = async (
   settingsOverride?: Record<string, unknown>
 ): Promise<TestimonialDisplayRules> => {
-  const settings = settingsOverride ?? ((await db.content.getAllSettings()) as Record<string, unknown>);
+  const settings =
+    settingsOverride ?? ((await db.content.getAllSettings()) as Record<string, unknown>);
 
   return {
     homepage: parsePlacementRulesFromSettings(settings, 'homepage'),
@@ -445,18 +446,19 @@ export const filterTestimonialsForPlacement = (
   const rule = rules[placement];
   if (!rule.enabled) return [];
 
-  const filtered = items.filter((item) => {
+  const filtered = items.filter(item => {
     if (!item.active) return false;
     if (item.rating < rule.minRating) return false;
 
-    const isPlacementEnabled = placement === 'homepage' ? item.showOnHomepage : item.showOnComingSoon;
+    const isPlacementEnabled =
+      placement === 'homepage' ? item.showOnHomepage : item.showOnComingSoon;
     if (!isPlacementEnabled) return false;
 
     if (rule.requireFeatured && !item.featured) return false;
 
     if (
-      rule.allowedCategories.length > 0
-      && !item.categories.some((category) => rule.allowedCategories.includes(category))
+      rule.allowedCategories.length > 0 &&
+      !item.categories.some(category => rule.allowedCategories.includes(category))
     ) {
       return false;
     }
@@ -539,7 +541,9 @@ export const getManagedTestimonials = async (): Promise<ManagedTestimonial[]> =>
   await ensureTestimonialsSeeded();
 
   try {
-    const entries = (await db.content.getCollection('testimonials')) as ContentEntry<Record<string, unknown>>[];
+    const entries = (await db.content.getCollection('testimonials')) as ContentEntry<
+      Record<string, unknown>
+    >[];
     const normalized = sortTestimonials(
       entries
         .map(normalizeTestimonialEntry)
@@ -569,8 +573,9 @@ export const getTestimonialsForPlacement = async (
 };
 
 export const categoriesToSettingValue = (categories: string[]): string =>
-  uniqueList(categories.map((category) => normalizeCategory(category, '')))
-    .filter((category) => category.length > 0)
+  uniqueList(categories.map(category => normalizeCategory(category, '')))
+    .filter(category => category.length > 0)
     .join(', ');
 
-export const settingValueToCategories = (value: unknown): string[] => uniqueList(parseCategoryList(value));
+export const settingValueToCategories = (value: unknown): string[] =>
+  uniqueList(parseCategoryList(value));

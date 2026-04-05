@@ -10,9 +10,10 @@ vi.mock('@lib/media-storage', () => ({
 import { getNetlifyBlobByPath, mediaStorageUtils } from '@lib/media-storage';
 import { GET } from './[...key]';
 
-const makeContext = (key: string) => ({
-  params: { key }
-}) as unknown as Parameters<typeof GET>[0];
+const makeContext = (key: string) =>
+  ({
+    params: { key }
+  }) as unknown as Parameters<typeof GET>[0];
 
 describe('GET /api/media/blob/[...key] — SVG security headers (F-05 P1 fix)', () => {
   beforeEach(() => {
@@ -54,9 +55,7 @@ describe('GET /api/media/blob/[...key] — SVG security headers (F-05 P1 fix)', 
 
     it('sets Content-Disposition: attachment for SVG content', async () => {
       const response = await GET(makeContext('images/icon.svg'));
-      expect(response.headers.get('Content-Disposition')).toBe(
-        'attachment; filename="image.svg"'
-      );
+      expect(response.headers.get('Content-Disposition')).toBe('attachment; filename="image.svg"');
     });
 
     it('sets X-Content-Type-Options: nosniff for SVG content', async () => {
@@ -71,9 +70,7 @@ describe('GET /api/media/blob/[...key] — SVG security headers (F-05 P1 fix)', 
 
     it('still sets Cache-Control for SVG', async () => {
       const response = await GET(makeContext('images/icon.svg'));
-      expect(response.headers.get('Cache-Control')).toBe(
-        'public, max-age=31536000, immutable'
-      );
+      expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
     });
 
     it('sets ETag when available', async () => {
@@ -114,9 +111,7 @@ describe('GET /api/media/blob/[...key] — SVG security headers (F-05 P1 fix)', 
 
     it('sets Cache-Control for JPEG', async () => {
       const response = await GET(makeContext('images/photo.jpg'));
-      expect(response.headers.get('Cache-Control')).toBe(
-        'public, max-age=31536000, immutable'
-      );
+      expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
     });
   });
 

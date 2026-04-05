@@ -123,22 +123,22 @@ const safeBasename = (filename: string): string => {
 const extensionFromMime = (mimeType: string): string => {
   const normalized = mimeType.trim().toLowerCase();
   switch (normalized) {
-  case 'image/jpeg':
-    return '.jpg';
-  case 'image/png':
-    return '.png';
-  case 'image/webp':
-    return '.webp';
-  case 'image/gif':
-    return '.gif';
-  case 'image/avif':
-    return '.avif';
-  case 'image/svg+xml':
-    return '.svg';
-  case 'application/pdf':
-    return '.pdf';
-  default:
-    return '.bin';
+    case 'image/jpeg':
+      return '.jpg';
+    case 'image/png':
+      return '.png';
+    case 'image/webp':
+      return '.webp';
+    case 'image/gif':
+      return '.gif';
+    case 'image/avif':
+      return '.avif';
+    case 'image/svg+xml':
+      return '.svg';
+    case 'application/pdf':
+      return '.pdf';
+    default:
+      return '.bin';
   }
 };
 
@@ -161,8 +161,8 @@ const buildStorageKey = (filename: string, fileBuffer: Buffer, mimeType: string)
 const decodeBlobPath = (rawPath: string): string =>
   rawPath
     .split('/')
-    .filter((segment) => segment.length > 0)
-    .map((segment) => decodeURIComponent(segment))
+    .filter(segment => segment.length > 0)
+    .map(segment => decodeURIComponent(segment))
     .join('/');
 
 const getBlobPathFromUrl = (url: string, basePath: string): string | null => {
@@ -228,12 +228,15 @@ class LocalStorage implements StorageProvider {
     }
   }
 
-  async upload(file: Buffer, filename: string, metadata: Record<string, unknown> = {}): Promise<UploadResult> {
+  async upload(
+    file: Buffer,
+    filename: string,
+    metadata: Record<string, unknown> = {}
+  ): Promise<UploadResult> {
     await this.ensureUploadDir();
 
-    const contentType = typeof metadata.contentType === 'string'
-      ? metadata.contentType
-      : 'application/octet-stream';
+    const contentType =
+      typeof metadata.contentType === 'string' ? metadata.contentType : 'application/octet-stream';
     const key = buildStorageKey(filename, file, contentType).replace(/\//g, '-');
     const filePath = path.join(this.uploadDir, key);
     await fs.writeFile(filePath, file);
@@ -264,15 +267,29 @@ class LocalStorage implements StorageProvider {
 class NetlifyBlobsStorage implements StorageProvider {
   name: StorageProviderName = 'netlify-blobs';
 
-  constructor(private storeName: string, private basePath: string) {}
+  constructor(
+    private storeName: string,
+    private basePath: string
+  ) {}
 
   private getStoreInstance() {
     return getStore(this.storeName);
   }
 
-  async upload(file: Buffer, filename: string, metadata: Record<string, unknown> = {}): Promise<UploadResult> {
-    const key = buildStorageKey(filename, file, String(metadata.contentType ?? 'application/octet-stream'));
-    const arrayBuffer = file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength) as ArrayBuffer;
+  async upload(
+    file: Buffer,
+    filename: string,
+    metadata: Record<string, unknown> = {}
+  ): Promise<UploadResult> {
+    const key = buildStorageKey(
+      filename,
+      file,
+      String(metadata.contentType ?? 'application/octet-stream')
+    );
+    const arrayBuffer = file.buffer.slice(
+      file.byteOffset,
+      file.byteOffset + file.byteLength
+    ) as ArrayBuffer;
 
     await this.getStoreInstance().set(key, arrayBuffer, { metadata });
 
@@ -288,7 +305,10 @@ class NetlifyBlobsStorage implements StorageProvider {
   }
 
   getUrl(pathValue: string): string {
-    const encodedPath = pathValue.split('/').map((segment) => encodeURIComponent(segment)).join('/');
+    const encodedPath = pathValue
+      .split('/')
+      .map(segment => encodeURIComponent(segment))
+      .join('/');
     return `${this.basePath}/${encodedPath}`;
   }
 }
@@ -333,7 +353,7 @@ async function getStorageSettings(): Promise<StorageSettings> {
     );
 
     const settings: Record<string, unknown> = {};
-    data?.forEach((row) => {
+    data?.forEach(row => {
       try {
         if (typeof row.setting_value === 'string') {
           settings[row.setting_key] = JSON.parse(row.setting_value);
@@ -377,26 +397,28 @@ export async function getStorageProvider(): Promise<StorageProvider> {
   const settings = await getStorageSettings();
 
   switch (settings.provider) {
-  case 'netlify-blobs':
-    return new NetlifyBlobsStorage(
-      STORAGE_CONFIG.netlifyBlobs.storeName,
-      STORAGE_CONFIG.netlifyBlobs.basePath
-    );
-  case 'gcs':
-    return new GoogleCloudStorage();
-  case 'r2':
-  case 'b2':
-    logServerWarn('Requested storage provider is not implemented, falling back to local', {
-      provider: settings.provider
-    });
-    return new LocalStorage(STORAGE_CONFIG.local.uploadDir);
-  case 'local':
-  default:
-    return new LocalStorage(STORAGE_CONFIG.local.uploadDir);
+    case 'netlify-blobs':
+      return new NetlifyBlobsStorage(
+        STORAGE_CONFIG.netlifyBlobs.storeName,
+        STORAGE_CONFIG.netlifyBlobs.basePath
+      );
+    case 'gcs':
+      return new GoogleCloudStorage();
+    case 'r2':
+    case 'b2':
+      logServerWarn('Requested storage provider is not implemented, falling back to local', {
+        provider: settings.provider
+      });
+      return new LocalStorage(STORAGE_CONFIG.local.uploadDir);
+    case 'local':
+    default:
+      return new LocalStorage(STORAGE_CONFIG.local.uploadDir);
   }
 }
 
-const getImageDimensions = async (file: UploadFileInput): Promise<{ width: number | null; height: number | null }> => {
+const getImageDimensions = async (
+  file: UploadFileInput
+): Promise<{ width: number | null; height: number | null }> => {
   if (!file.mimetype.startsWith('image/')) {
     return { width: null, height: null };
   }
@@ -444,7 +466,10 @@ const uploadWithFallback = async (
   }
 };
 
-export async function handleMediaUpload(file: UploadFileInput, userId: string): Promise<MediaUploadResult> {
+export async function handleMediaUpload(
+  file: UploadFileInput,
+  userId: string
+): Promise<MediaUploadResult> {
   try {
     const settings = await getStorageSettings();
     const maxFileSize = settings.config.maxFileSize || STORAGE_CONFIG.local.maxFileSize;
@@ -517,14 +542,18 @@ export async function handleMediaUpload(file: UploadFileInput, userId: string): 
   }
 }
 
-export async function validateFile(
-  file: { mimetype: string; size: number }
-): Promise<{ valid: boolean; error?: string }> {
+export async function validateFile(file: {
+  mimetype: string;
+  size: number;
+}): Promise<{ valid: boolean; error?: string }> {
   const settings = await getStorageSettings();
   const maxFileSize = settings.config.maxFileSize || STORAGE_CONFIG.local.maxFileSize;
 
   if (!STORAGE_CONFIG.local.allowedTypes.includes(file.mimetype)) {
-    return { valid: false, error: 'File type not allowed. Allowed types: JPG, PNG, WebP, GIF, AVIF, PDF' };
+    return {
+      valid: false,
+      error: 'File type not allowed. Allowed types: JPG, PNG, WebP, GIF, AVIF, PDF'
+    };
   }
 
   if (file.size > maxFileSize) {
@@ -575,7 +604,8 @@ export async function deleteStoredMediaAsset(reference: MediaAssetReference): Pr
   const url = typeof reference.url === 'string' ? reference.url : null;
 
   if (provider === 'netlify-blobs') {
-    const blobPath = storagePath || (url ? getBlobPathFromUrl(url, STORAGE_CONFIG.netlifyBlobs.basePath) : null);
+    const blobPath =
+      storagePath || (url ? getBlobPathFromUrl(url, STORAGE_CONFIG.netlifyBlobs.basePath) : null);
     if (!blobPath) {
       return;
     }

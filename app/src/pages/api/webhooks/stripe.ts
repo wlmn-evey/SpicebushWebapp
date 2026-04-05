@@ -15,9 +15,9 @@ const parseStripeSignatureHeader = (headerValue: string): Record<string, string[
   const parsed: Record<string, string[]> = {};
   headerValue
     .split(',')
-    .map((segment) => segment.trim())
+    .map(segment => segment.trim())
     .filter(Boolean)
-    .forEach((segment) => {
+    .forEach(segment => {
       const [key, value] = segment.split('=', 2);
       if (!key || !value) return;
       if (!parsed[key]) parsed[key] = [];
@@ -63,7 +63,7 @@ const verifyStripeSignature = (input: {
 
   const signedPayload = `${timestampRaw}.${input.rawBody}`;
   const expected = createHmac('sha256', input.secret).update(signedPayload, 'utf8').digest('hex');
-  const matched = candidates.some((candidate) => safeHexEquals(candidate, expected));
+  const matched = candidates.some(candidate => safeHexEquals(candidate, expected));
 
   return matched ? { valid: true } : { valid: false, reason: 'signature_mismatch' };
 };

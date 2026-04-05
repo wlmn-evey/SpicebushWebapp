@@ -30,7 +30,7 @@ describe('validateFile — upload type validation', () => {
       'application/pdf'
     ];
 
-    it.each(allowedTypes)('accepts %s uploads', async (mimetype) => {
+    it.each(allowedTypes)('accepts %s uploads', async mimetype => {
       const result = await validateFile({ mimetype, size: validSize });
       expect(result.valid).toBe(true);
       expect(result.error).toBeUndefined();

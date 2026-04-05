@@ -35,7 +35,9 @@ describe('api-utils', () => {
     expect(validatePhone('+1 (555) 111-2222')).toBe(true);
     expect(validatePhone('12345')).toBe(false);
 
-    expect(validateRequired({ name: 'Ada', email: 'ada@example.com' }, ['name', 'email'])).toBeNull();
+    expect(
+      validateRequired({ name: 'Ada', email: 'ada@example.com' }, ['name', 'email'])
+    ).toBeNull();
     expect(validateRequired({ name: '  ' }, ['name'])).toBe('name is required');
   });
 
@@ -72,7 +74,9 @@ describe('api-utils', () => {
       body: JSON.stringify({ name: 'Ada' })
     });
 
-    await expect(parseJsonBody<Record<string, string>>(goodRequest)).resolves.toEqual({ name: 'Ada' });
+    await expect(parseJsonBody<Record<string, string>>(goodRequest)).resolves.toEqual({
+      name: 'Ada'
+    });
 
     const badRequest = new Request('http://localhost/api', {
       method: 'POST',

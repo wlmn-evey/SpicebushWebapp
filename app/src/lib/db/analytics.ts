@@ -3,7 +3,8 @@ import { query, queryFirst, queryRows } from './client';
 
 type AnalyticsScalar = string | number | boolean | null;
 
-const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, value));
 
 const cleanString = (value: unknown, maxLength: number): string | null => {
   if (typeof value !== 'string') return null;
@@ -273,15 +274,15 @@ export async function getAnalyticsOverview(windowDays = 30): Promise<AnalyticsOv
         leads: toInt(summaryRow?.leads),
         attributedLeads: toInt(summaryRow?.attributed_leads)
       },
-      topPages: topPagesRows.map((row) => ({
+      topPages: topPagesRows.map(row => ({
         pagePath: row.page_path || '(unknown)',
         views: toInt(row.views)
       })),
-      topEvents: topEventsRows.map((row) => ({
+      topEvents: topEventsRows.map(row => ({
         eventName: row.event_name,
         count: toInt(row.count)
       })),
-      topCampaigns: topCampaignRows.map((row) => ({
+      topCampaigns: topCampaignRows.map(row => ({
         campaign: row.campaign,
         leads: toInt(row.leads)
       }))
@@ -313,7 +314,7 @@ export async function getRecentAnalyticsEvents(limit = 25): Promise<RecentAnalyt
       [safeLimit]
     );
 
-    return rows.map((row) => ({
+    return rows.map(row => ({
       id: row.id,
       eventName: row.event_name,
       pagePath: row.page_path,

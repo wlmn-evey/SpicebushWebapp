@@ -60,7 +60,9 @@ describe('coming-soon-client', () => {
 
     initComingSoonPage();
 
-    const startedAt = document.getElementById('coming-soon-submission-started-at') as HTMLInputElement;
+    const startedAt = document.getElementById(
+      'coming-soon-submission-started-at'
+    ) as HTMLInputElement;
     expect(startedAt.value).not.toBe('');
 
     const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');

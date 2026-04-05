@@ -16,7 +16,10 @@ const normalizeDomain = (value: string): string => value.trim().toLowerCase().re
 const getEmailDomain = (email: string): string | null => {
   const atIndex = email.lastIndexOf('@');
   if (atIndex < 0) return null;
-  const domain = email.slice(atIndex + 1).trim().toLowerCase();
+  const domain = email
+    .slice(atIndex + 1)
+    .trim()
+    .toLowerCase();
   return domain || null;
 };
 
@@ -39,7 +42,7 @@ export function getAdminConfig(): AdminConfig {
   const envAdminDomains = process.env.ADMIN_DOMAINS;
 
   return {
-    adminEmails: envAdminEmails 
+    adminEmails: envAdminEmails
       ? envAdminEmails.split(',').map((email: string) => email.trim())
       : defaultConfig.adminEmails,
     adminDomains: envAdminDomains
@@ -69,7 +72,7 @@ export function isAllowedAdminLoginEmail(email: string | null | undefined): bool
 // Check if an email has admin privileges
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
-  
+
   const config = getAdminConfig();
   const normalizedEmail = email.toLowerCase().trim();
 
@@ -87,20 +90,16 @@ export function isAdminEmail(email: string | null | undefined): boolean {
 
   const domain = getEmailDomain(normalizedEmail);
   if (!domain) return false;
-  
+
   // Check specific admin emails
-  if (config.adminEmails.some(adminEmail => 
-    normalizedEmail === adminEmail.toLowerCase()
-  )) {
+  if (config.adminEmails.some(adminEmail => normalizedEmail === adminEmail.toLowerCase())) {
     return true;
   }
-  
+
   // Check admin domains
-  if (config.adminDomains.some((adminDomain) => 
-    domain === normalizeDomain(adminDomain)
-  )) {
+  if (config.adminDomains.some(adminDomain => domain === normalizeDomain(adminDomain))) {
     return true;
   }
-  
+
   return false;
 }

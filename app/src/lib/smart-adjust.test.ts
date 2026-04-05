@@ -96,10 +96,11 @@ describe('smart-adjust utils', () => {
 
     const suggestion = createHeuristicSmartAdjustSuggestion(basePlacement, context);
 
-    const focusInsideOverlay = suggestion.desktopFocalX >= 35
-      && suggestion.desktopFocalX <= 65
-      && suggestion.desktopFocalY >= 35
-      && suggestion.desktopFocalY <= 65;
+    const focusInsideOverlay =
+      suggestion.desktopFocalX >= 35 &&
+      suggestion.desktopFocalX <= 65 &&
+      suggestion.desktopFocalY >= 35 &&
+      suggestion.desktopFocalY <= 65;
 
     expect(focusInsideOverlay).toBe(false);
 

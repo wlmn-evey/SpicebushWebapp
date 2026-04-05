@@ -80,10 +80,8 @@ const statusClass = (status: CampWeekView['status']): string => {
 };
 
 const statusBadgeLabel = (week: CampWeekView): string => {
-  if (week.status === 'limited' && week.availableSeats > 0)
-    return `${week.availableSeats} Left`;
-  if (week.status === 'open' && week.availableSeats > 0)
-    return `${week.availableSeats} Seats Open`;
+  if (week.status === 'limited' && week.availableSeats > 0) return `${week.availableSeats} Left`;
+  if (week.status === 'open' && week.availableSeats > 0) return `${week.availableSeats} Seats Open`;
   return statusLabel(week.status);
 };
 
@@ -288,8 +286,7 @@ const faqEntries: Array<{ question: string; answer: string }> = [
   },
   {
     question: 'How quickly are seat updates reflected?',
-    answer:
-      'Seat counts update as soon as a change is made, so what you see here is current.'
+    answer: 'Seat counts update as soon as a change is made, so what you see here is current.'
   },
   {
     question: 'Do you help families choose the right week?',
@@ -324,7 +321,7 @@ const campFamilyNotes: Array<{
   {
     title: 'Scheduling and Pickup Times',
     details:
-      'Camp runs 8:30 AM - 4:30 PM. Need an earlier pickup? Just let your child\'s teacher leaders know in advance.'
+      "Camp runs 8:30 AM - 4:30 PM. Need an earlier pickup? Just let your child's teacher leaders know in advance."
   }
 ];
 ---
@@ -524,25 +521,56 @@ const campFamilyNotes: Array<{
 
     <section data-camp-animate class="camp-reveal py-4">
       <div class="container mx-auto px-4">
-        <div class="water-play-banner relative overflow-hidden rounded-2xl border border-sky-300/40 px-5 py-6 text-white shadow-lg md:px-8">
+        <div
+          class="water-play-banner relative overflow-hidden rounded-2xl border border-sky-300/40 px-5 py-6 text-white shadow-lg md:px-8"
+        >
           <!-- Animated SVG wave layers -->
-          <svg class="water-svg-wave water-svg-wave-a" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,40 C150,80 350,0 500,40 C650,80 850,0 1000,40 C1050,55 1150,20 1200,40 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.12)"/>
+          <svg
+            class="water-svg-wave water-svg-wave-a"
+            aria-hidden="true"
+            preserveAspectRatio="none"
+            viewBox="0 0 1200 120"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M0,40 C150,80 350,0 500,40 C650,80 850,0 1000,40 C1050,55 1150,20 1200,40 L1200,120 L0,120 Z"
+              fill="rgba(255,255,255,0.12)"></path>
           </svg>
-          <svg class="water-svg-wave water-svg-wave-b" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,60 C200,20 300,90 500,50 C700,10 900,80 1200,50 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.08)"/>
+          <svg
+            class="water-svg-wave water-svg-wave-b"
+            aria-hidden="true"
+            preserveAspectRatio="none"
+            viewBox="0 0 1200 120"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M0,60 C200,20 300,90 500,50 C700,10 900,80 1200,50 L1200,120 L0,120 Z"
+              fill="rgba(255,255,255,0.08)"></path>
           </svg>
-          <svg class="water-svg-wave water-svg-wave-c" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,70 C100,40 250,95 400,60 C550,25 750,85 900,55 C1050,25 1150,70 1200,55 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.06)"/>
+          <svg
+            class="water-svg-wave water-svg-wave-c"
+            aria-hidden="true"
+            preserveAspectRatio="none"
+            viewBox="0 0 1200 120"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M0,70 C100,40 250,95 400,60 C550,25 750,85 900,55 C1050,25 1150,70 1200,55 L1200,120 L0,120 Z"
+              fill="rgba(255,255,255,0.06)"></path>
           </svg>
 
           <!-- Floating bubbles -->
           <div class="water-bubbles" aria-hidden="true">
-            <span class="water-bubble" style="--b-left:12%;--b-size:6px;--b-delay:0s;--b-dur:4.5s"></span>
-            <span class="water-bubble" style="--b-left:30%;--b-size:4px;--b-delay:1.2s;--b-dur:5s"></span>
-            <span class="water-bubble" style="--b-left:55%;--b-size:7px;--b-delay:2.4s;--b-dur:4s"></span>
-            <span class="water-bubble" style="--b-left:72%;--b-size:5px;--b-delay:0.8s;--b-dur:5.5s"></span>
-            <span class="water-bubble" style="--b-left:88%;--b-size:4px;--b-delay:3s;--b-dur:4.8s"></span>
+            <span class="water-bubble" style="--b-left:12%;--b-size:6px;--b-delay:0s;--b-dur:4.5s"
+            ></span>
+            <span class="water-bubble" style="--b-left:30%;--b-size:4px;--b-delay:1.2s;--b-dur:5s"
+            ></span>
+            <span class="water-bubble" style="--b-left:55%;--b-size:7px;--b-delay:2.4s;--b-dur:4s"
+            ></span>
+            <span class="water-bubble" style="--b-left:72%;--b-size:5px;--b-delay:0.8s;--b-dur:5.5s"
+            ></span>
+            <span class="water-bubble" style="--b-left:88%;--b-size:4px;--b-delay:3s;--b-dur:4.8s"
+            ></span>
           </div>
 
           <!-- Shimmer sweep -->
@@ -551,13 +579,22 @@ const campFamilyNotes: Array<{
           <!-- Content -->
           <div class="relative z-10 flex flex-wrap items-center gap-3 sm:gap-4">
             <!-- Water droplet icon -->
-            <span class="water-drop-icon inline-flex items-center justify-center rounded-full bg-white/20 p-2 backdrop-blur-sm">
-              <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69z"/>
+            <span
+              class="water-drop-icon inline-flex items-center justify-center rounded-full bg-white/20 p-2 backdrop-blur-sm"
+            >
+              <svg
+                class="h-5 w-5 text-white"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69z"></path>
               </svg>
             </span>
             <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-              <span class="inline-flex items-center rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-sm">
+              <span
+                class="inline-flex items-center rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-sm"
+              >
                 Summer Update
               </span>
               <p class="text-base font-semibold leading-tight text-white sm:text-lg">
@@ -576,20 +613,22 @@ const campFamilyNotes: Array<{
             Camp Family Notes
           </p>
           <div class="mt-3 grid gap-3 md:grid-cols-2">
-            {campFamilyNotes.map(note => (
-              <article class="rounded-xl border border-gray-200 bg-stone-beige/30 p-4">
-                <h2 class="text-base font-semibold text-earth-brown">{note.title}</h2>
-                <p class="mt-1 text-sm text-earth-brown/85">{note.details}</p>
-                {note.ctaHref && note.ctaLabel && (
-                  <a
-                    href={note.ctaHref}
-                    class="mt-2 inline-flex min-h-[42px] items-center justify-center rounded-lg border border-forest-canopy px-3 py-1.5 text-sm font-semibold text-forest-canopy transition hover:bg-forest-canopy hover:text-white"
-                  >
-                    {note.ctaLabel}
-                  </a>
-                )}
-              </article>
-            ))}
+            {
+              campFamilyNotes.map(note => (
+                <article class="rounded-xl border border-gray-200 bg-stone-beige/30 p-4">
+                  <h2 class="text-base font-semibold text-earth-brown">{note.title}</h2>
+                  <p class="mt-1 text-sm text-earth-brown/85">{note.details}</p>
+                  {note.ctaHref && note.ctaLabel && (
+                    <a
+                      href={note.ctaHref}
+                      class="mt-2 inline-flex min-h-[42px] items-center justify-center rounded-lg border border-forest-canopy px-3 py-1.5 text-sm font-semibold text-forest-canopy transition hover:bg-forest-canopy hover:text-white"
+                    >
+                      {note.ctaLabel}
+                    </a>
+                  )}
+                </article>
+              ))
+            }
           </div>
         </div>
       </div>
@@ -832,9 +871,7 @@ const campFamilyNotes: Array<{
                           </span>
                         </div>
 
-                        {leadCopy && (
-                          <p class="mt-2 text-sm text-earth-brown/85">{leadCopy}</p>
-                        )}
+                        {leadCopy && <p class="mt-2 text-sm text-earth-brown/85">{leadCopy}</p>}
 
                         {highlights.length > 0 && (
                           <div class="mt-2.5 flex flex-wrap gap-1.5">
@@ -1131,7 +1168,11 @@ const campFamilyNotes: Array<{
       width: var(--b-size, 5px);
       height: var(--b-size, 5px);
       border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.6), rgba(255,255,255,0.15));
+      background: radial-gradient(
+        circle at 35% 35%,
+        rgba(255, 255, 255, 0.6),
+        rgba(255, 255, 255, 0.15)
+      );
       animation: waterBubbleFloat var(--b-dur, 5s) ease-in var(--b-delay, 0s) infinite;
       opacity: 0;
     }
@@ -1143,9 +1184,9 @@ const campFamilyNotes: Array<{
       background: linear-gradient(
         105deg,
         transparent 40%,
-        rgba(255,255,255,0.1) 45%,
-        rgba(255,255,255,0.18) 50%,
-        rgba(255,255,255,0.1) 55%,
+        rgba(255, 255, 255, 0.1) 45%,
+        rgba(255, 255, 255, 0.18) 50%,
+        rgba(255, 255, 255, 0.1) 55%,
         transparent 60%
       );
       background-size: 250% 100%;
@@ -1261,7 +1302,8 @@ const campFamilyNotes: Array<{
     }
 
     @keyframes waterShimmerSweep {
-      0%, 100% {
+      0%,
+      100% {
         background-position: 200% center;
       }
 
@@ -1271,7 +1313,8 @@ const campFamilyNotes: Array<{
     }
 
     @keyframes waterDropBob {
-      0%, 100% {
+      0%,
+      100% {
         transform: translateY(0);
       }
 
@@ -1309,7 +1352,6 @@ const campFamilyNotes: Array<{
         animation: none;
       }
     }
-
   </style>
 
   <Footer />

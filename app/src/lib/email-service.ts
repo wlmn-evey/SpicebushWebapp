@@ -59,7 +59,12 @@ const normalizeProviderKey = (value: string | null | undefined): string => {
 };
 
 const parseRecipients = (to: string | string[]): string[] => {
-  const recipients = Array.isArray(to) ? to : to.split(',').map(entry => entry.trim()).filter(Boolean);
+  const recipients = Array.isArray(to)
+    ? to
+    : to
+        .split(',')
+        .map(entry => entry.trim())
+        .filter(Boolean);
   return recipients
     .map(entry => entry.trim())
     .filter(entry => entry.length > 0 && EMAIL_REGEX.test(entry));
@@ -87,7 +92,7 @@ const getDbSenderEmail = async (): Promise<string | null> => {
       [DB_SENDER_SETTING_KEYS]
     );
 
-    const rowByKey = new Map(rows.map((row) => [row.key, row.value]));
+    const rowByKey = new Map(rows.map(row => [row.key, row.value]));
     for (const key of DB_SENDER_SETTING_KEYS) {
       const email = parseSettingEmail(rowByKey.get(key));
       if (email) {
@@ -111,7 +116,9 @@ const getDbSenderEmail = async (): Promise<string | null> => {
   return null;
 };
 
-const resolveSender = async (message: EmailMessage): Promise<{ email: string; name: string } | null> => {
+const resolveSender = async (
+  message: EmailMessage
+): Promise<{ email: string; name: string } | null> => {
   const explicitEmail = message.from?.trim();
   if (explicitEmail && EMAIL_REGEX.test(explicitEmail)) {
     const name = (message.fromName || process.env.EMAIL_FROM_NAME || 'Spicebush Montessori').trim();
@@ -301,9 +308,10 @@ class UnioneProvider implements EmailProvider {
     this.apiKey = process.env.UNIONE_API_KEY || '';
     // Use EU region by default, can be overridden with UNIONE_REGION=us
     const region = process.env.UNIONE_REGION || 'eu';
-    this.baseUrl = region === 'us' 
-      ? 'https://us1.unione.io/en/transactional/api/v1' 
-      : 'https://eu1.unione.io/en/transactional/api/v1';
+    this.baseUrl =
+      region === 'us'
+        ? 'https://us1.unione.io/en/transactional/api/v1'
+        : 'https://eu1.unione.io/en/transactional/api/v1';
   }
 
   isConfigured(): boolean {
@@ -355,7 +363,7 @@ class UnioneProvider implements EmailProvider {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'X-API-KEY': this.apiKey
         },
         body: JSON.stringify(payload)
@@ -382,10 +390,9 @@ class UnioneProvider implements EmailProvider {
   }
 }
 
-
 /**
  * Email Service Manager
- * 
+ *
  * Manages multiple email providers and handles fallback logic
  */
 class EmailService {
@@ -394,10 +401,7 @@ class EmailService {
 
   constructor() {
     // Keep both providers available while defaulting to SendGrid-first.
-    this.providers = [
-      new SendGridProvider(),
-      new UnioneProvider()
-    ];
+    this.providers = [new SendGridProvider(), new UnioneProvider()];
 
     // Preferred provider order: explicit setting > sensible default.
     this.preferredProvider = normalizeProviderKey(process.env.EMAIL_SERVICE || 'sendgrid');
@@ -414,7 +418,7 @@ class EmailService {
    * Get configured provider names (lower-level status helper for diagnostics/UI)
    */
   getConfiguredProviderNames(): string[] {
-    return this.getConfiguredProviders().map((provider) => provider.name);
+    return this.getConfiguredProviders().map(provider => provider.name);
   }
 
   /**
@@ -433,8 +437,8 @@ class EmailService {
 
     // Try preferred provider first if specified
     if (this.preferredProvider) {
-      const preferred = configuredProviders.find(p => 
-        normalizeProviderKey(p.name) === this.preferredProvider
+      const preferred = configuredProviders.find(
+        p => normalizeProviderKey(p.name) === this.preferredProvider
       );
 
       if (preferred) {
@@ -462,7 +466,7 @@ class EmailService {
       if (result.success) {
         return result;
       }
-      
+
       errors.push(`${provider.name}: ${result.error}`);
     }
 

@@ -50,7 +50,9 @@ const parseEmail = async (
   request: Request
 ): Promise<{ email: string; redirectTo: string; nextPath: string; isForm: boolean }> => {
   const contentType = request.headers.get('content-type')?.toLowerCase() || '';
-  const isForm = contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data');
+  const isForm =
+    contentType.includes('application/x-www-form-urlencoded') ||
+    contentType.includes('multipart/form-data');
 
   if (isForm) {
     const formData = await request.formData();
@@ -80,7 +82,7 @@ const parseEmail = async (
   };
 };
 
-const handleRequest: APIRoute = async (context) => {
+const handleRequest: APIRoute = async context => {
   if (context.request.method !== 'POST') {
     return toJsonResponse(405, { error: 'Method not allowed' });
   }
@@ -127,7 +129,9 @@ const handleRequest: APIRoute = async (context) => {
     logServerError('Magic link request failed', error, { route: '/api/auth/request-link' });
 
     const contentType = context.request.headers.get('content-type')?.toLowerCase() || '';
-    const isForm = contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data');
+    const isForm =
+      contentType.includes('application/x-www-form-urlencoded') ||
+      contentType.includes('multipart/form-data');
     if (isForm) {
       return context.redirect(appendPathParam(DEFAULT_REDIRECT, 'error', ERROR_NOTICE));
     }
