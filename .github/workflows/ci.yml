@@ -21,7 +21,7 @@ jobs:
         cache-dependency-path: 'app/package-lock.json'
 
     - name: Install dependencies
-      run: cd app && npm ci
+      run: cd app && npm ci --force
 
     - name: Lint (zero warnings)
       run: cd app && npm run lint -- --max-warnings=0
