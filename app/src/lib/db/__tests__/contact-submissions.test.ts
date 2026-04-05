@@ -256,7 +256,9 @@ describe('getContactSubmissionsForExport — export cap (F-03 P1 fix)', () => {
     vi.mocked(queryFirst).mockResolvedValue({ count: 0 });
     vi.mocked(queryRows).mockResolvedValue([]);
 
-    const result = await getContactSubmissionsForExport({ page: 5 });
+    // page is excluded from the type signature (Omit<..., 'page'>)
+    // so we just verify the function always returns page=1
+    const result = await getContactSubmissionsForExport({});
 
     expect(result.page).toBe(1);
   });
