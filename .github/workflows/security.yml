@@ -23,7 +23,7 @@ jobs:
         cache-dependency-path: 'app/package-lock.json'
 
     - name: Install dependencies
-      run: cd app && npm ci --legacy-peer-deps
+      run: cd app && npm ci --force
 
     - name: Audit
       run: cd app && npm audit --audit-level=high
@@ -54,7 +54,7 @@ jobs:
         cache-dependency-path: 'app/package-lock.json'
 
     - name: Install dependencies
-      run: cd app && npm ci --legacy-peer-deps
+      run: cd app && npm ci --force
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3

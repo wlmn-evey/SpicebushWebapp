@@ -21,7 +21,8 @@ jobs:
         cache-dependency-path: 'app/package-lock.json'
 
     - name: Install dependencies
-      run: cd app && npm ci --legacy-peer-deps
+      # --force needed: lockfile contains platform-specific @rollup packages from macOS
+      run: cd app && npm ci --force
 
     - name: Lint (zero warnings)
       run: cd app && npm run lint -- --max-warnings=0
