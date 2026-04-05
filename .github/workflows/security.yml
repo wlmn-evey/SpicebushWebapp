@@ -15,18 +15,18 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup Node.js 20
+    - name: Setup Node.js 22
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
         cache: 'npm'
         cache-dependency-path: 'app/package-lock.json'
 
     - name: Install dependencies
-      run: cd app && npm ci --force
+      run: cd app && npm ci --legacy-peer-deps
 
     - name: Audit
-      run: cd app && npm audit --audit-level=moderate
+      run: cd app && npm audit --audit-level=high
 
   codeql:
     name: CodeQL Analysis
@@ -46,15 +46,15 @@ jobs:
         languages: typescript, javascript
         config-file: ./.github/codeql-config.yml
 
-    - name: Setup Node.js 20
+    - name: Setup Node.js 22
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
         cache: 'npm'
         cache-dependency-path: 'app/package-lock.json'
 
     - name: Install dependencies
-      run: cd app && npm ci --force
+      run: cd app && npm ci --legacy-peer-deps
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3

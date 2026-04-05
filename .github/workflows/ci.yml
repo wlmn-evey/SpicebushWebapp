@@ -13,15 +13,15 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup Node.js 20
+    - name: Setup Node.js 22
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
         cache: 'npm'
         cache-dependency-path: 'app/package-lock.json'
 
     - name: Install dependencies
-      run: cd app && npm ci --force
+      run: cd app && npm ci --legacy-peer-deps
 
     - name: Lint (zero warnings)
       run: cd app && npm run lint -- --max-warnings=0
@@ -33,7 +33,8 @@ jobs:
       run: cd app && npm run typecheck
 
     - name: Unit tests
-      run: cd app && npm run test -- --run
+      run: cd app && npm run test
 
     - name: Build
+      # Astro SSR defers DB connections to request time — no DATABASE_URL needed at build
       run: cd app && npm run build
