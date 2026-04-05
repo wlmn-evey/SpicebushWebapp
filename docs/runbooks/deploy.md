@@ -112,27 +112,28 @@ curl -I https://<preview-url>/enrollment
 
 ## 6. Deploy
 
-### Option A: Push to Deployment Branch
+### Automatic (CI/CD — standard path)
 
-```bash
-git push origin <branch>:main
-```
+Merging a PR to `main` triggers the `deploy.yml` GitHub Actions workflow, which:
+1. Builds the app (`cd app && npm run build`)
+2. Deploys to Netlify via CLI (`npx netlify deploy --prod --dir=app/dist`)
 
-Netlify will detect the push and trigger a build automatically.
+No Netlify git integration is used — GitHub Actions owns the build and deploy pipeline.
 
-### Option B: CLI Deploy from Repo Root
+**Required GitHub secrets:**
+- `NETLIFY_SITE_ID` — Netlify site UUID
+- `NETLIFY_AUTH_TOKEN` — Netlify personal access token
+
+### Manual CLI Deploy (emergency or ad-hoc)
 
 **CRITICAL: Run from the repository root, NOT from `app/`.** The `netlify.toml` has `base=app`, so deploying from `app/` causes path doubling.
 
 ```bash
-# From repo root
-npx netlify deploy --prod --dir=app/dist
-```
+# Build first
+cd app && npm run build
 
-### Preflight Script (Optional)
-
-```bash
-cd app && NETLIFY_SITE_ID=<site-id> npm run predeploy:production
+# Deploy from repo root
+cd .. && npx netlify deploy --prod --dir=app/dist
 ```
 
 ---
