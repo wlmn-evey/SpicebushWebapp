@@ -114,8 +114,9 @@ Phases 2, 3, 5, 6 can run in parallel after Phase 1. Phase 7 gates on 3 + 6. Pha
 1. **Install TipTap packages**
    ```
    @tiptap/react @tiptap/starter-kit @tiptap/pm
-   @tiptap/extension-link @tiptap/extension-image @tiptap/extension-bubble-menu
+   @tiptap/extension-image @tiptap/extension-bubble-menu
    ```
+   Note: Link extension is included in StarterKit — no separate install needed.
 
 2. **Add TipTap to Rollup manual chunks** in `astro.config.mjs`
    ```js
@@ -376,13 +377,13 @@ Phases 2, 3, 5, 6 can run in parallel after Phase 1. Phase 7 gates on 3 + 6. Pha
 | Package | Purpose | License | Rollup External? |
 |---------|---------|---------|-------------------|
 | `@tiptap/react` | Editor React binding | MIT | No (client) |
-| `@tiptap/starter-kit` | Core extensions | MIT | No (client) |
+| `@tiptap/starter-kit` | Core extensions (includes Link) | MIT | No (client) |
 | `@tiptap/pm` | ProseMirror peer dep | MIT | No (client) |
-| `@tiptap/extension-link` | Links | MIT | No (client) |
 | `@tiptap/extension-image` | Images | MIT | No (client) |
 | `@tiptap/extension-bubble-menu` | Floating AI toolbar | MIT | No (client) |
 | `@anthropic-ai/sdk` | Claude API | MIT | **Yes** |
 | `@extractus/article-extractor` | URL text extraction | MIT | **Yes** |
+| `text-readability-ts` | FK grade, sentence stats | MIT | No (server) |
 
 ---
 
@@ -396,7 +397,7 @@ Phases 2, 3, 5, 6 can run in parallel after Phase 1. Phase 7 gates on 3 + 6. Pha
 | URL extraction fails on paywalled/JS-heavy sites | Corpus gaps | Fallback: manual text paste always available |
 | `type='blog'` vs `type='cms_blog'` confusion | Query bugs | Clean up `cms_blog` in Phase 1, standardize on `blog` |
 | Scheduled posts need custom query logic | Posts appear early/late | Blog-specific query with `published_at <= NOW()` check |
-| TipTap can't be SSR'd | Hydration errors | Use `client:only="react"` not `client:load` |
+| TipTap can't be SSR'd | Hydration errors | Use `client:only="react"` not `client:load`; pass `immediatelyRender: false` to `useEditor` |
 | Anti-pattern detection false positives | Good writing rejected | Admin can remove entries from blocklist |
 
 ---
