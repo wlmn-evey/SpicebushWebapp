@@ -17,6 +17,7 @@
 | [camp-system.md](specs/camp-system.md) | Camp mode state machine, seat logic, promotions |
 | [email.md](specs/email.md) | Email providers, types, templates, routing |
 | [api.md](specs/api.md) | All 29 API endpoints with auth requirements |
+| [blog.md](specs/blog.md) | DB-backed blog: data model, admin flows, public pages, sanitization, SEO |
 
 ## Architecture Decision Records (`adr/`)
 
@@ -29,6 +30,14 @@
 | [005](adr/005-transparent-classroom.md) | Transparent Classroom as enrollment system |
 | [006](adr/006-cms-database-tables.md) | CMS as database tables over headless CMS |
 | [007](adr/007-email-provider-abstraction.md) | Configurable email provider abstraction |
+| [008](adr/008-db-backed-blog.md) | DB-backed blog over git-markdown Astro collection |
+
+## Plans (`plans/`)
+
+| Plan | Purpose |
+|------|---------|
+| [blog-implementation-plan.md](plans/blog-implementation-plan.md) | Authoritative build-run playbook for the blog MVP (PR-sized steps, acceptance criteria, rollout) |
+| [blog-decision-log.md](plans/blog-decision-log.md) | Audit trail of the blog planning process — judge panel, 4 stress rounds, decision ledger |
 
 ## Runbooks (`runbooks/`)
 
