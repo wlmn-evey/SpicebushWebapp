@@ -109,8 +109,9 @@ In the same change, `'blog'` is removed from `CONTENT_COLLECTIONS` in
 duplicates. Blog content is owned by the DB / admin panel and is excluded from seeding.
 
 The legacy Markdown source (`app/src/content/blog/*.md`) and the `blogCollection` definition in
-`app/src/content/config.ts` are removed only after the public pages are launched and verified; the
-content remains recoverable via git history.
+`app/src/content/config.ts` have been removed (PR-5), now that the public pages are launched and
+verified. Blog content lives only in the database (`content` rows with `type='blog'`); the removed
+Markdown remains recoverable via git history.
 
 ## Public Routes
 
