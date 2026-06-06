@@ -15,6 +15,11 @@ if ! command -v psql >/dev/null 2>&1; then
   exit 1
 fi
 
+# Print the parsed target host (NOT the full URL — it contains credentials) so the
+# operator can confirm the destination (e.g. the Neon production pooler) before any write.
+DB_HOST="$(printf '%s' "${DB_URL}" | sed -E 's#.*@([^/:?]+).*#\1#')"
+echo "Target DB host: ${DB_HOST}"
+
 if [[ ! -d "${MIGRATIONS_DIR}" ]]; then
   echo "Error: migration directory not found: ${MIGRATIONS_DIR}"
   exit 1
