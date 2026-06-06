@@ -31,6 +31,8 @@ cd app && NETLIFY_SITE_ID=<site-id> npm run db:seed:netlify -- production
 cd app && npm run test:db
 ```
 
+> **Blog content is NOT seeded.** `'blog'` was removed from `CONTENT_COLLECTIONS` in `app/scripts/insert-critical-data.js`, so neither `db:seed` nor `db:seed:netlify` creates, updates, or touches any `type='blog'` rows. Blog content is owned by the DB / admin panel and imported once via migration 015 (see § 2d). Re-running seed after migration 015 will not re-introduce the date-prefixed seed duplicates that 015 removed.
+
 ### 2b. Admin Allow-List Config
 
 1. Confirm `ADMIN_EMAILS` is set in Netlify environment variables.
@@ -40,6 +42,102 @@ cd app && npm run test:db
 
 1. Confirm `COMING_SOON_MODE` env var matches the intended state for this deploy (`true`, `false`, or unset for DB-driven).
 2. Verify admin bypass expectations (admins should see all pages regardless of coming-soon state).
+
+### 2d. Migration 015 — legacy blog import (one-time, manual, rollout-only)
+
+Migration 015 (`app/db/migrations/015_import_legacy_blog_posts.sql`) imports the 6 legacy blog posts into the `content` table. It is a **one-time data migration**, applied **manually via `npm run db:migrate` at rollout** — it is **NOT** part of the deploy path and is **NOT** run by CI. The build authors the file; the operator applies it once, supervised. Skip this subsection on routine deploys after the blog is live.
+
+**015 reconciles, then imports:** it first deletes the 6 seed-created date-prefixed rows (`author_email='seed@spicebushmontessori.org'`, slugs matching `^\d{4}-\d{2}-\d{2}-`), then inserts the 6 posts under clean slugs with `author_email = NULL` (the rollback discriminator). The inserts use `ON CONFLICT (type, slug) DO NOTHING`, so they never clobber an owner-edited or owner-created row that already occupies a clean slug.
+
+#### Step 1 — Applies 014 + 015 together (review 014 first)
+
+Production `schema_migrations` tops out at **013**; `014_retention_cleanup.sql` is on disk but **unapplied**. The runner (`apply-migrations.sh`) applies pending migrations in filename order, so a `db:migrate` run will apply **014 then 015** in sequence.
+
+> **The operator MUST review `app/db/migrations/014_retention_cleanup.sql` before applying.** It deletes auth tokens and sessions expired for more than 30 days, and analytics events older than 12 months. Confirm this cleanup is acceptable on production before proceeding.
+
+#### Step 2 — Mandatory pre-flight re-audit (immediately before applying 015)
+
+The Step-0 content audit can be days stale by rollout, so re-run it right before applying. Against the production DB:
+
+```sql
+SELECT type, slug, status, author_email, created_at, updated_at,
+       data ? 'featured_image' AS has_featured_image,
+       data ? 'image' AS has_image,
+       length(data->>'body') AS body_len
+  FROM content WHERE type IN ('blog','cms_blog') ORDER BY slug;
+```
+
+**STOP and reconcile manually** if either is true:
+- Any `type='blog'` row no longer matches the seed shape (the expected state is **6 rows**, all `author_email='seed@spicebushmontessori.org'`, all date-prefixed slugs); OR
+- Any **clean-slug** `type='blog'` row exists (an owner-created row matching one of the six clean slugs would be silently skipped by `ON CONFLICT DO NOTHING`, leaving a stale body). Reconcile that row's body against the markdown source before applying.
+
+#### Step 3 — PR-2 edit-window remediation
+
+Once the `/admin/blog` authoring page (PR-2) is live, the owner/tester can see the 6 seed rows with date-prefixed slugs. **A single admin edit sets `author_email` to the admin's session email**, which removes that row from 015's `DELETE` predicate — the clean-slug `INSERT` then lands alongside the edited row (7 rows, one duplicate). The PR-2 freeze note ("do not edit or delete the legacy seed rows until the PR-3 import is verified") is intended to prevent this. If it happened anyway:
+- Compare the edited date-prefixed row against its markdown source.
+- Confirm the clean-slug imported row supersedes it (carry over any divergent admin edits into the clean-slug row).
+- Delete the date-prefixed row manually.
+
+#### Step 4 — Execution
+
+From `app/`:
+
+```bash
+NETLIFY_DATABASE_URL="$(npx netlify env:get NETLIFY_DATABASE_URL --context production)" npm run db:migrate
+```
+
+`--context production` is **MANDATORY** — `env:get` defaults to the dev context, and this site carries context-divergent values.
+
+#### Step 5 — Confirm the target host
+
+`apply-migrations.sh` now prints `Target DB host: <host>` before applying. **The operator MUST confirm it is the Neon production pooler host** before letting the run proceed.
+
+#### Step 6 — Post-apply bookkeeping check
+
+The version-recording `INSERT` is a separate `psql` call from the apply (non-atomic), so a between-phase crash can leave 015 applied-but-unrecorded. After applying:
+
+```sql
+SELECT 1 FROM schema_migrations WHERE version='015_import_legacy_blog_posts.sql';
+```
+
+If it returns no row but the import is present, **re-insert the bookkeeping row** rather than re-running blindly:
+
+```sql
+INSERT INTO schema_migrations (version) VALUES ('015_import_legacy_blog_posts.sql');
+```
+
+(015 is idempotent — a blind re-run is harmless — but re-inserting the bookkeeping row is the clean fix.)
+
+#### Step 7 — Import verification
+
+Against the production DB after applying:
+
+```sql
+SELECT count(*) FROM content WHERE type='blog';                                   -- expect exactly 6
+SELECT count(*) FROM content WHERE type='blog'
+  AND author_email='seed@spicebushmontessori.org';                               -- expect 0
+SELECT slug, status, data->>'date', created_at, author_email FROM content
+  WHERE type='blog' ORDER BY data->>'date' DESC, slug DESC;                       -- clean slugs, NULL author_email
+SELECT slug, length(data->>'body') FROM content WHERE type='blog';               -- all bodies non-trivial
+SELECT slug, data->>'image' FROM content WHERE type='blog';                      -- all 6 set; each resolves to a file in app/public
+```
+
+Then re-run `npm run db:seed` against a **scratch** DB and confirm **zero** `type='blog'` rows are created or modified (blog was removed from `CONTENT_COLLECTIONS`). Finally, verify the 6 posts render in `/admin/blog`.
+
+#### Step 8 — Rollback
+
+```sql
+DELETE FROM content WHERE type='blog'
+  AND slug IN ('nurturing-growth-gardening-program','exploring-summer-camp',
+               'embracing-neurodiversity-adhd','embracing-holistic-development',
+               'exploring-universe-within-cosmic-curriculum','welcome-to-our-new-blog')
+  AND author_email IS NULL;
+```
+
+**Caveats:**
+- The `author_email IS NULL` guard ensures owner-edited posts (whose `author_email` is the admin's email) are **never** deleted.
+- Rollback does **not** resurrect the seed rows 015 deleted — the markdown source remains in git, so a re-apply re-imports cleanly.
+- Fixes ship as a corrected **016**, never by editing an already-applied 015.
 
 ---
 

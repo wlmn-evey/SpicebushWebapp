@@ -23,7 +23,7 @@ const CONTENT_COLLECTIONS = [
   'hours',
   'staff',
   'tuition',
-  'blog',
+  // 'blog' intentionally excluded: blog content is owned by the DB/admin panel (migration 015), not seeded — see docs/runbooks/deploy.md
   'announcements',
   'events',
   'testimonials',
