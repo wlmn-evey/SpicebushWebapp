@@ -58,27 +58,32 @@ const emptyToUndefined = (value: string): string | undefined =>
   value.length > 0 ? value : undefined;
 
 /**
- * Read-path trust boundary — the single tolerant mapper from a stored `ContentEntry`
- * to a `BlogPost`. Returns `null` to skip a row that cannot be trusted/rendered.
+ * Shared field mapper — builds a `BlogPost` from a stored `ContentEntry` WITHOUT the
+ * date/excerpt completeness gate. Returns `null` only when the row is structurally
+ * untrustworthy (slug fails the charset/length shape or title is absent).
  *
  * Data-key invariant (AMENDMENT 1): `body` is read from `entry.body`; `title` and every
  * other field are read from `entry.data.*` (`toContentEntry` merges the title column into
  * `entry.data.title`). There is no top-level `entry.date`/`entry.author`.
  *
- * `status` defaults to `'published'` here — the published read path only ever sees
- * published rows. `getManagedBlogPosts` overwrites `status` from the SQL column afterward.
+ * `status` defaults to `'published'` — the published read path only ever sees published
+ * rows. `getManagedBlogPosts` overwrites `status` from the SQL column afterward.
+ *
+ * The two read paths differ only in their completeness requirement, layered on top:
+ *   - `normalizeBlogEntry` (public): also drops rows missing date or excerpt.
+ *   - `getManagedBlogPosts` (admin): keeps bare drafts so an author always sees their save.
  */
-export function normalizeBlogEntry(entry: ContentEntry): BlogPost | null {
+function mapEntryToBlogPost(entry: ContentEntry): BlogPost | null {
   const slug = typeof entry.slug === 'string' ? entry.slug : '';
   if (!SLUG_REGEX.test(slug)) return null;
 
   const data = (entry.data ?? {}) as Record<string, unknown>;
 
   const title = asTrimmedString(data.title);
+  if (!title) return null;
+
   const date = asTrimmedString(data.date);
   const excerpt = asTrimmedString(data.excerpt);
-  if (!title || !date || !excerpt) return null;
-
   const body = typeof entry.body === 'string' ? entry.body : '';
   const author = asTrimmedString(data.author) || DEFAULT_AUTHOR;
 
@@ -99,6 +104,19 @@ export function normalizeBlogEntry(entry: ContentEntry): BlogPost | null {
     seoDescription: emptyToUndefined(asTrimmedString(data.seoDescription)),
     status: 'published'
   };
+}
+
+/**
+ * Public read-path trust boundary — the single tolerant mapper from a stored `ContentEntry`
+ * to a renderable `BlogPost`. Returns `null` to skip a row that cannot be trusted/rendered:
+ * a bad slug, or a row missing the title/date/excerpt the public index and post page require.
+ */
+export function normalizeBlogEntry(entry: ContentEntry): BlogPost | null {
+  const post = mapEntryToBlogPost(entry);
+  if (!post) return null;
+  // Public surfaces require a date and excerpt; a bare draft is not renderable here.
+  if (!post.date || !post.excerpt) return null;
+  return post;
 }
 
 /**
@@ -161,7 +179,10 @@ export async function getManagedBlogPosts(): Promise<BlogPost[]> {
         data,
         body: typeof data.body === 'string' ? data.body : ''
       };
-      const post = normalizeBlogEntry(entry);
+      // Relaxed mapping (NOT normalizeBlogEntry): the admin list must show bare drafts —
+      // a title-only draft is a valid save (validateBlogData exempts drafts from
+      // date/excerpt), so requiring date+excerpt here would hide the author's own row.
+      const post = mapEntryToBlogPost(entry);
       if (!post) return null;
       // Admin list shows the real status from the SQL column, not the published default.
       post.status = row.status;

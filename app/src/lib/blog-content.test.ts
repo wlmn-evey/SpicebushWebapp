@@ -286,6 +286,11 @@ describe('renderPostBody — URI / XSS matrix', () => {
     expect(renderPostBody('![x](images/x.png)')).not.toContain('images/x.png');
     // fragment-only stripped (R4-F6)
     expect(renderPostBody('[anchor](#top)')).not.toContain('#top');
+    // Positive companions: the safe shell survives (only the dangerous href is dropped),
+    // so a mutation that nukes the whole link structure — not just the scheme — is also caught.
+    // eslint-disable-next-line no-script-url -- intentional XSS test vector
+    expect(renderPostBody('[x](javascript:alert(1))')).toContain('>x<');
+    expect(renderPostBody('[anchor](#top)')).toContain('anchor');
   });
 
   it('normalizes www.-leading hrefs to https (walkTokens, R1-F19)', () => {
@@ -307,6 +312,15 @@ describe('renderPostBody — URI / XSS matrix', () => {
     expect(doc.querySelector('noscript')).toBeNull();
     expect(doc.querySelector('script')).toBeNull();
     expect(doc.querySelector('[onerror]')).toBeNull();
+  });
+
+  it('strips data-* and aria-* attributes (pins ALLOW_DATA_ATTR/ALLOW_ARIA_ATTR, R2-F3)', () => {
+    // These flags default to true and are evaluated BEFORE the ALLOWED_ATTR allowlist, so
+    // setting them false is the only thing keeping data-*/aria-* out — pin both directly.
+    expect(renderPostBody('<p data-admin-alert>x</p>')).not.toContain('data-admin-alert');
+    expect(renderPostBody('<a aria-hidden="true" href="https://e.com">x</a>')).not.toContain(
+      'aria-hidden'
+    );
   });
 
   it('retains NO author id on the public render (R4-F1)', () => {
@@ -520,6 +534,37 @@ describe('getManagedBlogPosts', () => {
     // Ordering applied: date DESC → draft(2025), published(2024), weird(2023).
     expect(posts.map(p => p.slug)).toEqual(['draft-post', 'published-post', 'weird-post']);
   });
+
+  it('surfaces a bare title-only draft the write path accepts (F1)', async () => {
+    // validateBlogData exempts drafts from date/excerpt, so a title-only draft is a valid
+    // save. The admin list must show it (author visibility) — unlike the public path, which
+    // drops rows missing date/excerpt. It carries the undated-last position in the ordering.
+    queryRowsMock.mockResolvedValueOnce([
+      { id: '1', slug: 'bare-draft', title: 'Bare Draft', status: 'draft', data: {} },
+      {
+        id: '2',
+        slug: 'published-post',
+        title: 'Published',
+        status: 'published',
+        data: { date: '2024-01-01', excerpt: 'E' }
+      }
+    ]);
+
+    const posts = await getManagedBlogPosts();
+    expect(posts.map(p => p.slug)).toEqual(['published-post', 'bare-draft']); // undated last
+    const bare = posts.find(p => p.slug === 'bare-draft');
+    expect(bare).toBeDefined();
+    expect(bare?.status).toBe('draft');
+    expect(bare?.date).toBe('');
+    expect(bare?.excerpt).toBe('');
+  });
+
+  it('still drops a row with no usable title (structural floor)', async () => {
+    queryRowsMock.mockResolvedValueOnce([
+      { id: '1', slug: 'no-title', title: null, status: 'draft', data: {} }
+    ]);
+    expect(await getManagedBlogPosts()).toEqual([]);
+  });
 });
 
 describe('escapeXml + renderBlogSitemapXml', () => {
@@ -558,7 +603,11 @@ describe('resolveLegacyBlogRedirect', () => {
     expect(await resolveLegacyBlogRedirect('2024-01-01-nonexistent')).toBeNull();
   });
 
-  it('returns null when the stripped target is a draft (getEntry returns null)', async () => {
+  // At this layer a draft and a miss are indistinguishable: db.content.getEntry already
+  // filters drafts in SQL, so both surface as `null`. This pins the null-passthrough contract
+  // (no 301 emitted when getPublishedPost resolves to null); the draft-exclusion guarantee
+  // itself is pinned by the SQL-string assertion in db/__tests__/content.test.ts (R1-F41).
+  it('returns null when getPublishedPost resolves to null (miss or SQL-filtered draft)', async () => {
     getEntryMock.mockResolvedValueOnce(null);
     expect(await resolveLegacyBlogRedirect('2099-01-01-secret-draft')).toBeNull();
   });

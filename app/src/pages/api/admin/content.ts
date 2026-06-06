@@ -146,6 +146,11 @@ const parseJsonObject = (value: string): Record<string, unknown> | null => {
 
 const parseRedirectPath = (value: unknown): string | null => {
   if (typeof value !== 'string') return null;
+  // Reject any control character (CR/LF included) so a redirectTo can never carry a
+  // header-splitting payload regardless of which response branch sets the Location header
+  // (defense-in-depth — the success branch sets Location directly, unnormalized). R2-F1.
+  // eslint-disable-next-line no-control-regex -- intentionally matching control chars to reject them
+  if (/[\x00-\x1f]/.test(value)) return null;
   // Reject backslash-leading paths (`/\evil.com`) that browsers resolve off-site as `//evil.com`.
   return /^\/(?![/\\])/.test(value) ? value : null;
 };
@@ -444,6 +449,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const title = payload.title?.trim() || null;
   let status = payload.status?.trim() || 'published';
   const redirectTo = parseRedirectPath(payload.redirectTo);
+  // Coerce defensively regardless of source (R2-F2 work order §6 Change 5): the form path
+  // already coerced via parseFormDataPayload, but the JSON path passes the body through
+  // untouched, so a JSON `createOnly: "false"` (string) would be truthy and wrongly take the
+  // insert-only DO NOTHING branch — turning an edit into a 400 collision.
+  const createOnly = parseBooleanValue(payload.createOnly, false);
 
   if (!collection || !ALLOWED_COLLECTIONS.has(collection)) {
     return responseByFormat(redirectTo, { error: 'Collection is not allowed' }, 400);
@@ -542,7 +552,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   ];
 
   try {
-    if (payload.createOnly) {
+    if (createOnly) {
       // Insert-only: a conflicting (type, slug) is left untouched and reported as a collision.
       const result = await query(
         `

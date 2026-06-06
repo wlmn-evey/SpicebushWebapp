@@ -323,14 +323,20 @@ receive a `303` redirect (with `redirectTo`) rather than a JSON body.
 
 **`parseRedirectPath` hardening**: the `redirectTo` validator rejects
 backslash-leading paths (`/\evil.com`) that browsers resolve off-site as
-`//evil.com` — regex `^\/(?![/\\])`. A rejected `redirectTo` falls back to a JSON
+`//evil.com` — regex `^\/(?![/\\])`. It also rejects any value containing a
+control character (`\x00`–`\x1f`, CR/LF included) so a `redirectTo` can never
+carry a header-splitting payload regardless of which response branch sets the
+`Location` header (defense-in-depth). A rejected `redirectTo` falls back to a JSON
 response (no `303` to the unsafe path).
 
 **Blog explicit-status requirement**: blog POSTs must carry a `status` of `draft`
 or `published` **explicitly**. A missing / empty / whitespace-only status is a
 `400` ("Status must be Draft or Published"), checked first against the raw form
 value — never silently defaulted to `published`. The `status || 'published'`
-default still applies to all other collections.
+default still applies to all other collections. The validated status is stored
+**lowercased** (`draft` / `published`) so a mixed-case input (e.g. `Published`)
+cannot pass validation yet stay invisible behind the exact `status = 'published'`
+read filter.
 
 ---
 

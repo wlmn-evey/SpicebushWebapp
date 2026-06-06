@@ -118,6 +118,29 @@ describe('POST /api/admin/content — createOnly (test 12)', () => {
     expect(queryMock.mock.calls[0][0]).toContain('DO NOTHING');
     expect(invalidateMock).toHaveBeenCalledWith('blog');
   });
+
+  it('coerces a JSON-body createOnly:"false" (string) to the DO UPDATE branch (F2)', async () => {
+    // The JSON path passes the body through untouched, so a string "false" would be truthy
+    // and wrongly take DO NOTHING — turning an edit into a 400 collision. parseBooleanValue
+    // must coerce it to false regardless of source.
+    queryMock.mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
+    const request = new Request(ENDPOINT, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        collection: 'blog',
+        slug: 'a-new-post',
+        title: 'A New Post',
+        status: 'published',
+        createOnly: 'false',
+        data: { date: '2024-01-01', excerpt: 'An excerpt', body: 'Hello world' }
+      })
+    });
+    const response = await callPost(request);
+    expect(response.status).toBe(200);
+    expect(queryMock.mock.calls[0][0]).toContain('DO UPDATE');
+    expect(queryMock.mock.calls[0][0]).not.toContain('DO NOTHING');
+  });
 });
 
 describe('POST /api/admin/content — allowlist + delete + origin + redirect (test 13)', () => {
