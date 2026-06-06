@@ -287,7 +287,7 @@ The middleware protects `/admin` and `/api/admin` prefixes:
 | Request | Result |
 |---|---|
 | Unauthenticated JSON request | `401` |
-| Unauthenticated `Accept: text/html` | `303` to `/auth/sign-in` |
+| Unauthenticated `Accept: text/html` | `302` to `/auth/sign-in` (middleware `context.redirect` default — verified; not `303`) |
 | Authenticated, non-admin session | `403` (the endpoint's own check) |
 
 ### Status requirement

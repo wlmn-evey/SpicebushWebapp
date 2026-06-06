@@ -42,7 +42,8 @@ npx netlify deploy --prod --dir=app/dist
 - We use Tailwind CSS 3, not CSS modules or styled-components
 - We use React islands selectively (TuitionCalculator), not as the primary renderer
 - Email providers: SendGrid + Unione (via REST). Resend/Postmark are Rollup externals but not active.
-- Out of scope: Stripe/payments, newsletter, public blog features
+- Blog: DB-backed via /admin/blog; posts are content rows with type='blog'
+- Out of scope: Stripe/payments, newsletter
 
 ## Path Aliases
 
@@ -55,17 +56,19 @@ npx netlify deploy --prod --dir=app/dist
 ## Database Access
 
 All DB access through the facade at `@lib/db`:
+
 ```typescript
-import { db } from '@lib/db';
+import { db } from "@lib/db";
 // db.content, db.camp, db.analytics, db.announcements,
 // db.communications, db.contact, db.adSpend, db.cache, db.raw
 ```
+
 Low-level: `queryFirst()` and `queryRows()` from `@lib/db/client`.
 
 ## Gotchas
 
 - **CSS `* { max-width: 100% }`** in `global.css` clamps ALL elements. Override with `max-width: none` when needed.
-- **Deploy from repo root, not `app/`.** `netlify.toml` has `base=app`, so deploying from `app/` causes path doubling.
+- **Deploy from repo root, not `app/`.** Deploying from repo root with `--dir=app/dist` is the working, current path; there is no `base=app` in the committed `netlify.toml`. The repo-root deploy empirically uploads the SSR function and prod serves SSR.
 - **SVGs with `preserveAspectRatio="none"`** need explicit width values (`width: auto` won't work).
 - **Email packages are Rollup externals** in `astro.config.mjs` — they resolve at runtime on Netlify, not at build.
 
@@ -74,11 +77,12 @@ Low-level: `queryFirst()` and `queryRows()` from `@lib/db/client`.
 - Components: PascalCase. Pages: kebab-case. Utilities: camelCase.
 - Commit prefixes: `feat(scope):`, `fix(scope):`, `[BUILD-FIX]`
 - Fonts: Nunito (body), Poppins (headings)
-- Brand colors are in `tailwind.config.cjs` under `forest-canopy`, `moss-green`, `sunlight-gold`, `earth-brown`, `stone-beige`, `cloud-gray`
+- Brand colors are in `tailwind.config.mjs` under `forest-canopy`, `moss-green`, `sunlight-gold`, `earth-brown`, `stone-beige`, `cloud-gray`
 
 ## Documentation
 
 Canonical docs live in `docs/`:
+
 - **PRD**: `docs/PRD.md`
 - **Roadmap**: `docs/ROADMAP.md`
 - **Specs**: `docs/specs/` (architecture, data-model, auth, camp-system, email, api)
@@ -92,6 +96,7 @@ Canonical docs live in `docs/`:
 ## Compact Instructions
 
 When compacting, preserve:
+
 - Current task description and acceptance criteria
 - List of files modified in this session
 - Unresolved blockers or open questions

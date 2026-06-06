@@ -38,6 +38,7 @@ export const SEO_MANAGED_PAGES: SeoManagedPage[] = [
   { path: '/resources/faq', label: 'FAQ' },
   { path: '/resources/events', label: 'Events' },
   { path: '/resources/parent-resources', label: 'Parent Resources' },
+  { path: '/blog', label: 'Blog' },
   {
     path: '/coming-soon',
     label: 'Coming Soon',

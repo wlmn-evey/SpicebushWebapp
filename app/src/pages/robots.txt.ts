@@ -22,6 +22,7 @@ export const GET: APIRoute = async ({ site }) => {
   }
 
   lines.push(`Sitemap: ${new URL('/sitemap-index.xml', siteOrigin).toString()}`);
+  lines.push(`Sitemap: ${new URL('/sitemap-blog.xml', siteOrigin).toString()}`);
 
   return new Response(`${lines.join('\n')}\n`, {
     headers: {
