@@ -1,0 +1,29 @@
+# ADR-008: DB-Backed Blog over Git-Markdown Astro Collection
+
+**Date**: 2026-06-05
+**Status**: Accepted
+
+## Context
+
+The school website's blog has been in a half-deprecated state. Three routes — `/blog`, `/blog/[slug]`, and `/resources/blog` — were each reduced to a single `Astro.redirect('/contact', 301)`, so the public blog was effectively removed while its plumbing remained. Meanwhile six legacy markdown posts (dated 2024-05-20 through 2025-07-26) still live in `app/src/content/blog/` behind a Zod-validated Astro content collection, orphaned from any rendered route. The Footer still links to `/blog`, a live bug that sends visitors to a page that 301s to `/contact`. The generic content layer carries a `'blog'` (and an unused `'cms_blog'`) collection name in `DATABASE_COLLECTIONS`, but no public surface consumes it. `docs/PRD.md` had marked the public blog as deferred ("content may exist in DB but blog UI is removed/redirected"), and `docs/ROADMAP.md` listed it as a Phase 3 candidate gated on a security review, no maintainability regression, and full test coverage.
+
+Reintroducing the blog raised an authoring-model question. The original blog was authored as git-tracked markdown files validated by an Astro content collection, which couples every new post to a code change, a pull request, and a deploy — a workflow non-technical school owners cannot perform. The alternative is to author posts as data through the existing admin panel, consistent with how every other content type (FAQ, testimonials, staff, hours, announcements) is already managed (see ADR-006). The site already has a generic `content` table (`id`, `type`, `slug`, `title`, `data` JSONB, `status`, `author_email`, timestamps), a media upload system, and a magic-link-protected admin form-POST convention — collectively enough to hold and author blog posts with no new table and no new architecture.
+
+The project owner decided on 2026-06-05 that blog content will be DB-backed and authored via the admin panel, so non-technical owners can write and publish posts at `/admin/blog` with no deploys, and that V1 ships a lean MVP.
+
+## Decision
+
+Reintroduce the blog as DB-backed content, stored as rows in the existing generic `content` table with `type='blog'`, and author it through a new admin page at `/admin/blog`. This replaces the deprecated git-markdown Astro content collection as the source of truth for blog posts. The six legacy markdown files are imported once into the DB and the file collection is then retired. Blog posts ride the existing content pipeline end to end — the same `db.content` reads, cache, magic-link auth, generic admin form-POST endpoint, and media upload system used by every other managed content type — with only small additive changes to the shared endpoint (a `'blog'` allowlist entry, a `_raw` form-field passthrough, blog normalize/validate hooks, a create-only guard, and a form-based delete). Public routes are restored: `/blog` (index) and `/blog/[slug]` (post) become real SSR pages, `/resources/blog` retargets to `/blog`, and the Footer link is fixed by making `/blog` real. Post bodies are stored as raw markdown and sanitized at render with a strict DOMPurify allowlist; drafts are invisible to the public via the existing `status='published'` read filter; per-post SEO meta and a dynamic blog sitemap update without deploys.
+
+V1 scope is deliberately lean. Explicitly out of scope and not to be scaffolded "for later": categories/tags UI, RSS, pagination, scheduled publishing, related posts, search, comments, newsletter integration, a rich-text/WYSIWYG editor, and in-post heading anchors / table-of-contents.
+
+## Consequences
+
+- **Easier**: Non-technical owners self-publish at `/admin/blog` with no pull request and no deploy, the workflow they already know from FAQ, testimonials, and staff editing. Publishing a post no longer requires a developer.
+- **Easier**: No new architecture or schema migration. The blog reuses the generic `content` table, the `db.content` cache, magic-link auth, the media upload system, and the admin form-POST endpoint, keeping the implementation diff small and the maintainability gate satisfiable.
+- **Easier**: Draft/published states, per-post SEO meta, and sitemap entries are data, so they all change live without a deploy. Drafts are hidden by the same `status='published'` SQL filter every other collection already uses.
+- **Harder**: Post bodies are now author-supplied markdown rendered with `set:html`, an XSS trust boundary that git-reviewed markdown files never had. This is mitigated by a strict DOMPurify allowlist applied uniformly across the write, read, and render paths, but it must be maintained as a real security surface.
+- **Harder**: A one-time legacy import is required, complicated by the fact that the `db:seed` pipeline already created date-prefix-slugged blog rows in production. The import migration must reconcile those seed rows before inserting the six clean-slug posts, and the seed script must be changed so it no longer recreates them.
+- **Harder**: Legacy URL preservation now spans multiple shapes (clean slugs, seed-era date-prefixed slugs, and the old `/resources/blog/*` paths), requiring redirect handling that git-markdown routing did not need.
+- **Trade-off**: Choosing DB authoring over git-markdown gives up version history, diff-based review, and deploy-gated changes for blog content in exchange for owner self-service. Content versioning and editorial review remain the gap noted in ADR-006; last-write-wins is the platform's existing concurrency model.
+- **Trade-off**: The blog's freshness is bounded by the existing per-instance cache (a newly published post's URL is live immediately, but the index listing and edits to already-cached posts can lag up to the 5-minute TTL on other warm serverless instances). Cross-instance invalidation is out of scope; this staleness is surfaced to owners in the admin UI.
