@@ -469,9 +469,11 @@ p {
   animation-delay: 1s;
 }
 
-/* Smooth scroll behavior for anchor links */
-html {
-  scroll-behavior: smooth;
+/* Smooth scroll behavior for anchor links (only when motion is allowed) */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 /* Focus states for accessibility */
