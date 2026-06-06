@@ -17,7 +17,7 @@ fi
 
 # Print the parsed target host (NOT the full URL — it contains credentials) so the
 # operator can confirm the destination (e.g. the Neon production pooler) before any write.
-DB_HOST="$(printf '%s' "${DB_URL}" | sed -E 's#^[a-zA-Z]+://[^@]*@([^/:?]+).*#\1#')"
+DB_HOST="$(printf '%s' "${DB_URL}" | sed -E 's#.*@([^/:?]+).*#\1#')"
 echo "Target DB host: ${DB_HOST}"
 
 if [[ ! -d "${MIGRATIONS_DIR}" ]]; then
