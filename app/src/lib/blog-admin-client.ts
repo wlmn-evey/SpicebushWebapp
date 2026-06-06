@@ -70,8 +70,12 @@ function initConditionalRequired(form: HTMLFormElement): void {
 /**
  * Slug autofill from the title (add-form only). Mirrors faq.astro:776-796 — slugify the title into
  * the slug input on `input`, stopping once the user manually edits the slug. No date prefix.
+ *
+ * `onAutofill` is invoked after the slug value is written programmatically so the caller can re-run
+ * the collision check (R2-F12). We deliberately do NOT dispatch an `input` event on the slug here:
+ * that would trip the manual-edit listener below (`dataset.manual='true'`) and stop autofill.
  */
-function initSlugAutofill(form: HTMLFormElement): void {
+function initSlugAutofill(form: HTMLFormElement, onAutofill?: () => void): void {
   const title = form.querySelector(`[name="${BLOG_FORM_FIELDS.title}"]`);
   const slug = form.querySelector(`[name="${BLOG_FORM_FIELDS.slug}"]`);
   if (!(title instanceof HTMLInputElement) || !(slug instanceof HTMLInputElement)) return;
@@ -81,6 +85,7 @@ function initSlugAutofill(form: HTMLFormElement): void {
     const normalized = slugify(title.value);
     if (normalized.length > 0) {
       slug.value = normalized.slice(0, 100);
+      onAutofill?.();
     }
   });
 
@@ -92,10 +97,14 @@ function initSlugAutofill(form: HTMLFormElement): void {
 /**
  * Blocking slug-collision check (R2-F12 / R2-F30) on the add-form. Reads the server-rendered slug
  * list from `[data-existing-slugs]`; mutates the inline `role="alert"` ONLY on state transition.
+ *
+ * Returns the `evaluate` callback so the title-autofill handler can re-run the check after it
+ * programmatically writes the slug (R2-F12 — an auto-generated colliding slug must warn too).
+ * Returns `null` when there is no usable slug input to wire.
  */
-function initSlugCollision(doc: Document, form: HTMLFormElement): void {
+function initSlugCollision(doc: Document, form: HTMLFormElement): (() => void) | null {
   const slug = form.querySelector(`[name="${BLOG_FORM_FIELDS.slug}"]`);
-  if (!(slug instanceof HTMLInputElement)) return;
+  if (!(slug instanceof HTMLInputElement)) return null;
 
   const listContainer = doc.querySelector('[data-existing-slugs]');
   let existing: string[] = [];
@@ -157,6 +166,8 @@ function initSlugCollision(doc: Document, form: HTMLFormElement): void {
 
   slug.addEventListener('input', evaluate);
   evaluate();
+
+  return evaluate;
 }
 
 /**
@@ -189,8 +200,9 @@ export function initBlogAdmin(doc: Document = document): void {
     if (!(form instanceof HTMLFormElement)) return;
     initConditionalRequired(form);
     if (form.hasAttribute('data-new-blog-form')) {
-      initSlugAutofill(form);
-      initSlugCollision(doc, form);
+      // Wire collision first so autofill can re-run the check after writing the slug (R2-F12).
+      const evaluateCollision = initSlugCollision(doc, form);
+      initSlugAutofill(form, evaluateCollision ?? undefined);
     }
   });
 

@@ -487,6 +487,7 @@ const baseDataFor = (post: BlogPost): string =>
                           Status
                           <select
                             name={BLOG_FORM_FIELDS.status}
+                            aria-describedby={`edit-status-help-${post.slug}`}
                             class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                           >
                             <option value="published" selected={post.status !== 'draft'}>
@@ -496,6 +497,15 @@ const baseDataFor = (post: BlogPost): string =>
                               Draft
                             </option>
                           </select>
+                          {/* PR-2 R1-F38: staleness helper text linked to the edit-form status control. */}
+                          <span
+                            id={`edit-status-help-${post.slug}`}
+                            class="mt-1 block text-xs text-earth-brown/70"
+                          >
+                            New posts appear at their link immediately after publishing. The blog
+                            index, and edits to already-published posts, can take up to 5 minutes to
+                            update.
+                          </span>
                         </label>
 
                         <label class="block text-sm font-medium">

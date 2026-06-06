@@ -221,6 +221,25 @@ describe('initBlogAdmin — slug autofill (add-form)', () => {
     title.dispatchEvent(new Event('input'));
     expect(slug.value).toBe('my-custom-slug');
   });
+
+  it('fires the collision warning when the auto-generated slug collides (R2-F12)', () => {
+    const { doc } = buildDoc({ kind: 'add', status: 'draft' }, ['nurturing-growth']);
+    initBlogAdmin(doc);
+
+    const title = doc.querySelector(`[name="${BLOG_FORM_FIELDS.title}"]`) as HTMLInputElement;
+    const slug = doc.querySelector(`[name="${BLOG_FORM_FIELDS.slug}"]`) as HTMLInputElement;
+
+    // Typing the title autofills a slug that collides with an existing post; the collision check
+    // must fire even though no `input` event was dispatched on the slug itself.
+    title.value = 'Nurturing Growth!';
+    title.dispatchEvent(new Event('input'));
+
+    expect(slug.value).toBe('nurturing-growth');
+    expect(slug.validationMessage.length).toBeGreaterThan(0);
+    const alert = doc.querySelector('[role="alert"]');
+    expect(alert).not.toBeNull();
+    expect(alert?.textContent ?? '').toContain('already exists');
+  });
 });
 
 describe('initBlogAdmin — error flash focus (R3-F22)', () => {
