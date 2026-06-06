@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
 import { db } from '@lib/db';
 import { query } from '@lib/db/client';
+import { normalizeBlogData, validateBlogData } from '@lib/blog-content';
 
 const ALLOWED_COLLECTIONS = new Set([
   'hours',
@@ -12,7 +13,8 @@ const ALLOWED_COLLECTIONS = new Set([
   'photos',
   'faq',
   'testimonials',
-  'media-slots'
+  'media-slots',
+  'blog'
 ]);
 
 type ContentPayload = {
@@ -24,6 +26,8 @@ type ContentPayload = {
   dataJson?: string;
   baseDataJson?: string;
   redirectTo?: string;
+  createOnly?: boolean;
+  action?: string;
 };
 
 const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
@@ -100,6 +104,14 @@ const parseFormDataPayload = (formData: FormData): ContentPayload => {
       continue;
     }
 
+    // `_raw` suffix: store the raw string, skipping parseSimpleValue coercion + trim.
+    // The blog form uses data.body_raw / data.excerpt_raw; the parser's trim is restored
+    // by normalizeBlogData (R2-F8).
+    if (dataKey.endsWith('_raw')) {
+      data[dataKey.slice(0, -4)] = typeof value === 'string' ? value : '';
+      continue;
+    }
+
     data[dataKey] = parseFormValue(value);
   }
 
@@ -111,7 +123,9 @@ const parseFormDataPayload = (formData: FormData): ContentPayload => {
     data: Object.keys(data).length > 0 ? data : undefined,
     dataJson: String(formData.get('dataJson') ?? ''),
     baseDataJson: String(formData.get('baseDataJson') ?? ''),
-    redirectTo: String(formData.get('redirectTo') ?? '')
+    redirectTo: String(formData.get('redirectTo') ?? ''),
+    createOnly: parseBooleanValue(formData.get('createOnly'), false),
+    action: String(formData.get('action') ?? '')
   };
 };
 
@@ -132,8 +146,8 @@ const parseJsonObject = (value: string): Record<string, unknown> | null => {
 
 const parseRedirectPath = (value: unknown): string | null => {
   if (typeof value !== 'string') return null;
-  if (!value.startsWith('/') || value.startsWith('//')) return null;
-  return value;
+  // Reject backslash-leading paths (`/\evil.com`) that browsers resolve off-site as `//evil.com`.
+  return /^\/(?![/\\])/.test(value) ? value : null;
 };
 
 const parseBody = async (request: Request): Promise<ContentPayload | null> => {
@@ -402,6 +416,21 @@ export const POST: APIRoute = async ({ request, locals }) => {
     });
   }
 
+  // Defense-in-depth CSRF check (SameSite=Lax remains the primary defense). Rejects only on
+  // positive cross-site evidence — fails open when both headers are absent. Hardens ALL admin
+  // collection POSTs, not just blog.
+  const requestOrigin = new URL(request.url).origin;
+  const origin = request.headers.get('origin');
+  if (
+    (origin && origin !== requestOrigin) ||
+    request.headers.get('sec-fetch-site') === 'cross-site'
+  ) {
+    return new Response(JSON.stringify({ error: 'Cross-site request rejected' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   const payload = await parseBody(request);
   if (!payload) {
     return new Response(JSON.stringify({ error: 'Invalid request body' }), {
@@ -413,7 +442,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const collection = payload.collection?.trim();
   const slug = payload.slug?.trim().toLowerCase();
   const title = payload.title?.trim() || null;
-  const status = payload.status?.trim() || 'published';
+  let status = payload.status?.trim() || 'published';
   const redirectTo = parseRedirectPath(payload.redirectTo);
 
   if (!collection || !ALLOWED_COLLECTIONS.has(collection)) {
@@ -428,6 +457,26 @@ export const POST: APIRoute = async ({ request, locals }) => {
     );
   }
 
+  // Form-based delete: `action=delete` runs the same DELETE as the standalone DELETE export and
+  // responds via responseByFormat (HTML form posts get a 303). No data parse needed.
+  if (payload.action === 'delete') {
+    try {
+      await query(
+        `
+          DELETE FROM content
+          WHERE type = $1 AND slug = $2
+        `,
+        [collection, slug]
+      );
+
+      db.cache.invalidateCollection(collection);
+
+      return responseByFormat(redirectTo, { success: true, collection, slug });
+    } catch {
+      return responseByFormat(redirectTo, { error: 'Failed to delete content' }, 500);
+    }
+  }
+
   const rawData = parseDataPayload(payload);
   if (!rawData) {
     return responseByFormat(redirectTo, { error: 'Content data must be a JSON object' }, 400);
@@ -438,6 +487,21 @@ export const POST: APIRoute = async ({ request, locals }) => {
     data = normalizeFaqData(rawData);
   } else if (collection === 'testimonials') {
     data = normalizeTestimonialsData(rawData);
+  } else if (collection === 'blog') {
+    data = normalizeBlogData(rawData);
+  }
+
+  if (collection === 'blog') {
+    // Pass payload.status (RAW form value, BEFORE the `|| 'published'` default at the `status`
+    // local above) so blog status omission is a 400, never a silent publish. The default stays
+    // untouched for all other collections (R2-F2). `{ ...data, slug }` lets validateBlogData see
+    // the slug for the date-prefix/shape check; `slug` is NEVER persisted into the JSONB data.
+    const error = validateBlogData({ ...data, slug }, title, payload.status);
+    if (error) return responseByFormat(redirectTo, { error }, 400);
+    // Canonicalize to the validated lowercase status. validateBlogData accepts status
+    // case-insensitively; the SQL read filter is exact `status = 'published'`, so storing
+    // 'Published' verbatim would make the post silently invisible on the public site.
+    status = (payload.status as string).trim().toLowerCase();
   }
 
   if (collection === 'faq') {
@@ -467,9 +531,41 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
   }
 
+  const upsertValues = [
+    collection,
+    slug,
+    title,
+    JSON.stringify(data),
+    status,
+    session.userEmail ?? null,
+    new Date().toISOString()
+  ];
+
   try {
-    await query(
-      `
+    if (payload.createOnly) {
+      // Insert-only: a conflicting (type, slug) is left untouched and reported as a collision.
+      const result = await query(
+        `
+          INSERT INTO content (type, slug, title, data, status, author_email, updated_at)
+          VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7)
+          ON CONFLICT (type, slug) DO NOTHING
+        `,
+        upsertValues
+      );
+
+      if (result.rowCount === 0) {
+        return responseByFormat(
+          redirectTo,
+          {
+            error:
+              'A post with this address already exists — change the address or edit the existing post.'
+          },
+          400
+        );
+      }
+    } else {
+      await query(
+        `
         INSERT INTO content (type, slug, title, data, status, author_email, updated_at)
         VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7)
         ON CONFLICT (type, slug)
@@ -480,16 +576,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
           author_email = EXCLUDED.author_email,
           updated_at = EXCLUDED.updated_at
       `,
-      [
-        collection,
-        slug,
-        title,
-        JSON.stringify(data),
-        status,
-        session.userEmail ?? null,
-        new Date().toISOString()
-      ]
-    );
+        upsertValues
+      );
+    }
 
     db.cache.invalidateCollection(collection);
 

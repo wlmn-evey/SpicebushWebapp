@@ -113,6 +113,22 @@ describe('db.content facade', () => {
     );
   });
 
+  it('pins draft-invisibility: fetchCollection AND fetchEntry SQL filter status = published (R1-F41)', async () => {
+    queryRowsMock.mockResolvedValueOnce([]);
+    queryFirstMock.mockResolvedValueOnce(null);
+
+    await getCollection('blog');
+    expect(queryRowsMock).toHaveBeenCalledWith(expect.stringContaining("status = 'published'"), [
+      'blog'
+    ]);
+
+    await getEntry('blog', 'some-slug');
+    expect(queryFirstMock).toHaveBeenCalledWith(
+      expect.stringContaining("WHERE type = $1 AND slug = $2 AND status = 'published'"),
+      ['blog', 'some-slug']
+    );
+  });
+
   it('parses and caches settings values from the service client', async () => {
     queryFirstMock.mockResolvedValueOnce({ key: 'homepage', value: '{"cta":"Join"}' });
 

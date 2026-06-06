@@ -286,15 +286,51 @@ characters.
 
 Generic content upsert/delete for allowed collections: `hours`, `staff`,
 `tuition`, `settings`, `school-info`, `photos`, `faq`, `testimonials`,
-`media-slots`.
+`media-slots`, `blog`.
 
 **POST**: Upserts a content entry by `(collection, slug)`. Slug is validated
 (`[a-z0-9-_]+`). Supports `dataJson`, `baseDataJson`, and `data.*` form fields.
-Collection-specific normalization for `faq` and `testimonials`.
+Collection-specific normalization for `faq`, `testimonials`, and `blog`.
 
 **DELETE**: Removes a content entry by `(collection, slug)`.
 
 Invalidates the relevant cache namespace on success.
+
+**Origin check (defense-in-depth CSRF)**: every POST is rejected with `403`
+("Cross-site request rejected") when the `Origin` header is present and does not
+match the request origin, OR when `Sec-Fetch-Site: cross-site` is sent. The check
+**fails open** when both headers are absent (rejecting only on positive cross-site
+evidence). `SameSite=Lax` cookies remain the primary CSRF defense; this hardens all
+admin collection POSTs.
+
+**`_raw` field suffix**: a `data.*_raw` form field bypasses `parseSimpleValue`
+type-coercion (and the implicit trim) and is stored as the raw string under the
+key with `_raw` stripped (e.g. `data.body_raw` → `data.body`). Used by the blog
+form for `data.body_raw` and `data.excerpt_raw`; follows the existing `_csv` /
+`_lines` convention.
+
+**`createOnly` flag**: when truthy, the upsert becomes insert-only
+(`INSERT … ON CONFLICT (type, slug) DO NOTHING`) and the result `rowCount` is
+checked. A conflict (`rowCount === 0`) returns `400` ("A post with this address
+already exists…") and leaves the existing row untouched. When falsy, the normal
+`ON CONFLICT … DO UPDATE` upsert runs. Used by the blog add-form to prevent
+silently overwriting an existing post.
+
+**Form-based delete (`action=delete`)**: a POST carrying `action=delete` runs the
+same DELETE as the standalone `DELETE` export (allowlist + slug check + cache
+invalidation) and responds via the shared response helper, so HTML form posts
+receive a `303` redirect (with `redirectTo`) rather than a JSON body.
+
+**`parseRedirectPath` hardening**: the `redirectTo` validator rejects
+backslash-leading paths (`/\evil.com`) that browsers resolve off-site as
+`//evil.com` — regex `^\/(?![/\\])`. A rejected `redirectTo` falls back to a JSON
+response (no `303` to the unsafe path).
+
+**Blog explicit-status requirement**: blog POSTs must carry a `status` of `draft`
+or `published` **explicitly**. A missing / empty / whitespace-only status is a
+`400` ("Status must be Draft or Published"), checked first against the raw form
+value — never silently defaulted to `published`. The `status || 'published'`
+default still applies to all other collections.
 
 ---
 
