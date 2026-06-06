@@ -359,4 +359,10 @@ Coverage is likewise a recorded manual `npm run test:coverage` step with a json-
   authoring flow creates a DRAFT only — the publish→200 transition is asserted ONLY in the
   post-deploy run (set `E2E_POST_DEPLOY=1` and point `E2E_BASE_URL` at prod). A crash between
   publish and cleanup must not strand a public published row pre-merge.
+- **Baseline honesty at PR creation (R1-F45):** record the current `npm run test:e2e` pass/fail
+  counts in the PR description; if the suite is red at baseline, scope the PR-4 E2E gate to the
+  named green set (`blog.spec.ts` + the a11y additions) and file a GitHub issue tracking the
+  pre-existing failures, linked from the PR (track, do not fix here). The baseline cannot be taken
+  during the build (the default Playwright config targets the live `testing` site — a rollout-only
+  surface per §9.1); take it at PR creation against that recorded gate.
 - **Search Console:** submit `sitemap-blog.xml` after launch (recovery for the unwound 301s).

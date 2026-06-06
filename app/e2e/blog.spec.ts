@@ -241,8 +241,8 @@ test.describe('Blog V1 — public routes + SEO', () => {
         title: 'E2E Flow Draft',
         status: 'draft',
         createOnly: 'true',
-        body_raw: bodyRaw,
-        excerpt: 'An E2E draft excerpt.'
+        'data.body_raw': bodyRaw,
+        'data.excerpt_raw': 'An E2E draft excerpt.'
       });
       expect([200, 303]).toContain(create.status());
 
@@ -262,7 +262,7 @@ test.describe('Blog V1 — public routes + SEO', () => {
       const adminPage1 = await (
         await request.get('/admin/blog', { headers: { Cookie: sessionCookie } })
       ).text();
-      const extracted1 = extractTextareaValue(adminPage1, slug, 'body_raw');
+      const extracted1 = extractTextareaValue(adminPage1, slug, 'data.body_raw');
       expect(extracted1, 'posted body round-trips byte-identical').toBe(bodyRaw);
 
       await postContent({
@@ -270,14 +270,14 @@ test.describe('Blog V1 — public routes + SEO', () => {
         slug,
         title: 'E2E Flow Draft',
         status: 'draft',
-        body_raw: extracted1 ?? bodyRaw,
-        excerpt: 'An E2E draft excerpt.'
+        'data.body_raw': extracted1 ?? bodyRaw,
+        'data.excerpt_raw': 'An E2E draft excerpt.'
       });
 
       const adminPage2 = await (
         await request.get('/admin/blog', { headers: { Cookie: sessionCookie } })
       ).text();
-      const extracted2 = extractTextareaValue(adminPage2, slug, 'body_raw');
+      const extracted2 = extractTextareaValue(adminPage2, slug, 'data.body_raw');
       expect(extracted2, 're-submit must not accrete whitespace').toBe(extracted1);
 
       // 3. publish→200 transition: asserted ONLY in the post-deploy (rollout) run (R4-F24).
@@ -289,9 +289,9 @@ test.describe('Blog V1 — public routes + SEO', () => {
           slug,
           title: 'E2E Flow Draft',
           status: 'published',
-          body_raw: bodyRaw,
-          excerpt: 'An E2E draft excerpt.',
-          date: '2099-01-01'
+          'data.body_raw': bodyRaw,
+          'data.excerpt_raw': 'An E2E draft excerpt.',
+          'data.date': '2099-01-01'
         });
         const published = await request.get(`/blog/${slug}`, { maxRedirects: 0 });
         expect(published.status()).toBe(200);
