@@ -12,13 +12,21 @@ export interface Props {
   description?: string;
   keywords?: string;
   preloadImages?: boolean;
+  ogImage?: string;
+  ogImageAlt?: string;
+  ogType?: string;
+  publishedTime?: string;
 }
 
-const { 
-  title, 
-  description = 'Spicebush Montessori School provides individualized, inclusive Montessori education for children ages 3-6. Welcoming all learners with accessible tuition and neurodiversity support.', 
+const {
+  title,
+  description = 'Spicebush Montessori School provides individualized, inclusive Montessori education for children ages 3-6. Welcoming all learners with accessible tuition and neurodiversity support.',
   keywords = 'Montessori school, inclusive preschool, neurodiversity education, accessible tuition, early childhood education',
-  preloadImages = false
+  preloadImages = false,
+  ogImage,
+  ogImageAlt,
+  ogType = 'website',
+  publishedTime
 } = Astro.props;
 
 const seoMetadata = await resolveSeoMetadata({
@@ -30,6 +38,7 @@ const seoMetadata = await resolveSeoMetadata({
 });
 
 const canonicalURL = seoMetadata.canonicalUrl;
+const resolvedOgImage = ogImage ?? seoMetadata.ogImageUrl;
 const analyticsConfig = await getAnalyticsConfig();
 const analyticsEnabled = analyticsConfig.enabled;
 const gaMeasurementId = analyticsConfig.measurementId;
@@ -57,19 +66,22 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
     {seoMetadata.noIndex && <meta name="googlebot" content="noindex, nofollow" />}
     
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={seoMetadata.title} />
     <meta property="og:description" content={seoMetadata.description} />
-    <meta property="og:image" content={seoMetadata.ogImageUrl} />
-    
+    <meta property="og:image" content={resolvedOgImage} />
+    {ogImage && ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
+    {ogType === 'article' && publishedTime && <meta property="article:published_time" content={publishedTime} />}
+
     <!-- Twitter -->
     <meta property="twitter:card" content={seoMetadata.twitterCard} />
     <meta property="twitter:url" content={canonicalURL} />
     <meta property="twitter:title" content={seoMetadata.title} />
     <meta property="twitter:description" content={seoMetadata.description} />
-    <meta property="twitter:image" content={seoMetadata.ogImageUrl} />
-    
+    <meta property="twitter:image" content={resolvedOgImage} />
+    {ogImage && ogImageAlt && <meta name="twitter:image:alt" content={ogImageAlt} />}
+
     <!-- Performance Optimization: Resource Hints -->
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">

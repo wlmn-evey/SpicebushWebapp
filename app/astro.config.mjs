@@ -11,7 +11,18 @@ export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || 'https://spicebushmontessori.org',
   integrations: [
     tailwind(),
-    sitemap(),
+    sitemap({
+      // Exclude routes that are owned by the dynamic blog sitemap, are redirect-only,
+      // or are admin/auth surfaces that should not be advertised to crawlers (R3-F8/R4-F4).
+      filter: (page) => {
+        const { pathname } = new URL(page);
+        if (pathname === '/blog' || pathname.startsWith('/blog/')) return false;
+        if (pathname === '/resources/blog' || pathname.startsWith('/resources/blog/')) return false;
+        if (pathname === '/admin' || pathname.startsWith('/admin/')) return false;
+        if (pathname.startsWith('/auth/')) return false;
+        return true;
+      }
+    }),
     react()
   ],
   output: 'server',

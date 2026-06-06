@@ -15,12 +15,12 @@ This is the living roadmap for the Spicebush Montessori website (spicebushmontes
 
 Key merged work:
 
-| Commit | Description |
-|--------|-------------|
+| Commit    | Description                                                                             |
+| --------- | --------------------------------------------------------------------------------------- |
 | `7a5d150` | P0+P1 re-audit fixes -- slug sort, photo picker, export cap, error display, SVG headers |
-| `c6e13e5` | Merge of P0+P1 fixes branch |
-| `4133012` | P1+P2 audit fixes |
-| `d48ed0b` | Merge of P1+P2 fixes branch |
+| `c6e13e5` | Merge of P0+P1 fixes branch                                                             |
+| `4133012` | P1+P2 audit fixes                                                                       |
+| `d48ed0b` | Merge of P1+P2 fixes branch                                                             |
 
 ---
 
@@ -29,6 +29,7 @@ Key merged work:
 **Goal:** Strip the codebase to what is actively used, fix critical issues, establish a stable baseline.
 
 ### Kept
+
 - Hours widget
 - Staff management
 - Tuition calculator
@@ -36,16 +37,24 @@ Key merged work:
 - Camp mode system
 
 ### Removed or Deferred
-- Blog UI
+
 - Newsletter
 - Stripe / payments integration
 
 ### Completed
+
 - Documentation consolidation
 - Archive stale plans
 - P0+P1 security fixes
 - P1+P2 security fixes
 - All open issues migrated to GitHub Issues
+- **Blog V1 (shipped)** — DB-backed `/blog` index + `/blog/[slug]` posts, draft/published states,
+  per-post SEO (canonical/OG/Twitter/`article` meta), dynamic `/sitemap-blog.xml`, admin CRUD via
+  `/admin/blog`. The Phase-3 prerequisite gates were met: (1) security review — no new P1+ findings;
+  (2) maintainability — no regression; (3) full coverage for new code; (4) lint/typecheck/E2E green.
+  **Gates 3 (full coverage) and 4 (E2E green) are satisfied via RECORDED MANUAL RUNS WITH ATTACHED
+  ARTIFACTS, not automated CI** (R4-F23 — CI runs no Playwright; coverage is a recorded manual
+  `npm run test:coverage` step with a json-summary artifact).
 
 ---
 
@@ -54,19 +63,23 @@ Key merged work:
 **Goal:** Make the admin panel production-solid, expand test coverage, and close remaining security findings.
 
 ### Authentication
+
 - [ ] Apply admin auth migration in all environments
 - [ ] Verify production email delivery for admin login magic links
 - [ ] Decide on magic-link auth long-term vs. Auth0
 
 ### Configuration-Driven Redirects
+
 - [ ] Replace `/donate` redirect with DB-configured `donation_external_link`
 - [ ] Replace `/enrollment` redirect with DB-configured `enrollment_external_link`
 
 ### Admin UX
+
 - [ ] Improve admin UX for core modules (camp, content, media, settings)
 - [ ] Remove remaining newsletter-specific references from admin UI and API routes
 
 ### Test Coverage
+
 - [ ] Expand automated test coverage from 9.5% to 25%+ target
 - [ ] Add tests for error branches in existing API routes
 - [ ] Add E2E coverage for admin authentication flow
@@ -78,13 +91,19 @@ Key merged work:
 **Goal:** Selectively re-add features that were stripped in Phase 1, only after they pass quality gates.
 
 ### Candidates (all optional, evaluated individually)
+
 - Media management refactor
-- Blog
 - Newsletter
 - Payments / Stripe
 
+> Blog shipped as V1 (see Phase 1 → Completed). Remaining blog enhancements (categories/tags UI,
+> RSS, pagination, scheduled publishing, related posts, search, comments, rich-text editor) stay
+> deferred and are evaluated individually if reintroduced.
+
 ### Prerequisites
+
 Each feature must pass before merge:
+
 1. Security review (no new P1+ findings)
 2. Maintainability review (no regression below current score)
 3. Full test coverage for new code
@@ -96,12 +115,12 @@ Each feature must pass before merge:
 
 Audit completed March 17, 2026.
 
-| Severity | Count | Status |
-|----------|-------|--------|
-| P0 | 0 | N/A |
-| P1 | 4 | All resolved (commits `7a5d150`, `4133012`) |
-| P2 | 9 | Most resolved; remaining tracked in GitHub Issues |
-| P3 | 16 | Tracked in GitHub Issues |
+| Severity | Count | Status                                            |
+| -------- | ----- | ------------------------------------------------- |
+| P0       | 0     | N/A                                               |
+| P1       | 4     | All resolved (commits `7a5d150`, `4133012`)       |
+| P2       | 9     | Most resolved; remaining tracked in GitHub Issues |
+| P3       | 16    | Tracked in GitHub Issues                          |
 
 All findings are now tracked as GitHub Issues with `P0`--`P3` labels.
 

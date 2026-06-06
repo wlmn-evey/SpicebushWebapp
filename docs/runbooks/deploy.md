@@ -1,6 +1,6 @@
 # Production Deployment Runbook
 
-*Spicebush Montessori -- Astro 5 SSR on Netlify + Neon PostgreSQL*
+_Spicebush Montessori -- Astro 5 SSR on Netlify + Neon PostgreSQL_
 
 ---
 
@@ -68,12 +68,14 @@ SELECT type, slug, status, author_email, created_at, updated_at,
 ```
 
 **STOP and reconcile manually** if either is true:
+
 - Any `type='blog'` row no longer matches the seed shape (the expected state is **6 rows**, all `author_email='seed@spicebushmontessori.org'`, all date-prefixed slugs); OR
 - Any **clean-slug** `type='blog'` row exists (an owner-created row matching one of the six clean slugs would be silently skipped by `ON CONFLICT DO NOTHING`, leaving a stale body). Reconcile that row's body against the markdown source before applying.
 
 #### Step 3 — PR-2 edit-window remediation
 
 Once the `/admin/blog` authoring page (PR-2) is live, the owner/tester can see the 6 seed rows with date-prefixed slugs. **A single admin edit sets `author_email` to the admin's session email**, which removes that row from 015's `DELETE` predicate — the clean-slug `INSERT` then lands alongside the edited row (7 rows, one duplicate). The PR-2 freeze note ("do not edit or delete the legacy seed rows until the PR-3 import is verified") is intended to prevent this. If it happened anyway:
+
 - Compare the edited date-prefixed row against its markdown source.
 - Confirm the clean-slug imported row supersedes it (carry over any divergent admin edits into the clean-slug row).
 - Delete the date-prefixed row manually.
@@ -135,6 +137,7 @@ DELETE FROM content WHERE type='blog'
 ```
 
 **Caveats:**
+
 - The `author_email IS NULL` guard ensures owner-edited posts (whose `author_email` is the admin's email) are **never** deleted.
 - Rollback does **not** resurrect the seed rows 015 deleted — the markdown source remains in git, so a re-apply re-imports cleanly.
 - Fixes ship as a corrected **016**, never by editing an already-applied 015.
@@ -213,18 +216,22 @@ curl -I https://<preview-url>/enrollment
 ### Automatic (CI/CD — standard path)
 
 Merging a PR to `main` triggers the `deploy.yml` GitHub Actions workflow, which:
+
 1. Builds the app (`cd app && npm run build`)
 2. Deploys to Netlify via CLI (`npx netlify deploy --prod --dir=app/dist`)
 
 No Netlify git integration is used — GitHub Actions owns the build and deploy pipeline.
 
+> **Verified:** the repo-root `npx netlify deploy --prod --dir=app/dist` empirically uploads the SSR function and prod serves SSR (probed 2026-06-06: `/contact` → 200, `/admin` → 302). The workflow is correct as-is — no deploy-command patch and no SSR-function-upload verification-deploy gate are needed.
+
 **Required GitHub secrets:**
+
 - `NETLIFY_SITE_ID` — Netlify site UUID
 - `NETLIFY_AUTH_TOKEN` — Netlify personal access token
 
 ### Manual CLI Deploy (emergency or ad-hoc)
 
-**CRITICAL: Run from the repository root, NOT from `app/`.** The `netlify.toml` has `base=app`, so deploying from `app/` causes path doubling.
+**CRITICAL: Run from the repository root, NOT from `app/`.** Deploying from the repo root with `--dir=app/dist` is the working, current path; the committed `netlify.toml` has **no `base` key** (`[build] command="npm run build"`, `publish="dist"`).
 
 ```bash
 # Build first
@@ -254,12 +261,12 @@ Complete each item against the live production URL.
 
 These settings must match in the Netlify dashboard (Site Settings > Build & Deploy):
 
-| Setting           | Value          |
-|-------------------|----------------|
-| Base directory    | `app`          |
-| Build command     | `npm run build`|
-| Publish directory | `dist`         |
-| Node version      | `20`           |
+| Setting           | Value           |
+| ----------------- | --------------- |
+| Base directory    | `app`           |
+| Build command     | `npm run build` |
+| Publish directory | `dist`          |
+| Node version      | `20`            |
 
 Environment variables required in Netlify:
 
@@ -270,3 +277,86 @@ Environment variables required in Netlify:
 - `ADMIN_DOMAINS` -- (optional) domain-based admin access
 - `COMING_SOON_MODE` -- (optional) override for coming-soon gate
 - One email provider key: `UNIONE_API_KEY`, `RESEND_API_KEY`, `SENDGRID_API_KEY`, or `POSTMARK_SERVER_TOKEN`
+
+---
+
+## 9. Blog V1 Launch (rollout boundary — supervised, performed at launch)
+
+The blog code, pages, sitemap, SEO meta, and tests ship in PR-4, but the public switch is
+flipped only at the supervised launch. The PR build does **not** execute any of the steps in
+§9.1. Apply migrations 014 + 015 (the migration procedure and seed defusal are in §2 above)
+**before** the launch deploy so the 6 clean-slug rows exist when `/blog` goes live.
+
+### 9.1 Rollout-boundary actions (NOT performed by the build — execute supervised at launch)
+
+1. **Set the canonical origin (build-env requirement, R4-F31).** The static `@astrojs/sitemap`
+   origin and per-post canonical/OG origins are baked from `PUBLIC_SITE_URL` at `astro build`
+   time. The production build **must** run with `PUBLIC_SITE_URL=https://spicebushmontessori.org`:
+   ```bash
+   npx netlify env:set PUBLIC_SITE_URL https://spicebushmontessori.org
+   ```
+   (all contexts; currently the production context is `https://spicebush-testing.netlify.app`,
+   which is the confirmed canonicals bug.)
+2. **Neutralize the competing git-CI deploy path.** The Netlify production branch is `testing`
+   (a live competing deploy path). Set `stop_builds=true` so the authoritative `deploy.yml`
+   (repo-root `npx netlify deploy --prod --dir=app/dist`) is the only deploy path:
+   ```
+   build_settings.stop_builds = true
+   ```
+   The existing `deploy.yml` is the working, authoritative deploy mechanism — do **not** add a
+   deploy-command patch or an SSR-function-upload verification-deploy gate.
+3. **Apply migrations 014 + 015** to prod (review 014 first — prod `schema_migrations` tops out
+   at 013; 014 is on disk but unapplied). Run the mandatory pre-flight re-audit (§2) immediately
+   before applying.
+4. Deploy via `deploy.yml`, then run §9.2 and the manual E2E gate (§9.3).
+
+### 9.2 Launch-verification curl checklist (against `https://spicebushmontessori.org`)
+
+```bash
+SITE=https://spicebushmontessori.org
+
+# Status matrix
+curl -sI "$SITE/blog"                                            # 200
+curl -sI "$SITE/blog/nurturing-growth-gardening-program"        # 200 (repeat for each clean slug)
+curl -sI "$SITE/blog/2024-05-20-nurturing-growth-gardening-program"  # 301 → /blog/<clean>
+curl -sI "$SITE/blog/2024-01-01-nonexistent"                    # 404 (date-prefixed miss, NOT a redirect)
+curl -sI "$SITE/resources/blog"                                 # 301 → /blog
+curl -sI "$SITE/resources/blog/nurturing-growth-gardening-program"  # 301 → /blog/<slug>
+curl -sI "$SITE/blog/this-does-not-exist"                       # 404 (branded)
+
+# Per-post SEO meta (prod origin; twitter:image = the post's featured image, NOT the default logo)
+curl -s "$SITE/blog/nurturing-growth-gardening-program" \
+  | grep -E 'rel="canonical"|og:url|og:image|twitter:image|og:image:alt|twitter:image:alt|article:published_time|name="robots"'
+#   - canonical / og:url / og:image start with https://spicebushmontessori.org
+#   - twitter:image contains /images/blog/feature-image-wf-flame-lily-1.webp (NOT SpicebushLogo)
+#   - twitter:image:alt present; og:image:alt present; article:published_time is ISO
+#   - robots = "index, follow"; no <meta name="googlebot" ... noindex> (also check /blog)
+curl -s "$SITE/blog" | grep -E 'name="robots"|googlebot'        # index,follow; no googlebot-noindex
+
+# Sitemap + robots (prod origin, exact slashless <loc>, draft-free)
+curl -s "$SITE/sitemap-blog.xml"                                # 200, XML; <loc>$SITE/blog</loc> and <loc>$SITE/blog/<slug></loc>; ≥6 posts; no drafts
+curl -s "$SITE/robots.txt" | grep sitemap-blog                  # Sitemap: $SITE/sitemap-blog.xml
+
+# Static sitemap must EXCLUDE blog / resources-blog / admin / auth
+curl -s "$SITE/sitemap-0.xml" | grep -E '/blog|/resources/blog|/admin|/auth'   # expect NO matches
+```
+
+### 9.3 Manual E2E gate (CI runs no Playwright — R4-F23)
+
+E2E green is a **recorded manual step with attached artifacts** (json/html report), not a CI gate.
+Coverage is likewise a recorded manual `npm run test:coverage` step with a json-summary artifact.
+
+- **Pinned gate command:** `npx playwright test e2e/blog.spec.ts --project=chromium`
+  (the repo has 7 projects, `fullyParallel: true`, no `webServer`; an unpinned run executes the
+  authoring flow 7× against the single DB).
+- **`E2E_ADMIN_SESSION` secret lifecycle:** provision a fresh admin session cookie immediately
+  before the run; **NEVER record the cookie value** in the PR, issues, or any committed file
+  (use `read -s` / an env file outside the repo); revoke it after the run (or accept the 12h-TTL
+  expiry). The origin check is exercised by unit tests, not this flow.
+- **`e2e-flow-%` orphan-sweep pre-step:** the authoring flow sweeps leftover `e2e-flow-%` drafts
+  before creating its own; keep that pre-step so an interrupted prior run cannot strand rows.
+- **Draft-only pre-merge / publish-only post-deploy (R4-F24):** in the pre-merge/build context the
+  authoring flow creates a DRAFT only — the publish→200 transition is asserted ONLY in the
+  post-deploy run (set `E2E_POST_DEPLOY=1` and point `E2E_BASE_URL` at prod). A crash between
+  publish and cleanup must not strand a public published row pre-merge.
+- **Search Console:** submit `sitemap-blog.xml` after launch (recovery for the unwound 301s).
