@@ -308,7 +308,11 @@ test.describe('Blog V1 — public routes + SEO', () => {
   });
 
   // Test 26 — auth gates
-  test('26: admin/blog + content endpoint auth gates (real middleware)', async ({ request }) => {
+  test('26: admin/blog + content endpoint auth gates (real middleware)', async ({
+    request,
+    baseURL
+  }) => {
+    const siteOrigin = new URL(baseURL ?? 'http://localhost:4321').origin;
     // Unauthenticated GET /admin/blog → redirect to sign-in.
     const adminGet = await request.get('/admin/blog', {
       maxRedirects: 0,
@@ -325,16 +329,30 @@ test.describe('Blog V1 — public routes + SEO', () => {
     });
     expect(jsonPost.status()).toBe(401);
 
-    // Same POST with Accept: text/html → 302 to /auth/sign-in.
+    // Same POST with Accept: text/html and a same-site Origin → 302 to /auth/sign-in.
+    // The Origin header is REQUIRED here: browsers always send it on form POSTs, but
+    // Playwright's APIRequestContext does not — and without it Astro's built-in CSRF
+    // protection (security.checkOrigin) rejects form-content-type POSTs with a 403
+    // ("Cross-site POST form submissions are forbidden") before the middleware ever runs.
+    // Verified against prod 2026-06-06.
     // NOTE: middleware's toSignInRedirect uses context.redirect() with no status → Astro
     // default 302 (verified), NOT 303 as the work-order prose states.
     const htmlPost = await request.post('/api/admin/content', {
       maxRedirects: 0,
-      headers: { Accept: 'text/html' },
+      headers: { Accept: 'text/html', Origin: siteOrigin },
       form: { collection: 'blog', slug: 'unauthed' }
     });
     expect(htmlPost.status()).toBe(302);
     expect(htmlPost.headers()['location']).toContain('/auth/sign-in');
+
+    // Defense-in-depth pin: the same form POST with NO Origin header is rejected by Astro's
+    // built-in CSRF layer (403) before any application code runs.
+    const originlessPost = await request.post('/api/admin/content', {
+      maxRedirects: 0,
+      headers: { Accept: 'text/html' },
+      form: { collection: 'blog', slug: 'unauthed' }
+    });
+    expect(originlessPost.status()).toBe(403);
   });
 
   // Test 27 — .blog-body a deterministic pin
