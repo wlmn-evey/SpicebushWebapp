@@ -1,21 +1,8 @@
 import type { APIRoute } from 'astro';
 import { getSeoSettings } from '@lib/seo-config';
+import { resolveSiteOrigin } from '@lib/site-origin';
 
 export const prerender = false;
-
-const resolveSiteOrigin = (site?: URL): string => {
-  if (site?.origin) return site.origin;
-
-  if (typeof process !== 'undefined' && typeof process.env.PUBLIC_SITE_URL === 'string') {
-    try {
-      return new URL(process.env.PUBLIC_SITE_URL).origin;
-    } catch {
-      // fall through to fallback
-    }
-  }
-
-  return 'https://spicebushmontessori.org';
-};
 
 export const GET: APIRoute = async ({ site }) => {
   const siteOrigin = resolveSiteOrigin(site);
