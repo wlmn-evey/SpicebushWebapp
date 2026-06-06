@@ -202,6 +202,14 @@ crop link to `/admin/media`. Inline post images are added by the owner via Markd
 (`![description](address)`), using addresses copied from the media system. The photo category
 `'blog'` already exists in `app/src/types/photo.ts`.
 
+- **New-tab editor links (R2-F11).** The crop/focal link and the in-body-image Media link both
+  carry `target="_blank" rel="noopener"` and a visible "(opens in a new tab)" suffix, so the owner
+  never loses an unsaved draft by navigating away in the same tab.
+- **Rendered-but-empty live region (R4-F14).** The upload announcement node is a
+  permanently-rendered, visually-empty `<p aria-live="polite">` — it does NOT carry staff.astro's
+  `hidden` class (content injected into a `display:none` live region is not announced). Upload
+  success, upload failure, and copy-address success all write into this same polite node.
+
 ### Client-side validation
 
 All client validation lives in `app/src/lib/blog-admin-client.ts` (an importable module called from
@@ -230,11 +238,30 @@ are enforced **server-side** at publish (the client does not mirror those).
 - Saved copy is **state-specific** (the page already loads every row, so it resolves the saved slug's
   status): a published save → "Published — now live at its link."; a draft save → "Saved as a draft —
   NOT yet visible to the public…"; `saved=deleted` → "Post deleted."
+- The add-form save (`saved=new`) uses a **two-state copy that names both outcomes** ("Saved. If you
+  set status to Published it is now live… If you saved it as a draft it is NOT yet visible…"). This
+  is a deliberate deviation from R4-F12's "saved=new state-specific" ask: the add-form `redirectTo`
+  is the static literal `/admin/blog?saved=new` (R1-F15, no slug) and `BlogPost` carries no
+  timestamp, so the just-created row cannot be identified to resolve its status. The edit-save case
+  carries the slug and fully resolves the state-specific copy.
 - The saved flash carries `role="status"` + a manual Dismiss button and must NOT carry
   `data-admin-alert` (avoiding AdminLayout's 6-second auto-hide). It gets no focus steal.
 - The error flash carries `role="alert"` + `tabindex="-1"` + `data-error-flash`, is focused once by
   an init script when present, then strips `?error=` from the URL; it must NOT carry
   `data-admin-alert` and is never auto-dismissed.
+
+### Accepted residuals (admin authoring)
+
+- **Slug-collision is a client convenience, not a guarantee (R2-F12).** The add-form's inline
+  collision check reads a server-rendered snapshot of existing slugs; the authoritative guard is the
+  endpoint's `createOnly` insert (`ON CONFLICT … DO NOTHING` → `400`). A genuine collision is
+  therefore only possible under concurrent creation of the same slug between page render and submit,
+  and the server rejects it.
+- **Body-image alt quality is enforced server-side at publish (R4-F7).** The client module does NOT
+  scan body Markdown for image alt text; a publish with a weak or empty in-body image description is
+  blocked by `validateBlogData` with a `400`. For a single author this surfaces as a publish-time
+  error rather than an inline warning — an accepted residual that keeps the client at faq.astro's
+  complexity class.
 
 ## Admin API
 

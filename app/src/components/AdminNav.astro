@@ -12,7 +12,8 @@ import {
   LineChart,
   Tent,
   Bell,
-  HandHeart
+  HandHeart,
+  Newspaper
 } from 'lucide-astro';
 
 export interface Props {
@@ -95,6 +96,14 @@ const displayName = userEmail.includes('@') ? userEmail.split('@')[0] : userEmai
         >
           <ImageIcon className="w-5 h-5 mr-3" />
           Media
+        </a>
+        <a
+          href="/admin/blog"
+          aria-current={currentPath === '/admin/blog' ? 'page' : undefined}
+          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+        >
+          <Newspaper className="w-5 h-5 mr-3" />
+          Blog
         </a>
 
         <!-- Programs -->
