@@ -224,3 +224,46 @@ The ledger is reproduced verbatim below.
 ## 6. Deferred Findings (carried out of the rounds)
 
 Across the four rounds, 7 findings were raised and not accepted (R1: 4, R2: 2, R3: 1, R4: 0). The seed ledger that this audit trail is built from enumerates only the accepted findings; the **individual texts of the deferred findings were not carried into it.** They are recorded here by count so the raised-minus-accepted gap is an explicit, traceable number rather than a silent omission. Their specifics are not reconstructed because no source for them exists in the planning record available to this log.
+
+## 7. Owner Overrides (2026-06-07)
+
+Two owner directives, given after the four stress rounds and after ADR-009/ADR-010 were drafted, reverse two earlier decisions. They are owner directives, not new stress-round findings; the verbatim ledger in §4 is unchanged (the owner's IN/OUT scope, the V1 invariants, and the PHASING LAW all stand). What changed is the storage winner of the previously-OPEN fork (§5) and the AI execution model. Both are settled, not re-openable. The implementation plan §§0–17, ADR-009, and ADR-010 are revised in place to reflect them.
+
+- **Override 1 — STORAGE = TipTap HTML (closes the §5 OPEN fork; reverses ADR-009's Markdown round-trip / Option B).** Owner: *"fix the plan to produce the fully functional html data like tiptap wants. I would rather have it correct."* `data.body` now stores TipTap HTML; underline, text-align, and TABLES are first-class WYSIWYG (the markdown-source-toggle deferral for tables is dropped). The security guarantee is preserved by keeping **render-time sanitization as the trust boundary** — every render re-sanitizes stored HTML through a bounded `DOMPurify` V2 config (the V1 properties plus a few tags + an enumerated `class` allowlist + enumerated `target`/`rel` + numeric table attributes; **the `style` attribute stays banned** via a class-based custom TextAlign and `resizable:false` tables — the owner's class-based-not-style-based preference). The 6 live posts are converted once markdown→HTML, gated by **rendered-output equivalence** (the public render is byte/normalization-equal pre/post), with the original markdown recoverable from git history and a migration rollback. The previously-latent markdown-only alt gate (R2-F4) is now ACTIVE — replaced by an HTML-aware alt gate before the editor is adopted. This closes the §5 "Open Item" above: the fork is resolved to HTML storage, not markdown round-trip.
+- **Override 2 — ASYNC AI DRAFTING by default.** Owner: *"Let's not worry about synchronous drafting."* Long AI actions (draft/voice) run as a background job by DEFAULT (202 → poll → **the job persists its result into the draft**); short actions stay synchronous. **Model defaults are UNCHANGED — Sonnet 4.6 default, Opus 4.8 opt-in:** async removes the infrastructure penalty from choosing async but does not promote Opus to default (the cost/quality choice stays the owner's). The synchronous-timeout constraint no longer shapes the design. The daily spend breaker, rate limiter, and per-action `max_tokens` EXPLICITLY cover the background-job path with **enqueue-time counting** — a queued burst trips the breaker before fan-out.
+- **Reviser decision recorded:** AI output format = constrained HTML, sanitized at insertion (no privileged write path; same render-time `DOMPurify` V2 boundary as human content). Markdown-emitted-then-converted is the documented fallback.
+- **Flagged for owner review (recorded, not built):** client-side localStorage autosave — interpreted as already satisfied by job-result-persists-into-draft; reviving client autosave (cut in V1) is a separate owner decision.
+- **Flagged for the security critic:** any future un-banning of the `style` attribute (only if class-based TextAlign proves unworkable; bounded to enumerated text-align values; must be explicitly accepted before shipping).
+
+## Owner Overrides — 2026-06-07 (HTML storage + async AI)
+
+> **Relationship to §7.** §7 above records the override *decisions* (the two quotes, the storage winner, the async execution model, the unchanged model defaults, the autosave flag). This section records the **delta-revision process** that produced the revised artifacts (implementation plan §§0–17, ADR-009, ADR-010) in response to those decisions — the recon/revision/stress-round work that §7 does not capture, in the same audit register as the §2 judge panel and §3 stress-round counts. The two overrides themselves are settled and not re-openable; §4's verbatim ledger is unchanged.
+
+### The two owner overrides (verbatim)
+
+Both directives were given on 2026-06-07, after the four stress rounds (§3) and after ADR-009/ADR-010 had been drafted. They reverse two earlier decisions.
+
+- **Override 1 — STORAGE = TipTap HTML.** Owner: *"fix the plan to produce the fully functional html data like tiptap wants. I would rather have it correct."*
+- **Override 2 — ASYNC AI DRAFTING.** Owner: *"Let's not worry about synchronous drafting."*
+
+### Why ADR-009 was reversed (fidelity-first)
+
+ADR-009 had recorded the **TipTap-markdown round-trip (Option B) as Accepted**, closing the §5 OPEN storage fork in favor of preserving V1's marked→sanitize markdown pipeline. The owner reversed this in favor of **storing TipTap HTML directly**, and the reversal is the better engineering choice, not merely an owner preference:
+
+- **Fidelity-first.** The round-trip could not carry the featureset losslessly — underline, text-align, and especially TABLES are not expressible in V1's markdown pipeline without lossy or bolted-on handling (the round-trip plan had to *defer* tables behind a markdown-source toggle). HTML storage makes all three first-class WYSIWYG. The owner's "I would rather have it correct" is a fidelity-over-convenience call.
+- **TipTap is HTML-native.** TipTap's document model serializes to HTML as its natural grain; markdown was an *added* serialization layer on top. Storing HTML removes a translation step rather than adding one.
+- **The round-trip was the fragile bolt-on.** It was the option whose own ADR had to carry a fallback escape hatch — an admission that the markdown↔HTML conversion was the brittle, failure-prone seam. Reversing to HTML storage removes that seam instead of hardening it. The remaining work is to do the bounded HTML adoption *correctly*, with render-time sanitization (a tightened, class-based `DOMPurify` V2 config) kept as the trust boundary so the security properties are preserved or strengthened, not relaxed.
+
+### Delta-revision process
+
+The revision was scoped as a bounded delta against the already-stress-tested base plan, not a re-plan. The process was:
+
+- **2 recon slices** — fact-gathering passes over the affected artifacts (the storage/sanitizer path for Override 1; the AI execution/abuse-control path for Override 2) to establish exactly what the HTML-storage and async-job changes touch before any edit.
+- **Surgical revision** — the implementation plan, ADR-009, and ADR-010 were edited in place to adopt HTML storage and async-by-default AI, rather than regenerated.
+- **1 focused stress round** — a single adversarial pass over the revised artifacts. **11 findings raised, 10 accepted and fixed, 1 not accepted** (raised − accepted = 1; the lone non-accepted finding is recorded as a count here, consistent with §3/§6's treatment of non-accepted findings — its individual text was not carried into this log). The 10:11 acceptance ratio on a single delta-focused round, versus the four full rounds in §3, reflects that the change surface was bounded and already sat on a converged base plan.
+
+### Pinned interpretations and unchanged decisions
+
+- **Autosave interpretation (pinned, recorded for owner review — not silently built).** The owner's "auto-save or something" is interpreted as already satisfied by the async pattern's **job-result-persists-into-the-draft** behavior. Client-side localStorage autosave remains on the V1 OUT list (it was cut deliberately in V1); reviving it would be a separate owner decision. This interpretation is recorded for owner review, not built.
+- **Model defaults UNCHANGED.** Sonnet 4.6 stays the default; Opus 4.8 stays opt-in. Async removes the infrastructure penalty that the synchronous-timeout constraint had attached to long Opus calls, but it does **not** promote Opus to default — that remains a pure cost/quality decision left with the owner.
+- **Non-negotiables preserved.** Render-time sanitization stays the guard (every render re-sanitizes; sanitize-on-write is additional hygiene only); the sanitizer remains class-based, not style-based (the `style` attribute stays banned); the 6-post markdown→HTML conversion is gated by rendered-output equivalence with markdown recoverable from git history and a migration rollback; AI output has no privileged write path and passes through the same sanitizer as human content; and the async abuse controls (daily spend breaker, rate limiter, per-action `max_tokens`) explicitly cover the background-job path with enqueue-time counting.
