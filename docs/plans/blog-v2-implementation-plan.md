@@ -401,7 +401,7 @@ The owner-input items are isolated and spelled out in §13 with the full implica
 
 | # | Question (R-id) | Default the plan proceeds on |
 |---|---|---|
-| 1 | Encryption mechanism (R2-F5/R4-F5) | Build `crypto.ts` + new CSRF'd `admin_settings` endpoint (ledger default). |
+| 1 | Encryption mechanism (R2-F5/R4-F5) | **SETTLED (owner 2026-06-07)**: encrypted-in-DB — build `crypto.ts` + new CSRF'd `admin_settings` endpoint; env-var alternative rejected. |
 | 2 | AI generation tier | SETTLED (owner override 2026-06-07): long actions async-by-default; model defaults UNCHANGED (Sonnet 4.6 default, Opus 4.8 opt-in — owner cost/quality choice). |
 | 3 | Netlify plan — **Phase-7 prerequisite** | Confirm ON-DEMAND BACKGROUND FUNCTIONS in writing before Phase-7 PR2 (async-default needs them); 26s sync tier now informational (short sync actions only). |
 | 4 | Admin page structure (R1-F24) | Separate `/admin/blog/edit` page. |
