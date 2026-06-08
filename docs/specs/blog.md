@@ -30,8 +30,9 @@ intentionally out and why.
 ## Data Model
 
 The blog reuses the existing `content` table unchanged (see `docs/specs/data-model.md` →
-`content`). No DDL migration is required. The `'cms_blog'` collection alias remains in the DB read
-allowlist but is unused; all blog rows use `type = 'blog'`.
+`content`). No DDL migration is required. All blog rows use `type = 'blog'`; the unused
+`'cms_blog'` collection alias was removed from the DB read allowlist in the Blog V2 build (Phase-1
+PR1) — nothing ever read or wrote it.
 
 ### Row shape for a blog post
 

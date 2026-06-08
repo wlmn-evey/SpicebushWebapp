@@ -60,6 +60,8 @@ const bodyHtml = renderPostBody(post.body);
         {formattedDate && <time datetime={post.date}>{formattedDate}</time>}
         {formattedDate && <span class="mx-2">·</span>}
         <span>By {post.author}</span>
+        {post.readingTime ? <span class="mx-2">·</span> : null}
+        {post.readingTime ? <span>{post.readingTime} min read</span> : null}
       </p>
 
       {

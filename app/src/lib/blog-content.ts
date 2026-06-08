@@ -26,6 +26,7 @@ export type BlogPost = {
   status: string;
   categories?: string[];
   tags?: string[];
+  readingTime?: number;
 };
 
 // Length caps — authoritative numbers per docs/specs/blog.md Data Model.
@@ -115,7 +116,13 @@ function mapEntryToBlogPost(entry: ContentEntry): BlogPost | null {
     seoDescription: emptyToUndefined(asTrimmedString(data.seoDescription)),
     status: 'published',
     categories: asStringArray(data.categories),
-    tags: asStringArray(data.tags)
+    tags: asStringArray(data.tags),
+    // Prefer the value stored on save; fall back to computing from the body so the 6 legacy posts
+    // (saved before reading time existed) still display it without a re-save.
+    readingTime:
+      typeof data.readingTime === 'number' && data.readingTime > 0
+        ? data.readingTime
+        : computeReadingTime(body)
   };
 }
 
@@ -247,6 +254,20 @@ export async function resolveLegacyBlogRedirect(slug: string): Promise<string | 
   return post ? stripped : null;
 }
 
+const WORDS_PER_MINUTE = 200;
+
+/**
+ * Estimate reading time in whole minutes. Strips HTML tags first — the body is markdown today and
+ * TipTap HTML after the Phase-1 conversion, so tag text must not be counted as words — then counts
+ * whitespace-delimited tokens at {@link WORDS_PER_MINUTE}. Returns 0 for an empty body, else ≥ 1.
+ */
+export function computeReadingTime(body: unknown): number {
+  if (typeof body !== 'string') return 0;
+  const text = body.replace(/<[^>]+>/g, ' ').trim();
+  if (!text) return 0;
+  return Math.max(1, Math.ceil(text.split(/\s+/).length / WORDS_PER_MINUTE));
+}
+
 /**
  * Write-path normalizer (called by the endpoint BEFORE validation). Returns a new object.
  */
@@ -279,6 +300,10 @@ export function normalizeBlogData(data: Record<string, unknown>): Record<string,
   if (typeof normalized.author !== 'string' || normalized.author.trim().length === 0) {
     normalized.author = DEFAULT_AUTHOR;
   }
+
+  // Reading time is derived: recompute on every save from the trimmed body (markdown today,
+  // TipTap HTML after the Phase-1 conversion). 0 for an empty/missing body.
+  normalized.readingTime = computeReadingTime(normalized.body);
 
   // Leave categories / tags untouched (R1-F12).
   return normalized;

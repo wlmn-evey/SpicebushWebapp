@@ -16,7 +16,6 @@ const DATABASE_COLLECTIONS = new Set([
   'hours',
   'photos',
   'cms_hours',
-  'cms_blog',
   'cms_staff',
   'cms_announcements',
   'cms_events',

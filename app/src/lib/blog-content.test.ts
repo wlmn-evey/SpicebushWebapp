@@ -23,6 +23,7 @@ import type { ContentEntry } from '@lib/db/types';
 import {
   blogPostToEditData,
   compareBlogPosts,
+  computeReadingTime,
   escapeXml,
   getManagedBlogPosts,
   getPublishedPosts,
@@ -89,7 +90,8 @@ describe('normalizeBlogEntry', () => {
       imageAlt: 'Children planting seedlings',
       seoTitle: 'Garden Day SEO',
       seoDescription: 'Garden Day description',
-      status: 'published'
+      status: 'published',
+      readingTime: 1
     });
   });
 
@@ -245,6 +247,52 @@ describe('blogPostToEditData', () => {
     const roundTripped = JSON.parse(JSON.stringify(blogPostToEditData(post)));
     expect(roundTripped.categories).toEqual(['a', 'b', 'c']);
     expect(roundTripped.tags).toEqual(['x']);
+  });
+});
+
+describe('computeReadingTime', () => {
+  it('returns 0 for an empty, whitespace-only, or non-string body', () => {
+    expect(computeReadingTime('')).toBe(0);
+    expect(computeReadingTime('   \n  ')).toBe(0);
+    expect(computeReadingTime(undefined)).toBe(0);
+    expect(computeReadingTime(123 as unknown as string)).toBe(0);
+  });
+
+  it('rounds up to whole minutes at 200 wpm with a floor of 1', () => {
+    expect(computeReadingTime('one two three')).toBe(1); // 3 words → 1 min
+    expect(computeReadingTime(Array.from({ length: 200 }, () => 'w').join(' '))).toBe(1); // exactly 200 → 1
+    expect(computeReadingTime(Array.from({ length: 201 }, () => 'w').join(' '))).toBe(2); // 201 → 2
+    expect(computeReadingTime(Array.from({ length: 1000 }, () => 'w').join(' '))).toBe(5); // 1000 → 5
+  });
+
+  it('strips HTML tags so markup is not counted as words', () => {
+    // 3 real words wrapped in tags → still 1 min, and the tags add no word count.
+    expect(computeReadingTime('<p><strong>hello</strong> there <em>world</em></p>')).toBe(1);
+  });
+});
+
+describe('reading time surfacing (R-readingTime)', () => {
+  it('prefers a stored data.readingTime over recomputation', () => {
+    const post = normalizeBlogEntry(
+      makeEntry('p', { title: 'T', date: '2024-01-01', excerpt: 'E', readingTime: 7 }, 'short body')
+    );
+    expect(post?.readingTime).toBe(7);
+  });
+
+  it('computes readingTime from the body when none is stored', () => {
+    const body = Array.from({ length: 400 }, () => 'word').join(' '); // 400 words → 2 min
+    const post = normalizeBlogEntry(
+      makeEntry('p', { title: 'T', date: '2024-01-01', excerpt: 'E' }, body)
+    );
+    expect(post?.readingTime).toBe(2);
+  });
+
+  it('normalizeBlogData stores a recomputed readingTime on save', () => {
+    const out = normalizeBlogData({
+      body: Array.from({ length: 600 }, () => 'word').join(' '), // 600 words → 3 min
+      readingTime: 99 // stale incoming value is overwritten
+    });
+    expect(out.readingTime).toBe(3);
   });
 });
 
