@@ -1,6 +1,11 @@
 ---
 import AdminLayout from '@layouts/AdminLayout.astro';
-import { getManagedBlogPosts, renderPostBody, type BlogPost } from '@lib/blog-content';
+import {
+  getManagedBlogPosts,
+  renderPostBody,
+  blogPostToEditData,
+  type BlogPost
+} from '@lib/blog-content';
 import { BLOG_FORM_FIELDS } from '@lib/blog-form-fields';
 
 const posts = await getManagedBlogPosts(); // uncached, no status filter, pre-sorted
@@ -46,20 +51,10 @@ const statusBadgeClass = (post: BlogPost): string =>
 const statusBadgeLabel = (post: BlogPost): string =>
   post.status === 'published' ? 'Published' : 'Draft';
 
-// `baseDataJson` for an edit form: carry the blog data.* fields reconstructable from `post`.
-const baseDataFor = (post: BlogPost): string =>
-  JSON.stringify({
-    title: post.title,
-    date: post.date,
-    author: post.author,
-    excerpt: post.excerpt,
-    body: post.body,
-    image: post.image,
-    imageAlt: post.imageAlt,
-    seoTitle: post.seoTitle,
-    seoDescription: post.seoDescription,
-    status: post.status
-  });
+// `baseDataJson` for an edit form: carry the blog data.* fields reconstructable from `post`,
+// including categories/tags (which have no form input) so the wholesale-replace upsert does not
+// drop them on edit (#84). The field list lives in `blogPostToEditData` so it is unit-tested.
+const baseDataFor = (post: BlogPost): string => JSON.stringify(blogPostToEditData(post));
 ---
 
 <AdminLayout title="Manage Blog">

@@ -24,6 +24,8 @@ export type BlogPost = {
   seoTitle?: string;
   seoDescription?: string;
   status: string;
+  categories?: string[];
+  tags?: string[];
 };
 
 // Length caps — authoritative numbers per docs/specs/blog.md Data Model.
@@ -56,6 +58,15 @@ const asTrimmedString = (value: unknown): string => (typeof value === 'string' ?
 
 const emptyToUndefined = (value: string): string | undefined =>
   value.length > 0 ? value : undefined;
+
+// Faithfully surface a stored JSONB string array (categories/tags) WITHOUT mutation, so an
+// edit round-trips it unchanged (#84 / R1-F15). Non-arrays and empty arrays become `undefined`;
+// canonicalization of taxonomy values is deferred to Phase 3, not done here.
+const asStringArray = (value: unknown): string[] | undefined => {
+  if (!Array.isArray(value)) return undefined;
+  const items = value.filter((item): item is string => typeof item === 'string');
+  return items.length > 0 ? items : undefined;
+};
 
 /**
  * Shared field mapper — builds a `BlogPost` from a stored `ContentEntry` WITHOUT the
@@ -102,7 +113,37 @@ function mapEntryToBlogPost(entry: ContentEntry): BlogPost | null {
     imageAlt: emptyToUndefined(asTrimmedString(data.imageAlt)),
     seoTitle: emptyToUndefined(asTrimmedString(data.seoTitle)),
     seoDescription: emptyToUndefined(asTrimmedString(data.seoDescription)),
-    status: 'published'
+    status: 'published',
+    categories: asStringArray(data.categories),
+    tags: asStringArray(data.tags)
+  };
+}
+
+/**
+ * Reconstruct the `baseDataJson` payload for an edit form from a managed `BlogPost`.
+ *
+ * The admin upsert writes `data = EXCLUDED.data` wholesale (no JSONB merge), so any persisted
+ * `data.*` field the edit form does not resubmit is silently dropped on edit. `categories`/`tags`
+ * have no form input yet, so they MUST be carried here or editing any post wipes them (#84 /
+ * R1-F15). `undefined` values are omitted by `JSON.stringify`, matching the prior inline behavior.
+ *
+ * NOTE: any FUTURE persisted `data.*` key that the edit form does not surface as its own input
+ * must be added here too, or it will be lost on the next edit.
+ */
+export function blogPostToEditData(post: BlogPost): Record<string, unknown> {
+  return {
+    title: post.title,
+    date: post.date,
+    author: post.author,
+    excerpt: post.excerpt,
+    body: post.body,
+    image: post.image,
+    imageAlt: post.imageAlt,
+    seoTitle: post.seoTitle,
+    seoDescription: post.seoDescription,
+    status: post.status,
+    categories: post.categories,
+    tags: post.tags
   };
 }
 
