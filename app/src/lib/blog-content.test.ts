@@ -21,6 +21,7 @@ vi.mock('@lib/db/client', () => ({
 
 import type { ContentEntry } from '@lib/db/types';
 import {
+  blogPostToEditData,
   compareBlogPosts,
   escapeXml,
   getManagedBlogPosts,
@@ -175,6 +176,75 @@ describe('normalizeBlogEntry', () => {
       makeEntry('p', { title: 'T', date: '2024-01-01', excerpt: 'E', image: '/img/x.png' })
     );
     expect(relative?.image).toBe('/img/x.png');
+  });
+
+  // #84 / R1-F15: categories & tags must be surfaced so the edit form can carry them through.
+  it('surfaces data.categories / data.tags as string arrays', () => {
+    const post = normalizeBlogEntry(
+      makeEntry('p', {
+        title: 'T',
+        date: '2024-01-01',
+        excerpt: 'E',
+        categories: ['Montessori', 'Parenting'],
+        tags: ['toddlers', 'play']
+      })
+    );
+    expect(post?.categories).toEqual(['Montessori', 'Parenting']);
+    expect(post?.tags).toEqual(['toddlers', 'play']);
+  });
+
+  it('leaves categories / tags undefined when absent, empty, or non-array', () => {
+    const absent = normalizeBlogEntry(
+      makeEntry('p', { title: 'T', date: '2024-01-01', excerpt: 'E' })
+    );
+    expect(absent?.categories).toBeUndefined();
+    expect(absent?.tags).toBeUndefined();
+
+    const empty = normalizeBlogEntry(
+      makeEntry('p', { title: 'T', date: '2024-01-01', excerpt: 'E', categories: [], tags: [] })
+    );
+    expect(empty?.categories).toBeUndefined();
+    expect(empty?.tags).toBeUndefined();
+
+    const garbage = normalizeBlogEntry(
+      makeEntry('p', {
+        title: 'T',
+        date: '2024-01-01',
+        excerpt: 'E',
+        categories: 'not-an-array',
+        tags: [123, null]
+      } as unknown as Record<string, unknown>)
+    );
+    expect(garbage?.categories).toBeUndefined();
+    expect(garbage?.tags).toBeUndefined();
+  });
+});
+
+// #84 / R1-F15: the edit form's baseDataJson MUST carry categories/tags (no form input exists),
+// or the wholesale `data = EXCLUDED.data` upsert silently drops them on every edit.
+describe('blogPostToEditData', () => {
+  it('includes categories / tags when the post carries them', () => {
+    const data = blogPostToEditData(
+      makePost({ categories: ['Montessori', 'Parenting'], tags: ['toddlers'] })
+    );
+    expect(data.categories).toEqual(['Montessori', 'Parenting']);
+    expect(data.tags).toEqual(['toddlers']);
+  });
+
+  it('omits categories / tags (undefined → dropped by JSON.stringify) when absent', () => {
+    const data = blogPostToEditData(makePost());
+    expect(data.categories).toBeUndefined();
+    expect(data.tags).toBeUndefined();
+    const roundTripped = JSON.parse(JSON.stringify(data));
+    expect('categories' in roundTripped).toBe(false);
+    expect('tags' in roundTripped).toBe(false);
+  });
+
+  it('round-trips categories/tags through JSON without loss', () => {
+    const post = makePost({ categories: ['a', 'b', 'c'], tags: ['x'] });
+    const roundTripped = JSON.parse(JSON.stringify(blogPostToEditData(post)));
+    expect(roundTripped.categories).toEqual(['a', 'b', 'c']);
+    expect(roundTripped.tags).toEqual(['x']);
   });
 });
 

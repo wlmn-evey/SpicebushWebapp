@@ -137,6 +137,29 @@ describe('POST /api/admin/content — blog path (§12.16 + §12.18)', () => {
     expect(upsertParams()[PARAM_STATUS]).toBe('published');
   });
 
+  it('#84/R1-F15: preserves data.categories/data.tags carried in baseDataJson through the edit upsert', async () => {
+    // The edit form resubmits baseDataJson reconstructed by `blogPostToEditData`, which now carries
+    // categories/tags (no form input exists for them). The wholesale `data = EXCLUDED.data` upsert
+    // MUST keep them — before the fix the edit form dropped them and they were silently wiped.
+    const fields = validPublishedFields({
+      [F.baseDataJson]: JSON.stringify({
+        title: 'A Real Post',
+        date: '2026-06-01',
+        author: 'Spicebush Team',
+        excerpt: 'A short summary of the post.',
+        body: 'Hello world body content.',
+        status: 'published',
+        categories: ['Montessori', 'Parenting'],
+        tags: ['toddlers', 'play']
+      })
+    });
+    await POST(makeContext(fields));
+
+    const data = JSON.parse(upsertParams()[PARAM_DATA] as string) as Record<string, unknown>;
+    expect(data.categories).toEqual(['Montessori', 'Parenting']);
+    expect(data.tags).toEqual(['toddlers', 'play']);
+  });
+
   it('§12.18 control: a draft-defaulted add stores draft', async () => {
     const fields = validPublishedFields({
       [F.status]: 'draft',
