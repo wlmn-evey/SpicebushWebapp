@@ -12,6 +12,7 @@ import { db } from '@lib/db';
 import { queryRows } from '@lib/db/client';
 import type { ContentEntry } from '@lib/db/types';
 import { collectHtmlImageAlts, renderBodyHtml } from './blog-html';
+import { BLOG_PAGE_SIZE, indexableCategories } from './blog-discovery';
 import { isFutureScheduledPublishAt, isScheduledPublishAtFormat } from './blog-publish-schedule';
 
 export type BlogPost = {
@@ -634,16 +635,28 @@ export function escapeXml(s: string): string {
 }
 
 /**
- * Build the `<urlset>` sitemap document. Emits SLASHLESS URLs (R2-F5/F17): `{origin}/blog`
- * and `{origin}/blog/{slug}` — never `/blog/`. No `lastmod` (R1-F7). Every URL is XML-escaped.
+ * Build the `<urlset>` sitemap document. Emits SLASHLESS URLs (R2-F5/F17): `{origin}/blog`, each
+ * `{origin}/blog/{slug}`, each pagination page `{origin}/blog/page/{n}` for **n ≥ 2** (never
+ * `/blog/page/1` — that 301s to `/blog`, R3-F19), and each **indexable** category
+ * `{origin}/blog/category/{slug}` (≥2 members — R1-F31). TAGS and below-threshold categories are
+ * EXCLUDED (they render `noindex` — R1-F21). Every route appears exactly once (R1-F28). No `lastmod`
+ * (R1-F7). Every URL is XML-escaped.
  */
 export function renderBlogSitemapXml(posts: BlogPost[], origin: string): string {
-  const urls = [
-    `  <url>\n    <loc>${escapeXml(`${origin}/blog`)}</loc>\n  </url>`,
-    ...posts.map(
-      post => `  <url>\n    <loc>${escapeXml(`${origin}/blog/${post.slug}`)}</loc>\n  </url>`
-    )
+  const totalPages = Math.max(1, Math.ceil(posts.length / BLOG_PAGE_SIZE));
+  const paths = [
+    `${origin}/blog`,
+    ...posts.map(post => `${origin}/blog/${post.slug}`),
+    // Pagination n ≥ 2 only — none with the current 6-post corpus on a ≥10 page size.
+    ...Array.from(
+      { length: Math.max(0, totalPages - 1) },
+      (_, i) => `${origin}/blog/page/${i + 2}`
+    ),
+    // Indexable categories only (≥2 members); tags + thin categories are noindex, so absent.
+    ...indexableCategories(posts).map(category => `${origin}/blog/category/${category.slug}`)
   ];
+
+  const urls = paths.map(path => `  <url>\n    <loc>${escapeXml(path)}</loc>\n  </url>`);
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;
 }

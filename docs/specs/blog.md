@@ -629,9 +629,12 @@ with no googlebot-noindex tag on `/blog` and post pages.
   `getPublishedPosts()` → `renderBlogSitemapXml(posts, origin)` → `Response` with
   `Content-Type: application/xml`, `Cache-Control: public, max-age=300`. Drafts never appear; no
   `lastmod`. The urlset builder and `escapeXml` live in `blog-content.ts` (coverage-measured).
-- URLs are **slashless**, matching the canonical form (`normalizePathname`): `{origin}/blog` and
-  `{origin}/blog/{slug}` — asserted as exact `<loc>` strings, not substrings. Every interpolated URL
-  passes through `escapeXml`.
+- URLs are **slashless**, matching the canonical form (`normalizePathname`): `{origin}/blog`, each
+  `{origin}/blog/{slug}`, each pagination page `{origin}/blog/page/{n}` for **n ≥ 2** (never
+  `/blog/page/1` — R3-F19), and each **indexable** category `{origin}/blog/category/{slug}` (≥2
+  members — R1-F31, via `indexableCategories`). **Tags and below-threshold categories are EXCLUDED**
+  (they render `noindex` — R1-F21). Every route appears exactly once (R1-F28). Asserted as exact
+  `<loc>` strings, not substrings; every interpolated URL passes through `escapeXml`.
 - The static `@astrojs/sitemap` `filter` excludes the blog URLs (deduped against the blog sitemap),
   the redirected `/resources/blog` and `/resources/blog/*`, and `/admin`, `/admin/*`, `/auth/*` (the
   live `sitemap-0.xml` already discloses the admin and auth surface — a pre-existing issue).
