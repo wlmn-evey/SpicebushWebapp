@@ -957,8 +957,10 @@ describe('escapeXml + renderBlogSitemapXml', () => {
     const xml = renderBlogSitemapXml(many, origin);
     expect(xml).toContain(`<loc>${origin}/blog/page/2</loc>`);
     expect(xml).toContain(`<loc>${origin}/blog/page/3</loc>`);
-    expect(xml).not.toContain('/blog/page/1');
-    expect(xml).not.toContain('/blog/page/4');
+    // Exact <loc> (not a substring) — `/blog/page/1` must be absent even once the corpus reaches
+    // ≥10 pages, where `/blog/page/10` would contain the bare substring `/blog/page/1`.
+    expect(xml).not.toContain(`<loc>${origin}/blog/page/1</loc>`);
+    expect(xml).not.toContain(`<loc>${origin}/blog/page/4</loc>`);
   });
 
   it('the 6-post corpus paginates to a single page — no /blog/page/* in the sitemap (R4-F10)', () => {
