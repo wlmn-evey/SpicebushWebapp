@@ -88,7 +88,9 @@ export default function TipTapEditor({
   }, []);
 
   const updateCounts = useCallback((editor: Editor) => {
-    const text = editor.state.doc.textContent;
+    // Use getText with a block separator: doc.textContent joins blocks with an EMPTY separator, so
+    // "<p>hello</p><p>world</p>" would collapse to "helloworld" and undercount as one word.
+    const text = editor.getText({ blockSeparator: ' ' });
     const trimmed = text.trim();
     setCounts({ words: trimmed ? trimmed.split(/\s+/).length : 0, chars: text.length });
   }, []);
