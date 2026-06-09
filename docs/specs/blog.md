@@ -29,6 +29,11 @@ intentionally out and why.
   grouped toolbar also has undo/redo and a live word/character count. All color/alignment/highlight
   output is **class-based, never inline `style`** (which stays banned) — see
   [Rendering & Sanitization](#rendering--sanitization).
+- Links and images are inserted via **accessible in-editor dialogs** (PR C / #114) — focus-trapped
+  `role="dialog"` modals with Esc/backdrop close, replacing the old `window.prompt` boxes. The link
+  dialog offers an "open in a new tab" option (`target="_blank"`, both enumerated-safe); the image
+  dialog requires alt text. A **live side-by-side preview** renders the body through the same
+  `renderBodyHtml` the public page uses, updating as you type.
 - The body is **re-sanitized at every render** through `renderBodyHtml` (DOMPurify `STRICT_CONFIG_V2`,
   `app/src/lib/blog-html.ts`) — sanitize-at-render is the trust boundary, never sanitize-at-write only.
   `style` is banned (alignment is class-based; tables `resizable:false`). During the markdown→HTML
@@ -227,9 +232,10 @@ The dashboard and the editor are separate pages (#114 redesign):
   status `<select>` renders `selected` matching the post's EXACT status, so an untouched edit retains
   it. The slug is editable on `new` (with the collision check) and read-only on `edit`; a missing slug
   on `edit` redirects to the list with an error flash.
-- **Preview** — the TipTap editor's own Preview button renders the current body through `renderBodyHtml`
-  (the same render-time pipeline the public page uses). The separate server-rendered accordion preview
-  was removed with the accordions.
+- **Preview** — the TipTap editor's Preview button toggles a **live side-by-side preview** pane (PR C)
+  that renders the current body through `renderBodyHtml` (the same render-time pipeline the public page
+  uses) and updates as you type; it stacks below the editor on narrow screens. The separate
+  server-rendered accordion preview was removed with the accordions.
 - **Delete** — a per-row form on the list posts `action=delete`, `collection=blog`, `slug`,
   `redirectTo=/admin/blog?saved=deleted`, with a confirmation prompt.
 
@@ -261,9 +267,10 @@ URL path, with an inline upload widget that POSTs to `/api/media/upload` (FormDa
 `category='blog'`, `createPhotoEntry='true'`). On success it sets the URL input (dispatching an
 `input` event so conditional validation re-runs), surfaces a "Image attached — save the post to keep
 it." status in a live region, and offers a "Copy address" affordance plus a "(opens in a new tab)"
-crop link to `/admin/media`. Inline post images are added by the owner via Markdown
-(`![description](address)`), using addresses copied from the media system. The photo category
-`'blog'` already exists in `app/src/types/photo.ts`.
+crop link to `/admin/media`. Inline **post-body** images are inserted via the editor's **image
+dialog** (PR C / #114): an accessible modal with an address field, a "Media (opens in a new tab)"
+link to `/admin/media`, and a **required alt-text** field (Insert is disabled until both are filled)
+— no more `window.prompt`. The photo category `'blog'` already exists in `app/src/types/photo.ts`.
 
 - **New-tab editor links (R2-F11).** The crop/focal link and the in-body-image Media link both
   carry `target="_blank" rel="noopener"` and a visible "(opens in a new tab)" suffix, so the owner
