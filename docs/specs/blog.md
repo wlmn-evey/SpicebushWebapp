@@ -326,6 +326,14 @@ collection still saves and deletes (including the header-absent fail-open case).
 | Form-based delete             | `action='delete'` runs the existing DELETE (allowlist + slug check + cache invalidation) and responds via `responseByFormat`                                                                    |
 | `parseRedirectPath` hardening | Rejects backslash-leading paths (`/\evil.com`) that browsers resolve off-site: `^\/(?![/\\])`                                                                                                   |
 
+**`/api/admin/settings` CSRF (Phase 6, R2-F1 / closes #85).** The generic settings endpoint now carries
+the **same** defense-in-depth Origin / `Sec-Fetch-Site: cross-site` → `403` check (fails open when both
+headers absent), copied from the content endpoint. This hardens all ~16 same-origin admin settings
+forms (camp, testimonials, seo, ticker) — verified none is cross-origin, so none breaks. The endpoint
+still validates the **key** only (`^[a-zA-Z0-9_]+$`), never the value — so the ticker's value-level
+safety (href scheme, expiry, ≤5) is enforced at render in `getActiveTickerItems`, not here. Authoring
+UI: `/admin/ticker` (full Ticker spec section added in the Phase-6 docs PR).
+
 ### Auth
 
 The middleware protects `/admin` and `/api/admin` prefixes:

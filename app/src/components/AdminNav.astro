@@ -12,6 +12,7 @@ import {
   LineChart,
   Tent,
   Bell,
+  Megaphone,
   HandHeart,
   Newspaper
 } from 'lucide-astro';
@@ -134,6 +135,14 @@ const displayName = userEmail.includes('@') ? userEmail.split('@')[0] : userEmai
         >
           <Bell className="w-5 h-5 mr-3" />
           Announcements
+        </a>
+        <a
+          href="/admin/ticker"
+          aria-current={currentPath === '/admin/ticker' ? 'page' : undefined}
+          class="admin-nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+        >
+          <Megaphone className="w-5 h-5 mr-3" />
+          Ticker
         </a>
         <a
           href="/admin/contact-submissions"
