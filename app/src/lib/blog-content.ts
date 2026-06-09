@@ -314,7 +314,10 @@ export function computeReadingTime(body: unknown): number {
 /**
  * Write-path normalizer (called by the endpoint BEFORE validation). Returns a new object.
  */
-export function normalizeBlogData(data: Record<string, unknown>): Record<string, unknown> {
+export function normalizeBlogData(
+  data: Record<string, unknown>,
+  rawStatus?: string
+): Record<string, unknown> {
   const normalized: Record<string, unknown> = { ...data };
 
   // Trim short string fields.
@@ -340,12 +343,19 @@ export function normalizeBlogData(data: Record<string, unknown>): Record<string,
     normalized.excerpt = normalized.excerpt.trim();
   }
 
-  // Delete optional keys whose trimmed value is '' (R2-F20). `publishedAt` is included so an empty
-  // value never persists — only a real scheduled instant is stored (a draft/published save clears it).
+  // Delete optional keys whose trimmed value is '' (R2-F20).
   for (const key of ['image', 'imageAlt', 'seoTitle', 'seoDescription', 'date', 'publishedAt']) {
     if (normalized[key] === '') {
       delete normalized[key];
     }
+  }
+
+  // `publishedAt` is meaningful ONLY for a scheduled save. Drop it for any other status so a
+  // scheduled→published/draft/archived edit cannot leave a stale future instant behind — that
+  // would mis-order the post on the public index, where `compareBlogPosts` uses `publishedAt` DESC
+  // as the same-`date` tiebreak (server-authoritative, independent of the client clearing it).
+  if (typeof rawStatus !== 'string' || rawStatus.trim().toLowerCase() !== 'scheduled') {
+    delete normalized.publishedAt;
   }
 
   // Default author when missing/empty.

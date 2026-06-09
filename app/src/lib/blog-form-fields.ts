@@ -20,6 +20,11 @@ export const BLOG_FORM_FIELDS = {
   action: 'action',
   date: 'data.date',
   author: 'data.author',
+  // Persisted UTC-Z scheduled instant (hidden input, filled by the client on submit from the
+  // zone-less datetime-local pick below). `publishedAtLocal` is the visible wall-clock control and
+  // is NOT a `data.` field, so it is never persisted directly.
+  publishedAt: 'data.publishedAt',
+  publishedAtLocal: 'publishedAtLocal',
   excerptRaw: 'data.excerpt_raw',
   bodyRaw: 'data.body_raw',
   image: 'data.image',

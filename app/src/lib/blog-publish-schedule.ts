@@ -63,3 +63,44 @@ export function isDueScheduledPublishAt(value: unknown, now: number): boolean {
   if (!isScheduledPublishAtFormat(value)) return false;
   return Date.parse(value.trim()) <= now;
 }
+
+const LOCAL_INPUT_REGEX = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/;
+
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+
+/**
+ * Convert a zone-LESS `datetime-local` input value (`YYYY-MM-DDTHH:mm`, the owner's wall-clock
+ * pick) to the stored UTC-`Z` ISO contract. `offsetMinutes` is the target zone's offset in the
+ * `Date.prototype.getTimezoneOffset()` convention (minutes that UTC is AHEAD of local — e.g. EDT
+ * = `240`), passed in so this stays a PURE function the tests can pin deterministically regardless
+ * of the machine's zone (CI runs UTC). Returns `''` for a malformed input.
+ *
+ * Output is uniformly `...Z` (never offset-explicit) because PR1's `compareBlogPosts` orders
+ * `publishedAt` LEXICALLY — `Z`-form strings sort chronologically, offset-form strings do not.
+ */
+export function localInputToUtcIso(local: string, offsetMinutes: number): string {
+  const match = LOCAL_INPUT_REGEX.exec(typeof local === 'string' ? local.trim() : '');
+  if (!match) return '';
+  const [, y, mo, d, h, min, s] = match;
+  const utcMs =
+    Date.UTC(Number(y), Number(mo) - 1, Number(d), Number(h), Number(min), s ? Number(s) : 0) +
+    offsetMinutes * 60000;
+  return new Date(utcMs).toISOString();
+}
+
+/**
+ * Inverse of {@link localInputToUtcIso}: render a stored UTC ISO instant back to the
+ * `datetime-local` wall-clock value the owner would see in their zone, so the edit form pre-fills
+ * the time they actually picked (NOT raw UTC — `iso.slice(0,16)` would show UTC and is the footgun
+ * this avoids). `offsetMinutes` follows the same `getTimezoneOffset()` convention. Returns `''` for
+ * an unparseable input.
+ */
+export function utcIsoToLocalInput(iso: string, offsetMinutes: number): string {
+  const ms = Date.parse(typeof iso === 'string' ? iso.trim() : '');
+  if (Number.isNaN(ms)) return '';
+  const local = new Date(ms - offsetMinutes * 60000);
+  return (
+    `${local.getUTCFullYear()}-${pad2(local.getUTCMonth() + 1)}-${pad2(local.getUTCDate())}` +
+    `T${pad2(local.getUTCHours())}:${pad2(local.getUTCMinutes())}`
+  );
+}
