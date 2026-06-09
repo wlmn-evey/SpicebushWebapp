@@ -321,6 +321,18 @@ same DELETE as the standalone `DELETE` export (allowlist + slug check + cache
 invalidation) and responds via the shared response helper, so HTML form posts
 receive a `303` redirect (with `redirectTo`) rather than a JSON body.
 
+**Blog lifecycle actions (Phase 2)** — all blog-only, origin/CSRF-checked like every POST,
+cache-invalidated, and `303`/JSON via the shared helper:
+
+- `action=archive` — `UPDATE status='archived'` for the single validated `slug`.
+- `action=restore` — `UPDATE status='draft'` (archived is reversible, R4-F12).
+- `action=bulk-archive` / `action=bulk-delete` — operate on the repeated `slugs` field (dashboard
+  checkboxes), NOT the single `slug`, so they run before the single-slug validation. Slugs are
+  lowercased, charset-filtered (`^[a-z0-9-_]+$`), and deduped; an empty resulting set is a `400`.
+  Archive does `UPDATE status='archived' … WHERE slug = ANY($1)`; delete does
+  `DELETE … WHERE slug = ANY($1)`. The count-aware irreversibility confirmation for bulk-delete
+  (R4-F14) is enforced in the dashboard UI; the endpoint is the authorization + persistence boundary.
+
 **`parseRedirectPath` hardening**: the `redirectTo` validator rejects
 backslash-leading paths (`/\evil.com`) that browsers resolve off-site as
 `//evil.com` — regex `^\/(?![/\\])`. It also rejects any value containing a
