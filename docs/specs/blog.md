@@ -18,6 +18,13 @@ intentionally out and why.
 
 ## Authoring Model
 
+> **Blog V2 transition (in progress).** A V2 rollout is replacing this Markdown/`<textarea>` model
+> with a **TipTap WYSIWYG editor storing sanitized HTML** in `data.body` (ADR-009). The V2 sanitizer
+> (`STRICT_CONFIG_V2`, `app/src/lib/blog-html.ts`), editor island, and HTML-aware alt gate are merged
+> but **surface-inert** — the live authoring surface and the public render below remain Markdown until
+> the atomic cutover deploy (which converts the 6 posts, flips `renderPostBody`, and mounts the editor
+> together). This section describes the current live V1 model; it is rewritten at the cutover.
+
 - Posts are authored in **Markdown** in a plain `<textarea>` (not a WYSIWYG / rich-text editor).
 - Markdown is stored raw in the DB and rendered to sanitized HTML on every read (sanitize-at-render,
   never sanitize-at-write — the stored body is always treated as untrusted on the next render).

@@ -55,6 +55,16 @@ The bounded V2 delta — and what it deliberately does NOT add:
 
 AI output has **no privileged path**: it emits constrained HTML and flows through `validateBlogData` + the same `DOMPurify(STRICT_CONFIG_V2)` + render-time re-sanitization as human content.
 
+### As-built notes (Phase-1 implementation)
+
+These details surfaced during the build and are authoritative for the code (`app/src/lib/blog-html.ts`, `blog-editor-extensions.ts`); they refine, not change, the decision above:
+
+- **`ADD_URI_SAFE_ATTR` is required.** Setting `ALLOWED_URI_REGEXP` makes DOMPurify validate EVERY non-URI-safe attribute value against that regexp — which silently strips `colspan`/`rowspan`/`target`/`rel` (their values are not URIs). They are marked URI-safe via `ADD_URI_SAFE_ATTR: ['class','target','rel','colspan','rowspan']` so the regexp applies only to the true URI attributes (`href`/`src`); the `uponSanitizeAttribute` hook still restricts `class`/`target`/`rel` values. (`class` is URI-safe by default; listed for explicitness.) Verified `javascript:` is still stripped on `href`.
+- **`data:` is blocked in the hook, not by the regexp.** DOMPurify accepts `data:` on its default image tags (`img`/`source`/…) INDEPENDENTLY of `ALLOWED_URI_REGEXP`, so the regexp alone does not enforce the no-`data:` policy on images. The hook rejects `data:` on `src`/`href` — the one place the regexp cannot reach — and the editor's Image node sets `allowBase64:false` as defense-in-depth. (Not script-executable, but off-policy: inline blobs / off-allowlist image content.)
+- **The HTML alt walk is a dependency-free regex scan** over `<img>` tags (`collectHtmlImageAlts`), not a literal DOM walk — it runs in the node SSR runtime without a DOM dependency and is an advisory quality gate (the render-time sanitizer is the trust boundary). During the transition both the markdown-token and HTML walks run in `validateBlogData`; each no-ops on the representation it does not own.
+- **The sanitizer matrix runs in the vitest `node` environment.** vitest's default jsdom sanitizes some table-cell attributes differently than Netlify's node runtime, so the matrix is pinned to node to be production-faithful (`@tiptap/html` serializes via happy-dom there; the fixture corpus is generated from the real extension set — D1-F10).
+- **The editor is MOUNTED atomically in the cutover.** The island COMPONENT lands first (additive, mounted nowhere rendered, render unchanged), and is MOUNTED in the admin forms in the SAME deploy that converts the 6 posts, flips `renderPostBody`, and drops the "Write in Markdown" helptext. Everything that switches the body representation — data, render, authoring surface, helptext — flips in one deploy, so an HTML editor never coexists with a markdown render (or vice-versa).
+
 ## Consequences
 
 - **Easier**: Full WYSIWYG fidelity for every TipTap construct — underline, text-align, and tables are first-class, with no lossy serializer and no markdown-source toggle. What the owner authors is what is stored and rendered.
