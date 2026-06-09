@@ -1,0 +1,35 @@
+---
+import type { BlogPost } from '@lib/blog-content';
+
+interface Props {
+  posts: BlogPost[];
+}
+
+const { posts } = Astro.props;
+---
+
+{
+  posts.length > 0 && (
+    <section aria-labelledby="related-heading" class="mt-12 border-t border-stone-beige pt-8">
+      <h2
+        id="related-heading"
+        class="text-2xl font-heading font-semibold text-earth-brown mb-4 tracking-tight"
+      >
+        Related posts
+      </h2>
+      <ul class="space-y-4">
+        {posts.map(p => (
+          <li>
+            <a
+              href={`/blog/${p.slug}`}
+              class="text-forest-canopy underline hover:text-moss-green font-heading font-semibold"
+            >
+              {p.title}
+            </a>
+            {p.excerpt && <p class="text-sm text-earth-brown/80 mt-1">{p.excerpt}</p>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

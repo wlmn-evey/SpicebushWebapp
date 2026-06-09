@@ -130,6 +130,26 @@ test.describe('Blog V1 — public routes + SEO', () => {
     expect(metaContent(html, 'robots', 'name')?.toLowerCase()).toContain('index');
     expect(/<meta[^>]*name=["']googlebot["'][^>]*noindex/i.test(html)).toBe(false);
 
+    // PR3 post-page surfaces (render-present; the copy-link CLICK is client-JS, browser-only).
+    // Share section with NAMED anchors (R3-F23) + the copy-link button + its aria-live status region.
+    expect(html, 'share section heading').toContain('Share this post');
+    expect(html, 'named share anchor').toContain(
+      'aria-label="Share on Facebook (opens in a new tab)"'
+    );
+    expect(html, 'copy-link button').toContain('id="copy-link-btn"');
+    expect(/aria-live=["']polite["']/i.test(html), 'copy-link status is a polite live region').toBe(
+      true
+    );
+    // Related posts: the pinned post shares categories (Education/Nature/Programs) with others, so the
+    // section renders and links a DIFFERENT published post.
+    expect(html, 'related posts heading').toContain('Related posts');
+    expect(
+      /<a[^>]*href=["']\/blog\/(?!nurturing-growth-gardening-program)[a-z0-9-]+["']/i.test(html),
+      'related section links another post'
+    ).toBe(true);
+    // Post's own taxonomy chips (discovery parity with the index cards).
+    expect(html, 'taxonomy chips on post').toMatch(/href=["']\/blog\/category\/[a-z0-9-]+["']/i);
+
     // Same robots discipline on /blog index.
     const indexHtml = await (await request.get('/blog')).text();
     expect(metaContent(indexHtml, 'robots', 'name')?.toLowerCase()).toContain('index');

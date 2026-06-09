@@ -1,0 +1,47 @@
+---
+import { categoryHref, tagHref } from '@lib/blog-routes';
+
+interface Props {
+  categories?: string[];
+  tags?: string[];
+  class?: string;
+}
+
+const { categories = [], tags = [], class: className = '' } = Astro.props;
+---
+
+{
+  (categories.length > 0 || tags.length > 0) && (
+    <div class={`text-sm ${className}`.trim()}>
+      {categories.length > 0 && (
+        <p class="text-earth-brown/80">
+          <span class="font-semibold">Categories:</span>{' '}
+          {categories.map((cat, i) => (
+            <>
+              {i > 0 && <span aria-hidden="true">, </span>}
+              <a
+                href={categoryHref(cat)}
+                class="text-forest-canopy underline hover:text-moss-green"
+              >
+                {cat}
+              </a>
+            </>
+          ))}
+        </p>
+      )}
+      {tags.length > 0 && (
+        <p class="text-earth-brown/80 mt-1">
+          <span class="font-semibold">Tags:</span>{' '}
+          {tags.map((tag, i) => (
+            <>
+              {i > 0 && <span aria-hidden="true">, </span>}
+              <a href={tagHref(tag)} class="text-forest-canopy underline hover:text-moss-green">
+                {tag}
+              </a>
+            </>
+          ))}
+        </p>
+      )}
+    </div>
+  )
+}
