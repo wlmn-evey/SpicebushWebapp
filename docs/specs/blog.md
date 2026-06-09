@@ -303,15 +303,20 @@ Blog POSTs must carry `status ∈ {draft, published, scheduled, archived}` **exp
 four-state lifecycle, R2-F11). A missing / empty / whitespace-only / unknown status is rejected with
 `400` "Status must be Draft, Published, Scheduled, or Archived" — checked first, against the raw form
 value, before the endpoint's `status || 'published'` default (which never applies to blog). The admin
-form always submits a status, so owners never see this error. Phase-2 PR4 adds a DB
-`CHECK (status IN ('draft','published','scheduled','archived'))` as defense-in-depth behind this gate
-and behind the exact-match `WHERE status = 'published'` public read filter.
+form always submits a status, so owners never see this error. Migration `016_blog_status_check.sql`
+adds a **type-scoped** DB CHECK
+(`type <> 'blog' OR status IN ('draft','published','scheduled','archived')`) as defense-in-depth
+behind this gate and behind the exact-match `WHERE status = 'published'` public read filter — scoped
+to blog rows so the shared `content.status` column does not couple other content types to the blog
+lifecycle.
 
 - **`published`** — live on every public surface.
 - **`draft`** — exempt from the publish requirements below; invisible publicly.
 - **`scheduled`** — passes the FULL publish gate at SAVE time (R1-F1): it goes live unattended, so it
   must be publish-ready now AND carry a future `data.publishedAt`. Invisible publicly until the
-  every-5-min scheduled-publish cron (PR4) flips it to `published`.
+  every-5-min scheduled-publish cron flips it to `published`
+  (`netlify/functions/publish-scheduled-blog-posts.ts` → `blog-scheduled-publish.ts`; see
+  `docs/runbooks/scheduled-publish.md`).
 - **`archived`** — non-publishing (exempt like a draft) and **reversible**: round-trips back to
   `draft`/`published` through the normal save path (R4-F12), so it is never a one-way trip.
 
