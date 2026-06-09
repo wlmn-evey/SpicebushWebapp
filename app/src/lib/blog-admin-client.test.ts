@@ -280,6 +280,80 @@ describe('initBlogAdmin — scheduling (R1-F1 / R4-F1 / R2-F19)', () => {
   });
 });
 
+describe('initBlogAdmin — bulk actions (R4-F14)', () => {
+  /** Build a doc with the bulk toolbar form + N checkboxes, `checked` of them ticked. */
+  function buildBulkDoc(total: number, checked: number): Document {
+    const doc = document.implementation.createHTMLDocument('blog-bulk');
+    const form = doc.createElement('form');
+    form.setAttribute('data-bulk-blog-form', '');
+    for (const action of ['archive', 'delete']) {
+      const btn = doc.createElement('button');
+      btn.type = 'submit';
+      btn.setAttribute('data-bulk-action', action);
+      form.appendChild(btn);
+    }
+    doc.body.appendChild(form);
+    for (let i = 0; i < total; i += 1) {
+      const cb = doc.createElement('input');
+      cb.type = 'checkbox';
+      cb.name = 'slugs';
+      cb.value = `post-${i}`;
+      cb.checked = i < checked;
+      doc.body.appendChild(cb);
+    }
+    return doc;
+  }
+
+  const button = (doc: Document, action: string): HTMLButtonElement =>
+    doc.querySelector(`button[data-bulk-action="${action}"]`) as HTMLButtonElement;
+  const clickAndGetEvent = (btn: HTMLButtonElement): Event => {
+    const ev = new Event('click', { cancelable: true, bubbles: true });
+    btn.dispatchEvent(ev);
+    return ev;
+  };
+
+  it('blocks a bulk submit with zero selected (alert, no confirm, default prevented)', () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const doc = buildBulkDoc(3, 0);
+    initBlogAdmin(doc);
+
+    const ev = clickAndGetEvent(button(doc, 'delete'));
+    expect(ev.defaultPrevented).toBe(true);
+    expect(alertSpy).toHaveBeenCalledOnce();
+    expect(confirmSpy).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
+    confirmSpy.mockRestore();
+  });
+
+  it('bulk-delete confirms with a count-aware, irreversibility-naming message', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const doc = buildBulkDoc(5, 3);
+    initBlogAdmin(doc);
+
+    const ev = clickAndGetEvent(button(doc, 'delete'));
+    expect(confirmSpy).toHaveBeenCalledWith('Delete 3 posts? This cannot be undone.');
+    expect(ev.defaultPrevented).toBe(true); // cancelled → blocked
+    confirmSpy.mockRestore();
+  });
+
+  it('bulk-archive confirms with a count + uses singular for one post; confirming lets it through', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const doc = buildBulkDoc(2, 1);
+    initBlogAdmin(doc);
+
+    const ev = clickAndGetEvent(button(doc, 'archive'));
+    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Archive 1 post?'));
+    expect(ev.defaultPrevented).toBe(false); // confirmed → proceeds
+    confirmSpy.mockRestore();
+  });
+
+  it('is a no-op when there is no bulk form on the page', () => {
+    const doc = document.implementation.createHTMLDocument('no-bulk');
+    expect(() => initBlogAdmin(doc)).not.toThrow();
+  });
+});
+
 describe('initBlogAdmin — slug collision (add-form)', () => {
   it('sets custom validity + renders an inline alert when the slug collides', () => {
     const { doc } = buildDoc({ kind: 'add', status: 'draft' }, ['existing-post']);

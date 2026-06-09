@@ -347,6 +347,18 @@ would have silently published a scheduled/archived post on an untouched save. Sc
   overridable `confirm()` ("this publishes now, not at that time") so a future date never silently
   publishes-now. `archived` is selectable here and round-trips to Draft/Published via a normal save.
 
+#### Dashboard (`/admin/blog` list — keep-accordion, R3-F15 owner override)
+
+The list keeps the per-post `<details>` accordion edit forms (the owner chose this over a scannable
+table) and adds lifecycle management in place: posts are grouped into four sections (Published,
+Scheduled, Drafts, Archived); each row carries a four-state status badge and per-row quick actions —
+**Archive** (any non-archived) / **Restore to draft** (archived, R4-F12) — that POST the
+`action=archive`/`action=restore` endpoints. **Bulk** select uses a checkbox per row associated via
+`form="bulk-blog-form"` (HTML forbids nesting them in the per-post edit forms) and a toolbar whose
+Archive/Delete buttons POST `bulk-archive`/`bulk-delete`; the client adds a **count-aware,
+irreversibility-naming `confirm()`** ("Delete N posts? This cannot be undone.", R4-F14) and blocks an
+empty selection. Buttons carry `data-no-loading` so a cancelled confirm never leaves them disabled.
+
 #### Author byline (`resolveAuthorByline`) — R4-F9
 
 The display byline resolves as: `registry.get(author_ref)` when `data.author_type` + `data.author_ref`

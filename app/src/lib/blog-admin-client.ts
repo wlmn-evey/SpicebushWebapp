@@ -284,6 +284,43 @@ function initErrorFlashFocus(doc: Document): void {
   }
 }
 
+/**
+ * Bulk-action confirmation (R4-F14). The toolbar's Archive/Delete buttons carry the action; this
+ * adds a COUNT-AWARE, irreversibility-naming confirm on click (a static `data-confirm` can't count
+ * the live selection). Preventing the click's default stops the submit, so a cancelled confirm — or
+ * an empty selection — never POSTs. Runs on click (not the form's submit) so `event.submitter`
+ * support is not required, and uses `stopImmediatePropagation` on cancel so the shared loading-state
+ * handler cannot disable the button after a cancel (belt-and-suspenders with `data-no-loading`).
+ */
+function initBulkActions(doc: Document): void {
+  const bulkForm = doc.querySelector('[data-bulk-blog-form]');
+  if (!(bulkForm instanceof HTMLFormElement)) return;
+
+  const countChecked = (): number => doc.querySelectorAll('input[name="slugs"]:checked').length;
+
+  bulkForm.querySelectorAll('button[data-bulk-action]').forEach(button => {
+    button.addEventListener('click', event => {
+      const action = button instanceof HTMLElement ? button.dataset.bulkAction : '';
+      const count = countChecked();
+      if (count === 0) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        window.alert('Tick the box next to at least one post first.');
+        return;
+      }
+      const noun = count === 1 ? 'post' : 'posts';
+      const message =
+        action === 'delete'
+          ? `Delete ${count} ${noun}? This cannot be undone.`
+          : `Archive ${count} ${noun}? They will be hidden from the public but kept — you can restore them.`;
+      if (!window.confirm(message)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    });
+  });
+}
+
 export function initBlogAdmin(doc: Document = document): void {
   const forms = doc.querySelectorAll('[data-blog-form]');
   forms.forEach(form => {
@@ -296,5 +333,6 @@ export function initBlogAdmin(doc: Document = document): void {
     }
   });
 
+  initBulkActions(doc);
   initErrorFlashFocus(doc);
 }
