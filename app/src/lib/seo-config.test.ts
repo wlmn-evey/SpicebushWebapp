@@ -197,6 +197,27 @@ describe('seo config helpers', () => {
       });
     };
 
+    // The site-wide kill switch — the other (more catastrophic) hard-noindex source besides a
+    // per-page override.
+    const mockKillSwitchConfig = () => {
+      getSettingMock.mockImplementation(async (key: string) => {
+        if (key === SEO_GLOBAL_KEY) {
+          return {
+            defaultTitle: 'Spicebush Montessori School',
+            titleSuffix: 'Spicebush',
+            defaultDescription: 'Default description',
+            defaultKeywords: 'default, keywords',
+            ogImageUrl: '/default-og.png',
+            twitterCard: 'summary_large_image',
+            siteNoIndex: true,
+            robotsDisallowPaths: []
+          };
+        }
+        if (key === SEO_PAGE_OVERRIDES_KEY) return {};
+        return null;
+      });
+    };
+
     const resolve = (overrides: { pathname?: string; softNoIndex?: boolean } = {}) =>
       resolveSeoMetadata({
         pathname: overrides.pathname ?? '/blog/page/2',
@@ -228,6 +249,14 @@ describe('seo config helpers', () => {
     it('INVERSE: a hard per-page noindex BEATS a soft request — stays noindex,nofollow', async () => {
       mockHardOverrideConfig();
       const metadata = await resolve({ pathname: '/blog', softNoIndex: true });
+      expect(metadata.noIndex).toBe(true);
+      expect(metadata.robotsContent).toBe('noindex, nofollow');
+      expect(metadata.googlebotContent).toBe('noindex, nofollow');
+    });
+
+    it('INVERSE: the site-wide kill switch BEATS a soft request — stays noindex,nofollow', async () => {
+      mockKillSwitchConfig();
+      const metadata = await resolve({ softNoIndex: true });
       expect(metadata.noIndex).toBe(true);
       expect(metadata.robotsContent).toBe('noindex, nofollow');
       expect(metadata.googlebotContent).toBe('noindex, nofollow');

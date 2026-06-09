@@ -340,7 +340,14 @@ curl -s "$SITE/blog" | grep -E 'name="robots"|googlebot'        # index,follow; 
 #     (added in PR2): robots="noindex, follow" AND googlebot="noindex, follow".
 #   • Hard noindex (site-wide kill switch or a per-page DB override): both tags "noindex, nofollow".
 # INVERSE spot-check — a known hard-noindex NON-blog page must STILL be hard noindex after the
-# refactor (proves googlebotContent didn't weaken hard noindex anywhere site-wide):
+# refactor (proves googlebotContent didn't weaken hard noindex anywhere site-wide).
+# PRECONDITION: this proves something only if the target is genuinely hard-noindex in prod RIGHT NOW.
+# /contact-success was verified hard-noindex (both tags "noindex, nofollow") at PR1b time, but that
+# rests on a per-page override row in the prod SEO config (set in /admin/seo), NOT on committed code —
+# so confirm the row still exists, OR substitute any page you know carries a saved hard-noindex
+# override. Note `grep` prints nothing AND exits 0 on a miss, so empty output ≠ pass: you must SEE
+# both "noindex, nofollow" lines. If the page now renders "index, follow", the override was removed —
+# that's a config drift, not a refactor regression.
 curl -s "$SITE/contact-success" | grep -E 'name="robots"|googlebot'  # BOTH "noindex, nofollow"
 # Soft spot-check (once PR2 routes ship) — a tag filter or page ≥2 must be crawl-but-don't-index:
 curl -s "$SITE/blog/tag/montessori" | grep -E 'name="robots"|googlebot'  # BOTH "noindex, follow"
