@@ -28,6 +28,8 @@ export type BlogPost = {
   status: string;
   /** Precise scheduled-publish instant (ISO-8601 w/ zone) for `status='scheduled'` posts (R4-F1). */
   publishedAt?: string;
+  /** Raw `content.updated_at` (Postgres format) for JSON-LD `dateModified` (R3-F18); normalize on use. */
+  updatedAt?: string;
   categories?: string[];
   tags?: string[];
   readingTime?: number;
@@ -146,6 +148,7 @@ function mapEntryToBlogPost(entry: ContentEntry): BlogPost | null {
     seoDescription: emptyToUndefined(asTrimmedString(data.seoDescription)),
     status: 'published',
     publishedAt: emptyToUndefined(asTrimmedString(data.publishedAt)),
+    updatedAt: emptyToUndefined(asTrimmedString(entry.updatedAt)),
     categories: asStringArray(data.categories),
     tags: asStringArray(data.tags),
     // Prefer the value stored on save; fall back to computing from the body so the 6 legacy posts
@@ -706,4 +709,75 @@ export function renderBlogRssXml(posts: BlogPost[], origin: string): string {
     '  </channel>',
     '</rss>'
   ].join('\n');
+}
+
+// Publisher logo for Article structured data — the same brand asset the SEO fallback OG uses.
+const PUBLISHER_LOGO_PATH = '/SpicebushLogo-03.png';
+const PUBLISHER_NAME = 'Spicebush Montessori School';
+// schema.org `headline` SHOULD be ≤110 chars (Google truncates beyond ~110); clamp from the TITLE,
+// never the 160-cap `seoTitle` (R4-F17).
+const JSONLD_HEADLINE_MAX = 110;
+
+/**
+ * Best-effort ISO-8601 from a possibly Postgres-format (`2024-05-20 16:04:05+00`, space not `T`) or
+ * `Date`-stringified value; `null` when unparseable. JSON-LD dates must be ISO-8601, and the DB
+ * driver's `updated_at` shape is not guaranteed, so normalize at the point of use (R3-F18).
+ */
+export function isoOrNull(value: string | undefined): string | null {
+  if (typeof value !== 'string' || value.length === 0) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
+/**
+ * Serialize an object for safe embedding in an inline `<script type="application/ld+json">` (R1-F29).
+ * `JSON.stringify` (NEVER `escapeXml`, which would corrupt the JSON), then neutralize the only chars
+ * that can break out of a `<script>` element (`<` → `</script>`/`<!--`) or a JS string literal
+ * (U+2028/U+2029). These never appear as JSON STRUCTURAL characters, so the result still
+ * `JSON.parse`s back to the original object.
+ */
+export function serializeJsonLd(obj: unknown): string {
+  return JSON.stringify(obj).replace(
+    /[<>&\u2028\u2029]/g,
+    ch => `\\u${ch.charCodeAt(0).toString(16).padStart(4, '0')}`
+  );
+}
+
+/**
+ * Build the schema.org `BlogPosting` JSON-LD for a post, serialized inline-script-safe. `headline` is
+ * clamped to ≤110 chars FROM THE TITLE (R4-F17). `datePublished` is the post date at noon UTC;
+ * `dateModified` is the normalized `updated_at`, falling back to `datePublished` (R3-F18). `image`
+ * (absolutized) is included only when the post has a featured image. `author`/`publisher` are
+ * Organizations (the live byline is the school team, not a person).
+ */
+export function buildArticleJsonLd(post: BlogPost, origin: string): string {
+  const url = `${origin}/blog/${post.slug}`;
+  const headline =
+    post.title.length <= JSONLD_HEADLINE_MAX
+      ? post.title
+      : `${post.title.slice(0, JSONLD_HEADLINE_MAX - 1)}…`;
+  const datePublished = isoOrNull(post.date ? `${post.date}T12:00:00Z` : undefined);
+  const dateModified = isoOrNull(post.updatedAt) ?? datePublished;
+
+  const jsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    url,
+    description: post.seoDescription || post.excerpt,
+    author: { '@type': 'Organization', name: post.author },
+    publisher: {
+      '@type': 'Organization',
+      name: PUBLISHER_NAME,
+      logo: { '@type': 'ImageObject', url: `${origin}${PUBLISHER_LOGO_PATH}` }
+    }
+  };
+  if (datePublished) jsonLd.datePublished = datePublished;
+  if (dateModified) jsonLd.dateModified = dateModified;
+  if (post.image) {
+    jsonLd.image = /^https?:\/\//.test(post.image) ? post.image : `${origin}${post.image}`;
+  }
+
+  return serializeJsonLd(jsonLd);
 }

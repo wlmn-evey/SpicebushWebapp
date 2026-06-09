@@ -6,8 +6,10 @@ import TaxonomyChips from '@components/blog/TaxonomyChips.astro';
 import ShareButtons from '@components/blog/ShareButtons.astro';
 import RelatedPosts from '@components/blog/RelatedPosts.astro';
 import {
+  buildArticleJsonLd,
   getPublishedPost,
   getPublishedPosts,
+  isoOrNull,
   resolveLegacyBlogRedirect,
   renderPostBody
 } from '@lib/blog-content';
@@ -41,6 +43,11 @@ const relatedPosts = getRelatedPosts(post, allPosts, 3);
 const siteOrigin = resolveSiteOrigin(Astro.site);
 const postUrl = new URL(`/blog/${post.slug}`, siteOrigin).href;
 
+// Article structured data (R1-F29) + the OG modified-time (R3-F18), both normalized to ISO-8601.
+const articleJsonLd = buildArticleJsonLd(post, siteOrigin);
+const modifiedTime =
+  isoOrNull(post.updatedAt) ?? (post.date ? `${post.date}T12:00:00Z` : undefined);
+
 const formatDate = (date: string | undefined): string | null => {
   if (!date) return null;
   const parsed = new Date(date);
@@ -64,6 +71,9 @@ const bodyHtml = renderPostBody(post.body);
   ogImage={post.image ? new URL(post.image, siteOrigin).href : undefined}
   ogImageAlt={post.imageAlt}
   publishedTime={post.date ? `${post.date}T12:00:00Z` : undefined}
+  modifiedTime={modifiedTime}
+  jsonLd={articleJsonLd}
+  feedUrl="/blog/rss.xml"
 >
   <Header />
 

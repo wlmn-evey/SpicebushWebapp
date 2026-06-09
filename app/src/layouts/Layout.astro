@@ -16,6 +16,15 @@ export interface Props {
   ogImageAlt?: string;
   ogType?: string;
   publishedTime?: string;
+  /** ISO `article:modified_time` OG tag (post pages — pairs with `publishedTime`). */
+  modifiedTime?: string;
+  /**
+   * Pre-serialized, inline-script-safe JSON-LD (e.g. `buildArticleJsonLd`). Rendered as an additional
+   * `application/ld+json` block ALONGSIDE the site-wide organization block (R2-F24).
+   */
+  jsonLd?: string;
+  /** RSS feed URL for an auto-discovery `<link rel="alternate">` (blog pages). */
+  feedUrl?: string;
   /**
    * Request a soft `noindex, follow` for thin/duplicate routes (paginated lists, tag filters,
    * below-threshold category pages). Defaults to `'index'`; a hard noindex (site-wide kill switch or
@@ -33,6 +42,9 @@ const {
   ogImageAlt,
   ogType = 'website',
   publishedTime,
+  modifiedTime,
+  jsonLd,
+  feedUrl,
   robots = 'index'
 } = Astro.props;
 
@@ -72,6 +84,7 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
     <link rel="canonical" href={canonicalURL} />
     <meta name="robots" content={seoMetadata.robotsContent} />
     {seoMetadata.googlebotContent && <meta name="googlebot" content={seoMetadata.googlebotContent} />}
+    {feedUrl && <link rel="alternate" type="application/rss+xml" title="Spicebush Montessori Blog" href={feedUrl} />}
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content={ogType} />
@@ -81,6 +94,7 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
     <meta property="og:image" content={resolvedOgImage} />
     {ogImage && ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
     {ogType === 'article' && publishedTime && <meta property="article:published_time" content={publishedTime} />}
+    {ogType === 'article' && modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
 
     <!-- Twitter -->
     <meta property="twitter:card" content={seoMetadata.twitterCard} />
@@ -122,6 +136,10 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
         }
       }
     </script>
+
+    {/* Per-page structured data (e.g. blog Article), alongside the org block. Already serialized
+        inline-script-safe by `serializeJsonLd` (R1-F29/R2-F24). */}
+    {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
 
     {shouldLoadGaScript && (
       <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaMeasurementId)}`}></script>

@@ -22,9 +22,12 @@ vi.mock('@lib/db/client', () => ({
 import type { ContentEntry } from '@lib/db/types';
 import {
   blogPostToEditData,
+  buildArticleJsonLd,
   compareBlogPosts,
   computeReadingTime,
   escapeXml,
+  isoOrNull,
+  serializeJsonLd,
   getManagedBlogPosts,
   getPublishedPosts,
   normalizeBlogData,
@@ -1016,6 +1019,97 @@ describe('renderBlogRssXml (R1-F30)', () => {
     expect(xml).toContain('<channel>');
     expect((xml.match(/<item>/g) ?? []).length).toBe(0);
     expect(xml.trimEnd().endsWith('</rss>')).toBe(true);
+  });
+});
+
+describe('isoOrNull (R3-F18)', () => {
+  it('normalizes a Postgres-format timestamp (space, not T) to ISO-8601', () => {
+    expect(isoOrNull('2026-06-09 04:32:05.960997+00')).toBe('2026-06-09T04:32:05.960Z');
+  });
+
+  it('passes through an already-ISO value', () => {
+    expect(isoOrNull('2024-05-20T12:00:00Z')).toBe('2024-05-20T12:00:00.000Z');
+  });
+
+  it('returns null for empty/undefined/unparseable', () => {
+    expect(isoOrNull('')).toBeNull();
+    expect(isoOrNull(undefined)).toBeNull();
+    expect(isoOrNull('not-a-date')).toBeNull();
+  });
+});
+
+describe('serializeJsonLd (R1-F29 inline-script safety)', () => {
+  it('escapes <, >, & so the JSON cannot break out of a <script> element', () => {
+    const out = serializeJsonLd({ a: '</script><b>&' });
+    expect(out).not.toContain('</script>');
+    expect(out).not.toContain('<b>');
+    expect(out).toContain('\\u003c'); // <
+    expect(out).toContain('\\u003e'); // >
+    expect(out).toContain('\\u0026'); // &
+  });
+
+  it('round-trips back to the original object via JSON.parse (escapes are JSON-valid)', () => {
+    const obj = { headline: 'Tom & Jerry </script> <b>', n: 1, nested: { x: ['<a>'] } };
+    expect(JSON.parse(serializeJsonLd(obj))).toEqual(obj);
+  });
+
+  it('escapes the U+2028/U+2029 line separators that break inline scripts', () => {
+    const out = serializeJsonLd({ a: String.fromCharCode(0x2028, 0x2029) });
+    expect(out).toContain('\\u2028');
+    expect(out).toContain('\\u2029');
+  });
+});
+
+describe('buildArticleJsonLd (R1-F29 / R3-F18 / R4-F17)', () => {
+  const origin = 'https://spicebushmontessori.org';
+
+  it('emits a valid BlogPosting with required schema.org fields that JSON.parse round-trips', () => {
+    const post = makePost({
+      slug: 'gardening',
+      title: 'Our Gardening Program',
+      excerpt: 'Excerpt',
+      date: '2024-05-20',
+      updatedAt: '2026-06-09 04:32:05.96+00'
+    });
+    const parsed = JSON.parse(buildArticleJsonLd(post, origin));
+    expect(parsed['@context']).toBe('https://schema.org');
+    expect(parsed['@type']).toBe('BlogPosting');
+    expect(parsed.headline).toBe('Our Gardening Program');
+    expect(parsed.url).toBe(`${origin}/blog/gardening`);
+    expect(parsed.mainEntityOfPage['@id']).toBe(`${origin}/blog/gardening`);
+    expect(parsed.author).toEqual({ '@type': 'Organization', name: 'Spicebush Team' });
+    expect(parsed.publisher['@type']).toBe('Organization');
+    expect(parsed.publisher.logo.url).toBe(`${origin}/SpicebushLogo-03.png`);
+    expect(parsed.datePublished).toBe('2024-05-20T12:00:00.000Z');
+    // dateModified is the NORMALIZED updated_at (R3-F18), not the raw Postgres string.
+    expect(parsed.dateModified).toBe('2026-06-09T04:32:05.960Z');
+  });
+
+  it('falls back dateModified to datePublished when updated_at is absent', () => {
+    const parsed = JSON.parse(buildArticleJsonLd(makePost({ date: '2024-05-20' }), origin));
+    expect(parsed.dateModified).toBe(parsed.datePublished);
+  });
+
+  it('clamps headline to <=110 chars from the TITLE, not the 160-cap seoTitle (R4-F17)', () => {
+    const longTitle = 'A'.repeat(150);
+    const post = makePost({ title: longTitle, seoTitle: 'B'.repeat(160) });
+    const parsed = JSON.parse(buildArticleJsonLd(post, origin));
+    expect(parsed.headline.length).toBe(110);
+    expect(parsed.headline.startsWith('A')).toBe(true); // from title, never seoTitle
+    expect(parsed.headline.endsWith('…')).toBe(true);
+  });
+
+  it('includes an absolutized image only when the post has a featured image', () => {
+    const withImg = JSON.parse(
+      buildArticleJsonLd(makePost({ image: '/images/blog/x.webp' }), origin)
+    );
+    expect(withImg.image).toBe(`${origin}/images/blog/x.webp`);
+    const httpsImg = JSON.parse(
+      buildArticleJsonLd(makePost({ image: 'https://cdn.example.com/x.webp' }), origin)
+    );
+    expect(httpsImg.image).toBe('https://cdn.example.com/x.webp');
+    const noImg = JSON.parse(buildArticleJsonLd(makePost({ image: undefined }), origin));
+    expect('image' in noImg).toBe(false);
   });
 });
 

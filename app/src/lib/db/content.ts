@@ -48,7 +48,11 @@ const toContentEntry = (row: ContentRow): ContentEntry => {
     slug: row.slug,
     collection: row.type,
     data: mergedData,
-    body: bodyValue
+    body: bodyValue,
+    // Raw passthrough (not normalized here — the generic layer stays generic; the blog JSON-LD
+    // normalizes to ISO at the point of use). Coerce to string so a driver that hands back a `Date`
+    // still round-trips through `new Date(...)`. `undefined` when the row/mock omits it.
+    updatedAt: row.updated_at != null ? String(row.updated_at) : undefined
   };
 };
 

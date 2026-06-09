@@ -638,6 +638,28 @@ with no googlebot-noindex tag on `/blog` and post pages.
 - `robots.txt` appends `Sitemap: {origin}/sitemap-blog.xml`. Search Console submission is the
   recovery mechanism for the unwound 301s.
 
+### Feeds & structured data (Phase 4)
+
+- **RSS feed** — `/blog/rss.xml` (`app/src/pages/blog/rss.xml.ts`, `prerender = false`; the static
+  path wins over `/blog/[slug]`). `getPublishedPosts()` → `renderBlogRssXml(posts, origin)` → RSS 2.0
+  with an `atom:self` link, one `<item>` per post (title, link, permalink `<guid>`, excerpt
+  `<description>`, RFC-822 `<pubDate>` from `toRfc822Date` at noon UTC), all XML-escaped.
+  `<lastBuildDate>` is the newest post's date (deterministic, no `Date.now()`). Auto-discovered via a
+  `<link rel="alternate" type="application/rss+xml">` in the blog `<head>` (Layout `feedUrl` prop).
+- **JSON-LD Article** — each post page emits a `BlogPosting` block (`buildArticleJsonLd(post, origin)`)
+  ALONGSIDE the site-wide `EducationalOrganization` block (R2-F24), via the Layout `jsonLd` prop.
+  Serialized with `serializeJsonLd` = `JSON.stringify` + `<`/`>`/`&`/U+2028/U+2029 → `\uXXXX`
+  (inline-`<script>`-safe, NOT `escapeXml`; round-trips through `JSON.parse` — R1-F29). `headline` is
+  clamped ≤110 chars from the **title** (never the 160-cap `seoTitle` — R4-F17); `datePublished` =
+  post date at noon UTC; `dateModified` = the normalized `updated_at` (`isoOrNull`, falling back to
+  `datePublished` — R3-F18); `image` (absolutized) only when a featured image exists; `author` and
+  `publisher` are Organizations. A paired `article:modified_time` OG tag uses the same value.
+- **`updated_at` plumbing (R3-F18)** — `content.updated_at` is carried through the generic
+  `toContentEntry` as `ContentEntry.updatedAt` (raw passthrough; the DB driver's format is not
+  guaranteed) and surfaced as `BlogPost.updatedAt`; ISO normalization happens only at the JSON-LD
+  point of use. The 6 legacy posts' `updated_at` reflects the cutover date, so their `dateModified`
+  is the cutover instant (semantically correct — the body was rewritten then).
+
 ### Legacy URL preservation
 
 Three layers preserve historical URLs: (1) the six clean slugs restore the Markdown-era URLs; (2) the
