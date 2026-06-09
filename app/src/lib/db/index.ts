@@ -44,6 +44,7 @@ import {
   updateScheduleException,
   deleteScheduleException
 } from './announcements';
+import { getActiveTickerItems, getTickerEnabled } from './ticker';
 
 export const db = {
   content: {
@@ -101,6 +102,10 @@ export const db = {
     createScheduleException,
     updateScheduleException,
     deleteScheduleException
+  },
+  ticker: {
+    getActiveTickerItems,
+    getTickerEnabled
   },
   raw: {
     getPublicClient,
@@ -160,4 +165,5 @@ export {
   updateScheduleException,
   deleteScheduleException
 } from './announcements';
+export { getActiveTickerItems, getTickerEnabled, type TickerItem } from './ticker';
 export { getPublicClient, getServiceClient, withServiceClient } from './client';
