@@ -26,6 +26,7 @@ import {
   compareBlogPosts,
   computeReadingTime,
   escapeXml,
+  getBlogPostViewCounts,
   isoOrNull,
   serializeJsonLd,
   getManagedBlogPosts,
@@ -1199,5 +1200,65 @@ describe('resolveLegacyBlogRedirect', () => {
   it('returns null for a non-date-prefixed slug without querying', async () => {
     expect(await resolveLegacyBlogRedirect('regular-slug')).toBeNull();
     expect(getEntryMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('getBlogPostViewCounts (Phase 5, R1-F13/R3-F3)', () => {
+  it('aggregates page_view counts by slug, constrained to /blog/{slug} for the given slugs', async () => {
+    queryRowsMock.mockResolvedValueOnce([
+      { page_path: '/blog/first', views: 42 },
+      { page_path: '/blog/second', views: 7 }
+    ]);
+    const counts = await getBlogPostViewCounts(['first', 'second', 'third']);
+    expect(counts.get('first')).toBe(42);
+    expect(counts.get('second')).toBe(7);
+    expect(counts.get('third')).toBe(0); // requested but no events → 0
+    // The SQL constraint is the trust boundary: it queries page_path = ANY([/blog/first, ...]).
+    const [, params] = queryRowsMock.mock.calls[0];
+    expect(params[0]).toEqual(['/blog/first', '/blog/second', '/blog/third']);
+    expect(queryRowsMock.mock.calls[0][0]).toContain("event_name = 'page_view'");
+    expect(queryRowsMock.mock.calls[0][0]).toContain('page_path = ANY($1)');
+  });
+
+  it('does NOT count a fabricated /blog/<phantom> row outside the requested set (R3-F3)', async () => {
+    // Even if the DB returned a phantom row, the map only has the requested slugs.
+    queryRowsMock.mockResolvedValueOnce([
+      { page_path: '/blog/real', views: 5 },
+      { page_path: '/blog/phantom', views: 9999 }
+    ]);
+    const counts = await getBlogPostViewCounts(['real']);
+    expect(counts.get('real')).toBe(5);
+    expect(counts.has('phantom')).toBe(false);
+    expect([...counts.keys()]).toEqual(['real']);
+  });
+
+  it('charset-filters and de-dupes input slugs before querying', async () => {
+    queryRowsMock.mockResolvedValueOnce([]);
+    const counts = await getBlogPostViewCounts(['ok-slug', 'Bad Slug!', '../etc', 'ok-slug']);
+    expect([...counts.keys()]).toEqual(['ok-slug']); // invalid dropped, dup collapsed
+    const [, params] = queryRowsMock.mock.calls[0];
+    expect(params[0]).toEqual(['/blog/ok-slug']);
+  });
+
+  it('returns an empty map and skips the query for no usable slugs', async () => {
+    const counts = await getBlogPostViewCounts([]);
+    expect(counts.size).toBe(0);
+    expect(queryRowsMock).not.toHaveBeenCalled();
+
+    const onlyBad = await getBlogPostViewCounts(['Bad!', '']);
+    expect(onlyBad.size).toBe(0);
+    expect(queryRowsMock).not.toHaveBeenCalled();
+  });
+
+  it('coerces string/zero/negative counts to a non-negative integer', async () => {
+    queryRowsMock.mockResolvedValueOnce([
+      { page_path: '/blog/a', views: '13' },
+      { page_path: '/blog/b', views: 0 },
+      { page_path: '/blog/c', views: -4 }
+    ]);
+    const counts = await getBlogPostViewCounts(['a', 'b', 'c']);
+    expect(counts.get('a')).toBe(13);
+    expect(counts.get('b')).toBe(0);
+    expect(counts.get('c')).toBe(0); // negative coerced to 0
   });
 });

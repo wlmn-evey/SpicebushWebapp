@@ -398,6 +398,16 @@ Archive/Delete buttons POST `bulk-archive`/`bulk-delete`; the client adds a **co
 irreversibility-naming `confirm()`** ("Delete N posts? This cannot be undone.", R4-F14) and blocks an
 empty selection. Buttons carry `data-no-loading` so a cancelled confirm never leaves them disabled.
 
+**Per-post view counts (Phase 5, R1-F13/R3-F3).** Each PUBLISHED post's summary shows an
+approximate "N views" badge from `getBlogPostViewCounts(publishedSlugs)`, which aggregates
+`event_name = 'page_view'` rows from the EXISTING `analytics_events` table — **no new schema**. The
+count is **constrained in SQL to `/blog/{slug}` for the published slugs** (`page_path = ANY($1)`), so a
+fabricated `/blog/<phantom>` event row is never counted (R3-F3); the SQL constraint is the trust
+boundary. Only published posts have a public page, so only they carry the badge. The rendered value is
+a NUMBER (Astro auto-escaped) — no raw `page_path` is ever rendered, so there is no hostile-string
+surface. Counts are labelled **best-effort/forgeable** (a `title` tooltip notes they can be over- or
+under-counted) — client-fired analytics, not an authoritative figure.
+
 #### Author byline (`resolveAuthorByline`) — R4-F9
 
 The display byline resolves as: `registry.get(author_ref)` when `data.author_type` + `data.author_ref`
