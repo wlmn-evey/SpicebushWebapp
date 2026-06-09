@@ -24,7 +24,7 @@ const isSection = variant === 'section';
           ? 'border-y border-stone-beige bg-cloud-gray/40'
           : 'border-b border-stone-beige bg-cloud-gray/50'
       ]}
-      aria-label="News ticker"
+      aria-label={isSection ? 'News highlights' : 'News ticker'}
       aria-roledescription="carousel"
     >
       <div
@@ -63,11 +63,12 @@ const isSection = variant === 'section';
             >
               ‹
             </button>
+            {/* Action button (NOT a toggle): the label states the action and changes Pause↔Play —
+                no aria-pressed, per the WAI-ARIA carousel/rotation-control pattern. */}
             <button
               type="button"
               class="ticker-pause rounded border border-stone-beige px-2 py-1 text-earth-brown hover:bg-white"
               aria-label="Pause news ticker"
-              aria-pressed="false"
             >
               <span class="ticker-pause-icon">⏸</span>
               <span class="ticker-play-icon hidden">▶</span>
@@ -106,6 +107,8 @@ const isSection = variant === 'section';
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let index = 0;
     let playing = !reduced; // reduced-motion: do NOT auto-advance (R1-F32); nav still works
+    let hovered = false;
+    let focused = false;
     let timer: ReturnType<typeof setInterval> | null = null;
 
     const show = (next: number) => {
@@ -120,16 +123,16 @@ const isSection = variant === 'section';
         timer = null;
       }
     };
-    const startTimer = () => {
+    // Resume ONLY when playing AND neither pause source (hover, focus) is active — so a mouse leaving
+    // while a ticker link is still keyboard-focused does not yank the rotation out from under the user.
+    const refreshTimer = () => {
       stopTimer();
-      if (playing) timer = setInterval(() => show(index + 1), ROTATE_MS);
+      if (playing && !hovered && !focused) timer = setInterval(() => show(index + 1), ROTATE_MS);
     };
 
     const reflectState = () => {
-      if (pauseBtn) {
-        pauseBtn.setAttribute('aria-pressed', String(!playing));
-        pauseBtn.setAttribute('aria-label', playing ? 'Pause news ticker' : 'Play news ticker');
-      }
+      // Action button (not a toggle): only the label/icon change — no aria-pressed (carousel pattern).
+      pauseBtn?.setAttribute('aria-label', playing ? 'Pause news ticker' : 'Play news ticker');
       pauseIcon?.classList.toggle('hidden', !playing);
       playIcon?.classList.toggle('hidden', playing);
       // State-dependent live region: silent while auto-advancing, polite when stopped (R3-F20).
@@ -139,7 +142,7 @@ const isSection = variant === 'section';
     const setPlaying = (value: boolean) => {
       playing = value;
       reflectState();
-      startTimer();
+      refreshTimer();
     };
 
     pauseBtn?.addEventListener('click', () => setPlaying(!playing));
@@ -152,14 +155,27 @@ const isSection = variant === 'section';
       show(index + 1);
     });
 
-    // Pause-on-focus / hover so a reader/keyboard user isn't raced.
-    root.addEventListener('focusin', stopTimer);
-    root.addEventListener('focusout', startTimer);
-    root.addEventListener('mouseenter', stopTimer);
-    root.addEventListener('mouseleave', startTimer);
+    // Pause-on-focus / hover so a reader/keyboard user isn't raced. Tracked independently so one
+    // source releasing doesn't resume while the other is still active.
+    root.addEventListener('focusin', () => {
+      focused = true;
+      refreshTimer();
+    });
+    root.addEventListener('focusout', () => {
+      focused = false;
+      refreshTimer();
+    });
+    root.addEventListener('mouseenter', () => {
+      hovered = true;
+      refreshTimer();
+    });
+    root.addEventListener('mouseleave', () => {
+      hovered = false;
+      refreshTimer();
+    });
 
     reflectState();
-    startTimer();
+    refreshTimer();
   };
 
   const tickers = document.querySelectorAll<HTMLElement>('.js-ticker');
