@@ -368,6 +368,26 @@ legacy `data.author` string (default `'Spicebush Team'`). The 6 live posts carry
 byte-for-byte (6-byline regression test). Ordering tiebreak: posts sharing a calendar `date` order by
 `data.publishedAt` DESC before the slug tiebreak (R1-F17), a no-op for legacy posts that carry none.
 
+### Public discovery helpers (`blog-discovery.ts`) — Phase 3
+
+Pure functions over the already-published, already-sorted `BlogPost[]`:
+
+- **Taxonomy canonicalization (R1-F3).** `taxonomySlug(label)` slugifies a free-text category/tag
+  (lowercase → hyphenate spaces → strip to `[a-z0-9-]` → collapse/trim hyphens). `buildTaxonomy`
+  groups posts by slug — variant spellings collapse to one group; a post counts once per slug — and
+  picks the display label by a stable **collision rule**: most frequent raw label, ties alphabetical.
+  Taxonomy is canonicalized on read, never rejected.
+- **Category index threshold (R1-F31).** `indexableCategories` keeps categories with
+  `≥ CATEGORY_INDEX_THRESHOLD` (= 2) members; below that a category route renders `noindex` (thin
+  content). Category routes are PATH segments `/blog/category/[slug]` (R4-F15). Tags are a click-filter
+  and `noindex` (R1-F21) — never sitemapped index routes.
+- **Pagination (R3-F19 / R4-F10).** `paginate(items, page, BLOG_PAGE_SIZE)` with `BLOG_PAGE_SIZE` = 10
+  (≥10 so the 6-post corpus is a single page — `/blog` shows all 6). An out-of-range / non-integer
+  page is flagged `isValidPage:false` (the route 404s) while still returning a clamped renderable page;
+  a one-page list reports no prev/next.
+- **Related posts.** `getRelatedPosts(post, all, limit)` ranks other posts by shared category/tag
+  count, then input (recency) order; excludes self and zero-overlap; a post with no taxonomy gets none.
+
 ### Validation rules (`validateBlogData`)
 
 - **Always:** explicit status (checked first); valid slug (`^[a-z0-9-_]{1,100}$` AND not
