@@ -723,6 +723,61 @@ redirect entries.
 - No in-page anchors (heading anchors are not a feature).
 - Heading hierarchy is normalized in the renderer (h1→h2 demotion + skip clamp), keeping every legal
   owner save within the heading-hierarchy CI assertion.
+- **Skip-to-main link (R4-F18)** — `Header.astro` renders a `Skip to main content` link as the first
+  focusable element, visually hidden (`.sr-only`) until focused, targeting `#main-content` (present on
+  every page that renders the shared `Header`). It lets keyboard/SR users bypass the header chrome
+  (including the ticker strip + its controls). Explicit `focus:` styles ensure it shows regardless of
+  the global `.sr-only` override (`focus:not-sr-only` wins on specificity; `focus:fixed` avoids shift).
+
+## Ticker (Phase 6)
+
+A rotating "News" strip the owner controls from `/admin/ticker`. **Ships OFF and inert** — nothing
+renders publicly until the owner adds items **and** enables it.
+
+### Storage & reads
+
+- **No table.** Two `settings` JSONB keys: `ticker_items` (a `TickerItem[]`) and `ticker_enabled`
+  (bool, default `false`). Reorder is array index order — no `sort_order` column.
+- `TickerItem` = `{ text, href?, expiresAt?, type? }`. `type` (`info|event|closure`) is organisation
+  metadata only — **not rendered publicly** (decision D5=A — sidesteps WCAG 1.4.1 color-coding,
+  R4-F20); a future PR could surface it as an icon+label indicator.
+- **5-minute TTL (R4-F11).** `getActiveTickerItems` / `getTickerEnabled` read via
+  `getSetting(key, 5*60*1000)` — never `getAllSettings()` (whose `setting:all` blob caches 30 min and
+  whose per-key cache ignores `maxAge`). So the ticker is no staler than the 5-min AnnouncementBar.
+  Cross-instance propagation rides the 5-min TTL (the single-instance `invalidateSettings()` clears
+  `setting:*` on write; the TTL is the contract, not the test).
+
+### Render-time trust boundary (`getActiveTickerItems`, R1-F2/R3-F4)
+
+The `/api/admin/settings` endpoint validates the **key** only (`^[a-zA-Z0-9_]+$`), never the value, so
+**all** value-level safety is enforced at render: drop empty-text + past-`expiresAt` items, **strip an
+unsafe `href`** (the item still renders as inert text), cap text to 200 chars, cap to **5** items.
+The href allowlist `LINK_HREF_REGEX = /^(?:https:|mailto:|tel:|\/(?![/\\]))/i` allows
+https/mailto/tel/site-relative and blocks `javascript:`/`data:`/protocol-relative `//` — **duplicated**
+from `blog-html.ts` `ALLOWED_URI_REGEXP` (R3-F1 "tightening forbidden", so not shared); a parity test
+pins them. The validator strips `[\t\n\r]` **before** the regex (browsers strip those from URLs, so
+`/⇥/evil.com` would reconstitute to `//evil.com` — an open-redirect the naked regex misses).
+
+### Public render (`Ticker.astro`)
+
+- One shared component, `variant: strip | section`. **Inert when empty** (`{items.length > 0 && …}`,
+  mirroring `AnnouncementBar`); `getSetting` returns `null` on a DB error → inert even on a hiccup.
+- Mounted as a **site-wide header strip** (after `AnnouncementBar`, independent stacking — R2-F21) and
+  a **homepage section** (top of `<main>`). The two carousels carry distinct accessible names.
+- Rotator (vanilla per-instance script): Pause/Play **action** button (label states the action, no
+  `aria-pressed`), prev/next, **reduced-motion gate** (`prefers-reduced-motion` → no auto-advance, nav
+  still works — R1-F32), **state-dependent `aria-live`** (`off` while auto-advancing, `polite` when
+  paused — R3-F20), and pause-on-focus/hover with **reference-counted** sources (a release of one
+  source doesn't resume while the other is still active). Non-current items are `display:none`
+  (removed from the a11y tree). `text`/`href` are Astro auto-escaped.
+
+### Admin (`/admin/ticker`) + endpoint CSRF
+
+Mirrors `admin/announcements`: enable/disable is a native no-JS form; the items editor is JS-driven
+(text/link/expiry/type per item, Add/Remove, keyboard **Move up/down** with an `aria-live` confirmation
+— R1-F35) and serializes the rows into the `ticker_items` JSON on submit. Initial items are passed via
+an **auto-escaped `data-` attribute** (not an inline `<script>`) — no admin self-XSS. The endpoint got
+the defense-in-depth Origin/CSRF check (R2-F1 / #85 — see Admin API above).
 
 ## Deferred Features
 
