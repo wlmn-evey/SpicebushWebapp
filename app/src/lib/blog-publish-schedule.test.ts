@@ -33,7 +33,9 @@ describe('isScheduledPublishAtFormat', () => {
       '2024-12-31T09:00:00', // no zone — Postgres would read it in session TimeZone
       '2024-12-31T09:00', // datetime-local, no zone
       '2024-12-31', // date only
-      '2024-13-31T09:00:00Z', // impossible month → Date.parse NaN
+      '2024-13-31T09:00:00Z', // impossible month (>12) → rejected by the explicit day check + NaN
+      '2024-12-32T09:00:00Z', // impossible day (>31)
+      '2024-12-31T25:00:00Z', // impossible hour → Date.parse NaN
       '2024-12-31 09:00:00Z', // space, not 'T'
       'not-a-date',
       '',
@@ -43,6 +45,25 @@ describe('isScheduledPublishAtFormat', () => {
     ]) {
       expect(isScheduledPublishAtFormat(v as unknown)).toBe(false);
     }
+  });
+
+  it('rejects calendar-overflow days that Date.parse would silently roll forward', () => {
+    // V8 normalizes these to the 1st of the next month; the explicit wall-clock day check rejects
+    // them so a nonsensical typed date can never persist + fire a day late.
+    for (const v of [
+      '2025-02-29T09:00:00Z', // non-leap Feb 29
+      '2024-02-30T09:00:00Z', // Feb 30
+      '2024-04-31T09:00:00Z', // Apr 31
+      '2024-06-31T09:00:00Z', // Jun 31
+      '2024-11-31T09:00:00Z', // Nov 31
+      '2024-01-00T09:00:00Z' // day 00
+    ]) {
+      expect(isScheduledPublishAtFormat(v)).toBe(false);
+    }
+  });
+
+  it('accepts a real leap-day instant (Feb 29 in a leap year)', () => {
+    expect(isScheduledPublishAtFormat('2024-02-29T09:00:00Z')).toBe(true);
   });
 });
 

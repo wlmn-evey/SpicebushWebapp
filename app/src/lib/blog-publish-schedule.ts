@@ -22,13 +22,25 @@ export const SCHEDULED_PUBLISH_AT_REGEX =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 /**
- * True when `value` is a string matching the shared format AND a real, parseable instant.
- * Rejects malformed shapes and impossible dates (`Date.parse` → `NaN`).
+ * True when `value` is a string matching the shared format AND a real, valid instant. Rejects
+ * malformed shapes, calendar-overflow days (Feb 30, non-leap Feb 29 — validated explicitly, since
+ * `Date.parse` silently rolls those forward instead of returning `NaN`), and out-of-range time /
+ * offset fields (hour 25, minute 60, `+99:99` — caught by the `Date.parse` → `NaN` check).
  */
 export function isScheduledPublishAtFormat(value: unknown): value is string {
   if (typeof value !== 'string') return false;
   const trimmed = value.trim();
   if (!SCHEDULED_PUBLISH_AT_REGEX.test(trimmed)) return false;
+  // Reject calendar-overflow days (non-leap Feb 29, Feb 30, Apr/Jun/Sep/Nov 31, …). `Date.parse`
+  // does NOT catch these — V8 silently rolls them into the next month — so validate the wall-clock
+  // date directly from the matched Y-M-D (invalid regardless of zone offset). The anchored regex
+  // guarantees the first 10 chars are `YYYY-MM-DD`.
+  const [year, month, day] = trimmed.slice(0, 10).split('-').map(Number);
+  const isLeap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > daysInMonth[month - 1]) return false;
+  // Date.parse still earns its place for the out-of-range time/offset fields the day check above
+  // does not cover (hour 25, minute 60, second 61, +99:99).
   return !Number.isNaN(Date.parse(trimmed));
 }
 
