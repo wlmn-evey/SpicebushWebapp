@@ -79,21 +79,19 @@ const field = (doc: Document, name: string): HTMLInputElement | HTMLTextAreaElem
   doc.querySelector(`[name="${name}"]`) as HTMLInputElement | HTMLTextAreaElement;
 
 describe('initBlogAdmin — conditional required', () => {
-  it('sets required on excerpt/body/date at init for a published edit-form, with NO events (R2-F9)', () => {
+  it('sets required on excerpt/date at init for a published edit-form, with NO events (R2-F9)', () => {
     const { doc } = buildDoc({ kind: 'edit', status: 'published' });
     initBlogAdmin(doc);
 
     expect(field(doc, BLOG_FORM_FIELDS.excerptRaw).required).toBe(true);
-    expect(field(doc, BLOG_FORM_FIELDS.bodyRaw).required).toBe(true);
     expect(field(doc, BLOG_FORM_FIELDS.date).required).toBe(true);
   });
 
-  it('leaves excerpt/body/date optional at init for a draft form', () => {
+  it('leaves excerpt/date optional at init for a draft form', () => {
     const { doc } = buildDoc({ kind: 'add', status: 'draft' });
     initBlogAdmin(doc);
 
     expect(field(doc, BLOG_FORM_FIELDS.excerptRaw).required).toBe(false);
-    expect(field(doc, BLOG_FORM_FIELDS.bodyRaw).required).toBe(false);
     expect(field(doc, BLOG_FORM_FIELDS.date).required).toBe(false);
   });
 
@@ -106,7 +104,6 @@ describe('initBlogAdmin — conditional required', () => {
     status.dispatchEvent(new Event('change'));
 
     expect(field(doc, BLOG_FORM_FIELDS.excerptRaw).required).toBe(true);
-    expect(field(doc, BLOG_FORM_FIELDS.bodyRaw).required).toBe(true);
     expect(field(doc, BLOG_FORM_FIELDS.date).required).toBe(true);
   });
 
@@ -119,8 +116,26 @@ describe('initBlogAdmin — conditional required', () => {
     status.dispatchEvent(new Event('change'));
 
     expect(field(doc, BLOG_FORM_FIELDS.excerptRaw).required).toBe(false);
-    expect(field(doc, BLOG_FORM_FIELDS.bodyRaw).required).toBe(false);
     expect(field(doc, BLOG_FORM_FIELDS.date).required).toBe(false);
+  });
+
+  it('blocks a publish submit with an empty editor body, allows a non-empty one (R3-F10 submit-time guard)', () => {
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const { doc } = buildDoc({ kind: 'edit', status: 'published' });
+    initBlogAdmin(doc);
+    const form = doc.querySelector('form[data-blog-form]') as HTMLFormElement;
+
+    // Empty editor (TipTap emits "<p></p>" for an empty doc) → submit is blocked.
+    field(doc, BLOG_FORM_FIELDS.bodyRaw).value = '<p></p>';
+    const blocked = new Event('submit', { cancelable: true });
+    form.dispatchEvent(blocked);
+    expect(blocked.defaultPrevented).toBe(true);
+
+    // Non-empty body → submit proceeds.
+    field(doc, BLOG_FORM_FIELDS.bodyRaw).value = '<p>Real content.</p>';
+    const allowed = new Event('submit', { cancelable: true });
+    form.dispatchEvent(allowed);
+    expect(allowed.defaultPrevented).toBe(false);
   });
 
   it('requires imageAlt when an image value is set, releases it when cleared', () => {

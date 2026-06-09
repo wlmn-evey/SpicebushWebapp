@@ -11,7 +11,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import { db } from '@lib/db';
 import { queryRows } from '@lib/db/client';
 import type { ContentEntry } from '@lib/db/types';
-import { collectHtmlImageAlts } from './blog-html';
+import { collectHtmlImageAlts, renderBodyHtml } from './blog-html';
 
 export type BlogPost = {
   slug: string;
@@ -430,15 +430,38 @@ export function validateBlogData(
 }
 
 /**
- * The ONLY place `set:html` content is produced. Pipeline: marked (walkTokens www-normalizer +
- * heading renderer override) → DOMPurify.sanitize(STRICT_CONFIG) → string.
+ * Detect a stored body that is already TipTap/sanitized HTML (vs legacy markdown): an HTML body
+ * begins with a known block tag, markdown begins with prose/markdown syntax. Used ONLY for the
+ * markdown→HTML transition so `renderPostBody` serves both representations safely; once all bodies
+ * are HTML (after the conversion is ratified) this branch and `marked` are removed from the render
+ * path — see docs/runbooks/blog-html-conversion.md.
+ */
+const isStoredHtml = (body: string): boolean =>
+  /^\s*<(?:h[2-6]|p|ul|ol|blockquote|pre|table|figure|div|img|hr|u|s|strong|em|b|i|a)\b/i.test(
+    body
+  );
+
+/**
+ * The ONLY place `set:html` content is produced. Transitional during the Blog V2 cutover: HTML
+ * bodies (TipTap / AI / converted) render through the V2 sanitizer (`renderBodyHtml`), while legacy
+ * markdown bodies keep the `marked` → `DOMPurify(STRICT_CONFIG)` pipeline (walkTokens www-normalizer
+ * + heading renderer override) until they are converted. `renderBodyHtml` is the steady-state path.
  *
  * `previousDepth` (and the `Marked` instance) are created FRESH per call (R4-F22) — module-scope
  * state would let the admin list's second post continue the first post's heading clamp.
  */
-export function renderPostBody(markdown: string): string {
-  if (typeof markdown !== 'string' || markdown.length === 0) return '';
+export function renderPostBody(body: string): string {
+  if (typeof body !== 'string' || body.length === 0) return '';
+  return isStoredHtml(body) ? renderBodyHtml(body) : renderMarkdownToHtml(body);
+}
 
+/**
+ * Render a legacy MARKDOWN body to sanitized HTML via the V1 pipeline (marked → `DOMPurify`
+ * STRICT_CONFIG). Exposed so the one-time conversion can FORCE the markdown path regardless of the
+ * body's leading character; removed from the steady-state render path once conversion is ratified.
+ */
+export function renderMarkdownToHtml(markdown: string): string {
+  if (typeof markdown !== 'string' || markdown.length === 0) return '';
   let previousDepth = 1; // the page <h1> precedes the body
   const renderer = new Marked({ gfm: true, async: false });
 
