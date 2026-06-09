@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import { buildBlogEditorExtensions, BRAND_TEXT_COLORS } from '@lib/blog-editor-extensions';
 import { renderBodyHtml } from '@lib/blog-html';
+import '@styles/blog-editor.css';
 
 type Props = {
   /** Stored HTML to hydrate the editor with (the post body). */

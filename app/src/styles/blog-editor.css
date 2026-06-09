@@ -1,0 +1,249 @@
+/**
+ * Blog editor island styles (#125). TipTapEditor.tsx styles itself with these classes and imports
+ * this file, so the CSS ships only where the island mounts (the /admin/blog editor pages).
+ *
+ * The content-typography block mirrors the public `.blog-body` styles in
+ * src/pages/blog/[slug].astro (which are scoped to that page) so the editing surface and the live
+ * preview look like the published post — keep the two in step when either changes (#124).
+ * Brand text-color classes (text-forest-canopy etc.) are Tailwind utilities generated from the
+ * literals in blog-editor-extensions.ts, so they are not duplicated here.
+ */
+
+/* ---------- Toolbar ---------- */
+
+.blog-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-bottom: 0;
+  border-radius: 0.5rem 0.5rem 0 0;
+  background: #f7f5ef;
+}
+
+.blog-editor-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.45rem;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  background: transparent;
+  font-size: 0.8125rem;
+  line-height: 1;
+  color: #2e2e2e; /* earth-brown */
+  cursor: pointer;
+}
+
+.blog-editor-btn:hover {
+  background: #eceff1; /* cloud-gray */
+  border-color: #d1d5db;
+}
+
+.blog-editor-btn:focus-visible {
+  outline: 2px solid #3e6d51; /* forest-canopy */
+  outline-offset: 1px;
+}
+
+.blog-editor-btn.is-active {
+  background: #3e6d51; /* forest-canopy — white on it is 5.98:1 (AA) */
+  border-color: #3e6d51;
+  color: #ffffff;
+}
+
+/* The Highlight button's <mark> glyph: keep its yellow chip readable in both states. */
+.blog-editor-btn mark {
+  padding: 0 0.15rem;
+  border-radius: 0.125rem;
+}
+
+/* ---------- Editing surface ---------- */
+
+/* This class is set on the ProseMirror contenteditable itself (editorProps.attributes.class).
+   TipTap's injected base CSS covers caret/whitespace; this adds the visible chrome. */
+.blog-editor-surface {
+  min-height: 20rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0 0 0.5rem 0.5rem;
+  background: #ffffff;
+}
+
+.blog-editor-surface:focus {
+  outline: none;
+  border-color: #3e6d51;
+  box-shadow: 0 0 0 2px rgb(62 109 81 / 0.25);
+}
+
+/* Selected table cells (ProseMirror adds .selectedCell during cell selection). */
+.blog-editor-surface .selectedCell {
+  background: rgb(62 109 81 / 0.12);
+}
+
+/* ---------- Live preview panel ---------- */
+
+.blog-editor-preview {
+  min-height: 20rem;
+  padding: 1rem 1.25rem;
+  border: 1px dashed #c8c2b4;
+  border-radius: 0.5rem;
+  background: #ffffff;
+}
+
+/* ---------- Content typography (mirrors .blog-body on the public post page) ---------- */
+
+.blog-editor-surface,
+.blog-editor-preview {
+  font-family: 'Nunito', sans-serif;
+  line-height: 1.7;
+  color: #4b3a2f;
+  overflow-wrap: break-word;
+}
+
+.blog-editor-surface h2,
+.blog-editor-surface h3,
+.blog-editor-surface h4,
+.blog-editor-preview h2,
+.blog-editor-preview h3,
+.blog-editor-preview h4 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  color: #4b3a2f;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+.blog-editor-surface h2,
+.blog-editor-preview h2 {
+  font-size: 1.75rem;
+}
+.blog-editor-surface h3,
+.blog-editor-preview h3 {
+  font-size: 1.4rem;
+}
+.blog-editor-surface h4,
+.blog-editor-preview h4 {
+  font-size: 1.2rem;
+}
+
+.blog-editor-surface p,
+.blog-editor-preview p {
+  margin-bottom: 1.1rem;
+}
+
+.blog-editor-surface a,
+.blog-editor-preview a {
+  color: #3e6d51;
+  text-decoration: underline;
+}
+
+.blog-editor-surface ul,
+.blog-editor-surface ol,
+.blog-editor-preview ul,
+.blog-editor-preview ol {
+  margin: 0 0 1.1rem 1.5rem;
+}
+.blog-editor-surface ul,
+.blog-editor-preview ul {
+  list-style: disc;
+}
+.blog-editor-surface ol,
+.blog-editor-preview ol {
+  list-style: decimal;
+}
+.blog-editor-surface li,
+.blog-editor-preview li {
+  margin-bottom: 0.4rem;
+}
+
+.blog-editor-surface blockquote,
+.blog-editor-preview blockquote {
+  border-left: 4px solid #5a8065; /* moss-green */
+  padding-left: 1rem;
+  margin: 0 0 1.1rem 0;
+  font-style: italic;
+  color: #5b4a3f;
+}
+
+.blog-editor-surface code,
+.blog-editor-preview code {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #f1efe9;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+}
+
+.blog-editor-surface pre,
+.blog-editor-preview pre {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #f1efe9;
+  padding: 1rem;
+  border-radius: 0.4rem;
+  overflow-x: auto;
+  margin-bottom: 1.1rem;
+}
+
+.blog-editor-surface pre code,
+.blog-editor-preview pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.blog-editor-surface table,
+.blog-editor-preview table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1.1rem;
+}
+
+.blog-editor-surface th,
+.blog-editor-surface td,
+.blog-editor-preview th,
+.blog-editor-preview td {
+  border: 1px solid #d6cfc2;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.blog-editor-surface th,
+.blog-editor-preview th {
+  background-color: #f1efe9;
+  font-weight: 600;
+}
+
+.blog-editor-surface img,
+.blog-editor-preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.4rem;
+  margin: 1.1rem 0;
+}
+
+.blog-editor-surface hr,
+.blog-editor-preview hr {
+  border: 0;
+  border-top: 1px solid #d6cfc2;
+  margin: 2rem 0;
+}
+
+/* Class-based text alignment — the editor emits these classes, never inline style. Stated
+   explicitly (not left to Tailwind utility generation) so alignment inside the editor and preview
+   never depends on what other templates happen to use. */
+.blog-editor-surface .text-left,
+.blog-editor-preview .text-left {
+  text-align: left;
+}
+.blog-editor-surface .text-center,
+.blog-editor-preview .text-center {
+  text-align: center;
+}
+.blog-editor-surface .text-right,
+.blog-editor-preview .text-right {
+  text-align: right;
+}
