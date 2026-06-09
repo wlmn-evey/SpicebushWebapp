@@ -327,8 +327,25 @@ zone (`Z` or `±HH:MM`; seconds/millis optional) that is a real instant in the *
 `datetime-local` (no zone) is rejected — the authoring form attaches a zone before saving (UTC
 contract). This format contract lives in `app/src/lib/blog-publish-schedule.ts`
 (`isScheduledPublishAtFormat` / `isFutureScheduledPublishAt` / `isDueScheduledPublishAt`) and is
-imported by BOTH `validateBlogData` (save gate) and the scheduled-publish cron (PR4 fire predicate),
+imported by BOTH `validateBlogData` (save gate) and the scheduled-publish cron (fire predicate),
 so a post that saves cleanly is exactly the set the cron will fire — one contract, no drift.
+
+#### Authoring the lifecycle (`/admin/blog` form + `blog-admin-client.ts`)
+
+The add/edit forms expose all four statuses in the status dropdown. Each edit-form option's
+`selected` matches the post's EXACT status (R3-F10) — the prior `selected={post.status !== 'draft'}`
+would have silently published a scheduled/archived post on an untouched save. Scheduling specifics:
+
+- A **datetime-local** "Go live on (your local time)" control appears only while status = Scheduled;
+  the client toggles its visibility AND its `required` in **lockstep** (a hidden-but-`required`
+  control is silently unsubmittable, so the markup carries no static `required`).
+- On submit the client converts the local pick to UTC-`Z` (`localInputToUtcIso`, offset read from
+  the target date for DST correctness) into a hidden `data.publishedAt`; the edit form pre-fills the
+  visible control back from the stored UTC (`utcIsoToLocalInput`) so the owner sees the local time
+  they picked, not raw UTC. Both helpers are pure (offset injected) and unit-tested.
+- **Two-gesture reconciliation (R2-F19):** choosing Published while a future time is set prompts an
+  overridable `confirm()` ("this publishes now, not at that time") so a future date never silently
+  publishes-now. `archived` is selectable here and round-trips to Draft/Published via a normal save.
 
 #### Author byline (`resolveAuthorByline`) — R4-F9
 

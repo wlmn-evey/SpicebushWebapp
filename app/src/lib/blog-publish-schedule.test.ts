@@ -3,7 +3,9 @@ import {
   SCHEDULED_PUBLISH_AT_REGEX,
   isDueScheduledPublishAt,
   isFutureScheduledPublishAt,
-  isScheduledPublishAtFormat
+  isScheduledPublishAtFormat,
+  localInputToUtcIso,
+  utcIsoToLocalInput
 } from './blog-publish-schedule';
 
 // The shared scheduled-publish date contract (R4-F1). The same predicates gate the write-time
@@ -90,5 +92,40 @@ describe('isDueScheduledPublishAt (cron fire predicate)', () => {
     const v = '2024-09-01T12:00:00Z';
     expect(isFutureScheduledPublishAt(v, NOW)).toBe(true);
     expect(isDueScheduledPublishAt(v, NOW)).toBe(false);
+  });
+});
+
+describe('localInputToUtcIso / utcIsoToLocalInput (offset injected — deterministic in CI)', () => {
+  it('converts a wall-clock local pick to UTC-Z for fixed offsets', () => {
+    // offset is the getTimezoneOffset() convention: minutes UTC is AHEAD of local.
+    expect(localInputToUtcIso('2026-06-15T09:00', 240)).toBe('2026-06-15T13:00:00.000Z'); // EDT (UTC-4)
+    expect(localInputToUtcIso('2026-06-15T09:00', 0)).toBe('2026-06-15T09:00:00.000Z'); // UTC
+    expect(localInputToUtcIso('2026-06-15T09:00', -60)).toBe('2026-06-15T08:00:00.000Z'); // CET (UTC+1)
+    expect(localInputToUtcIso('2026-06-15T09:00:30', 240)).toBe('2026-06-15T13:00:30.000Z'); // seconds kept
+  });
+
+  it('always emits UTC-Z (never offset-form) so compareBlogPosts sorts it chronologically', () => {
+    expect(localInputToUtcIso('2026-01-01T00:00', 240)).toMatch(/Z$/);
+  });
+
+  it('renders a stored UTC ISO back to the local wall-clock value', () => {
+    expect(utcIsoToLocalInput('2026-06-15T13:00:00.000Z', 240)).toBe('2026-06-15T09:00'); // EDT
+    expect(utcIsoToLocalInput('2026-06-15T09:00:00.000Z', 0)).toBe('2026-06-15T09:00'); // UTC
+    // Crosses a date boundary going west: 01:00Z at UTC-4 is the previous evening.
+    expect(utcIsoToLocalInput('2026-06-15T01:00:00.000Z', 240)).toBe('2026-06-14T21:00');
+  });
+
+  it('round-trips local → UTC → local for assorted offsets (property)', () => {
+    for (const offset of [-330, -60, 0, 240, 300, 480]) {
+      for (const local of ['2026-06-15T09:00', '2026-12-31T23:30', '2026-01-01T00:00']) {
+        expect(utcIsoToLocalInput(localInputToUtcIso(local, offset), offset)).toBe(local);
+      }
+    }
+  });
+
+  it('returns empty string for malformed input', () => {
+    expect(localInputToUtcIso('not-a-date', 0)).toBe('');
+    expect(localInputToUtcIso('2026-06-15', 0)).toBe(''); // date only, no time
+    expect(utcIsoToLocalInput('garbage', 0)).toBe('');
   });
 });

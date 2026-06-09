@@ -39,18 +39,51 @@ if (savedSlug === 'deleted') {
   savedMessage =
     'Saved. If you set status to Published it is now live at its link. If you saved it as a draft it is NOT yet visible to the public — set status to Published when ready.';
 } else if (savedPost) {
-  savedMessage =
-    savedPost.status === 'published'
-      ? 'Published — now live at its link.'
-      : 'Saved as a draft — NOT yet visible to the public. Set status to Published when ready.';
+  // State-specific saved copy across the four lifecycle states (R1-F26/R4-F12).
+  switch (savedPost.status) {
+    case 'published':
+      savedMessage = 'Published — now live at its link.';
+      break;
+    case 'scheduled':
+      savedMessage =
+        'Scheduled — NOT yet visible. It will publish automatically at the time you set (checked every 5 minutes).';
+      break;
+    case 'archived':
+      savedMessage =
+        'Archived — hidden from the public but kept. Set status to Draft or Published to bring it back.';
+      break;
+    default:
+      savedMessage =
+        'Saved as a draft — NOT yet visible to the public. Set status to Published when ready.';
+  }
 }
 
-const statusBadgeClass = (post: BlogPost): string =>
-  post.status === 'published'
-    ? 'bg-green-50 text-green-800 border border-green-200'
-    : 'bg-amber-50 text-amber-800 border border-amber-200';
-const statusBadgeLabel = (post: BlogPost): string =>
-  post.status === 'published' ? 'Published' : 'Draft';
+// Four-state badge (R1-F26): each lifecycle status reads distinctly so a scheduled/archived post
+// is never mislabelled as a generic "Draft".
+const statusBadgeClass = (post: BlogPost): string => {
+  switch (post.status) {
+    case 'published':
+      return 'bg-green-50 text-green-800 border border-green-200';
+    case 'scheduled':
+      return 'bg-blue-50 text-blue-800 border border-blue-200';
+    case 'archived':
+      return 'bg-stone-100 text-earth-brown border border-stone-300';
+    default:
+      return 'bg-amber-50 text-amber-800 border border-amber-200';
+  }
+};
+const statusBadgeLabel = (post: BlogPost): string => {
+  switch (post.status) {
+    case 'published':
+      return 'Published';
+    case 'scheduled':
+      return 'Scheduled';
+    case 'archived':
+      return 'Archived';
+    default:
+      return 'Draft';
+  }
+};
 
 // `baseDataJson` for an edit form: carry the blog data.* fields reconstructable from `post`,
 // including categories/tags (which have no form input) so the wholesale-replace upsert does not
@@ -170,14 +203,41 @@ const baseDataFor = (post: BlogPost): string => JSON.stringify(blogPostToEditDat
                 >
                   <option value="draft" selected>Draft</option>
                   <option value="published">Published</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="archived">Archived</option>
                 </select>
                 <span id="add-status-help" class="mt-1 block text-xs text-earth-brown/70">
-                  Title is always required. To publish you also need an excerpt, a body, and a date;
-                  if you set a featured image you also need an image description. New posts appear
-                  at their link immediately after publishing. The blog index, and edits to
+                  Title is always required. To publish (now or scheduled) you also need an excerpt,
+                  a body, and a date; if you set a featured image you also need an image
+                  description. Scheduled posts go live automatically at the time you pick. New posts
+                  appear at their link immediately after publishing. The blog index, and edits to
                   already-published posts, can take up to 5 minutes to update.
                 </span>
               </label>
+
+              {
+                /* Schedule control — shown only when Status = Scheduled (toggled by the client).
+                  No static `required` (a hidden required field is unsubmittable); the client adds
+                  `required` in lockstep with visibility. The visible value is local wall-clock; the
+                  client writes the UTC-Z instant into the hidden `data.publishedAt` on submit. */
+              }
+              <div class="block text-sm font-medium" data-schedule-group hidden>
+                <label class="block">
+                  Go live on (your local time)
+                  <input
+                    type="datetime-local"
+                    name={BLOG_FORM_FIELDS.publishedAtLocal}
+                    aria-describedby="add-schedule-help"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </label>
+                <input type="hidden" name={BLOG_FORM_FIELDS.publishedAt} value="" />
+                <span id="add-schedule-help" class="mt-1 block text-xs text-earth-brown/70">
+                  Pick a future date and time — the post stays hidden until then, when it publishes
+                  automatically (checked every 5 minutes). Not ready to commit to a time? Set Status
+                  back to Draft instead.
+                </span>
+              </div>
 
               <label class="block text-sm font-medium">
                 Date (required to publish)
@@ -450,7 +510,10 @@ const baseDataFor = (post: BlogPost): string => JSON.stringify(blogPostToEditDat
                         </label>
 
                         {/* PR-2 deviation 1 (R2-F14): status select top-level. */}
-                        {/* PR-2 deviation 6 (R4-F11): selected={post.status} so an untouched edit re-submits the current status (no silent unpublish). */}
+                        {/* R3-F10/R4-F12: each option's `selected` matches the post's EXACT status,
+                            so an untouched edit re-submits the current status. The prior
+                            `selected={post.status !== 'draft'}` collapsed scheduled/archived into
+                            "Published" and would silently publish them on save — fixed here. */}
                         <label class="block text-sm font-medium">
                           Status
                           <select
@@ -458,11 +521,17 @@ const baseDataFor = (post: BlogPost): string => JSON.stringify(blogPostToEditDat
                             aria-describedby={`edit-status-help-${post.slug}`}
                             class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                           >
-                            <option value="published" selected={post.status !== 'draft'}>
-                              Published
-                            </option>
                             <option value="draft" selected={post.status === 'draft'}>
                               Draft
+                            </option>
+                            <option value="published" selected={post.status === 'published'}>
+                              Published
+                            </option>
+                            <option value="scheduled" selected={post.status === 'scheduled'}>
+                              Scheduled
+                            </option>
+                            <option value="archived" selected={post.status === 'archived'}>
+                              Archived
                             </option>
                           </select>
                           {/* PR-2 R1-F38: staleness helper text linked to the edit-form status control. */}
@@ -470,11 +539,44 @@ const baseDataFor = (post: BlogPost): string => JSON.stringify(blogPostToEditDat
                             id={`edit-status-help-${post.slug}`}
                             class="mt-1 block text-xs text-earth-brown/70"
                           >
-                            New posts appear at their link immediately after publishing. The blog
-                            index, and edits to already-published posts, can take up to 5 minutes to
-                            update.
+                            Set <strong>Archived</strong> to hide a post without deleting it (you
+                            can restore it any time). New posts appear at their link immediately
+                            after publishing. The blog index, and edits to already-published posts,
+                            can take up to 5 minutes to update.
                           </span>
                         </label>
+
+                        {/* Schedule control — shown when this post is (or is being set) Scheduled.
+                            No static `required`; the client toggles visibility + `required` in
+                            lockstep and round-trips the time through the hidden UTC field. */}
+                        <div
+                          class="block text-sm font-medium"
+                          data-schedule-group
+                          hidden={post.status !== 'scheduled'}
+                        >
+                          <label class="block">
+                            Go live on (your local time)
+                            <input
+                              type="datetime-local"
+                              name={BLOG_FORM_FIELDS.publishedAtLocal}
+                              aria-describedby={`edit-schedule-help-${post.slug}`}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+                          <input
+                            type="hidden"
+                            name={BLOG_FORM_FIELDS.publishedAt}
+                            value={post.publishedAt ?? ''}
+                          />
+                          <span
+                            id={`edit-schedule-help-${post.slug}`}
+                            class="mt-1 block text-xs text-earth-brown/70"
+                          >
+                            Pick a future date and time — the post stays hidden until then, when it
+                            publishes automatically (checked every 5 minutes). Not ready? Set Status
+                            back to Draft instead.
+                          </span>
+                        </div>
 
                         <label class="block text-sm font-medium">
                           Date (required to publish)

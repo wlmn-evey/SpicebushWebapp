@@ -9,9 +9,14 @@
  * `initBlogAdmin(doc)` takes an optional Document so jsdom unit tests can pass a constructed one.
  */
 import { BLOG_FORM_FIELDS } from '@lib/blog-form-fields';
+import { localInputToUtcIso, utcIsoToLocalInput } from './blog-publish-schedule';
 
 const COLLISION_MESSAGE =
   'A post with this address already exists — choose a different address or edit the existing post.';
+
+// Statuses that must satisfy the full publish gate at save time (R1-F1): published goes live now,
+// scheduled goes live unattended — both need excerpt + date + body.
+const PUBLISHING_STATUSES = new Set(['published', 'scheduled']);
 
 const slugify = (value: string): string =>
   String(value || '')
@@ -30,6 +35,9 @@ function initConditionalRequired(form: HTMLFormElement): void {
   const date = form.querySelector(`[name="${BLOG_FORM_FIELDS.date}"]`);
   const image = form.querySelector(`[name="${BLOG_FORM_FIELDS.image}"]`);
   const imageAlt = form.querySelector(`[name="${BLOG_FORM_FIELDS.imageAlt}"]`);
+  const publishedAtLocal = form.querySelector(`[name="${BLOG_FORM_FIELDS.publishedAtLocal}"]`);
+  const publishedAtHidden = form.querySelector(`[name="${BLOG_FORM_FIELDS.publishedAt}"]`);
+  const scheduleGroup = form.querySelector('[data-schedule-group]');
 
   const setRequired = (el: Element | null, required: boolean): void => {
     if (
@@ -41,17 +49,41 @@ function initConditionalRequired(form: HTMLFormElement): void {
     }
   };
 
+  const currentStatus = (): string =>
+    statusSelect instanceof HTMLSelectElement ? statusSelect.value : '';
+
   const syncPublishRequired = (): void => {
-    const publishing =
-      statusSelect instanceof HTMLSelectElement && statusSelect.value === 'published';
+    const status = currentStatus();
+    const publishing = PUBLISHING_STATUSES.has(status);
+    const scheduled = status === 'scheduled';
     setRequired(excerpt, publishing);
     setRequired(date, publishing);
+    // Lockstep visibility + `required` for the schedule control: a hidden-but-`required` field makes
+    // the form silently unsubmittable ("an invalid form control is not focusable"). So the datetime
+    // is required ONLY while its group is shown (scheduled). The markup carries no static `required`.
+    setRequired(publishedAtLocal, scheduled);
+    if (scheduleGroup instanceof HTMLElement) {
+      scheduleGroup.hidden = !scheduled;
+    }
   };
 
   const syncImageAltRequired = (): void => {
     const hasImage = image instanceof HTMLInputElement && image.value.trim().length > 0;
     setRequired(imageAlt, hasImage);
   };
+
+  // Pre-fill the visible datetime-local from the stored UTC `publishedAt` (edit form) so the owner
+  // sees the LOCAL time they picked, not raw UTC. Offset is read from the stored instant (DST-aware).
+  if (
+    publishedAtLocal instanceof HTMLInputElement &&
+    publishedAtHidden instanceof HTMLInputElement &&
+    publishedAtLocal.value.trim().length === 0 &&
+    publishedAtHidden.value.trim().length > 0
+  ) {
+    const iso = publishedAtHidden.value.trim();
+    const localValue = utcIsoToLocalInput(iso, new Date(iso).getTimezoneOffset());
+    if (localValue) publishedAtLocal.value = localValue;
+  }
 
   // Body moved from a <textarea> to the TipTap island's hidden field, and `required` does NOT apply
   // to a hidden input — so the publish-time "body required" guard moves to a SUBMIT-TIME check
@@ -64,8 +96,43 @@ function initConditionalRequired(form: HTMLFormElement): void {
       .trim().length === 0;
 
   form.addEventListener('submit', event => {
-    const publishing =
-      statusSelect instanceof HTMLSelectElement && statusSelect.value === 'published';
+    const status = currentStatus();
+    const publishing = PUBLISHING_STATUSES.has(status);
+
+    // Scheduled: write the zone-attached UTC-Z instant into the hidden persisted field from the
+    // owner's local pick. An empty pick stays empty so the server rejects it with the readiness
+    // message rather than this client silently inventing a time.
+    if (
+      status === 'scheduled' &&
+      publishedAtLocal instanceof HTMLInputElement &&
+      publishedAtHidden instanceof HTMLInputElement
+    ) {
+      const local = publishedAtLocal.value.trim();
+      publishedAtHidden.value = local
+        ? localInputToUtcIso(local, new Date(local).getTimezoneOffset())
+        : '';
+    }
+
+    // Two-gesture reconciliation (R2-F19): Published + a FUTURE picked time would silently
+    // publish-now. Make it an explicit, OVERRIDABLE choice (confirm), never a silent surprise.
+    if (
+      status === 'published' &&
+      publishedAtLocal instanceof HTMLInputElement &&
+      publishedAtLocal.value.trim().length > 0
+    ) {
+      const when = new Date(publishedAtLocal.value.trim()).getTime();
+      if (!Number.isNaN(when) && when > Date.now()) {
+        const proceed = window.confirm(
+          'You picked a future date and time, but the status is Published — this publishes the post NOW, not at that time. Choose Scheduled if you want it to go live later. Publish now anyway?'
+        );
+        if (!proceed) {
+          event.preventDefault();
+          return;
+        }
+      }
+    }
+
+    // Body-required guard, now covering scheduled as well as published.
     if (!publishing) return;
     const bodyField = form.querySelector(`[name="${BLOG_FORM_FIELDS.bodyRaw}"]`);
     const value =

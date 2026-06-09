@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { initBlogAdmin } from '@lib/blog-admin-client';
 import { BLOG_FORM_FIELDS } from '@lib/blog-form-fields';
+import {
+  SCHEDULED_PUBLISH_AT_REGEX,
+  localInputToUtcIso,
+  utcIsoToLocalInput
+} from '@lib/blog-publish-schedule';
 
 // vitest's `environment: 'jsdom'` is global (vitest.config.ts:22) — no per-file docblock needed.
 
@@ -10,6 +15,7 @@ interface BuildOptions {
   kind: FormKind;
   status?: string; // initial status select value
   imageValue?: string; // initial image URL value
+  publishedAt?: string; // initial stored UTC publishedAt (edit form)
 }
 
 /**
@@ -39,15 +45,29 @@ function buildDoc(options: BuildOptions, existingSlugs: string[] = []): { doc: D
 
   const status = doc.createElement('select');
   status.setAttribute('name', BLOG_FORM_FIELDS.status);
-  const draftOpt = doc.createElement('option');
-  draftOpt.value = 'draft';
-  draftOpt.textContent = 'Draft';
-  const publishedOpt = doc.createElement('option');
-  publishedOpt.value = 'published';
-  publishedOpt.textContent = 'Published';
-  status.append(draftOpt, publishedOpt);
+  for (const value of ['draft', 'published', 'scheduled', 'archived']) {
+    const opt = doc.createElement('option');
+    opt.value = value;
+    opt.textContent = value;
+    status.appendChild(opt);
+  }
   status.value = options.status ?? 'draft';
   form.appendChild(status);
+
+  // Schedule group — mirrors blog.astro: a visibility wrapper, the visible datetime-local control,
+  // and the hidden persisted UTC field. Initially hidden unless the post is already scheduled.
+  const scheduleGroup = doc.createElement('div');
+  scheduleGroup.setAttribute('data-schedule-group', '');
+  scheduleGroup.hidden = (options.status ?? 'draft') !== 'scheduled';
+  const publishedAtLocal = doc.createElement('input');
+  publishedAtLocal.type = 'datetime-local';
+  publishedAtLocal.setAttribute('name', BLOG_FORM_FIELDS.publishedAtLocal);
+  const publishedAtHidden = doc.createElement('input');
+  publishedAtHidden.type = 'hidden';
+  publishedAtHidden.setAttribute('name', BLOG_FORM_FIELDS.publishedAt);
+  publishedAtHidden.value = options.publishedAt ?? '';
+  scheduleGroup.append(publishedAtLocal, publishedAtHidden);
+  form.appendChild(scheduleGroup);
 
   const date = doc.createElement('input');
   date.type = 'date';
@@ -156,6 +176,107 @@ describe('initBlogAdmin — conditional required', () => {
     const { doc } = buildDoc({ kind: 'edit', status: 'draft', imageValue: '/images/seed.jpg' });
     initBlogAdmin(doc);
     expect(field(doc, BLOG_FORM_FIELDS.imageAlt).required).toBe(true);
+  });
+});
+
+describe('initBlogAdmin — scheduling (R1-F1 / R4-F1 / R2-F19)', () => {
+  const statusSelect = (doc: Document): HTMLSelectElement =>
+    doc.querySelector(`[name="${BLOG_FORM_FIELDS.status}"]`) as HTMLSelectElement;
+  const group = (doc: Document): HTMLElement =>
+    doc.querySelector('[data-schedule-group]') as HTMLElement;
+
+  it('scheduled treats excerpt+date as publish fields AND shows+requires the datetime (lockstep)', () => {
+    const { doc } = buildDoc({ kind: 'edit', status: 'scheduled' });
+    initBlogAdmin(doc);
+    expect(field(doc, BLOG_FORM_FIELDS.excerptRaw).required).toBe(true);
+    expect(field(doc, BLOG_FORM_FIELDS.date).required).toBe(true);
+    // The schedule control is visible AND required together — never hidden-but-required.
+    expect(group(doc).hidden).toBe(false);
+    expect(field(doc, BLOG_FORM_FIELDS.publishedAtLocal).required).toBe(true);
+  });
+
+  it('published/draft/archived hide the datetime AND leave it NOT required (no unsubmittable trap)', () => {
+    for (const status of ['published', 'draft', 'archived']) {
+      const { doc } = buildDoc({ kind: 'edit', status });
+      initBlogAdmin(doc);
+      expect(group(doc).hidden).toBe(true);
+      expect(field(doc, BLOG_FORM_FIELDS.publishedAtLocal).required).toBe(false);
+    }
+  });
+
+  it('toggles the datetime group + required in lockstep when status changes', () => {
+    const { doc } = buildDoc({ kind: 'add', status: 'draft' });
+    initBlogAdmin(doc);
+    const status = statusSelect(doc);
+
+    status.value = 'scheduled';
+    status.dispatchEvent(new Event('change'));
+    expect(group(doc).hidden).toBe(false);
+    expect(field(doc, BLOG_FORM_FIELDS.publishedAtLocal).required).toBe(true);
+
+    status.value = 'published';
+    status.dispatchEvent(new Event('change'));
+    expect(group(doc).hidden).toBe(true);
+    expect(field(doc, BLOG_FORM_FIELDS.publishedAtLocal).required).toBe(false);
+  });
+
+  it('on submit, writes the zone-attached UTC-Z instant into the hidden publishedAt (scheduled)', () => {
+    const { doc } = buildDoc({ kind: 'add', status: 'scheduled' });
+    initBlogAdmin(doc);
+    const form = doc.querySelector('form[data-blog-form]') as HTMLFormElement;
+    field(doc, BLOG_FORM_FIELDS.bodyRaw).value = '<p>Body.</p>';
+    const local = '2026-09-15T09:00';
+    field(doc, BLOG_FORM_FIELDS.publishedAtLocal).value = local;
+
+    form.dispatchEvent(new Event('submit', { cancelable: true }));
+
+    const hidden = field(doc, BLOG_FORM_FIELDS.publishedAt).value;
+    expect(hidden).toMatch(SCHEDULED_PUBLISH_AT_REGEX);
+    // Deterministic regardless of the test env's zone: the expected value is computed with the same
+    // offset the client reads from the same local string.
+    expect(hidden).toBe(localInputToUtcIso(local, new Date(local).getTimezoneOffset()));
+  });
+
+  it('pre-fills the visible datetime from the stored UTC publishedAt (edit, scheduled)', () => {
+    const stored = '2026-09-15T13:00:00.000Z';
+    const { doc } = buildDoc({ kind: 'edit', status: 'scheduled', publishedAt: stored });
+    initBlogAdmin(doc);
+    expect(field(doc, BLOG_FORM_FIELDS.publishedAtLocal).value).toBe(
+      utcIsoToLocalInput(stored, new Date(stored).getTimezoneOffset())
+    );
+  });
+
+  it('two-gesture (R2-F19): Published + a FUTURE time prompts confirm; cancel blocks the submit', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const { doc } = buildDoc({ kind: 'add', status: 'published' });
+    initBlogAdmin(doc);
+    const form = doc.querySelector('form[data-blog-form]') as HTMLFormElement;
+    field(doc, BLOG_FORM_FIELDS.bodyRaw).value = '<p>Body.</p>';
+    // A future local time sitting in the (hidden) datetime control while status is Published.
+    field(doc, BLOG_FORM_FIELDS.publishedAtLocal).value = '2099-01-01T09:00';
+
+    const ev = new Event('submit', { cancelable: true });
+    form.dispatchEvent(ev);
+
+    expect(confirmSpy).toHaveBeenCalledOnce();
+    expect(ev.defaultPrevented).toBe(true); // cancelled → submit blocked
+    confirmSpy.mockRestore();
+  });
+
+  it('two-gesture: confirming the dialog lets the Published submit through', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const { doc } = buildDoc({ kind: 'add', status: 'published' });
+    initBlogAdmin(doc);
+    const form = doc.querySelector('form[data-blog-form]') as HTMLFormElement;
+    field(doc, BLOG_FORM_FIELDS.bodyRaw).value = '<p>Body.</p>';
+    field(doc, BLOG_FORM_FIELDS.publishedAtLocal).value = '2099-01-01T09:00';
+
+    const ev = new Event('submit', { cancelable: true });
+    form.dispatchEvent(ev);
+
+    expect(confirmSpy).toHaveBeenCalledOnce();
+    expect(ev.defaultPrevented).toBe(false);
+    confirmSpy.mockRestore();
   });
 });
 
