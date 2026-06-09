@@ -72,6 +72,16 @@ describe('renderBodyHtml — TipTap construct survival (D1-F10, generated from t
       }
     }
   });
+
+  it('keeps a TipTap block image (src+alt); a data:/base64 image is dropped at the editor level', () => {
+    const out = renderBodyHtml(
+      tiptapHtml('<p>x</p><img src="/media/photo.png" alt="A child planting"><p>y</p>')
+    );
+    expect(out).toContain('src="/media/photo.png"');
+    expect(out).toContain('alt="A child planting"');
+    // allowBase64:false → the editor never even produces a data: image node.
+    expect(tiptapHtml('<img src="data:image/png;base64,AAA" alt="x">')).not.toContain('data:');
+  });
 });
 
 describe('renderBodyHtml — V1 trust-boundary properties hold (hostile inputs)', () => {

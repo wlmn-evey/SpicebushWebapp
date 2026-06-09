@@ -605,6 +605,27 @@ describe('validateBlogData', () => {
     ).toBeNull();
   });
 
+  it('rejects HTML-body <img> without quality alt at publish, accepts good alt (R2-F4 HTML-aware walk)', () => {
+    const base = { slug: 'p', excerpt: 'x', date: '2024-01-01' };
+    // A raw <img> is an HTML token the markdown walk does not see — only the HTML walk catches these.
+    expect(
+      validateBlogData({ ...base, body: '<p>x</p><img src="/x.png">' }, 'T', 'published')
+    ).toMatch(/body/i);
+    expect(
+      validateBlogData({ ...base, body: '<img src="/x.png" alt="">' }, 'T', 'published')
+    ).toMatch(/body/i);
+    expect(
+      validateBlogData({ ...base, body: '<img src="/x.png" alt="x.png">' }, 'T', 'published')
+    ).toMatch(/body/i);
+    expect(
+      validateBlogData(
+        { ...base, body: '<img src="/x.png" alt="Children planting seedlings">' },
+        'T',
+        'published'
+      )
+    ).toBeNull();
+  });
+
   it('exempts drafts from body-image alt rules', () => {
     expect(
       validateBlogData({ slug: 'p', excerpt: 'x', body: '![](x)', date: '' }, 'T', 'draft')

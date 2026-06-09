@@ -11,6 +11,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import { db } from '@lib/db';
 import { queryRows } from '@lib/db/client';
 import type { ContentEntry } from '@lib/db/types';
+import { collectHtmlImageAlts } from './blog-html';
 
 export type BlogPost = {
   slug: string;
@@ -410,8 +411,16 @@ export function validateBlogData(
     return 'Featured image alt text is required to publish';
   }
 
-  // 7. Body-image alt walk (publish-only) — every body image needs quality alt text (R2-F26).
-  for (const alt of collectBodyImageAlts(body)) {
+  // 7. Body-image alt walk (publish-only) — every body image needs quality alt text (R2-F26/R2-F4).
+  // Legacy markdown bodies carry markdown image tokens; TipTap/AI HTML bodies carry <img> tags. BOTH
+  // walks run during the markdown→HTML transition; each no-ops on the representation it does not own,
+  // so a missing/empty alt is caught whichever way the image was authored. `null` (no alt attr) maps
+  // to '' so it fails isValidImageAlt just like an empty alt.
+  const bodyImageAlts = [
+    ...collectBodyImageAlts(body),
+    ...collectHtmlImageAlts(body).map(image => image.alt ?? '')
+  ];
+  for (const alt of bodyImageAlts) {
     if (!isValidImageAlt(alt.trim())) {
       return 'Every image in the post body must have descriptive alt text (at least 6 characters, not a filename or a single generic word)';
     }
