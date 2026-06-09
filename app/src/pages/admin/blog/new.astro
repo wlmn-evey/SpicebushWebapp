@@ -1,0 +1,18 @@
+---
+/**
+ * Dedicated "new blog post" editor (issue #114). Replaces the accordion add-form that lived inline
+ * in /admin/blog. Auth is enforced by the /admin middleware (same gate as the rest of /admin/blog).
+ * AdminLayout supplies the <main> landmark + the page <h1> (via `title`) + shared admin scripts.
+ */
+import AdminLayout from '@layouts/AdminLayout.astro';
+import BlogEditorForm from '@components/admin/BlogEditorForm.astro';
+import { getManagedBlogPosts } from '@lib/blog-content';
+
+// Existing slugs power the client-side collision check ([data-existing-slugs] on the new form).
+const posts = await getManagedBlogPosts();
+const existingSlugs = posts.map(p => p.slug);
+---
+
+<AdminLayout title="New blog post">
+  <BlogEditorForm mode="new" existingSlugs={existingSlugs} />
+</AdminLayout>

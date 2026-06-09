@@ -1,0 +1,24 @@
+---
+/**
+ * Dedicated blog-post editor (issue #114). Replaces the accordion edit-form that unfolded inside
+ * each list row in /admin/blog. Auth is enforced by the /admin middleware. A missing slug bounces
+ * back to the list with an error flash (the list renders ?error).
+ */
+import AdminLayout from '@layouts/AdminLayout.astro';
+import BlogEditorForm from '@components/admin/BlogEditorForm.astro';
+import { getManagedBlogPosts } from '@lib/blog-content';
+
+const { slug } = Astro.params;
+const posts = await getManagedBlogPosts(); // uncached, all statuses
+const post = posts.find(p => p.slug === slug);
+
+if (!post) {
+  return Astro.redirect(
+    `/admin/blog?error=${encodeURIComponent('That post could not be found — it may have been deleted.')}`
+  );
+}
+---
+
+<AdminLayout title={`Edit: ${post.title}`}>
+  <BlogEditorForm mode="edit" post={post} />
+</AdminLayout>
