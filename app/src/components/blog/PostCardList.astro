@@ -1,0 +1,94 @@
+---
+import type { BlogPost } from '@lib/blog-content';
+import { categoryHref, tagHref } from '@lib/blog-routes';
+
+interface Props {
+  posts: BlogPost[];
+}
+
+const { posts } = Astro.props;
+
+const formatDate = (date: string | undefined): string | null => {
+  if (!date) return null;
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC'
+  });
+};
+---
+
+<div class="space-y-12 max-w-3xl">
+  {
+    posts.map(post => {
+      const formattedDate = formatDate(post.date);
+      const categories = post.categories ?? [];
+      const tags = post.tags ?? [];
+      return (
+        <article>
+          {post.image && (
+            <img
+              loading="lazy"
+              alt={post.imageAlt}
+              src={post.image}
+              class="w-full rounded-lg mb-4"
+            />
+          )}
+          {/* H2 keeps the heading outline continuous under each page's single H1 (R3-F21). */}
+          <h2 class="text-2xl lg:text-3xl font-heading font-semibold mb-2">
+            <a href={`/blog/${post.slug}`} class="text-forest-canopy hover:text-moss-green">
+              {post.title}
+            </a>
+          </h2>
+          {/* Byline <p>: the ONLY `article p:has(time)` — blog.spec test 18 pins its
+              text-earth-brown/80 contrast token. Do not move <time> out or drop the class. */}
+          <p class="text-sm text-earth-brown/80 mb-3">
+            {formattedDate && <time datetime={post.date}>{formattedDate}</time>}
+            {formattedDate && <span class="mx-2">·</span>}
+            <span>By {post.author}</span>
+          </p>
+          <p class="text-earth-brown/80">{post.excerpt}</p>
+          {(categories.length > 0 || tags.length > 0) && (
+            <div class="mt-3 text-sm">
+              {categories.length > 0 && (
+                <p class="text-earth-brown/80">
+                  <span class="font-semibold">Categories:</span>{' '}
+                  {categories.map((cat, i) => (
+                    <>
+                      {i > 0 && <span aria-hidden="true">, </span>}
+                      <a
+                        href={categoryHref(cat)}
+                        class="text-forest-canopy underline hover:text-moss-green"
+                      >
+                        {cat}
+                      </a>
+                    </>
+                  ))}
+                </p>
+              )}
+              {tags.length > 0 && (
+                <p class="text-earth-brown/80 mt-1">
+                  <span class="font-semibold">Tags:</span>{' '}
+                  {tags.map((tag, i) => (
+                    <>
+                      {i > 0 && <span aria-hidden="true">, </span>}
+                      <a
+                        href={tagHref(tag)}
+                        class="text-forest-canopy underline hover:text-moss-green"
+                      >
+                        {tag}
+                      </a>
+                    </>
+                  ))}
+                </p>
+              )}
+            </div>
+          )}
+        </article>
+      );
+    })
+  }
+</div>

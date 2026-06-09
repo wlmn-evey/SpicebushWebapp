@@ -41,23 +41,23 @@ PR1) — nothing ever read or wrote it.
 
 ### Row shape for a blog post
 
-| Column / JSONB key | Value |
-|---|---|
-| `type` | `'blog'` |
-| `slug` | URL slug, matches `^[a-z0-9-_]{1,100}$`; must NOT match `^\d{4}-\d{2}-\d{2}-` (that prefix shape is reserved for the legacy-redirect namespace); immutable after creation in the admin UI |
-| `title` (column) | Post title, ≤ 300 chars. Overrides `data.title` on read (via `toContentEntry`) |
-| `status` | `'published'` or `'draft'` — the entire draft/published representation. Blog POSTs must carry an **explicit** status; a missing/empty value is a 400, never a silent publish |
-| `data.date` | `'YYYY-MM-DD'` string — display and sort date |
-| `data.author` | string, default `'Spicebush Team'` |
-| `data.excerpt` | string, ≤ 1,000 chars, trimmed |
-| `data.body` | raw **Markdown** string, ≤ 200,000 chars (~200 KB), trimmed of leading/trailing whitespace; never HTML |
-| `data.image` | optional featured-image URL; must be site-relative or HTTPS absolute, matching `^(\/(?![/\\])\|https:\/\/)` |
-| `data.imageAlt` | alt text; required when `image` is set and status is `published`; must be ≥ 6 chars, not filename-like, not a generic word |
-| `data.seoTitle` | optional per-post `<title>` / OG override |
-| `data.seoDescription` | optional per-post meta-description / OG override |
-| `data.categories`, `data.tags` | legacy import keys, carried **opaquely** by the generic `baseDataJson` edit passthrough; no blog code reads, validates, or reshapes them |
-| `author_email` | set automatically to the admin's session email on save; `NULL` on the imported legacy rows (rollback discriminator) |
-| `created_at` / `updated_at` | imported rows use `{date}T12:00:00Z`; auto-managed otherwise |
+| Column / JSONB key             | Value                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`                         | `'blog'`                                                                                                                                                                                                                                                                                                                                           |
+| `slug`                         | URL slug, matches `^[a-z0-9-_]{1,100}$`; must NOT match `^\d{4}-\d{2}-\d{2}-` (that prefix shape is reserved for the legacy-redirect namespace); immutable after creation in the admin UI                                                                                                                                                          |
+| `title` (column)               | Post title, ≤ 300 chars. Overrides `data.title` on read (via `toContentEntry`)                                                                                                                                                                                                                                                                     |
+| `status`                       | `'published'` or `'draft'` — the entire draft/published representation. Blog POSTs must carry an **explicit** status; a missing/empty value is a 400, never a silent publish                                                                                                                                                                       |
+| `data.date`                    | `'YYYY-MM-DD'` string — display and sort date                                                                                                                                                                                                                                                                                                      |
+| `data.author`                  | string, default `'Spicebush Team'`                                                                                                                                                                                                                                                                                                                 |
+| `data.excerpt`                 | string, ≤ 1,000 chars, trimmed                                                                                                                                                                                                                                                                                                                     |
+| `data.body`                    | raw **Markdown** string, ≤ 200,000 chars (~200 KB), trimmed of leading/trailing whitespace; never HTML                                                                                                                                                                                                                                             |
+| `data.image`                   | optional featured-image URL; must be site-relative or HTTPS absolute, matching `^(\/(?![/\\])\|https:\/\/)`                                                                                                                                                                                                                                        |
+| `data.imageAlt`                | alt text; required when `image` is set and status is `published`; must be ≥ 6 chars, not filename-like, not a generic word                                                                                                                                                                                                                         |
+| `data.seoTitle`                | optional per-post `<title>` / OG override                                                                                                                                                                                                                                                                                                          |
+| `data.seoDescription`          | optional per-post meta-description / OG override                                                                                                                                                                                                                                                                                                   |
+| `data.categories`, `data.tags` | string arrays, carried losslessly through the edit passthrough (never mutated on write — R1-F12). The Phase-3 public discovery layer (`blog-discovery.ts`) **reads** them, canonicalizing each label to a slug on read for the `/blog/category/[slug]` + `/blog/tag/[slug]` routes and related-posts ranking; the stored values are never reshaped |
+| `author_email`                 | set automatically to the admin's session email on save; `NULL` on the imported legacy rows (rollback discriminator)                                                                                                                                                                                                                                |
+| `created_at` / `updated_at`    | imported rows use `{date}T12:00:00Z`; auto-managed otherwise                                                                                                                                                                                                                                                                                       |
 
 ### Empty-string semantics
 
@@ -105,7 +105,7 @@ seed-created blog rows.
 Migration 015 **reconciles then imports**, all in one transaction:
 
 1. **Reconcile** — `DELETE` the seed-pipeline rows (targets only `author_email =
-   'seed@spicebushmontessori.org'` AND date-prefixed slugs).
+'seed@spicebushmontessori.org'` AND date-prefixed slugs).
 2. **Import** — six `INSERT … ON CONFLICT (type, slug) DO NOTHING`, using the **clean** slugs (file
    name with the date prefix stripped, or the explicit frontmatter `slug`), `author_email = NULL`,
    and `created_at`/`updated_at` of `{date}T12:00:00Z`.
@@ -121,12 +121,36 @@ Markdown remains recoverable via git history.
 
 ## Public Routes
 
-| Route | Description |
-|-------|-------------|
-| `/blog` | Blog index — vertical list of published posts (featured image, title link, date, author, excerpt). Friendly branded empty state at HTTP 200 when no posts. File: `app/src/pages/blog.astro` |
-| `/blog/[slug]` | Individual post page — SSR, sanitized body. File: `app/src/pages/blog/[slug].astro` |
-| `/resources/blog` | 301 redirect to `/blog`. File: `app/src/pages/resources/blog.astro` |
-| `/resources/blog/[slug]` | Trivial 301 redirect to `/blog/[slug]`. File: `app/src/pages/resources/blog/[slug].astro` |
+| Route                    | Description                                                                                                                                                                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/blog`                  | Blog index = **page 1** of the paginated list. Published-post cards (featured image, title link, date, author, excerpt, category/tag chips). Friendly branded empty state at HTTP 200 when no posts. File: `app/src/pages/blog.astro` |
+| `/blog/page/[n]`         | Pagination for **n ≥ 2** only; `/blog/page/1` `301`s to `/blog`; an out-of-range or non-integer `[n]` `404`s. Each `n ≥ 2` self-canonicals and is indexable. File: `app/src/pages/blog/page/[n].astro`                                |
+| `/blog/category/[slug]`  | Category index (PATH segment, never query params — R4-F15). Indexable at **≥2 members** (`CATEGORY_INDEX_THRESHOLD`); below that, `noindex, follow` (thin content). Self-canonical. File: `app/src/pages/blog/category/[slug].astro`  |
+| `/blog/tag/[slug]`       | Tag click-filter — **always `noindex, follow`** and excluded from the sitemap (R1-F21). Self-canonical. File: `app/src/pages/blog/tag/[slug].astro`                                                                                   |
+| `/blog/[slug]`           | Individual post page — SSR, sanitized body. File: `app/src/pages/blog/[slug].astro`                                                                                                                                                   |
+| `/resources/blog`        | 301 redirect to `/blog`. File: `app/src/pages/resources/blog.astro`                                                                                                                                                                   |
+| `/resources/blog/[slug]` | Trivial 301 redirect to `/blog/[slug]`. File: `app/src/pages/resources/blog/[slug].astro`                                                                                                                                             |
+
+### Discovery route behavior (Phase 3 PR2)
+
+- **Canonical-param guard.** Category/tag routes render only when the `[slug]` is ALREADY the
+  canonical taxonomy slug (`isCanonicalTaxonomyParam` — `taxonomySlug(raw) === raw`, blog-routes.ts).
+  A capital, spaced, or hyphen-noisy param (`/blog/category/Education`) `404`s rather than serving a
+  duplicate, so there is exactly ONE indexable URL per taxonomy and its self-referential canonical
+  (built path-only by `resolveSeoMetadata`) is always correct.
+- **Pagination param.** `parseBlogPageParam` classifies `[n]`: `'1'` → `301 /blog`; a clean integer
+  `≥2` → render (range checked by `paginate.isValidPage`, else `404`); everything else (non-integer,
+  `'0'`, leading-zero `'02'`) → `404`. `blogPageHref(n)` collapses page 1 to `/blog`.
+- **Soft noindex** is driven by the Layout `robots="noindex-follow"` prop (PR1b machinery): tag pages
+  always; category pages only below the ≥2 threshold. Indexable pages pass no prop (`index, follow`).
+- **a11y (R2-F25).** `Pagination.astro` is a `<nav aria-label="Blog pagination">` of real anchors with
+  `aria-current="page"` + bold/underline (non-color affordance) on the active page and `aria-disabled`
+  prev/next at the boundaries. Taxonomy/count text is rendered in document order (no `aria-live` — these
+  are full-nav routes, not client filters, so a live region would be a no-op).
+- **Heading outline (R3-F21).** Each route has a single `<h1>`; `PostCardList` cards use `<h2>` titles
+  — no skipped levels.
+- **Shared components.** `app/src/components/blog/PostCardList.astro` (cards + chips) and
+  `Pagination.astro` are reused by `/blog`, `/blog/page/[n]`, and the category/tag routes.
 
 ### Post page behavior
 
@@ -146,10 +170,10 @@ real fixes the previously-broken link that 301'd to `/contact`.
 
 ## Admin Routes
 
-| Route | Description |
-|-------|-------------|
-| `/admin/blog` | Blog authoring dashboard — add-post form + draft/published lists with inline edit, preview, and delete. File: `app/src/pages/admin/blog.astro` |
-| `POST /api/admin/content` | Generic content endpoint (existing) — the blog uses it via `collection=blog`. File: `app/src/pages/api/admin/content.ts` |
+| Route                     | Description                                                                                                                                    |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/admin/blog`             | Blog authoring dashboard — add-post form + draft/published lists with inline edit, preview, and delete. File: `app/src/pages/admin/blog.astro` |
+| `POST /api/admin/content` | Generic content endpoint (existing) — the blog uses it via `collection=blog`. File: `app/src/pages/api/admin/content.ts`                       |
 
 The admin page is a structural clone of `app/src/pages/admin/faq.astro` (AdminLayout wrapper,
 `?saved=` / `?error=` flash params, `<details>` add-form + collapsible per-item edit forms). A link
@@ -277,25 +301,25 @@ The blog uses the existing generic content endpoint `POST /api/admin/content` (w
 enter the request path of all existing admin collections — a regression test confirms an existing
 collection still saves and deletes (including the header-absent fail-open case).
 
-| Change | Behavior |
-|---|---|
-| Allowlist | `'blog'` added to `ALLOWED_COLLECTIONS` |
-| Origin check | Defense-in-depth CSRF: a mismatched `Origin` or `Sec-Fetch-Site: cross-site` → `403`; **fails open** when both headers are absent. SameSite=Lax remains the primary CSRF defense |
-| `_raw` field suffix | A `data.*_raw` field bypasses `parseSimpleValue` type-coercion and is stored as the raw string (used by `data.body_raw`, `data.excerpt_raw`); follows the existing `_csv` / `_lines` convention |
-| Blog normalize/validate hook | When `collection='blog'`, runs `normalizeBlogData` then `validateBlogData` (wired like the existing faq/testimonials hooks), passing the **raw pre-default** status |
-| `createOnly` guard | When truthy, `INSERT … ON CONFLICT (type, slug) DO NOTHING` + rowCount check; rowCount 0 → `400` "A post with this address already exists…" (used by the blog add-form) |
-| Form-based delete | `action='delete'` runs the existing DELETE (allowlist + slug check + cache invalidation) and responds via `responseByFormat` |
-| `parseRedirectPath` hardening | Rejects backslash-leading paths (`/\evil.com`) that browsers resolve off-site: `^\/(?![/\\])` |
+| Change                        | Behavior                                                                                                                                                                                        |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Allowlist                     | `'blog'` added to `ALLOWED_COLLECTIONS`                                                                                                                                                         |
+| Origin check                  | Defense-in-depth CSRF: a mismatched `Origin` or `Sec-Fetch-Site: cross-site` → `403`; **fails open** when both headers are absent. SameSite=Lax remains the primary CSRF defense                |
+| `_raw` field suffix           | A `data.*_raw` field bypasses `parseSimpleValue` type-coercion and is stored as the raw string (used by `data.body_raw`, `data.excerpt_raw`); follows the existing `_csv` / `_lines` convention |
+| Blog normalize/validate hook  | When `collection='blog'`, runs `normalizeBlogData` then `validateBlogData` (wired like the existing faq/testimonials hooks), passing the **raw pre-default** status                             |
+| `createOnly` guard            | When truthy, `INSERT … ON CONFLICT (type, slug) DO NOTHING` + rowCount check; rowCount 0 → `400` "A post with this address already exists…" (used by the blog add-form)                         |
+| Form-based delete             | `action='delete'` runs the existing DELETE (allowlist + slug check + cache invalidation) and responds via `responseByFormat`                                                                    |
+| `parseRedirectPath` hardening | Rejects backslash-leading paths (`/\evil.com`) that browsers resolve off-site: `^\/(?![/\\])`                                                                                                   |
 
 ### Auth
 
 The middleware protects `/admin` and `/api/admin` prefixes:
 
-| Request | Result |
-|---|---|
-| Unauthenticated JSON request | `401` |
+| Request                             | Result                                                                                 |
+| ----------------------------------- | -------------------------------------------------------------------------------------- |
+| Unauthenticated JSON request        | `401`                                                                                  |
 | Unauthenticated `Accept: text/html` | `302` to `/auth/sign-in` (middleware `context.redirect` default — verified; not `303`) |
-| Authenticated, non-admin session | `403` (the endpoint's own check) |
+| Authenticated, non-admin session    | `403` (the endpoint's own check)                                                       |
 
 ### Status requirement
 
@@ -419,18 +443,18 @@ All error messages use plain language and surface through the focused error flas
 Blog logic lives in one lib file. It consumes `ContentEntry` as-is and does not motivate any change
 to `ContentEntry` / `toContentEntry`. Exports:
 
-| Export | Purpose |
-|---|---|
-| `type BlogPost` | `{ slug, title, date, author, excerpt, body, image?, imageAlt?, seoTitle?, seoDescription?, status }` |
-| `normalizeBlogEntry(entry)` | Read-path trust boundary — skips rows with bad slug / missing title-date-excerpt; coerces `''` optionals to `undefined`; nulls `data.image` failing the scheme regex (covers index `<img>`, post `<img>`, and ogImage) |
-| `compareBlogPosts(a, b)` | The single ordering implementation (date DESC, slug DESC, undated-last) |
-| `getPublishedPosts()` | `db.content.getCollection('blog')` → normalize → sort (public index) |
-| `getPublishedPost(slug)` | `db.content.getEntry('blog', slug)` (drafts are `null` via SQL) |
-| `getManagedBlogPosts()` | `queryRows` for `type='blog'` with **no status filter** (admin list), uncached |
-| `resolveLegacyBlogRedirect(slug)` | Returns the stripped slug when `slug` is date-prefixed AND the stripped target is a published post; `null` otherwise (miss or draft target) |
-| `normalizeBlogData(data)` / `validateBlogData(data, title, rawStatus)` | Write-path normalize / validate |
-| `renderPostBody(markdown)` | Markdown → sanitized HTML (see [Rendering & Sanitization](#rendering--sanitization)) |
-| `escapeXml(s)` / `renderBlogSitemapXml(posts, origin)` | Sitemap urlset builder (kept in-lib so the endpoint is a thin shell) |
+| Export                                                                 | Purpose                                                                                                                                                                                                                |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type BlogPost`                                                        | `{ slug, title, date, author, excerpt, body, image?, imageAlt?, seoTitle?, seoDescription?, status }`                                                                                                                  |
+| `normalizeBlogEntry(entry)`                                            | Read-path trust boundary — skips rows with bad slug / missing title-date-excerpt; coerces `''` optionals to `undefined`; nulls `data.image` failing the scheme regex (covers index `<img>`, post `<img>`, and ogImage) |
+| `compareBlogPosts(a, b)`                                               | The single ordering implementation (date DESC, slug DESC, undated-last)                                                                                                                                                |
+| `getPublishedPosts()`                                                  | `db.content.getCollection('blog')` → normalize → sort (public index)                                                                                                                                                   |
+| `getPublishedPost(slug)`                                               | `db.content.getEntry('blog', slug)` (drafts are `null` via SQL)                                                                                                                                                        |
+| `getManagedBlogPosts()`                                                | `queryRows` for `type='blog'` with **no status filter** (admin list), uncached                                                                                                                                         |
+| `resolveLegacyBlogRedirect(slug)`                                      | Returns the stripped slug when `slug` is date-prefixed AND the stripped target is a published post; `null` otherwise (miss or draft target)                                                                            |
+| `normalizeBlogData(data)` / `validateBlogData(data, title, rawStatus)` | Write-path normalize / validate                                                                                                                                                                                        |
+| `renderPostBody(markdown)`                                             | Markdown → sanitized HTML (see [Rendering & Sanitization](#rendering--sanitization))                                                                                                                                   |
+| `escapeXml(s)` / `renderBlogSitemapXml(posts, origin)`                 | Sitemap urlset builder (kept in-lib so the endpoint is a thin shell)                                                                                                                                                   |
 
 ## Rendering & Sanitization
 
@@ -457,18 +481,44 @@ blog code (plus the admin preview call site).
 
 ```typescript
 DOMPurify.sanitize(html, {
-  ALLOWED_TAGS: ['h2','h3','h4','h5','h6','p','a','ul','ol','li','strong','em','b','i',
-                 'blockquote','code','pre','img','hr','br',
-                 'table','thead','tbody','tr','th','td','del'],
-  ALLOWED_ATTR: ['href','src','alt','title'],   // NO 'id' — heading anchors are cut, so author
-                                                // ids must never reach the public page; DOMPurify
-                                                // strips every author-supplied id (no DOM-clobbering
-                                                // surface; resolved by removal)
-  ALLOW_DATA_ATTR: false,   // defaults to TRUE and is checked BEFORE ALLOWED_ATTR — without these,
-  ALLOW_ARIA_ATTR: false,   // an authored <p data-admin-alert> survives "strict" sanitization and
-                            // trips AdminLayout's auto-remove in the preview; aria spoofing reaches
-                            // screen-reader users
-  ALLOWED_URI_REGEXP: /^(?:https:|mailto:|tel:|\/(?![/\\]))/i
+  ALLOWED_TAGS: [
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "p",
+    "a",
+    "ul",
+    "ol",
+    "li",
+    "strong",
+    "em",
+    "b",
+    "i",
+    "blockquote",
+    "code",
+    "pre",
+    "img",
+    "hr",
+    "br",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
+    "del",
+  ],
+  ALLOWED_ATTR: ["href", "src", "alt", "title"], // NO 'id' — heading anchors are cut, so author
+  // ids must never reach the public page; DOMPurify
+  // strips every author-supplied id (no DOM-clobbering
+  // surface; resolved by removal)
+  ALLOW_DATA_ATTR: false, // defaults to TRUE and is checked BEFORE ALLOWED_ATTR — without these,
+  ALLOW_ARIA_ATTR: false, // an authored <p data-admin-alert> survives "strict" sanitization and
+  // trips AdminLayout's auto-remove in the preview; aria spoofing reaches
+  // screen-reader users
+  ALLOWED_URI_REGEXP: /^(?:https:|mailto:|tel:|\/(?![/\\]))/i,
   // HTTPS-only for body links/images (unifies the body trust boundary with the featured-image
   // policy); NO '#'/fragment alternative (heading anchors cut, so fragment links have no targets);
   // blocks javascript:, data:, vbscript:, protocol-relative, AND the backslash form '/\evil.com'
@@ -478,16 +528,16 @@ DOMPurify.sanitize(html, {
 
 ### URI policy
 
-| Form | Behavior |
-|---|---|
-| `http:` body links/images | **Blocked** (HTTPS-only) |
-| `https:`, `mailto:`, `tel:` | Allowed |
-| Site-relative `/page` | Allowed |
-| `www.`-leading | Normalized to `https://` (walkTokens) |
-| Fragment-only `#section` | **Stripped** (no in-post id targets exist) |
-| Non-slash relative `images/x.png`, `../page` | **Blocked** |
-| Backslash-leading `/\evil.com` | **Blocked** (in the sanitizer, the write-path image scheme, and the read-path mapper) |
-| `javascript:` / `data:` / `vbscript:` / `//evil` | **Blocked** |
+| Form                                             | Behavior                                                                              |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| `http:` body links/images                        | **Blocked** (HTTPS-only)                                                              |
+| `https:`, `mailto:`, `tel:`                      | Allowed                                                                               |
+| Site-relative `/page`                            | Allowed                                                                               |
+| `www.`-leading                                   | Normalized to `https://` (walkTokens)                                                 |
+| Fragment-only `#section`                         | **Stripped** (no in-post id targets exist)                                            |
+| Non-slash relative `images/x.png`, `../page`     | **Blocked**                                                                           |
+| Backslash-leading `/\evil.com`                   | **Blocked** (in the sanitizer, the write-path image scheme, and the read-path mapper) |
+| `javascript:` / `data:` / `vbscript:` / `//evil` | **Blocked**                                                                           |
 
 The featured-image URL is validated by the same backslash-aware scheme on the write path
 (`validateBlogData`) and re-checked on the read path (`normalizeBlogEntry`); the slug charset is
@@ -546,13 +596,13 @@ The post page passes `title={post.seoTitle || post.title}` and
 `description={post.seoDescription || post.excerpt}` (using `||`, not `??`). `Layout.astro` accepts
 optional props `ogImage`, `ogImageAlt`, `ogType` (default `'website'`), and `publishedTime`:
 
-| Tag | Source |
-|---|---|
-| `og:image` and `twitter:image` | `ogImage ?? seoMetadata.ogImageUrl` (post featured image, absolute prod-origin URL) |
+| Tag                                    | Source                                                                                       |
+| -------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `og:image` and `twitter:image`         | `ogImage ?? seoMetadata.ogImageUrl` (post featured image, absolute prod-origin URL)          |
 | `og:image:alt` and `twitter:image:alt` | `ogImageAlt` (post `imageAlt`) — Twitter/X does not read `og:image:alt`, so both are emitted |
-| `og:type` | `'article'` for posts |
-| `article:published_time` | `{date}T12:00:00Z` ISO value, when `ogType='article'` and set |
-| `rel="canonical"`, `meta[name=robots]` | prod-origin canonical; `index, follow` (asserted, not assumed) |
+| `og:type`                              | `'article'` for posts                                                                        |
+| `article:published_time`               | `{date}T12:00:00Z` ISO value, when `ogType='article'` and set                                |
+| `rel="canonical"`, `meta[name=robots]` | prod-origin canonical; `index, follow` (asserted, not assumed)                               |
 
 `/blog` is added to `SEO_MANAGED_PAGES` (owner-tunable index meta via `/admin/seo`); individual posts
 are not added. Indexability is asserted, not assumed — `meta[name=robots]` must be `index, follow`
@@ -621,21 +671,21 @@ redirect entries.
 Each item below is intentionally **out of V1**. The generic content pipeline already does ~90% of the
 work; every deferred item would add files, migrations, or UI that the maintainability gate penalizes.
 
-| Deferred | Rationale |
-|---|---|
-| Categories / tags UI | Owner-deferred; legacy keys are carried opaquely by `baseDataJson`. No blog code names them |
-| RSS | No `@astrojs/rss` dependency; a new surface for zero current demand |
-| Pagination | 6 posts + a slow cadence; a single list page is correct until post count demands otherwise |
-| Scheduled publishing | Draft → manual publish covers the owner workflow |
-| Related posts, search, comments, newsletter integration | Each is a feature in itself |
-| In-post heading anchors / table of contents / "back to top" fragment links | Documentation-grade for a low-volume school blog, and the root of an author-controlled-`id` security surface; the renderer emits no ids and DOMPurify strips all author ids |
-| Rich-text / WYSIWYG editor | A new dependency + a new XSS surface; Markdown + server preview achieves owner confidence within MVP. A V2 candidate only if owners struggle |
-| Client-side autosave / restore | Prevention (client validation) replaces recovery; the residual loss risk is recorded below |
-| Body-image-alt client scanner | A per-keystroke parallel validation engine with no admin-surface precedent; the server enforces body-image alt quality at publish |
-| Featured-image thumbnail preview in the editor | Additive UI with its own load/error/empty states and a11y; the field is text-box-only, matching the staff/media clone source. A high-value V2 candidate |
-| `BlogPosting` JSON-LD structured data | Per-post meta + OG/Twitter tags cover V1; a V2 candidate |
-| Meta-description length capping / bespoke index meta | Search engines truncate gracefully; the `/blog` index meta is owner-tunable via `/admin/seo` |
-| Cross-instance cache invalidation, CDN caching of blog pages, full-site sitemap rebuild | Risk decisions; see [Caching](#caching) and [SEO](#seo) |
+| Deferred                                                                                | Rationale                                                                                                                                                                   |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Categories / tags UI                                                                    | Owner-deferred; legacy keys are carried opaquely by `baseDataJson`. No blog code names them                                                                                 |
+| RSS                                                                                     | No `@astrojs/rss` dependency; a new surface for zero current demand                                                                                                         |
+| Pagination                                                                              | 6 posts + a slow cadence; a single list page is correct until post count demands otherwise                                                                                  |
+| Scheduled publishing                                                                    | Draft → manual publish covers the owner workflow                                                                                                                            |
+| Related posts, search, comments, newsletter integration                                 | Each is a feature in itself                                                                                                                                                 |
+| In-post heading anchors / table of contents / "back to top" fragment links              | Documentation-grade for a low-volume school blog, and the root of an author-controlled-`id` security surface; the renderer emits no ids and DOMPurify strips all author ids |
+| Rich-text / WYSIWYG editor                                                              | A new dependency + a new XSS surface; Markdown + server preview achieves owner confidence within MVP. A V2 candidate only if owners struggle                                |
+| Client-side autosave / restore                                                          | Prevention (client validation) replaces recovery; the residual loss risk is recorded below                                                                                  |
+| Body-image-alt client scanner                                                           | A per-keystroke parallel validation engine with no admin-surface precedent; the server enforces body-image alt quality at publish                                           |
+| Featured-image thumbnail preview in the editor                                          | Additive UI with its own load/error/empty states and a11y; the field is text-box-only, matching the staff/media clone source. A high-value V2 candidate                     |
+| `BlogPosting` JSON-LD structured data                                                   | Per-post meta + OG/Twitter tags cover V1; a V2 candidate                                                                                                                    |
+| Meta-description length capping / bespoke index meta                                    | Search engines truncate gracefully; the `/blog` index meta is owner-tunable via `/admin/seo`                                                                                |
+| Cross-instance cache invalidation, CDN caching of blog pages, full-site sitemap rebuild | Risk decisions; see [Caching](#caching) and [SEO](#seo)                                                                                                                     |
 
 ## Accepted Residual Risks
 

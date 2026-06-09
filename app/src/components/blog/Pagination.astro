@@ -1,0 +1,71 @@
+---
+import { blogPageHref } from '@lib/blog-routes';
+
+interface Props {
+  page: number;
+  totalPages: number;
+  hasPrev: boolean;
+  hasNext: boolean;
+}
+
+const { page, totalPages, hasPrev, hasNext } = Astro.props;
+
+// Numbered page links 1..totalPages (page 1 → /blog, n>=2 → /blog/page/n). Small corpus keeps the
+// list short; if it ever grows large this is the seam to add a windowed range.
+const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+---
+
+{
+  totalPages > 1 && (
+    <nav aria-label="Blog pagination" class="mt-12 max-w-3xl">
+      <ul class="flex flex-wrap items-center gap-4">
+        <li>
+          {hasPrev ? (
+            <a
+              rel="prev"
+              href={blogPageHref(page - 1)}
+              class="text-forest-canopy underline hover:text-moss-green"
+            >
+              ← Newer posts
+            </a>
+          ) : (
+            <span aria-disabled="true" class="text-earth-brown/40">
+              ← Newer posts
+            </span>
+          )}
+        </li>
+        {pageNumbers.map(p => (
+          <li>
+            {p === page ? (
+              // Active page: bold + underline is the non-color affordance (R2-F25) alongside
+              // aria-current so it is not signalled by color alone.
+              <span aria-current="page" class="font-bold underline text-earth-brown">
+                {p}
+                <span class="sr-only"> (current page)</span>
+              </span>
+            ) : (
+              <a href={blogPageHref(p)} class="text-forest-canopy underline hover:text-moss-green">
+                {p}
+              </a>
+            )}
+          </li>
+        ))}
+        <li>
+          {hasNext ? (
+            <a
+              rel="next"
+              href={blogPageHref(page + 1)}
+              class="text-forest-canopy underline hover:text-moss-green"
+            >
+              Older posts →
+            </a>
+          ) : (
+            <span aria-disabled="true" class="text-earth-brown/40">
+              Older posts →
+            </span>
+          )}
+        </li>
+      </ul>
+    </nav>
+  )
+}

@@ -2,21 +2,17 @@
 import Layout from '@layouts/Layout.astro';
 import Header from '@components/Header.astro';
 import Footer from '@components/Footer.astro';
+import PostCardList from '@components/blog/PostCardList.astro';
+import Pagination from '@components/blog/Pagination.astro';
 import { getPublishedPosts } from '@lib/blog-content';
+import { paginate } from '@lib/blog-discovery';
 
 const posts = await getPublishedPosts();
 
-const formatDate = (date: string | undefined): string | null => {
-  if (!date) return null;
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return parsed.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'UTC'
-  });
-};
+// `/blog` is page 1 of the paginated index. With the pinned page size (>=10) the 6-post corpus is a
+// single page, so all six cards show here and no prev/next renders — the `/blog/page/[n]` route only
+// matters once the corpus outgrows one page (R3-F19 / R4-F10).
+const pagination = paginate(posts, 1);
 ---
 
 <Layout title="Blog">
@@ -34,7 +30,7 @@ const formatDate = (date: string | undefined): string | null => {
             We're growing new stories. Check back soon for news, reflections, and updates from the
             Spicebush Montessori community.
           </p>
-          <h3 class="text-xl font-heading font-semibold text-earth-brown mb-3">In the meantime</h3>
+          <h2 class="text-xl font-heading font-semibold text-earth-brown mb-3">In the meantime</h2>
           <p class="text-earth-brown/80">
             Have a question or want to learn more about our school?{' '}
             <a href="/contact" class="text-forest-canopy underline hover:text-moss-green">
@@ -44,34 +40,15 @@ const formatDate = (date: string | undefined): string | null => {
           </p>
         </div>
       ) : (
-        <div class="space-y-12 max-w-3xl">
-          {posts.map(post => {
-            const formattedDate = formatDate(post.date);
-            return (
-              <article>
-                {post.image && (
-                  <img
-                    loading="lazy"
-                    alt={post.imageAlt}
-                    src={post.image}
-                    class="w-full rounded-lg mb-4"
-                  />
-                )}
-                <h2 class="text-2xl lg:text-3xl font-heading font-semibold mb-2">
-                  <a href={`/blog/${post.slug}`} class="text-forest-canopy hover:text-moss-green">
-                    {post.title}
-                  </a>
-                </h2>
-                <p class="text-sm text-earth-brown/80 mb-3">
-                  {formattedDate && <time datetime={post.date}>{formattedDate}</time>}
-                  {formattedDate && <span class="mx-2">·</span>}
-                  <span>By {post.author}</span>
-                </p>
-                <p class="text-earth-brown/80">{post.excerpt}</p>
-              </article>
-            );
-          })}
-        </div>
+        <>
+          <PostCardList posts={pagination.items} />
+          <Pagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            hasPrev={pagination.hasPrev}
+            hasNext={pagination.hasNext}
+          />
+        </>
       )
     }
   </main>
