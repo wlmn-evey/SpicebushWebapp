@@ -107,9 +107,13 @@
 .blog-editor-surface h2,
 .blog-editor-surface h3,
 .blog-editor-surface h4,
+.blog-editor-surface h5,
+.blog-editor-surface h6,
 .blog-editor-preview h2,
 .blog-editor-preview h3,
-.blog-editor-preview h4 {
+.blog-editor-preview h4,
+.blog-editor-preview h5,
+.blog-editor-preview h6 {
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
   color: #4b3a2f;
@@ -246,4 +250,8 @@
 .blog-editor-surface .text-right,
 .blog-editor-preview .text-right {
   text-align: right;
+}
+.blog-editor-surface .text-justify,
+.blog-editor-preview .text-justify {
+  text-align: justify;
 }
