@@ -188,35 +188,44 @@ real fixes the previously-broken link that 301'd to `/contact`.
 
 ## Admin Routes
 
-| Route                     | Description                                                                                                                                    |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/admin/blog`             | Blog authoring dashboard — add-post form + draft/published lists with inline edit, preview, and delete. File: `app/src/pages/admin/blog.astro` |
-| `POST /api/admin/content` | Generic content endpoint (existing) — the blog uses it via `collection=blog`. File: `app/src/pages/api/admin/content.ts`                       |
+| Route                     | Description                                                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/admin/blog`             | Blog dashboard — a scannable list of all posts (four lifecycle groups) with bulk + per-row lifecycle actions and a **New Post** button. File: `app/src/pages/admin/blog.astro` |
+| `/admin/blog/new`         | Dedicated new-post editor. File: `app/src/pages/admin/blog/new.astro`                                                                                          |
+| `/admin/blog/edit/[slug]` | Dedicated editor for an existing post. File: `app/src/pages/admin/blog/edit/[slug].astro`                                                                      |
+| `POST /api/admin/content` | Generic content endpoint (existing) — the blog uses it via `collection=blog`. File: `app/src/pages/api/admin/content.ts`                                       |
 
-The admin page is a structural clone of `app/src/pages/admin/faq.astro` (AdminLayout wrapper,
-`?saved=` / `?error=` flash params, `<details>` add-form + collapsible per-item edit forms). A link
-to `/admin/blog` (label "Blog") is added to `app/src/components/AdminNav.astro` under "Content".
+The list and the editor share the `AdminLayout` wrapper and the `?saved=` / `?error=` flash params.
+The editor form lives in one shared component, `app/src/components/admin/BlogEditorForm.astro` (used
+by both `new` and `edit`), so the field set is authored once. The **#114 admin redesign** replaced
+the accordion add/edit forms that previously lived inline on the list page with these dedicated
+editor pages (it preserved the form-POST contract, field names, validation, upload widget, and flash
+logic exactly — only the layout changed). A link to `/admin/blog` (label "Blog") is in
+`app/src/components/AdminNav.astro` under "Content".
 
 ### Page structure
 
-- **Add new post** — a `<details>` form posting to `/api/admin/content` with hidden
-  `collection=blog`, `createOnly=true`, `redirectTo=/admin/blog?saved=new`. Fields: title, slug,
-  date, author, excerpt, body (TipTap rich-text editor — see [Authoring Model](#authoring-model)),
-  featured image (upload widget + URL input), image description (alt), SEO title/description
-  (collapsed, optional), and a status select (Draft / Published, default Draft).
-- **Post list** — two groups, **Drafts** and **Published**, ordered by `compareBlogPosts`. Every row
-  with `type='blog'` is shown regardless of status (any non-`published` status, including a
-  stray/legacy value, sorts under Drafts). Status badges pair color with text using AA-passing
-  pairings.
-- **Edit form** — the same field set, pre-filled. Slug is read-only (a hidden input plus a display).
-  The status `<select>` renders `selected={post.status}` so an untouched edit retains the post's
-  current status (editing a published post without touching status keeps it published). The image
-  input prefills `value={post.image}`. The edit form carries no `createOnly`.
-- **Preview** — a nested `<details>` containing the server-rendered output of
-  `renderPostBody(post.body)` — the identical public render pipeline, zero-JS. On save, the saved
-  post's `<details>` (and its preview) server-render `open` so the save → redirect → preview loop
-  works.
-- **Delete** — a per-post form posting `action=delete`, `collection=blog`, `slug`,
+The dashboard and the editor are separate pages (#114 redesign):
+
+- **List (`/admin/blog`)** — four lifecycle groups (Published, Scheduled, Drafts, Archived), each a
+  scannable list of rows ordered by `compareBlogPosts`. Every row with `type='blog'` is shown
+  regardless of status (any non-`published`/`scheduled`/`archived` value sorts under Drafts). Each
+  row shows the title (a link to the editor), a four-state status badge (color paired with AA-passing
+  text), the date, an optional "N views" badge (published only), per-row quick actions (View on site,
+  Archive/Restore, Delete), and an **Edit** link. A **New Post** button opens the editor.
+- **Editor (`/admin/blog/new`, `/admin/blog/edit/[slug]`)** — the shared `BlogEditorForm.astro`
+  renders the title + TipTap body in the main column and **all metadata in an always-visible
+  sidebar** (status + schedule, date, slug, author, excerpt, featured image + alt, SEO; categories
+  and tags shown read-only when present). Nothing is hidden in `<details>`. The form posts to
+  `/api/admin/content`: `new` carries `createOnly=true` and `redirectTo=/admin/blog?saved=new`; `edit`
+  carries the post's `slug` (hidden), `baseDataJson`, and `redirectTo=/admin/blog?saved=<slug>`. The
+  status `<select>` renders `selected` matching the post's EXACT status, so an untouched edit retains
+  it. The slug is editable on `new` (with the collision check) and read-only on `edit`; a missing slug
+  on `edit` redirects to the list with an error flash.
+- **Preview** — the TipTap editor's own Preview button renders the current body through `renderBodyHtml`
+  (the same render-time pipeline the public page uses). The separate server-rendered accordion preview
+  was removed with the accordions.
+- **Delete** — a per-row form on the list posts `action=delete`, `collection=blog`, `slug`,
   `redirectTo=/admin/blog?saved=deleted`, with a confirmation prompt.
 
 ### Form field names
@@ -230,15 +239,15 @@ through this module so drift fails a test.
 
 ### Layout constraints
 
-- The status `<select>` always renders top-level, never inside a collapsed `<details>` (a required
-  control inside a collapsed, unfocusable disclosure can be silently un-submittable in Chrome).
-- Only optional, never-required fields (the "SEO (optional)" group) may live inside collapsed
-  sub-details. Date, excerpt, body, image, and imageAlt (all conditionally required) render
-  top-level.
-- The body and excerpt textareas are authored with tight interpolation
-  (`<textarea …>{post.body}</textarea>`, zero whitespace) under a `<!-- prettier-ignore -->` guard,
+- Every field is **always visible** on the editor page — none lives inside a collapsed `<details>`
+  (the #114 redesign removed the accordions). The status `<select>` and all conditionally-required
+  fields (date, excerpt, body, image, imageAlt) sit in the always-visible main column / sidebar, so a
+  required control can never be hidden in a collapsed, unfocusable disclosure (which can be silently
+  un-submittable in Chrome).
+- The excerpt textarea is authored with tight interpolation
+  (`<textarea …>{post.excerpt}</textarea>`, zero whitespace) under a `<!-- prettier-ignore -->` guard,
   because the `_raw` form path deliberately skips the parser's trim; `normalizeBlogData` is the
-  backstop trim.
+  backstop trim. (The body is the TipTap island's hidden field, not a textarea.)
 
 ### Featured image (media system reuse)
 
@@ -380,9 +389,9 @@ contract). This format contract lives in `app/src/lib/blog-publish-schedule.ts`
 imported by BOTH `validateBlogData` (save gate) and the scheduled-publish cron (fire predicate),
 so a post that saves cleanly is exactly the set the cron will fire — one contract, no drift.
 
-#### Authoring the lifecycle (`/admin/blog` form + `blog-admin-client.ts`)
+#### Authoring the lifecycle (`BlogEditorForm.astro` + `blog-admin-client.ts`)
 
-The add/edit forms expose all four statuses in the status dropdown. Each edit-form option's
+The editor's status dropdown exposes all four statuses. Each edit option's
 `selected` matches the post's EXACT status (R3-F10) — the prior `selected={post.status !== 'draft'}`
 would have silently published a scheduled/archived post on an untouched save. Scheduling specifics:
 
@@ -397,11 +406,13 @@ would have silently published a scheduled/archived post on an untouched save. Sc
   overridable `confirm()` ("this publishes now, not at that time") so a future date never silently
   publishes-now. `archived` is selectable here and round-trips to Draft/Published via a normal save.
 
-#### Dashboard (`/admin/blog` list — keep-accordion, R3-F15 owner override)
+#### Dashboard (`/admin/blog` list — scannable rows, #114 redesign)
 
-The list keeps the per-post `<details>` accordion edit forms (the owner chose this over a scannable
-table) and adds lifecycle management in place: posts are grouped into four sections (Published,
-Scheduled, Drafts, Archived); each row carries a four-state status badge and per-row quick actions —
+The list is a scannable set of rows that link to the dedicated editor — the **#114 redesign**
+replaced the per-post `<details>` accordion edit forms, **superseding the earlier R3-F15
+keep-accordion choice**. Lifecycle management stays in place: posts are grouped into four sections
+(Published, Scheduled, Drafts, Archived); each row carries a four-state status badge and per-row
+quick actions —
 **Archive** (any non-archived) / **Restore to draft** (archived, R4-F12) — that POST the
 `action=archive`/`action=restore` endpoints. **Bulk** select uses a checkbox per row associated via
 `form="bulk-blog-form"` (HTML forbids nesting them in the per-post edit forms) and a toolbar whose
