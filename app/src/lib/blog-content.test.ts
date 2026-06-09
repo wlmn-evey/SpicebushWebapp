@@ -450,6 +450,19 @@ describe('renderPostBody — URI / XSS matrix', () => {
   });
 });
 
+describe('renderPostBody — transitional HTML/markdown dispatch (Blog V2 cutover)', () => {
+  it('routes an HTML body through the V2 sanitizer (keeps <u>, which the V1 markdown path strips)', () => {
+    const out = renderPostBody('<p>before</p><p><u>underlined</u></p>');
+    expect(out).toContain('<u>underlined</u>');
+  });
+
+  it('routes a markdown body through the marked path (## → <h2>, **x** → <strong>)', () => {
+    const out = renderPostBody('## Heading\n\nSome **bold** text.');
+    expect(out).toContain('<h2>Heading</h2>');
+    expect(out).toContain('<strong>bold</strong>');
+  });
+});
+
 describe('normalizeBlogData', () => {
   it('coerces and trims short fields, defaults author', () => {
     const out = normalizeBlogData({

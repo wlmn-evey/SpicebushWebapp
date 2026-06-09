@@ -27,7 +27,6 @@ const slugify = (value: string): string =>
 function initConditionalRequired(form: HTMLFormElement): void {
   const statusSelect = form.querySelector(`[name="${BLOG_FORM_FIELDS.status}"]`);
   const excerpt = form.querySelector(`[name="${BLOG_FORM_FIELDS.excerptRaw}"]`);
-  const body = form.querySelector(`[name="${BLOG_FORM_FIELDS.bodyRaw}"]`);
   const date = form.querySelector(`[name="${BLOG_FORM_FIELDS.date}"]`);
   const image = form.querySelector(`[name="${BLOG_FORM_FIELDS.image}"]`);
   const imageAlt = form.querySelector(`[name="${BLOG_FORM_FIELDS.imageAlt}"]`);
@@ -46,7 +45,6 @@ function initConditionalRequired(form: HTMLFormElement): void {
     const publishing =
       statusSelect instanceof HTMLSelectElement && statusSelect.value === 'published';
     setRequired(excerpt, publishing);
-    setRequired(body, publishing);
     setRequired(date, publishing);
   };
 
@@ -54,6 +52,31 @@ function initConditionalRequired(form: HTMLFormElement): void {
     const hasImage = image instanceof HTMLInputElement && image.value.trim().length > 0;
     setRequired(imageAlt, hasImage);
   };
+
+  // Body moved from a <textarea> to the TipTap island's hidden field, and `required` does NOT apply
+  // to a hidden input — so the publish-time "body required" guard moves to a SUBMIT-TIME check
+  // (R3-F10). The server (validateBlogData) stays the source of truth; this is immediate feedback.
+  // The field is queried at submit time because the island hydrates after init.
+  const isEditorEmpty = (html: string): boolean =>
+    html
+      .replace(/<p>\s*<\/p>/gi, '')
+      .replace(/<[^>]*>/g, '')
+      .trim().length === 0;
+
+  form.addEventListener('submit', event => {
+    const publishing =
+      statusSelect instanceof HTMLSelectElement && statusSelect.value === 'published';
+    if (!publishing) return;
+    const bodyField = form.querySelector(`[name="${BLOG_FORM_FIELDS.bodyRaw}"]`);
+    const value =
+      bodyField instanceof HTMLInputElement || bodyField instanceof HTMLTextAreaElement
+        ? bodyField.value
+        : '';
+    if (isEditorEmpty(value)) {
+      event.preventDefault();
+      window.alert('Body is required to publish.');
+    }
+  });
 
   if (statusSelect instanceof HTMLSelectElement) {
     statusSelect.addEventListener('change', syncPublishRequired);

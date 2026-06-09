@@ -42,7 +42,7 @@ npx netlify deploy --prod --dir=app/dist
 - We use Tailwind CSS 3, not CSS modules or styled-components
 - We use React islands selectively (TuitionCalculator), not as the primary renderer
 - Email providers: SendGrid + Unione (via REST). Resend/Postmark are Rollup externals but not active.
-- Blog: DB-backed via /admin/blog; posts are content rows with type='blog'
+- Blog: DB-backed via /admin/blog; posts are content rows with type='blog'. V2 authoring is a TipTap WYSIWYG editor storing sanitized HTML in data.body (ADR-009; `blog-html.ts` STRICT_CONFIG_V2 is the render-time trust boundary)
 - Out of scope: Stripe/payments, newsletter
 
 ## Path Aliases

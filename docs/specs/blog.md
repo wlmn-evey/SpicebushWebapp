@@ -18,16 +18,14 @@ intentionally out and why.
 
 ## Authoring Model
 
-> **Blog V2 transition (in progress).** A V2 rollout is replacing this Markdown/`<textarea>` model
-> with a **TipTap WYSIWYG editor storing sanitized HTML** in `data.body` (ADR-009). The V2 sanitizer
-> (`STRICT_CONFIG_V2`, `app/src/lib/blog-html.ts`), editor island, and HTML-aware alt gate are merged
-> but **surface-inert** — the live authoring surface and the public render below remain Markdown until
-> the atomic cutover deploy (which converts the 6 posts, flips `renderPostBody`, and mounts the editor
-> together). This section describes the current live V1 model; it is rewritten at the cutover.
-
-- Posts are authored in **Markdown** in a plain `<textarea>` (not a WYSIWYG / rich-text editor).
-- Markdown is stored raw in the DB and rendered to sanitized HTML on every read (sanitize-at-render,
-  never sanitize-at-write — the stored body is always treated as untrusted on the next render).
+- Posts are authored in a **TipTap WYSIWYG editor** at `/admin/blog` (ADR-009); the editor's HTML is
+  stored in `data.body`. Bold/italic/underline/strike, H2–H4, lists, blockquote, code blocks, links,
+  images, tables, and **class-based** text alignment are first-class.
+- The body is **re-sanitized at every render** through `renderBodyHtml` (DOMPurify `STRICT_CONFIG_V2`,
+  `app/src/lib/blog-html.ts`) — sanitize-at-render is the trust boundary, never sanitize-at-write only.
+  `style` is banned (alignment is class-based; tables `resizable:false`). During the markdown→HTML
+  cutover, `renderPostBody` is **transitional**: HTML bodies use `renderBodyHtml`, any not-yet-converted
+  legacy markdown still uses the V1 `marked` path (see `docs/runbooks/blog-html-conversion.md`).
 - Each post has a **status** of `published` or `draft`. Drafts are excluded from every public read
   by the SQL `status = 'published'` filter and are visible only in the admin list.
 - Owners publish, edit, unpublish (flip to draft), and delete posts from `/admin/blog` with no
