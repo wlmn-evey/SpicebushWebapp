@@ -4,16 +4,19 @@
 
 The blog is a DB-backed content system that lets non-technical school owners author, draft, and
 publish posts from the admin panel at `/admin/blog` with no deploys. Posts are stored as rows in the
-generic `content` table (`type = 'blog'`), authored in Markdown, and rendered to sanitized HTML at
-request time. The public surface is a blog index at `/blog` and individual post pages at
-`/blog/[slug]`.
+generic `content` table (`type = 'blog'`), authored in a TipTap WYSIWYG editor whose HTML is stored
+in `data.body` and re-sanitized to safe HTML at request time. The public surface is a blog index at
+`/blog` and individual post pages at `/blog/[slug]`.
 
 The blog rides the existing generic content pipeline end to end — the same `content` table, DB
 facade, cache layer, admin form-POST endpoint, and media upload system used by other CMS
-collections. No new database table, no new admin API endpoint, and no rich-text editor are
-introduced. Blog-specific logic is concentrated in `app/src/lib/blog-content.ts`.
+collections. No new database table and no new admin API endpoint are introduced; the V2 build added
+a TipTap rich-text editor (ADR-009) on top of the existing form-POST save path. Blog-specific logic
+is concentrated in `app/src/lib/blog-content.ts`.
 
-This is the lean V1 ("MVP") scope. See [Deferred Features](#deferred-features) for what is
+This spec documents the shipped V2 scope — the WYSIWYG authoring editor, the public discovery layer
+(categories, tags, pagination, related posts), SEO/syndication (JSON-LD, RSS, sitemap), and the
+admin-controlled news ticker. See [Deferred Features](#deferred-features) for what remains
 intentionally out and why.
 
 ## Authoring Model
@@ -50,7 +53,7 @@ PR1) — nothing ever read or wrote it.
 | `data.date`                    | `'YYYY-MM-DD'` string — display and sort date                                                                                                                                                                                                                                                                                                      |
 | `data.author`                  | string, default `'Spicebush Team'`                                                                                                                                                                                                                                                                                                                 |
 | `data.excerpt`                 | string, ≤ 1,000 chars, trimmed                                                                                                                                                                                                                                                                                                                     |
-| `data.body`                    | raw **Markdown** string, ≤ 200,000 chars (~200 KB), trimmed of leading/trailing whitespace; never HTML                                                                                                                                                                                                                                             |
+| `data.body`                    | **sanitized HTML** string from the TipTap editor, ≤ 200,000 chars (~200 KB), trimmed of leading/trailing whitespace; re-sanitized to safe HTML at every render (`renderBodyHtml`, DOMPurify `STRICT_CONFIG_V2`). Not-yet-converted legacy rows still hold V1 Markdown rendered via the transitional `marked` path — see [Authoring Model](#authoring-model)                                                                                                |
 | `data.image`                   | optional featured-image URL; must be site-relative or HTTPS absolute, matching `^(\/(?![/\\])\|https:\/\/)`                                                                                                                                                                                                                                        |
 | `data.imageAlt`                | alt text; required when `image` is set and status is `published`; must be ≥ 6 chars, not filename-like, not a generic word                                                                                                                                                                                                                         |
 | `data.seoTitle`                | optional per-post `<title>` / OG override                                                                                                                                                                                                                                                                                                          |
@@ -198,9 +201,9 @@ to `/admin/blog` (label "Blog") is added to `app/src/components/AdminNav.astro` 
 
 - **Add new post** — a `<details>` form posting to `/api/admin/content` with hidden
   `collection=blog`, `createOnly=true`, `redirectTo=/admin/blog?saved=new`. Fields: title, slug,
-  date, author, excerpt, body (Markdown), featured image (upload widget + URL input), image
-  description (alt), SEO title/description (collapsed, optional), and a status select (Draft /
-  Published, default Draft).
+  date, author, excerpt, body (TipTap rich-text editor — see [Authoring Model](#authoring-model)),
+  featured image (upload widget + URL input), image description (alt), SEO title/description
+  (collapsed, optional), and a status select (Draft / Published, default Draft).
 - **Post list** — two groups, **Drafts** and **Published**, ordered by `compareBlogPosts`. Every row
   with `type='blog'` is shown regardless of status (any non-`published` status, including a
   stray/legacy value, sorts under Drafts). Status badges pair color with text using AA-passing
@@ -491,8 +494,10 @@ to `ContentEntry` / `toContentEntry`. Exports:
 
 ## Rendering & Sanitization
 
-`data.body` is rendered server-side only (the public post page + the admin preview), via one
-function, `renderPostBody()`:
+`data.body` is rendered server-side only (the public post page + the admin preview), via
+`renderPostBody()`. For V2 HTML bodies it delegates to `renderBodyHtml` (DOMPurify
+`STRICT_CONFIG_V2`, `app/src/lib/blog-html.ts`; see [Authoring Model](#authoring-model)); for
+not-yet-converted legacy Markdown rows it runs the transitional `marked` path detailed below:
 
 1. `marked.parse(markdown, { gfm: true, async: false })` with:
    - a **walkTokens** normalization — link/image tokens whose `href`/`src` begins with `www.` get
