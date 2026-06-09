@@ -1,0 +1,183 @@
+---
+import { db } from '@lib/db';
+
+interface Props {
+  /** `strip` = compact site-wide header bar; `section` = larger homepage block. */
+  variant?: 'strip' | 'section';
+}
+
+const { variant = 'strip' } = Astro.props;
+
+// Public render path — already filtered (enabled, expiry, ≤5) and href-validated by the lib (the
+// render-time trust boundary). Inert when disabled/empty: the component returns NOTHING below.
+const items = await db.ticker.getActiveTickerItems();
+
+const isSection = variant === 'section';
+---
+
+{
+  items.length > 0 && (
+    <aside
+      class:list={[
+        'js-ticker',
+        isSection
+          ? 'border-y border-stone-beige bg-cloud-gray/40'
+          : 'border-b border-stone-beige bg-cloud-gray/50'
+      ]}
+      aria-label={isSection ? 'News highlights' : 'News ticker'}
+      aria-roledescription="carousel"
+    >
+      <div
+        class:list={[
+          'container mx-auto flex items-center gap-3 px-4',
+          isSection ? 'py-3 text-base' : 'py-2 text-sm'
+        ]}
+      >
+        <span class="shrink-0 font-semibold text-earth-brown">News</span>
+
+        {/* Rotating viewport. aria-live starts OFF (auto-advancing); the script flips it to polite
+            when paused so screen-reader users aren't spammed per rotation (R3-F20). */}
+        <div class="ticker-viewport relative min-w-0 flex-1" aria-live="off" aria-atomic="true">
+          {items.map((item, i) => (
+            <p
+              class:list={['ticker-item truncate text-earth-brown/90', i === 0 ? '' : 'hidden']}
+              data-index={i}
+            >
+              {item.href ? (
+                <a href={item.href} class="text-forest-canopy underline hover:text-moss-green">
+                  {item.text}
+                </a>
+              ) : (
+                <span>{item.text}</span>
+              )}
+            </p>
+          ))}
+        </div>
+
+        {items.length > 1 && (
+          <div class="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              class="ticker-prev rounded border border-stone-beige px-2 py-1 text-earth-brown hover:bg-white"
+              aria-label="Previous news item"
+            >
+              ‹
+            </button>
+            {/* Action button (NOT a toggle): the label states the action and changes Pause↔Play —
+                no aria-pressed, per the WAI-ARIA carousel/rotation-control pattern. */}
+            <button
+              type="button"
+              class="ticker-pause rounded border border-stone-beige px-2 py-1 text-earth-brown hover:bg-white"
+              aria-label="Pause news ticker"
+            >
+              <span class="ticker-pause-icon">⏸</span>
+              <span class="ticker-play-icon hidden">▶</span>
+            </button>
+            <button
+              type="button"
+              class="ticker-next rounded border border-stone-beige px-2 py-1 text-earth-brown hover:bg-white"
+              aria-label="Next news item"
+            >
+              ›
+            </button>
+          </div>
+        )}
+      </div>
+    </aside>
+  )
+}
+
+<script>
+  // Per-instance rotator over every .js-ticker on the page (the component may render twice — the
+  // header strip AND the homepage section). Vanilla JS (no island). The lib already enforced all
+  // content safety; this is presentation only.
+  const ROTATE_MS = 6000;
+
+  const initTicker = (root: HTMLElement) => {
+    const items = Array.from(root.querySelectorAll<HTMLElement>('.ticker-item'));
+    if (items.length <= 1) return; // nothing to rotate
+
+    const viewport = root.querySelector<HTMLElement>('.ticker-viewport');
+    const pauseBtn = root.querySelector<HTMLButtonElement>('.ticker-pause');
+    const prevBtn = root.querySelector<HTMLButtonElement>('.ticker-prev');
+    const nextBtn = root.querySelector<HTMLButtonElement>('.ticker-next');
+    const pauseIcon = root.querySelector<HTMLElement>('.ticker-pause-icon');
+    const playIcon = root.querySelector<HTMLElement>('.ticker-play-icon');
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let index = 0;
+    let playing = !reduced; // reduced-motion: do NOT auto-advance (R1-F32); nav still works
+    let hovered = false;
+    let focused = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    const show = (next: number) => {
+      items[index]?.classList.add('hidden');
+      index = (next + items.length) % items.length;
+      items[index]?.classList.remove('hidden');
+    };
+
+    const stopTimer = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    };
+    // Resume ONLY when playing AND neither pause source (hover, focus) is active — so a mouse leaving
+    // while a ticker link is still keyboard-focused does not yank the rotation out from under the user.
+    const refreshTimer = () => {
+      stopTimer();
+      if (playing && !hovered && !focused) timer = setInterval(() => show(index + 1), ROTATE_MS);
+    };
+
+    const reflectState = () => {
+      // Action button (not a toggle): only the label/icon change — no aria-pressed (carousel pattern).
+      pauseBtn?.setAttribute('aria-label', playing ? 'Pause news ticker' : 'Play news ticker');
+      pauseIcon?.classList.toggle('hidden', !playing);
+      playIcon?.classList.toggle('hidden', playing);
+      // State-dependent live region: silent while auto-advancing, polite when stopped (R3-F20).
+      viewport?.setAttribute('aria-live', playing ? 'off' : 'polite');
+    };
+
+    const setPlaying = (value: boolean) => {
+      playing = value;
+      reflectState();
+      refreshTimer();
+    };
+
+    pauseBtn?.addEventListener('click', () => setPlaying(!playing));
+    prevBtn?.addEventListener('click', () => {
+      setPlaying(false); // manual nav pauses auto-advance so the change is announced
+      show(index - 1);
+    });
+    nextBtn?.addEventListener('click', () => {
+      setPlaying(false);
+      show(index + 1);
+    });
+
+    // Pause-on-focus / hover so a reader/keyboard user isn't raced. Tracked independently so one
+    // source releasing doesn't resume while the other is still active.
+    root.addEventListener('focusin', () => {
+      focused = true;
+      refreshTimer();
+    });
+    root.addEventListener('focusout', () => {
+      focused = false;
+      refreshTimer();
+    });
+    root.addEventListener('mouseenter', () => {
+      hovered = true;
+      refreshTimer();
+    });
+    root.addEventListener('mouseleave', () => {
+      hovered = false;
+      refreshTimer();
+    });
+
+    reflectState();
+    refreshTimer();
+  };
+
+  const tickers = document.querySelectorAll<HTMLElement>('.js-ticker');
+  tickers.forEach(initTicker);
+</script>

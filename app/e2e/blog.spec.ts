@@ -431,6 +431,29 @@ test.describe('Blog V1 — public routes + SEO', () => {
     );
     expect(decoration).toContain('underline');
   });
+
+  // Test 28 — Phase-6 ticker safety: inert until enabled, and the site-wide skip-to-main link.
+  test('28: ticker is inert by default + skip-to-main link present site-wide', async ({ page }) => {
+    const res = await page.goto('/');
+    expect(res?.status(), 'homepage 200').toBe(200);
+
+    // INERT: with the ticker disabled (default), neither the header strip nor the homepage section
+    // renders anything — no visible change to the live site until the owner opts in.
+    expect(await page.locator('.js-ticker').count(), 'ticker renders nothing while disabled').toBe(
+      0
+    );
+
+    // R4-F18 skip link — present on the homepage AND a non-homepage page, targeting #main-content.
+    const skip = page.locator('a[href="#main-content"]');
+    await expect(skip, 'skip link on homepage').toHaveCount(1);
+    await expect(page.locator('#main-content'), 'main landmark present').toHaveCount(1);
+
+    await page.goto('/about');
+    await expect(
+      page.locator('a[href="#main-content"]'),
+      'skip link site-wide (non-homepage)'
+    ).toHaveCount(1);
+  });
 });
 
 /**
