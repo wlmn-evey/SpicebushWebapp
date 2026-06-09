@@ -644,3 +644,66 @@ export function renderBlogSitemapXml(posts: BlogPost[], origin: string): string 
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;
 }
+
+/**
+ * RFC-822 date for an RSS `<pubDate>` from a `YYYY-MM-DD` post date. Posts have no time component, so
+ * we pin noon UTC (matching the imported rows' `{date}T12:00:00Z`); `toUTCString()` emits the exact
+ * RFC-822/1123 shape RSS wants (`Mon, 20 May 2024 12:00:00 GMT`). Returns `''` for an unparseable date
+ * so the caller can omit `<pubDate>` rather than emit `Invalid Date`.
+ */
+export function toRfc822Date(date: string | undefined): string {
+  if (typeof date !== 'string' || !DATE_FORMAT_REGEX.test(date)) return '';
+  const parsed = new Date(`${date}T12:00:00Z`);
+  return Number.isNaN(parsed.getTime()) ? '' : parsed.toUTCString();
+}
+
+/**
+ * Build the blog RSS 2.0 feed. Channel + `atom:self` self-link (R1-F30), one `<item>` per published
+ * post (the caller passes already-filtered, already-sorted posts) with title, link, a permalink
+ * `<guid>`, the excerpt as `<description>`, and an RFC-822 `<pubDate>`. Every text value is XML-escaped.
+ * `<lastBuildDate>` is derived from the newest post (posts are date-DESC) so the document is
+ * deterministic and unit-testable — no `Date.now()`.
+ */
+export function renderBlogRssXml(posts: BlogPost[], origin: string): string {
+  const feedUrl = `${origin}/blog/rss.xml`;
+  const blogUrl = `${origin}/blog`;
+  const title = 'Spicebush Montessori Blog';
+  const description = 'News, reflections, and updates from the Spicebush Montessori community.';
+
+  const newestPubDate = posts.map(p => toRfc822Date(p.date)).find(d => d.length > 0);
+
+  const items = posts.map(post => {
+    const link = `${origin}/blog/${post.slug}`;
+    const pubDate = toRfc822Date(post.date);
+    return [
+      '    <item>',
+      `      <title>${escapeXml(post.title)}</title>`,
+      `      <link>${escapeXml(link)}</link>`,
+      `      <guid isPermaLink="true">${escapeXml(link)}</guid>`,
+      post.excerpt ? `      <description>${escapeXml(post.excerpt)}</description>` : '',
+      pubDate ? `      <pubDate>${pubDate}</pubDate>` : '',
+      '    </item>'
+    ]
+      .filter(line => line.length > 0)
+      .join('\n');
+  });
+
+  const channelHead = [
+    `    <title>${escapeXml(title)}</title>`,
+    `    <link>${escapeXml(blogUrl)}</link>`,
+    `    <description>${escapeXml(description)}</description>`,
+    '    <language>en-us</language>',
+    `    <atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml" />`,
+    newestPubDate ? `    <lastBuildDate>${newestPubDate}</lastBuildDate>` : ''
+  ].filter(line => line.length > 0);
+
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
+    '  <channel>',
+    ...channelHead,
+    ...items,
+    '  </channel>',
+    '</rss>'
+  ].join('\n');
+}

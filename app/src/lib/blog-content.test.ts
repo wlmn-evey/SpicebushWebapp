@@ -29,8 +29,10 @@ import {
   getPublishedPosts,
   normalizeBlogData,
   normalizeBlogEntry,
+  renderBlogRssXml,
   renderBlogSitemapXml,
   renderPostBody,
+  toRfc822Date,
   resolveAuthorByline,
   resolveLegacyBlogRedirect,
   validateBlogData,
@@ -926,6 +928,86 @@ describe('escapeXml + renderBlogSitemapXml', () => {
     expect(xml).toContain('<loc>https://spicebushmontessori.org/blog/second</loc>');
     expect(xml).not.toContain('<loc>https://spicebushmontessori.org/blog/</loc>');
     expect(xml).not.toContain('/blog/first/</loc>');
+  });
+});
+
+describe('toRfc822Date (R1-F30)', () => {
+  it('formats a YYYY-MM-DD date at noon UTC as RFC-822', () => {
+    expect(toRfc822Date('2024-05-20')).toBe('Mon, 20 May 2024 12:00:00 GMT');
+  });
+
+  it('returns "" for a missing or malformed date (caller omits <pubDate>)', () => {
+    expect(toRfc822Date('')).toBe('');
+    expect(toRfc822Date(undefined)).toBe('');
+    expect(toRfc822Date('2024-5-20')).toBe(''); // not zero-padded → not our format
+    expect(toRfc822Date('not-a-date')).toBe('');
+    expect(toRfc822Date('2024-13-40')).toBe(''); // calendar-invalid (Date NaN)
+  });
+});
+
+describe('renderBlogRssXml (R1-F30)', () => {
+  const origin = 'https://spicebushmontessori.org';
+
+  it('is well-formed RSS 2.0 with an atom self-link to /blog/rss.xml', () => {
+    const xml = renderBlogRssXml([makePost({ slug: 'first', date: '2024-05-20' })], origin);
+    expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
+    expect(xml).toContain('<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">');
+    expect(xml).toContain(
+      `<atom:link href="${origin}/blog/rss.xml" rel="self" type="application/rss+xml" />`
+    );
+    expect(xml).toContain(`<link>${origin}/blog</link>`);
+    expect(xml.trimEnd().endsWith('</rss>')).toBe(true);
+  });
+
+  it('emits one item per post with permalink guid, link, and RFC-822 pubDate', () => {
+    const xml = renderBlogRssXml(
+      [
+        makePost({ slug: 'first', title: 'First Post', excerpt: 'Hello', date: '2024-05-20' }),
+        makePost({ slug: 'second', title: 'Second', excerpt: 'World', date: '2024-04-01' })
+      ],
+      origin
+    );
+    expect((xml.match(/<item>/g) ?? []).length).toBe(2);
+    expect(xml).toContain('<title>First Post</title>');
+    expect(xml).toContain(`<link>${origin}/blog/first</link>`);
+    expect(xml).toContain(`<guid isPermaLink="true">${origin}/blog/first</guid>`);
+    expect(xml).toContain('<description>Hello</description>');
+    expect(xml).toContain('<pubDate>Mon, 20 May 2024 12:00:00 GMT</pubDate>');
+    // lastBuildDate = the newest post (input is date-DESC sorted upstream).
+    expect(xml).toContain('<lastBuildDate>Mon, 20 May 2024 12:00:00 GMT</lastBuildDate>');
+  });
+
+  it('XML-escapes titles and excerpts so markup cannot break the feed', () => {
+    const xml = renderBlogRssXml(
+      [
+        makePost({
+          slug: 's',
+          title: 'Tom & Jerry <b>',
+          excerpt: 'a < b & "c"',
+          date: '2024-05-20'
+        })
+      ],
+      origin
+    );
+    expect(xml).toContain('<title>Tom &amp; Jerry &lt;b&gt;</title>');
+    expect(xml).toContain('<description>a &lt; b &amp; &quot;c&quot;</description>');
+    expect(xml).not.toContain('<title>Tom & Jerry <b></title>');
+  });
+
+  it('omits the ITEM <description>/<pubDate> when absent rather than emitting empty/invalid values', () => {
+    const xml = renderBlogRssXml([makePost({ slug: 's', excerpt: '', date: '' })], origin);
+    // The channel always carries one <description>; the item must not add a second.
+    expect((xml.match(/<description>/g) ?? []).length).toBe(1);
+    expect(xml).not.toContain('<pubDate>');
+    expect(xml).not.toContain('Invalid Date');
+    expect(xml).not.toContain('<lastBuildDate>'); // no datable post → no channel build date
+  });
+
+  it('renders an empty but valid channel for no posts', () => {
+    const xml = renderBlogRssXml([], origin);
+    expect(xml).toContain('<channel>');
+    expect((xml.match(/<item>/g) ?? []).length).toBe(0);
+    expect(xml.trimEnd().endsWith('</rss>')).toBe(true);
   });
 });
 
