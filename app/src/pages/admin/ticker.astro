@@ -1,0 +1,312 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+import { db } from '@lib/db';
+import type { TickerItem } from '@lib/db/ticker';
+
+// Admin editing read: the RAW stored items (incl. disabled/expired) so the owner can edit them — NOT
+// getActiveTickerItems (which filters for the public render). The settings POST invalidates the cache,
+// so the post-save 303 redirect re-reads fresh.
+const rawItems = await db.content.getSetting('ticker_items');
+const enabledRaw = await db.content.getSetting('ticker_enabled');
+const enabled =
+  enabledRaw === true || enabledRaw === 'true' || enabledRaw === 1 || enabledRaw === '1';
+
+const TYPES = ['info', 'event', 'closure'] as const;
+
+const items: TickerItem[] = Array.isArray(rawItems)
+  ? rawItems
+      .filter(
+        (entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === 'object'
+      )
+      .map(entry => ({
+        text: typeof entry.text === 'string' ? entry.text : '',
+        href: typeof entry.href === 'string' ? entry.href : '',
+        expiresAt: typeof entry.expiresAt === 'string' ? entry.expiresAt : '',
+        type: TYPES.includes(entry.type as (typeof TYPES)[number])
+          ? (entry.type as (typeof TYPES)[number])
+          : 'info'
+      }))
+  : [];
+
+const savedKey = Astro.url.searchParams.get('saved');
+const errorKey = Astro.url.searchParams.get('error');
+---
+
+<AdminLayout title="Ticker">
+  <div class="mx-auto max-w-3xl px-4 py-8">
+    <h1 class="mb-2 text-2xl font-bold text-earth-brown">News Ticker</h1>
+
+    {
+      savedKey && (
+        <p class="mb-4 rounded-lg border border-moss-green bg-moss-green/10 p-3 text-sm text-earth-brown">
+          Ticker saved.
+        </p>
+      )
+    }
+    {
+      errorKey && (
+        <p class="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+          Could not save the ticker. Please try again.
+        </p>
+      )
+    }
+
+    {/* R2-F21 — Ticker vs Announcements role distinction. */}
+    <div
+      class="mb-6 rounded-xl border border-stone-beige bg-cloud-gray/40 p-4 text-sm text-earth-brown/90"
+    >
+      <p class="mb-1 font-semibold">Ticker vs. Announcements</p>
+      <p>
+        <strong>Announcements</strong> are for one timely, must-see notice (a closure or alert) shown
+        prominently. The <strong>Ticker</strong> is a rotating strip of up to 5 short items (events,
+        links, reminders). Use Announcements for urgent alerts; use the Ticker for a lighter, rotating
+        set. They are independent — both can appear at once.
+      </p>
+    </div>
+
+    {/* Enable / disable — native form, works without JS. */}
+    <form method="post" action="/api/admin/settings" class="mb-6">
+      <input type="hidden" name="redirectTo" value="/admin/ticker" />
+      <input type="hidden" name="ticker_enabled" value={enabled ? 'false' : 'true'} />
+      <div
+        class="flex items-center justify-between rounded-xl border border-stone-beige bg-white p-4"
+      >
+        <div>
+          <p class="font-semibold text-earth-brown">
+            Ticker is currently {enabled ? 'ON' : 'OFF'}
+          </p>
+          <p class="text-sm text-earth-brown/70">
+            When OFF (or empty), nothing shows on the public site.
+          </p>
+        </div>
+        <button
+          type="submit"
+          class="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+        >
+          Turn {enabled ? 'OFF' : 'ON'}
+        </button>
+      </div>
+    </form>
+
+    {/* Items editor — JS-driven (the JSON array is serialized on submit). */}
+    <form method="post" action="/api/admin/settings" id="ticker-form" class="space-y-4">
+      <input type="hidden" name="redirectTo" value="/admin/ticker" />
+      <input type="hidden" name="ticker_items" id="ticker-items-input" value="[]" />
+
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-earth-brown">Items</h2>
+        <span id="ticker-count-note" class="text-sm text-earth-brown/70"></span>
+      </div>
+      <p class="text-sm text-earth-brown/70">
+        Up to 5 items show publicly. Links must start with <code>https://</code>, <code
+          >mailto:</code
+        >,
+        <code>tel:</code>, or <code>/</code> — anything else is shown as plain text. An expired item
+        is hidden automatically.
+      </p>
+
+      <ol id="ticker-list" class="space-y-3"></ol>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          id="ticker-add"
+          class="rounded-lg border border-forest-canopy px-4 py-2 text-sm font-semibold text-forest-canopy hover:bg-forest-canopy/10"
+        >
+          + Add item
+        </button>
+        <button
+          type="submit"
+          class="rounded-lg bg-forest-canopy px-5 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+        >
+          Save ticker
+        </button>
+      </div>
+
+      {/* aria-live confirmation for reorder/add/remove (admin page — verbosity is fine). */}
+      <p id="ticker-status" class="sr-only" role="status" aria-live="polite"></p>
+    </form>
+
+    {
+      /* Initial items for the client to hydrate the editor. Passed via a data- attribute (Astro
+        auto-escapes attribute values) NOT an inline <script>, so item text containing `</script>`
+        or quotes can't break out — no admin self-XSS. */
+    }
+    <div id="ticker-initial" data-items={JSON.stringify(items)} hidden></div>
+
+    {/* Row template (cloned by the script per item). */}
+    <template id="ticker-row-template">
+      <li class="ticker-row rounded-xl border border-stone-beige bg-white p-4">
+        <div class="mb-2 flex items-center justify-between">
+          <span class="ticker-row-label text-sm font-semibold text-earth-brown"></span>
+          <span class="flex gap-1">
+            <button
+              type="button"
+              class="ticker-up rounded border border-stone-beige px-2 py-1 text-xs hover:bg-cloud-gray"
+            >
+              ↑<span class="sr-only"> Move up</span>
+            </button>
+            <button
+              type="button"
+              class="ticker-down rounded border border-stone-beige px-2 py-1 text-xs hover:bg-cloud-gray"
+            >
+              ↓<span class="sr-only"> Move down</span>
+            </button>
+            <button
+              type="button"
+              class="ticker-remove rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
+            >
+              Remove
+            </button>
+          </span>
+        </div>
+        <label class="block text-sm">
+          <span class="text-earth-brown/80">Text</span>
+          <textarea
+            class="ticker-text mt-1 w-full rounded-lg border border-stone-beige p-2"
+            rows="2"
+            maxlength="200"></textarea>
+        </label>
+        <div class="mt-2 grid gap-2 sm:grid-cols-3">
+          <label class="block text-sm">
+            <span class="text-earth-brown/80">Link (optional)</span>
+            <input
+              type="text"
+              class="ticker-href mt-1 w-full rounded-lg border border-stone-beige p-2"
+              placeholder="https://… or /blog"
+            />
+          </label>
+          <label class="block text-sm">
+            <span class="text-earth-brown/80">Expires (optional)</span>
+            <input
+              type="datetime-local"
+              class="ticker-expires mt-1 w-full rounded-lg border border-stone-beige p-2"
+            />
+          </label>
+          <label class="block text-sm">
+            <span class="text-earth-brown/80">Type</span>
+            <select class="ticker-type mt-1 w-full rounded-lg border border-stone-beige p-2">
+              <option value="info">Info</option>
+              <option value="event">Event</option>
+              <option value="closure">Closure</option>
+            </select>
+          </label>
+        </div>
+      </li>
+    </template>
+  </div>
+</AdminLayout>
+
+<script>
+  // Vanilla editor for the ticker JSON array. The PUBLIC render path (getActiveTickerItems) is the
+  // security boundary (it re-validates hrefs, expiry, ≤5); this script is owner-convenience only.
+  const form = document.getElementById('ticker-form') as HTMLFormElement | null;
+  const list = document.getElementById('ticker-list');
+  const template = document.getElementById('ticker-row-template') as HTMLTemplateElement | null;
+  const hidden = document.getElementById('ticker-items-input') as HTMLInputElement | null;
+  const status = document.getElementById('ticker-status');
+  const countNote = document.getElementById('ticker-count-note');
+  const initialEl = document.getElementById('ticker-initial');
+
+  if (form && list && template && hidden) {
+    const announce = (msg: string) => {
+      if (status) status.textContent = msg;
+    };
+
+    const isoToLocal = (iso: string): string => {
+      if (!iso) return '';
+      const ms = Date.parse(iso);
+      if (!Number.isFinite(ms)) return '';
+      const d = new Date(ms);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+
+    const relabel = () => {
+      const rows = Array.from(list.querySelectorAll('.ticker-row'));
+      rows.forEach((row, i) => {
+        const label = row.querySelector('.ticker-row-label');
+        if (label) label.textContent = `Item ${i + 1} of ${rows.length}`;
+      });
+      if (countNote) {
+        countNote.textContent =
+          rows.length > 5
+            ? `${rows.length} items — only the first 5 show publicly`
+            : `${rows.length} item(s)`;
+      }
+    };
+
+    const addRow = (item?: { text?: string; href?: string; expiresAt?: string; type?: string }) => {
+      const frag = template.content.cloneNode(true) as DocumentFragment;
+      const row = frag.querySelector('.ticker-row') as HTMLElement;
+      (row.querySelector('.ticker-text') as HTMLTextAreaElement).value = item?.text ?? '';
+      (row.querySelector('.ticker-href') as HTMLInputElement).value = item?.href ?? '';
+      (row.querySelector('.ticker-expires') as HTMLInputElement).value = isoToLocal(
+        item?.expiresAt ?? ''
+      );
+      (row.querySelector('.ticker-type') as HTMLSelectElement).value =
+        item?.type === 'event' || item?.type === 'closure' ? item.type : 'info';
+
+      row.querySelector('.ticker-up')?.addEventListener('click', () => {
+        const prev = row.previousElementSibling;
+        if (prev) {
+          list.insertBefore(row, prev);
+          relabel();
+          announce('Moved item up.');
+        }
+      });
+      row.querySelector('.ticker-down')?.addEventListener('click', () => {
+        const next = row.nextElementSibling;
+        if (next) {
+          list.insertBefore(next, row);
+          relabel();
+          announce('Moved item down.');
+        }
+      });
+      row.querySelector('.ticker-remove')?.addEventListener('click', () => {
+        row.remove();
+        relabel();
+        announce('Item removed.');
+      });
+
+      list.appendChild(row);
+      relabel();
+    };
+
+    // Hydrate from the server-provided initial items (read from the auto-escaped data- attribute).
+    try {
+      const initial = JSON.parse((initialEl as HTMLElement | null)?.dataset.items || '[]');
+      if (Array.isArray(initial)) initial.forEach(addRow);
+    } catch {
+      /* ignore malformed seed — start empty */
+    }
+    if (!list.querySelector('.ticker-row')) addRow();
+
+    document.getElementById('ticker-add')?.addEventListener('click', () => {
+      addRow();
+      announce('Item added.');
+    });
+
+    // Serialize the rows into the hidden ticker_items value on submit.
+    form.addEventListener('submit', () => {
+      const rows = Array.from(list.querySelectorAll('.ticker-row'));
+      const out: Array<Record<string, string>> = [];
+      for (const row of rows) {
+        const text = (row.querySelector('.ticker-text') as HTMLTextAreaElement).value.trim();
+        if (!text) continue; // skip blank rows
+        const href = (row.querySelector('.ticker-href') as HTMLInputElement).value.trim();
+        const expiresLocal = (row.querySelector('.ticker-expires') as HTMLInputElement).value;
+        const type = (row.querySelector('.ticker-type') as HTMLSelectElement).value;
+        const item: Record<string, string> = { text };
+        if (href) item.href = href;
+        if (expiresLocal) {
+          const ms = Date.parse(expiresLocal);
+          if (Number.isFinite(ms)) item.expiresAt = new Date(ms).toISOString();
+        }
+        if (type) item.type = type;
+        out.push(item);
+      }
+      hidden.value = JSON.stringify(out);
+    });
+  }
+</script>

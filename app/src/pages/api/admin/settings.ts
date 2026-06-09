@@ -63,6 +63,19 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return jsonResponse({ error: 'Admin access required' }, 403);
   }
 
+  // Defense-in-depth CSRF check (SameSite=Lax remains the primary defense), mirroring the content
+  // endpoint (R2-F1, closes bug #85). Rejects only on POSITIVE cross-site evidence — fails open when
+  // both headers are absent — so it hardens ALL same-origin admin settings forms (camp, testimonials,
+  // seo, ticker) without breaking any of them.
+  const requestOrigin = new URL(request.url).origin;
+  const origin = request.headers.get('origin');
+  if (
+    (origin && origin !== requestOrigin) ||
+    request.headers.get('sec-fetch-site') === 'cross-site'
+  ) {
+    return jsonResponse({ error: 'Cross-site request rejected' }, 403);
+  }
+
   const contentType = request.headers.get('content-type') ?? '';
   const updates: Record<string, unknown> = {};
   let redirectTo: string | null = null;
