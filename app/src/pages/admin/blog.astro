@@ -1,6 +1,7 @@
 ---
 import AdminLayout from '@layouts/AdminLayout.astro';
 import {
+  getBlogPostViewCounts,
   getManagedBlogPosts,
   renderPostBody,
   blogPostToEditData,
@@ -23,6 +24,10 @@ const archivedPosts = posts.filter(p => p.status === 'archived');
 const draftPosts = posts.filter(
   p => p.status !== 'published' && p.status !== 'scheduled' && p.status !== 'archived'
 );
+
+// Best-effort per-post view counts (Phase 5) — only published posts have a public `/blog/{slug}`
+// page, so only they can accrue `page_view` events. Constrained to these slugs in SQL (R3-F3).
+const viewCounts = await getBlogPostViewCounts(publishedPosts.map(p => p.slug));
 
 // Existing-slug list for the client collision check (server-rendered into a data- attribute).
 const existingSlugs = posts.map(p => p.slug);
@@ -517,6 +522,16 @@ const baseDataFor = (post: BlogPost): string => JSON.stringify(blogPostToEditDat
                       <span class="flex flex-wrap items-center justify-between gap-2">
                         <span class="font-semibold text-earth-brown">{post.title}</span>
                         <span class="flex items-center gap-2 text-xs">
+                          {/* Best-effort view count — only published posts are in the map (R3-F3).
+                              The count is a number (auto-escaped); no raw page_path is ever rendered. */}
+                          {viewCounts.has(post.slug) && (
+                            <span
+                              class="text-earth-brown/70"
+                              title="Approximate page views from site analytics — best-effort and can be over- or under-counted; not an authoritative figure."
+                            >
+                              {viewCounts.get(post.slug)} views
+                            </span>
+                          )}
                           <span class={`rounded-full px-2 py-1 ${statusBadgeClass(post)}`}>
                             {statusBadgeLabel(post)}
                           </span>
