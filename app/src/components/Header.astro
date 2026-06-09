@@ -6,6 +6,7 @@ import { getTourLink } from '@lib/tour-settings';
 import { evaluateCampMode, parseCampModeSettings } from '@lib/camp-mode';
 import OptimizedImage from './OptimizedImage.astro';
 import AnnouncementBar from './AnnouncementBar.astro';
+import Ticker from './Ticker.astro';
 
 interface SchoolInfoData {
   phone?: unknown;
@@ -96,6 +97,19 @@ const weekdayHours = {
 };
 ---
 
+{
+  /* Skip-to-main link (R4-F18) — first focusable element, lets keyboard users bypass the header
+    chrome (incl. the ticker strip + its controls) and jump to #main-content (present on every page).
+    Visually hidden until focused; explicit focus styles so it shows regardless of the global
+    .sr-only override. */
+}
+<a
+  href="#main-content"
+  class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded focus:bg-forest-canopy focus:px-4 focus:py-2 focus:font-semibold focus:text-white"
+>
+  Skip to main content
+</a>
+
 <header class="bg-white shadow-sm sticky top-0 z-50">
   <!-- Top Utility Bar -->
   <div class="bg-stone-beige border-b border-gray-200">
@@ -137,6 +151,12 @@ const weekdayHours = {
   </div>
 
   <AnnouncementBar />
+
+  {
+    /* News ticker strip — site-wide, stacks below the AnnouncementBar (R2-F21, independent). Inert
+      until the owner adds items + enables it. */
+  }
+  <Ticker variant="strip" />
 
   {
     campPromoEnabled && showCampEntryPoints && !isCampRoute && (

@@ -13,6 +13,7 @@ import InclusionCommitment from '../components/InclusionCommitment.astro';
 import CallToAction from '../components/CallToAction.astro';
 import TrustIndicators from '../components/TrustIndicators.astro';
 import CampPromoModule from '../components/CampPromoModule.astro';
+import Ticker from '../components/Ticker.astro';
 import { CheckCircle, ArrowRight } from 'lucide-astro';
 import { db, type ContentEntry } from '@lib/db';
 import { logServerError } from '@lib/server-logger';
@@ -149,6 +150,9 @@ const testimonials = pageData.testimonials;
   <Header />
 
   <main id="main-content">
+    {/* Homepage news ticker section (R2-F15). Inert until the owner enables it + adds items. */}
+    <Ticker variant="section" />
+
     <!-- New Hero Section with full-width image -->
     <HeroSection />
 
