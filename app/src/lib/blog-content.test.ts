@@ -31,6 +31,7 @@ import {
   normalizeBlogEntry,
   renderBlogSitemapXml,
   renderPostBody,
+  resolveAuthorByline,
   resolveLegacyBlogRedirect,
   validateBlogData,
   type BlogPost
@@ -296,6 +297,96 @@ describe('reading time surfacing (R-readingTime)', () => {
   });
 });
 
+describe('resolveAuthorByline (R4-F9)', () => {
+  // The 6 live posts as they actually exist in prod: each carries only data.author ('Spicebush
+  // Team'), no author_type/author_ref. Introducing the resolver MUST NOT rewrite any byline.
+  const LIVE_POST_SLUGS = [
+    'embracing-holistic-development',
+    'embracing-neurodiversity-adhd',
+    'exploring-summer-camp',
+    'exploring-universe-within-cosmic-curriculum',
+    'nurturing-growth-gardening-program',
+    'welcome-to-our-new-blog'
+  ];
+
+  it('preserves all 6 live posts’ bylines via the data.author fallback (6-byline regression)', () => {
+    for (const slug of LIVE_POST_SLUGS) {
+      const data = { title: slug, author: 'Spicebush Team' };
+      // No author_type/author_ref → fallback to data.author, byte-for-byte, with OR without a registry.
+      expect(resolveAuthorByline(data)).toBe('Spicebush Team');
+      expect(resolveAuthorByline(data, new Map([['staff:rivera', 'Ms. Rivera']]))).toBe(
+        'Spicebush Team'
+      );
+    }
+  });
+
+  it('returns a custom data.author unchanged — never flattens to the default', () => {
+    expect(resolveAuthorByline({ author: 'Ms. Rivera' })).toBe('Ms. Rivera');
+  });
+
+  it('defaults to Spicebush Team only when no author string is present', () => {
+    expect(resolveAuthorByline({})).toBe('Spicebush Team');
+    expect(resolveAuthorByline({ author: '   ' })).toBe('Spicebush Team');
+  });
+
+  it('resolves a structured author_ref against the registry when present', () => {
+    const registry = new Map([['virtual:maria', 'Maria Montessori']]);
+    const data = {
+      author_type: 'virtual',
+      author_ref: 'virtual:maria',
+      author: 'ignored fallback'
+    };
+    expect(resolveAuthorByline(data, registry)).toBe('Maria Montessori');
+  });
+
+  it('falls back to data.author when the ref is unresolvable or no registry is supplied', () => {
+    const data = { author_type: 'virtual', author_ref: 'virtual:ghost', author: 'Spicebush Team' };
+    expect(resolveAuthorByline(data, new Map())).toBe('Spicebush Team'); // ref not in registry
+    expect(resolveAuthorByline(data)).toBe('Spicebush Team'); // no registry at all
+  });
+
+  it('mapEntryToBlogPost surfaces the resolved byline (read-path wiring)', () => {
+    const post = normalizeBlogEntry(
+      makeEntry('p', { title: 'T', date: '2024-01-01', excerpt: 'E', author: 'Ms. Rivera' })
+    );
+    expect(post?.author).toBe('Ms. Rivera');
+  });
+});
+
+describe('publishedAt surfacing + round-trip (R1-F17 / R4-F1)', () => {
+  it('normalizeBlogEntry surfaces a stored publishedAt and omits an absent one', () => {
+    const withAt = normalizeBlogEntry(
+      makeEntry('p', {
+        title: 'T',
+        date: '2024-01-01',
+        excerpt: 'E',
+        publishedAt: '2024-06-15T09:00:00Z'
+      })
+    );
+    expect(withAt?.publishedAt).toBe('2024-06-15T09:00:00Z');
+
+    const without = normalizeBlogEntry(
+      makeEntry('q', { title: 'T', date: '2024-01-01', excerpt: 'E' })
+    );
+    expect(without?.publishedAt).toBeUndefined();
+  });
+
+  it('blogPostToEditData carries publishedAt so an edit cannot wipe it', () => {
+    const data = blogPostToEditData(makePost({ publishedAt: '2024-06-15T09:00:00Z' }));
+    expect(data.publishedAt).toBe('2024-06-15T09:00:00Z');
+    // Absent → undefined → dropped by JSON.stringify (same contract as categories/tags).
+    const bare = JSON.parse(JSON.stringify(blogPostToEditData(makePost())));
+    expect('publishedAt' in bare).toBe(false);
+  });
+
+  it('normalizeBlogData trims publishedAt and drops an empty value', () => {
+    expect(normalizeBlogData({ publishedAt: '  2024-06-15T09:00:00Z  ' }).publishedAt).toBe(
+      '2024-06-15T09:00:00Z'
+    );
+    expect('publishedAt' in normalizeBlogData({ publishedAt: '   ' })).toBe(false);
+  });
+});
+
 describe('compareBlogPosts', () => {
   it('sorts date DESC, slug DESC tiebreak, undated last (R3-F18)', () => {
     const posts = [
@@ -308,6 +399,25 @@ describe('compareBlogPosts', () => {
     const sorted = [...posts].sort(compareBlogPosts).map(p => p.slug);
     // Same-date pair (mid-a, mid-b) deterministic by slug DESC → mid-b before mid-a.
     expect(sorted).toEqual(['new', 'mid-b', 'mid-a', 'old', 'undated']);
+  });
+
+  it('breaks a same-date tie by publishedAt DESC before slug (R1-F17)', () => {
+    // Same calendar date; `later` has the more recent precise instant → sorts first, ahead of the
+    // slug tiebreak that would otherwise put `aaa` before `zzz`.
+    const posts = [
+      makePost({ slug: 'aaa', date: '2024-10-29', publishedAt: '2024-10-29T08:00:00Z' }),
+      makePost({ slug: 'zzz', date: '2024-10-29', publishedAt: '2024-10-29T17:00:00Z' })
+    ];
+    expect([...posts].sort(compareBlogPosts).map(p => p.slug)).toEqual(['zzz', 'aaa']);
+  });
+
+  it('falls back to the slug tiebreak when publishedAt is absent on both (legacy no-op)', () => {
+    const posts = [
+      makePost({ slug: 'aaa', date: '2024-10-29' }),
+      makePost({ slug: 'zzz', date: '2024-10-29' })
+    ];
+    // No publishedAt on either → slug DESC, exactly as before the R1-F17 tiebreak was added.
+    expect([...posts].sort(compareBlogPosts).map(p => p.slug)).toEqual(['zzz', 'aaa']);
   });
 
   it('getPublishedPosts returns normalized + sorted output', async () => {
@@ -509,20 +619,29 @@ describe('normalizeBlogData', () => {
 describe('validateBlogData', () => {
   const validDraft = { slug: 'my-post', excerpt: 'x', body: 'y', date: '2024-01-01' };
 
+  const FOUR_STATE_ERROR = 'Status must be Draft, Published, Scheduled, or Archived';
+
   it('rejects missing/empty/whitespace-only rawStatus FIRST (R2-F2)', () => {
-    expect(validateBlogData({ ...validDraft }, 'T', undefined)).toBe(
-      'Status must be Draft or Published'
-    );
-    expect(validateBlogData({ ...validDraft }, 'T', '')).toBe('Status must be Draft or Published');
-    expect(validateBlogData({ ...validDraft }, 'T', '   ')).toBe(
-      'Status must be Draft or Published'
-    );
+    expect(validateBlogData({ ...validDraft }, 'T', undefined)).toBe(FOUR_STATE_ERROR);
+    expect(validateBlogData({ ...validDraft }, 'T', '')).toBe(FOUR_STATE_ERROR);
+    expect(validateBlogData({ ...validDraft }, 'T', '   ')).toBe(FOUR_STATE_ERROR);
   });
 
-  it('rejects an invalid status value', () => {
-    expect(validateBlogData({ ...validDraft }, 'T', 'archived')).toBe(
-      'Status must be Draft or Published'
-    );
+  it('rejects an unknown status value with the four-state error (R2-F11)', () => {
+    // R2-F11 inverts the prior `'archived'`-is-rejected assertion: the whitelist now accepts the
+    // four lifecycle states, so the rejection case uses a genuinely unknown value.
+    expect(validateBlogData({ ...validDraft }, 'T', 'bogus')).toBe(FOUR_STATE_ERROR);
+    expect(validateBlogData({ ...validDraft }, 'T', 'publish')).toBe(FOUR_STATE_ERROR);
+  });
+
+  it('accepts the four lifecycle states case-insensitively (R2-F11)', () => {
+    // Drafts/archived are exempt from publish requirements; published/scheduled meet them via the
+    // fixtures below. A bare validDraft satisfies draft + archived.
+    expect(validateBlogData({ ...validDraft }, 'T', 'draft')).toBeNull();
+    expect(validateBlogData({ ...validDraft }, 'T', 'ARCHIVED')).toBeNull();
+    expect(
+      validateBlogData({ slug: 'p', excerpt: 'x', body: 'y', date: '2024-01-01' }, 'T', 'Published')
+    ).toBeNull();
   });
 
   it('rejects missing title', () => {
@@ -649,6 +768,67 @@ describe('validateBlogData', () => {
     expect(
       validateBlogData({ slug: 'p', excerpt: 'x', body: 'y', date: '2024-01-01' }, 'T', 'published')
     ).toBeNull();
+  });
+
+  // ── Phase-2 lifecycle: scheduled-as-publishing gate (R1-F1) + publishedAt contract (R4-F1) ──
+  const NOW = Date.parse('2024-06-01T00:00:00Z');
+  const FUTURE = '2024-12-31T09:00:00Z';
+  const PAST = '2024-01-01T09:00:00Z';
+  const schedulable = { slug: 'p', excerpt: 'x', body: 'y', date: '2024-12-31' };
+
+  it('a scheduled save passes the FULL publish gate at save time (R1-F1)', () => {
+    // Missing excerpt/body/date are rejected for scheduled exactly as for published.
+    expect(
+      validateBlogData(
+        { slug: 'p', body: 'y', date: '2024-12-31', publishedAt: FUTURE },
+        'T',
+        'scheduled',
+        NOW
+      )
+    ).toMatch(/Excerpt/);
+    expect(
+      validateBlogData(
+        { slug: 'p', excerpt: 'x', date: '2024-12-31', publishedAt: FUTURE },
+        'T',
+        'scheduled',
+        NOW
+      )
+    ).toMatch(/Body/);
+  });
+
+  it('a scheduled save requires a future, well-formed publishedAt (R4-F1)', () => {
+    expect(validateBlogData({ ...schedulable }, 'T', 'scheduled', NOW)).toMatch(
+      /needs a publish date/i
+    );
+    expect(
+      validateBlogData({ ...schedulable, publishedAt: '2024-12-31' }, 'T', 'scheduled', NOW)
+    ).toMatch(/time zone/i); // date-only: no zone, no time
+    expect(
+      validateBlogData({ ...schedulable, publishedAt: '2024-12-31T09:00' }, 'T', 'scheduled', NOW)
+    ).toMatch(/time zone/i); // datetime-local with NO zone is rejected (UTC contract)
+    expect(validateBlogData({ ...schedulable, publishedAt: PAST }, 'T', 'scheduled', NOW)).toMatch(
+      /in the future/i
+    );
+  });
+
+  it('accepts a fully-formed scheduled save', () => {
+    expect(
+      validateBlogData({ ...schedulable, publishedAt: FUTURE }, 'T', 'scheduled', NOW)
+    ).toBeNull();
+  });
+
+  it('published/draft/archived saves do NOT require publishedAt', () => {
+    expect(validateBlogData({ ...schedulable }, 'T', 'published', NOW)).toBeNull();
+    expect(validateBlogData({ slug: 'p' }, 'T', 'draft', NOW)).toBeNull();
+    expect(validateBlogData({ slug: 'p' }, 'T', 'archived', NOW)).toBeNull();
+  });
+
+  it('an archived post round-trips back to draft via the normal save path (R4-F12)', () => {
+    // The same minimal payload is valid as archived AND as draft — archiving is reversible, not a
+    // one-way trip, and neither state imposes the publish requirements.
+    const minimal = { slug: 'p', excerpt: 'x', body: '![](no-alt)', date: '' };
+    expect(validateBlogData({ ...minimal }, 'T', 'archived', NOW)).toBeNull();
+    expect(validateBlogData({ ...minimal }, 'T', 'draft', NOW)).toBeNull();
   });
 });
 

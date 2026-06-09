@@ -242,7 +242,7 @@ describe('POST /api/admin/content — blog validation (test 13 / acceptance)', (
     const response = await callPost(formRequest(fields));
     expect(response.status).toBe(400);
     const body = await response.json();
-    expect(body.error).toBe('Status must be Draft or Published');
+    expect(body.error).toBe('Status must be Draft, Published, Scheduled, or Archived');
     expect(queryMock).not.toHaveBeenCalled();
   });
 

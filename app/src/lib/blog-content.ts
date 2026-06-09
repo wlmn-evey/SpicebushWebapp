@@ -12,6 +12,7 @@ import { db } from '@lib/db';
 import { queryRows } from '@lib/db/client';
 import type { ContentEntry } from '@lib/db/types';
 import { collectHtmlImageAlts, renderBodyHtml } from './blog-html';
+import { isFutureScheduledPublishAt, isScheduledPublishAtFormat } from './blog-publish-schedule';
 
 export type BlogPost = {
   slug: string;
@@ -25,6 +26,8 @@ export type BlogPost = {
   seoTitle?: string;
   seoDescription?: string;
   status: string;
+  /** Precise scheduled-publish instant (ISO-8601 w/ zone) for `status='scheduled'` posts (R4-F1). */
+  publishedAt?: string;
   categories?: string[];
   tags?: string[];
   readingTime?: number;
@@ -71,6 +74,32 @@ const asStringArray = (value: unknown): string[] | undefined => {
 };
 
 /**
+ * Resolve a post's display byline (R4-F9). When a structured author reference is present
+ * (`author_type` + `author_ref`) AND it resolves against the provided `registry` (staff /
+ * virtual authors from `settings.blog_authors`), the registry's display name wins. Otherwise the
+ * byline falls back to the legacy `data.author` string (default `'Spicebush Team'`).
+ *
+ * The 6 live posts carry only `data.author` (no `author_type`/`author_ref`), so they ALWAYS take
+ * the fallback and their bylines are preserved byte-for-byte — locked by the 6-byline regression
+ * test. `registry` is optional; with none provided every post takes the fallback, which is the
+ * PR1 read-path behavior until the author registry is wired in (later Phase-2/3 PR). The fallback
+ * must NEVER short-circuit to the default where a real `data.author` exists, or every legacy
+ * byline would be silently rewritten to 'Spicebush Team'.
+ */
+export function resolveAuthorByline(
+  data: Record<string, unknown>,
+  registry?: ReadonlyMap<string, string>
+): string {
+  const authorType = asTrimmedString(data.author_type);
+  const authorRef = asTrimmedString(data.author_ref);
+  if (authorType && authorRef && registry) {
+    const resolved = registry.get(authorRef);
+    if (resolved && resolved.trim().length > 0) return resolved.trim();
+  }
+  return asTrimmedString(data.author) || DEFAULT_AUTHOR;
+}
+
+/**
  * Shared field mapper — builds a `BlogPost` from a stored `ContentEntry` WITHOUT the
  * date/excerpt completeness gate. Returns `null` only when the row is structurally
  * untrustworthy (slug fails the charset/length shape or title is absent).
@@ -98,7 +127,7 @@ function mapEntryToBlogPost(entry: ContentEntry): BlogPost | null {
   const date = asTrimmedString(data.date);
   const excerpt = asTrimmedString(data.excerpt);
   const body = typeof entry.body === 'string' ? entry.body : '';
-  const author = asTrimmedString(data.author) || DEFAULT_AUTHOR;
+  const author = resolveAuthorByline(data);
 
   // Null/strip a featured image failing the backslash-aware scheme — treat as absent.
   const rawImage = asTrimmedString(data.image);
@@ -116,6 +145,7 @@ function mapEntryToBlogPost(entry: ContentEntry): BlogPost | null {
     seoTitle: emptyToUndefined(asTrimmedString(data.seoTitle)),
     seoDescription: emptyToUndefined(asTrimmedString(data.seoDescription)),
     status: 'published',
+    publishedAt: emptyToUndefined(asTrimmedString(data.publishedAt)),
     categories: asStringArray(data.categories),
     tags: asStringArray(data.tags),
     // Prefer the value stored on save; fall back to computing from the body so the 6 legacy posts
@@ -150,6 +180,9 @@ export function blogPostToEditData(post: BlogPost): Record<string, unknown> {
     seoTitle: post.seoTitle,
     seoDescription: post.seoDescription,
     status: post.status,
+    // Carry the scheduled-publish instant through an edit — it has no form input of its own yet,
+    // and the upsert writes `data` wholesale, so omitting it here would wipe it on the next save.
+    publishedAt: post.publishedAt,
     categories: post.categories,
     tags: post.tags
   };
@@ -169,7 +202,11 @@ export function normalizeBlogEntry(entry: ContentEntry): BlogPost | null {
 }
 
 /**
- * The ONLY ordering implementation (R1-F9): date DESC, slug DESC tiebreak, undated-last (R3-F18).
+ * The ONLY ordering implementation (R1-F9): date DESC, then `publishedAt` DESC, slug DESC
+ * tiebreak, undated-last (R3-F18). The `publishedAt` tiebreak (R1-F17) orders two posts sharing a
+ * calendar `date` by their precise scheduled-publish instant before falling back to the slug —
+ * legacy posts carry no `publishedAt` (both `''`), so this step is a no-op for them and the
+ * existing date/slug ordering is unchanged.
  */
 export function compareBlogPosts(a: BlogPost, b: BlogPost): number {
   const aDated = a.date.length > 0;
@@ -177,6 +214,11 @@ export function compareBlogPosts(a: BlogPost, b: BlogPost): number {
   if (aDated !== bDated) return aDated ? -1 : 1; // undated sorts last
 
   if (a.date !== b.date) return a.date < b.date ? 1 : -1; // date DESC
+
+  const aAt = a.publishedAt ?? '';
+  const bAt = b.publishedAt ?? '';
+  if (aAt !== bAt) return aAt < bAt ? 1 : -1; // publishedAt DESC (R1-F17)
+
   if (a.slug !== b.slug) return a.slug < b.slug ? 1 : -1; // slug DESC
   return 0;
 }
@@ -276,7 +318,15 @@ export function normalizeBlogData(data: Record<string, unknown>): Record<string,
   const normalized: Record<string, unknown> = { ...data };
 
   // Trim short string fields.
-  for (const key of ['date', 'author', 'image', 'imageAlt', 'seoTitle', 'seoDescription']) {
+  for (const key of [
+    'date',
+    'author',
+    'image',
+    'imageAlt',
+    'seoTitle',
+    'seoDescription',
+    'publishedAt'
+  ]) {
     if (typeof normalized[key] === 'string') {
       normalized[key] = (normalized[key] as string).trim();
     }
@@ -290,8 +340,9 @@ export function normalizeBlogData(data: Record<string, unknown>): Record<string,
     normalized.excerpt = normalized.excerpt.trim();
   }
 
-  // Delete optional keys whose trimmed value is '' (R2-F20).
-  for (const key of ['image', 'imageAlt', 'seoTitle', 'seoDescription', 'date']) {
+  // Delete optional keys whose trimmed value is '' (R2-F20). `publishedAt` is included so an empty
+  // value never persists — only a real scheduled instant is stored (a draft/published save clears it).
+  for (const key of ['image', 'imageAlt', 'seoTitle', 'seoDescription', 'date', 'publishedAt']) {
     if (normalized[key] === '') {
       delete normalized[key];
     }
@@ -341,14 +392,26 @@ const collectBodyImageAlts = (markdown: string): string[] => {
 export function validateBlogData(
   data: Record<string, unknown>,
   title: string | null,
-  rawStatus: string | undefined
+  rawStatus: string | undefined,
+  now: number = Date.now()
 ): string | null {
-  // 1. Explicit-status check FIRST, against the RAW pre-default value (R2-F2).
+  // 1. Explicit-status check FIRST, against the RAW pre-default value (R2-F2). Four-state
+  // whitelist (R2-F11): draft | published | scheduled | archived. The DB CHECK constraint
+  // (PR4) is defense-in-depth behind this gate.
   const statusValue = typeof rawStatus === 'string' ? rawStatus.trim().toLowerCase() : '';
-  if (statusValue !== 'draft' && statusValue !== 'published') {
-    return 'Status must be Draft or Published';
+  if (
+    statusValue !== 'draft' &&
+    statusValue !== 'published' &&
+    statusValue !== 'scheduled' &&
+    statusValue !== 'archived'
+  ) {
+    return 'Status must be Draft, Published, Scheduled, or Archived';
   }
-  const isPublishing = statusValue === 'published';
+  // A scheduled post passes the FULL publish gate at save time (R1-F1): it goes live unattended,
+  // so it must be publish-ready NOW. `archived` is non-publishing — exempt like a draft (and an
+  // archived post round-trips back to draft via this same path, R4-F12).
+  const isPublishing = statusValue === 'published' || statusValue === 'scheduled';
+  const isScheduled = statusValue === 'scheduled';
 
   // 2. Slug shape + date-prefix rejection (R2-F19).
   const slug = typeof data.slug === 'string' ? data.slug : '';
@@ -407,6 +470,24 @@ export function validateBlogData(
   if (!date || !DATE_FORMAT_REGEX.test(date) || Number.isNaN(Date.parse(date))) {
     return 'A valid publish date (YYYY-MM-DD) is required to publish';
   }
+
+  // Scheduled posts additionally need a precise, future publish timestamp sharing the cron's exact
+  // format contract (R4-F1) — so a save that succeeds is exactly the set the cron will fire, and a
+  // post that saves can never sit un-firing forever. Plain-language guidance nudges the
+  // "Save as Draft instead" fallback (R3-F16) when the post is not yet schedule-ready.
+  if (isScheduled) {
+    const publishedAt = typeof data.publishedAt === 'string' ? data.publishedAt.trim() : '';
+    if (!publishedAt) {
+      return 'A scheduled post needs a publish date and time — pick when it should go live, or save it as a draft instead';
+    }
+    if (!isScheduledPublishAtFormat(publishedAt)) {
+      return 'Scheduled publish time must be a valid date and time with a time zone (for example 2026-06-15T09:00:00Z)';
+    }
+    if (!isFutureScheduledPublishAt(publishedAt, now)) {
+      return 'Scheduled publish time must be in the future — pick a later time, or save it as a draft instead';
+    }
+  }
+
   if (image && !imageAlt) {
     return 'Featured image alt text is required to publish';
   }
