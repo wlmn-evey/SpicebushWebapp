@@ -379,11 +379,23 @@ describe('publishedAt surfacing + round-trip (R1-F17 / R4-F1)', () => {
     expect('publishedAt' in bare).toBe(false);
   });
 
-  it('normalizeBlogData trims publishedAt and drops an empty value', () => {
-    expect(normalizeBlogData({ publishedAt: '  2024-06-15T09:00:00Z  ' }).publishedAt).toBe(
-      '2024-06-15T09:00:00Z'
-    );
-    expect('publishedAt' in normalizeBlogData({ publishedAt: '   ' })).toBe(false);
+  it('normalizeBlogData trims publishedAt and drops an empty value (scheduled save)', () => {
+    expect(
+      normalizeBlogData({ publishedAt: '  2024-06-15T09:00:00Z  ' }, 'scheduled').publishedAt
+    ).toBe('2024-06-15T09:00:00Z');
+    expect('publishedAt' in normalizeBlogData({ publishedAt: '   ' }, 'scheduled')).toBe(false);
+  });
+
+  it('normalizeBlogData drops publishedAt on any non-scheduled save (no stale future instant)', () => {
+    const withAt = { publishedAt: '2024-06-15T09:00:00Z' };
+    // A scheduled→published/draft/archived edit (or a status-less call) must not retain publishedAt:
+    // compareBlogPosts uses it as a same-date tiebreak, so a stale future value mis-orders the index.
+    expect('publishedAt' in normalizeBlogData({ ...withAt }, 'published')).toBe(false);
+    expect('publishedAt' in normalizeBlogData({ ...withAt }, 'draft')).toBe(false);
+    expect('publishedAt' in normalizeBlogData({ ...withAt }, 'archived')).toBe(false);
+    expect('publishedAt' in normalizeBlogData({ ...withAt })).toBe(false);
+    // ...but a scheduled save keeps it.
+    expect(normalizeBlogData({ ...withAt }, 'scheduled').publishedAt).toBe('2024-06-15T09:00:00Z');
   });
 });
 

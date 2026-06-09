@@ -575,7 +575,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
   } else if (collection === 'testimonials') {
     data = normalizeTestimonialsData(rawData);
   } else if (collection === 'blog') {
-    data = normalizeBlogData(rawData);
+    // Pass the RAW status so the normalizer can drop a stale `publishedAt` on any non-scheduled
+    // save (it is only meaningful while scheduled).
+    data = normalizeBlogData(rawData, payload.status);
   }
 
   if (collection === 'blog') {
