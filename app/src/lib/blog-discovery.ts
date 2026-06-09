@@ -30,13 +30,19 @@ export type Taxonomy = {
 };
 
 /**
- * Canonical taxonomy slug from a free-text label: lowercase, spaces→hyphens, strip to `[a-z0-9-]`,
- * collapse and trim hyphens. Returns `''` for an unusable label (the caller drops it). Mirrors the
- * testimonials category-token rule so taxonomy slugs are consistent across the site.
+ * Canonical taxonomy slug from a free-text label: NFKD-fold accents/width (so `café` → `cafe`,
+ * fullwidth `Ｐｌａｙ` → `play`), lowercase, spaces→hyphens, strip remaining non-`[a-z0-9-]`, collapse
+ * and trim hyphens. Mirrors the testimonials category-token rule so slugs are consistent site-wide.
+ *
+ * Returns `''` for a label with no Latin-alphanumeric content after folding (e.g. a purely non-Latin
+ * or emoji-only label) — the caller drops it. So "canonicalized on read, never rejected" (R1-F3) holds
+ * for the realistic English/accented-Latin corpus; a label that folds to nothing is the one exception.
  */
 export function taxonomySlug(value: unknown): string {
   if (typeof value !== 'string') return '';
   return value
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '') // strip combining diacritics left by NFKD
     .trim()
     .toLowerCase()
     .replace(/\s+/g, '-')
@@ -169,14 +175,21 @@ export function getRelatedPosts(post: BlogPost, all: BlogPost[], limit = 3): Blo
   return all
     .filter(candidate => candidate.slug !== post.slug)
     .map((candidate, index) => {
-      let shared = 0;
+      // Count DISTINCT shared taxonomy keys — dedupe the candidate's own variants/duplicates first,
+      // mirroring buildTaxonomy's per-slug dedup. Counting raw entries would let a post with
+      // duplicate/variant labels (`['Montessori','montessori']`) inflate its overlap score.
+      const candidateKeys = new Set<string>();
       for (const field of ['categories', 'tags'] as const) {
         const values = candidate[field];
         if (!Array.isArray(values)) continue;
         for (const raw of values) {
           const slug = taxonomySlug(raw);
-          if (slug && own.has(`${field}:${slug}`)) shared += 1;
+          if (slug) candidateKeys.add(`${field}:${slug}`);
         }
+      }
+      let shared = 0;
+      for (const key of candidateKeys) {
+        if (own.has(key)) shared += 1;
       }
       return { post: candidate, shared, index };
     })

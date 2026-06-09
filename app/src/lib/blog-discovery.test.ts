@@ -30,9 +30,17 @@ describe('taxonomySlug', () => {
     expect(taxonomySlug('--Edge--')).toBe('edge');
   });
 
-  it('returns empty for unusable / non-string input', () => {
+  it('NFKD-folds accents and fullwidth so they slugify to base Latin', () => {
+    expect(taxonomySlug('Café Montessori')).toBe('cafe-montessori'); // é → e
+    expect(taxonomySlug('Crème')).toBe('creme');
+    expect(taxonomySlug('Ｐｌａｙ')).toBe('play'); // fullwidth → ASCII
+  });
+
+  it('returns empty for unusable / non-string / non-Latin-only input', () => {
     expect(taxonomySlug('')).toBe('');
     expect(taxonomySlug('!!!')).toBe('');
+    expect(taxonomySlug('日本語')).toBe(''); // no Latin-alphanumeric after folding → dropped
+    expect(taxonomySlug('🌱')).toBe('');
     expect(taxonomySlug(undefined)).toBe('');
     expect(taxonomySlug(123 as unknown)).toBe('');
   });
@@ -172,5 +180,21 @@ describe('getRelatedPosts', () => {
 
   it('a post with no taxonomy of its own has no related posts', () => {
     expect(getRelatedPosts(makePost({ slug: 't' }), all)).toEqual([]);
+  });
+
+  it('counts DISTINCT shared keys — duplicate/variant labels do not inflate the overlap score', () => {
+    const tgt = makePost({ slug: 'tgt', categories: ['Montessori'], tags: ['play'] });
+    const distinctTwo = makePost({
+      slug: 'distinct-two',
+      categories: ['Montessori'],
+      tags: ['play']
+    }); // 2 distinct
+    const dupOne = makePost({
+      slug: 'dup-one',
+      categories: ['Montessori', 'montessori', 'MONTESSORI']
+    }); // still 1
+    // distinctTwo (shared 2) must outrank dupOne (shared 1) despite dupOne's three raw entries.
+    const related = getRelatedPosts(tgt, [tgt, distinctTwo, dupOne]).map(p => p.slug);
+    expect(related).toEqual(['distinct-two', 'dup-one']);
   });
 });
