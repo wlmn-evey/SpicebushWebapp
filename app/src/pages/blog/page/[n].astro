@@ -1,0 +1,50 @@
+---
+import Layout from '@layouts/Layout.astro';
+import Header from '@components/Header.astro';
+import Footer from '@components/Footer.astro';
+import PostCardList from '@components/blog/PostCardList.astro';
+import Pagination from '@components/blog/Pagination.astro';
+import { getPublishedPosts } from '@lib/blog-content';
+import { paginate } from '@lib/blog-discovery';
+import { parseBlogPageParam } from '@lib/blog-routes';
+
+// `/blog/page/1` 301s to `/blog` (page 1 is the index, never a self-canonical duplicate — R3-F19);
+// a non-integer / out-of-domain `[n]` 404s before any DB read.
+const parsed = parseBlogPageParam(Astro.params.n);
+if (parsed.kind === 'redirect') {
+  return Astro.redirect('/blog', 301);
+}
+if (parsed.kind === 'invalid') {
+  return new Response(null, { status: 404 });
+}
+
+const posts = await getPublishedPosts();
+const pagination = paginate(posts, parsed.n);
+
+// An out-of-range page (e.g. `/blog/page/9` on a one-page corpus) 404s — no thin/empty page that
+// would self-canonical to a non-existent slice.
+if (!pagination.isValidPage) {
+  return new Response(null, { status: 404 });
+}
+---
+
+<Layout title={`Blog — Page ${pagination.page}`}>
+  <Header />
+
+  <main id="main-content" class="container mx-auto px-4 py-12">
+    <h1 class="text-4xl lg:text-5xl font-heading font-bold text-earth-brown mb-2 tracking-tight">
+      Blog
+    </h1>
+    <p class="text-earth-brown/80 mb-10">Page {pagination.page} of {pagination.totalPages}</p>
+
+    <PostCardList posts={pagination.items} />
+    <Pagination
+      page={pagination.page}
+      totalPages={pagination.totalPages}
+      hasPrev={pagination.hasPrev}
+      hasNext={pagination.hasNext}
+    />
+  </main>
+
+  <Footer />
+</Layout>

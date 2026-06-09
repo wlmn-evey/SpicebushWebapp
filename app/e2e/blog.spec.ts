@@ -59,12 +59,23 @@ test.describe('Blog V1 — public routes + SEO', () => {
 
     await expect(page.locator('h1')).toHaveText('Blog');
 
-    const postLinks = page.locator('a[href^="/blog/"]');
+    // Count only post-DETAIL links (R4-F10 lockstep): PR2 added /blog/category/ and /blog/tag/
+    // discovery chips that also start with /blog/, so exclude them to keep ">=6 posts" honest.
+    const postLinks = page.locator(
+      'a[href^="/blog/"]:not([href*="/category/"]):not([href*="/tag/"]):not([href*="/page/"])'
+    );
     expect(await postLinks.count(), 'at least 6 published posts').toBeGreaterThanOrEqual(6);
     await expect(
       page.locator(`a[href="/blog/${PINNED_SLUG}"]`),
       'pinned gardening post link present'
     ).toHaveCount(1);
+
+    // PR2 discovery surface: post cards carry category (and tag) chip links so visitors can browse
+    // by taxonomy. At least one category chip must render.
+    expect(
+      await page.locator('a[href^="/blog/category/"]').count(),
+      'category discovery chips present'
+    ).toBeGreaterThanOrEqual(1);
 
     // R4-F18 metadata-contrast pin (POSITIVE assertion): the date/byline/excerpt text must compute
     // to text-earth-brown/80 (rgba(46,46,46,0.8), ~6.4:1), NOT a failing token. The byline <p>

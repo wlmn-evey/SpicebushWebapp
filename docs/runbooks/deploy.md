@@ -349,8 +349,19 @@ curl -s "$SITE/blog" | grep -E 'name="robots"|googlebot'        # index,follow; 
 # both "noindex, nofollow" lines. If the page now renders "index, follow", the override was removed —
 # that's a config drift, not a refactor regression.
 curl -s "$SITE/contact-success" | grep -E 'name="robots"|googlebot'  # BOTH "noindex, nofollow"
-# Soft spot-check (once PR2 routes ship) — a tag filter or page ≥2 must be crawl-but-don't-index:
-curl -s "$SITE/blog/tag/montessori" | grep -E 'name="robots"|googlebot'  # BOTH "noindex, follow"
+
+# PR2 discovery routes (status + robots + self-canonical). Slugs below are REAL live-corpus values
+# (categories: Education×3, Philosophy/Programs/Nature×2 = indexable; Values/Inclusion/News×1 = soft;
+# tags are ALWAYS soft). taxonomySlug lowercases + hyphenates, so the URL is the canonical slug.
+curl -sI "$SITE/blog/category/education"                         # 200 (indexable, ≥2 members)
+curl -s  "$SITE/blog/category/education" | grep -E 'name="robots"|googlebot|rel="canonical"'
+#   → robots="index, follow", NO googlebot tag, canonical = $SITE/blog/category/education (SELF, not /blog)
+curl -s  "$SITE/blog/category/values"   | grep -E 'name="robots"|googlebot'  # BOTH "noindex, follow" (1 member → soft)
+curl -s  "$SITE/blog/tag/inclusion"     | grep -E 'name="robots"|googlebot'  # BOTH "noindex, follow" (tags always soft)
+curl -sI "$SITE/blog/category/Education"                         # 404 (capital → non-canonical param, no dup content)
+curl -sI "$SITE/blog/page/1"                                     # 301 → /blog (page 1 is the index)
+curl -sI "$SITE/blog/page/9"                                     # 404 (out of range on the 1-page corpus)
+curl -sI "$SITE/blog/page/abc"                                   # 404 (non-integer param)
 
 # Sitemap + robots (prod origin, exact slashless <loc>, draft-free)
 curl -s "$SITE/sitemap-blog.xml"                                # 200, XML; <loc>$SITE/blog</loc> and <loc>$SITE/blog/<slug></loc>; ≥6 posts; no drafts
