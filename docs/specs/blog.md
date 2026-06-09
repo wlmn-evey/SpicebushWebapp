@@ -299,10 +299,40 @@ The middleware protects `/admin` and `/api/admin` prefixes:
 
 ### Status requirement
 
-Blog POSTs must carry `status ∈ {draft, published}` **explicitly**. A missing / empty /
-whitespace-only status is rejected with `400` "Status must be Draft or Published" — checked first,
-against the raw form value, before the endpoint's `status || 'published'` default (which never
-applies to blog). The admin form always submits a status, so owners never see this error.
+Blog POSTs must carry `status ∈ {draft, published, scheduled, archived}` **explicitly** (Phase-2
+four-state lifecycle, R2-F11). A missing / empty / whitespace-only / unknown status is rejected with
+`400` "Status must be Draft, Published, Scheduled, or Archived" — checked first, against the raw form
+value, before the endpoint's `status || 'published'` default (which never applies to blog). The admin
+form always submits a status, so owners never see this error. Phase-2 PR4 adds a DB
+`CHECK (status IN ('draft','published','scheduled','archived'))` as defense-in-depth behind this gate
+and behind the exact-match `WHERE status = 'published'` public read filter.
+
+- **`published`** — live on every public surface.
+- **`draft`** — exempt from the publish requirements below; invisible publicly.
+- **`scheduled`** — passes the FULL publish gate at SAVE time (R1-F1): it goes live unattended, so it
+  must be publish-ready now AND carry a future `data.publishedAt`. Invisible publicly until the
+  every-5-min scheduled-publish cron (PR4) flips it to `published`.
+- **`archived`** — non-publishing (exempt like a draft) and **reversible**: round-trips back to
+  `draft`/`published` through the normal save path (R4-F12), so it is never a one-way trip.
+
+#### Scheduled publish timestamp (`data.publishedAt`) — R4-F1
+
+A `scheduled` save additionally requires `data.publishedAt`: an ISO-8601 date-time with an explicit
+zone (`Z` or `±HH:MM`; seconds/millis optional) that is a real instant in the **future**. A bare
+`datetime-local` (no zone) is rejected — the authoring form attaches a zone before saving (UTC
+contract). This format contract lives in `app/src/lib/blog-publish-schedule.ts`
+(`isScheduledPublishAtFormat` / `isFutureScheduledPublishAt` / `isDueScheduledPublishAt`) and is
+imported by BOTH `validateBlogData` (save gate) and the scheduled-publish cron (PR4 fire predicate),
+so a post that saves cleanly is exactly the set the cron will fire — one contract, no drift.
+
+#### Author byline (`resolveAuthorByline`) — R4-F9
+
+The display byline resolves as: `registry.get(author_ref)` when `data.author_type` + `data.author_ref`
+are both present AND resolve against the author registry (`settings.blog_authors`); otherwise the
+legacy `data.author` string (default `'Spicebush Team'`). The 6 live posts carry only `data.author`
+(no `author_type`/`author_ref`), so they always take the fallback and their bylines are preserved
+byte-for-byte (6-byline regression test). Ordering tiebreak: posts sharing a calendar `date` order by
+`data.publishedAt` DESC before the slug tiebreak (R1-F17), a no-op for legacy posts that carry none.
 
 ### Validation rules (`validateBlogData`)
 

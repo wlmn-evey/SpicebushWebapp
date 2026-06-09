@@ -329,14 +329,17 @@ carry a header-splitting payload regardless of which response branch sets the
 `Location` header (defense-in-depth). A rejected `redirectTo` falls back to a JSON
 response (no `303` to the unsafe path).
 
-**Blog explicit-status requirement**: blog POSTs must carry a `status` of `draft`
-or `published` **explicitly**. A missing / empty / whitespace-only status is a
-`400` ("Status must be Draft or Published"), checked first against the raw form
-value — never silently defaulted to `published`. The `status || 'published'`
-default still applies to all other collections. The validated status is stored
-**lowercased** (`draft` / `published`) so a mixed-case input (e.g. `Published`)
+**Blog explicit-status requirement**: blog POSTs must carry a `status` of `draft`,
+`published`, `scheduled`, or `archived` **explicitly** (Phase-2 four-state
+lifecycle). A missing / empty / whitespace-only / unknown status is a `400`
+("Status must be Draft, Published, Scheduled, or Archived"), checked first against
+the raw form value — never silently defaulted to `published`. The
+`status || 'published'` default still applies to all other collections. The
+validated status is stored **lowercased** so a mixed-case input (e.g. `Published`)
 cannot pass validation yet stay invisible behind the exact `status = 'published'`
-read filter.
+read filter. A `scheduled` save additionally requires a future, zone-explicit
+`data.publishedAt` (shared format contract in `blog-publish-schedule.ts`); a
+`scheduled` post passes the full publish gate at save time.
 
 ---
 
