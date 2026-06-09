@@ -48,6 +48,22 @@ describe('isSafeTickerHref (R3-F4)', () => {
     expect(isSafeTickerHref('')).toBe(false);
   });
 
+  it('REJECTS the tab/LF/CR open-redirect bypass (browsers strip them → //host)', () => {
+    // `'/\t/evil.com'` reconstitutes to `'//evil.com'` in a browser → cross-origin. The validator
+    // strips tab/LF/CR before the scheme check, so these must be rejected (R3-F4 open-redirect).
+    expect(isSafeTickerHref('/\t/evil.com')).toBe(false);
+    expect(isSafeTickerHref('/\n/evil.com')).toBe(false);
+    expect(isSafeTickerHref('/\r/evil.com')).toBe(false);
+    expect(isSafeTickerHref('/\t\t/evil.com')).toBe(false);
+  });
+
+  it('ACCEPTS a whitespace-padded safe href and a mixed-case scheme (the /i flag + trim)', () => {
+    expect(isSafeTickerHref('  https://spicebushmontessori.org  ')).toBe(true);
+    expect(isSafeTickerHref('HTTPS://spicebushmontessori.org')).toBe(true);
+    expect(isSafeTickerHref('MailTo:hi@spicebushmontessori.org')).toBe(true);
+    expect(isSafeTickerHref('TEL:+14842020712')).toBe(true);
+  });
+
   it('PARITY: the href allowlist is byte-identical to blog-html ALLOWED_URI_REGEXP (R3-F1, no drift)', () => {
     expect(LINK_HREF_REGEX.source).toBe(STRICT_CONFIG_V2.ALLOWED_URI_REGEXP.source);
     expect(LINK_HREF_REGEX.flags).toBe(STRICT_CONFIG_V2.ALLOWED_URI_REGEXP.flags);
@@ -80,6 +96,26 @@ describe('getActiveTickerItems', () => {
     expect(await getActiveTickerItems(NOW)).toEqual([]);
     stubSettings(true, 'not-an-array');
     expect(await getActiveTickerItems(NOW)).toEqual([]);
+  });
+
+  it('skips null / primitive / array entries without throwing (the entry-type guard)', async () => {
+    // A value-blind endpoint could store a non-object entry; the public render path must not crash.
+    stubSettings(true, [null, 'a string', 42, ['nested'], { text: 'ok' }]);
+    const items = await getActiveTickerItems(NOW);
+    expect(items.map(i => i.text)).toEqual(['ok']);
+  });
+
+  it('strips a tab/LF/CR open-redirect href but keeps the item as inert text', async () => {
+    stubSettings(true, [{ text: 'Sneaky', href: '/\t/evil.com' }]);
+    const [item] = await getActiveTickerItems(NOW);
+    expect(item.text).toBe('Sneaky');
+    expect(item.href).toBeUndefined();
+  });
+
+  it('stores the NORMALIZED (tab/whitespace-stripped) href for a safe link', async () => {
+    stubSettings(true, [{ text: 'Padded', href: '  https://spicebushmontessori.org  ' }]);
+    const [item] = await getActiveTickerItems(NOW);
+    expect(item.href).toBe('https://spicebushmontessori.org');
   });
 
   it('R3-F4 NEGATIVE: strips an unsafe href but KEEPS the item as inert text', async () => {
@@ -141,6 +177,18 @@ describe('getActiveTickerItems', () => {
     expect(items.map(i => i.text)).toEqual(['Item 0', 'Item 1', 'Item 2', 'Item 3', 'Item 4']);
   });
 
+  it('≤5 counts KEPT items, not raw indices — leading filtered entries do not eat the budget', async () => {
+    // 2 expired up front + 6 valid → the cap must yield the first 5 VALID (v1..v5), proving it counts
+    // post-filter survivors, not raw array positions.
+    stubSettings(true, [
+      { text: 'gone1', expiresAt: '2026-06-01T00:00:00Z' },
+      { text: 'gone2', expiresAt: '2026-06-02T00:00:00Z' },
+      ...Array.from({ length: 6 }, (_, i) => ({ text: `v${i + 1}` }))
+    ]);
+    const items = await getActiveTickerItems(NOW);
+    expect(items.map(i => i.text)).toEqual(['v1', 'v2', 'v3', 'v4', 'v5']);
+  });
+
   it('drops empty-text items and caps text length to 200', async () => {
     stubSettings(true, [{ text: '   ' }, { text: 'x'.repeat(250) }, { notText: 1 }]);
     const items = await getActiveTickerItems(NOW);
@@ -148,14 +196,15 @@ describe('getActiveTickerItems', () => {
     expect(items[0].text).toHaveLength(200);
   });
 
-  it('preserves admin-only `type` metadata when valid, drops an invalid type', async () => {
+  it('passes through every valid `type` allowlist member, drops an invalid type', async () => {
     stubSettings(true, [
-      { text: 'A', type: 'closure' },
-      { text: 'B', type: 'bogus' }
+      { text: 'A', type: 'info' },
+      { text: 'B', type: 'event' },
+      { text: 'C', type: 'closure' },
+      { text: 'D', type: 'bogus' }
     ]);
     const items = await getActiveTickerItems(NOW);
-    expect(items[0].type).toBe('closure');
-    expect(items[1].type).toBeUndefined();
+    expect(items.map(i => i.type)).toEqual(['info', 'event', 'closure', undefined]);
   });
 
   it('R4-F11 TTL: reads BOTH keys with the dedicated 5-minute maxAge, never the 30-min default', async () => {

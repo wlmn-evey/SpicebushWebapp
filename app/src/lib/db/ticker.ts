@@ -20,7 +20,12 @@ export interface TickerItem {
   href?: string;
   /** Optional ISO-8601 expiry; render-time filtered once `Date.parse(expiresAt) <= now`. */
   expiresAt?: string;
-  /** Admin-only organisation metadata — NOT surfaced to public visitors (D5). */
+  /**
+   * Organisation metadata, passed through by the read path. Under the current decision (D5=A) the
+   * PUBLIC ticker components do NOT render it — it sidesteps WCAG 1.4.1 color-coding (R4-F20). It is
+   * still emitted here so a future PR can surface it as a per-item indicator (icon + text label,
+   * never color alone — R4-F20) without changing the read contract.
+   */
   type?: 'info' | 'event' | 'closure';
 }
 
@@ -43,8 +48,19 @@ const MAX_TICKER_TEXT = 200;
  */
 export const LINK_HREF_REGEX = /^(?:https:|mailto:|tel:|\/(?![/\\]))/i;
 
+/**
+ * Normalize a href the way a BROWSER will before applying the scheme allowlist. Browsers strip ASCII
+ * tab/LF/CR from the ENTIRE URL before parsing (WHATWG URL spec), so `'/\t/evil.com'` reconstitutes to
+ * a protocol-relative `'//evil.com'` → cross-origin. The naked regex (used inside DOMPurify, which
+ * runs this same ATTR_WHITESPACE stripping first) does NOT account for that on its own — so we strip
+ * those chars here, BEFORE the regex, or the `//host` block is bypassable (open redirect).
+ */
+function normalizeHref(href: string): string {
+  return href.replace(/[\t\n\r]/g, '').trim();
+}
+
 export function isSafeTickerHref(href: string | undefined): boolean {
-  return typeof href === 'string' && LINK_HREF_REGEX.test(href.trim());
+  return typeof href === 'string' && LINK_HREF_REGEX.test(normalizeHref(href));
 }
 
 /** Whether the ticker is switched on. Missing/garbage key coerces to `false` (ships off — D-safety). */
@@ -79,9 +95,10 @@ export async function getActiveTickerItems(now: number = Date.now()): Promise<Ti
       if (Number.isFinite(expiryMs) && expiryMs <= now) continue;
     }
 
-    // Strip an unsafe href (keep the item as inert text) — render-time trust boundary (R3-F4).
-    const rawHref = typeof candidate.href === 'string' ? candidate.href.trim() : '';
-    const href = rawHref && isSafeTickerHref(rawHref) ? rawHref : undefined;
+    // Strip an unsafe href (keep the item as inert text) — render-time trust boundary (R3-F4). Store
+    // the NORMALIZED href (tab/LF/CR removed) so what renders is exactly what was validated.
+    const normalizedHref = typeof candidate.href === 'string' ? normalizeHref(candidate.href) : '';
+    const href = normalizedHref && isSafeTickerHref(normalizedHref) ? normalizedHref : undefined;
 
     const rawType = candidate.type;
     const type =
