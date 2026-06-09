@@ -53,8 +53,6 @@ export async function publishDueScheduledPosts(
     skippedMalformed: 0
   };
 
-  const publishedAtIso = new Date(now).toISOString();
-
   for (const row of rows) {
     const at = row.published_at;
     if (!isScheduledPublishAtFormat(at)) {
@@ -66,10 +64,12 @@ export async function publishDueScheduledPosts(
       continue;
     }
     // Flip status ONLY. The WHERE re-asserts status='scheduled' so a concurrent owner edit that
-    // already moved the row (published/archived/back-to-draft) is not double-flipped.
+    // already moved the row (published/archived/back-to-draft) is not double-flipped. `updated_at`
+    // is left to the `trigger_content_set_updated_at` BEFORE-UPDATE trigger (001_core_schema.sql),
+    // which sets it to NOW() — passing it here would only be overwritten.
     await query(
-      "UPDATE content SET status = 'published', updated_at = $2 WHERE type = 'blog' AND slug = $1 AND status = 'scheduled'",
-      [row.slug, publishedAtIso]
+      "UPDATE content SET status = 'published' WHERE type = 'blog' AND slug = $1 AND status = 'scheduled'",
+      [row.slug]
     );
     summary.published.push(row.slug);
   }
