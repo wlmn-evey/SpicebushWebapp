@@ -20,6 +20,7 @@ import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { TableCell } from '@tiptap/extension-table-cell';
+import Image from '@tiptap/extension-image';
 import type { Extensions } from '@tiptap/core';
 
 /** The four alignments the editor supports, mapped to the enumerated sanitizer-allowlisted classes. */
@@ -79,6 +80,10 @@ export function buildBlogEditorExtensions(): Extensions {
     Table.configure({ resizable: false }),
     TableRow,
     TableHeader,
-    TableCell
+    TableCell,
+    // Block images. allowBase64:false rejects data:/base64 at the editor level too, mirroring the
+    // render-time sanitizer's data: block (blog-html.ts) — images must be real URLs (media library
+    // or site-relative paths), never inline blobs.
+    Image.configure({ inline: false, allowBase64: false })
   ];
 }
