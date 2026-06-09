@@ -21,9 +21,14 @@ intentionally out and why.
 
 ## Authoring Model
 
-- Posts are authored in a **TipTap WYSIWYG editor** at `/admin/blog` (ADR-009); the editor's HTML is
-  stored in `data.body`. Bold/italic/underline/strike, H2–H4, lists, blockquote, code blocks, links,
-  images, tables, and **class-based** text alignment are first-class.
+- Posts are authored in a **TipTap WYSIWYG editor** (ADR-009; redesigned to dedicated editor pages in
+  ADR-011, #114). The editor's HTML is stored in `data.body`. Bold/italic/underline/strike,
+  **highlight** (`<mark>`), **class-based brand text color**
+  (`text-forest-canopy|moss-green|sunlight-gold|earth-brown`), H2–H4, lists, blockquote, code blocks,
+  **horizontal rules**, links, images, tables, and **class-based** text alignment are first-class. The
+  grouped toolbar also has undo/redo and a live word/character count. All color/alignment/highlight
+  output is **class-based, never inline `style`** (which stays banned) — see
+  [Rendering & Sanitization](#rendering--sanitization).
 - The body is **re-sanitized at every render** through `renderBodyHtml` (DOMPurify `STRICT_CONFIG_V2`,
   `app/src/lib/blog-html.ts`) — sanitize-at-render is the trust boundary, never sanitize-at-write only.
   `style` is banned (alignment is class-based; tables `resizable:false`). During the markdown→HTML
@@ -526,54 +531,51 @@ realistic hostile input is raw HTML an owner pastes (`<img src=x onerror=...>`, 
 barrier. The stored body is re-sanitized on every render, and `set:html` appears exactly once in
 blog code (plus the admin preview call site).
 
-### Strict DOMPurify config (authoritative)
+### Render-time sanitizer config — `STRICT_CONFIG_V2` (authoritative)
+
+Every TipTap/HTML body renders through `renderBodyHtml` → `DOMPurify.sanitize(html, STRICT_CONFIG_V2)`
+(`app/src/lib/blog-html.ts`). This is the authoritative steady-state config:
 
 ```typescript
-DOMPurify.sanitize(html, {
+// app/src/lib/blog-html.ts
+export const STRICT_CONFIG_V2 = {
   ALLOWED_TAGS: [
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "p",
-    "a",
-    "ul",
-    "ol",
-    "li",
-    "strong",
-    "em",
-    "b",
-    "i",
-    "blockquote",
-    "code",
-    "pre",
-    "img",
-    "hr",
-    "br",
-    "table",
-    "thead",
-    "tbody",
-    "tr",
-    "th",
-    "td",
-    "del",
+    // V1 baseline:
+    'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'ul', 'ol', 'li', 'strong', 'em', 'b', 'i',
+    'blockquote', 'code', 'pre', 'img', 'hr', 'br', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'del',
+    // V2 delta: underline/strike, table column groups, then PR B (#114) highlight + brand-color span
+    'u', 's', 'colgroup', 'col', 'mark', 'span'
   ],
-  ALLOWED_ATTR: ["href", "src", "alt", "title"], // NO 'id' — heading anchors are cut, so author
-  // ids must never reach the public page; DOMPurify
-  // strips every author-supplied id (no DOM-clobbering
-  // surface; resolved by removal)
-  ALLOW_DATA_ATTR: false, // defaults to TRUE and is checked BEFORE ALLOWED_ATTR — without these,
-  ALLOW_ARIA_ATTR: false, // an authored <p data-admin-alert> survives "strict" sanitization and
-  // trips AdminLayout's auto-remove in the preview; aria spoofing reaches
-  // screen-reader users
+  // NO 'id', NO 'style'. class/target/rel are admitted by NAME then VALUE-ENUMERATED by the hook below.
+  ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'target', 'rel', 'class', 'colspan', 'rowspan'],
+  ALLOW_DATA_ATTR: false,
+  ALLOW_ARIA_ATTR: false,
+  // https/mailto/tel/site-relative (NOT https-only — live posts carry mailto:/tel:, R3-F1). Blocks
+  // javascript:/vbscript:/protocol-relative and the backslash form '/\evil.com' (parsed as '//evil.com').
   ALLOWED_URI_REGEXP: /^(?:https:|mailto:|tel:|\/(?![/\\]))/i,
-  // HTTPS-only for body links/images (unifies the body trust boundary with the featured-image
-  // policy); NO '#'/fragment alternative (heading anchors cut, so fragment links have no targets);
-  // blocks javascript:, data:, vbscript:, protocol-relative, AND the backslash form '/\evil.com'
-  // (which WHATWG URL and browsers parse as '//evil.com')
-});
+  // Mark structural/enumerated attrs URI-safe so the URI regexp gates only true URIs (href/src).
+  ADD_URI_SAFE_ATTR: ['class', 'target', 'rel', 'colspan', 'rowspan']
+};
 ```
+
+A `uponSanitizeAttribute` hook (`enumerateBodyAttrs`) value-restricts the by-name-only attributes —
+registered around each sanitize call and removed in a `finally` so it never leaks to another path:
+
+- **`class`** → kept tokens limited to code-block language hints (`language-*`), the four text-align
+  classes (`text-left|center|right|justify`), and the four brand text-color classes
+  (`text-forest-canopy|moss-green|sunlight-gold|earth-brown`). Any other token is dropped; an empty
+  result drops the `class` attribute entirely. So `<span>`/`<mark>` can never carry anything but an
+  allowlisted **presentational class** — no inline `style`, no utility-class/CSS-injection abuse.
+- **`rel`** → `noopener|noreferrer|nofollow`; **`target`** → `_blank|_self`; anything else dropped.
+- **`src`/`href`** → `data:` rejected (DOMPurify otherwise admits `data:` on its default image tags
+  regardless of `ALLOWED_URI_REGEXP`).
+
+> **Legacy markdown path (transitional).** Not-yet-converted legacy markdown bodies still render via
+> `renderMarkdownToHtml` (`marked` → `DOMPurify.sanitize(html, STRICT_CONFIG)`), whose V1
+> `STRICT_CONFIG` is **narrower** (`ALLOWED_ATTR: ['href','src','alt','title']`; no `class`/`target`/
+> `rel`, no `u`/`s`/`mark`/`span`, no enumeration hook). It is retained only until the markdown→HTML
+> conversion is fully ratified (see `docs/runbooks/blog-html-conversion.md`); the steady-state
+> config for the primary path is `STRICT_CONFIG_V2` above.
 
 ### URI policy
 

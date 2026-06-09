@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 import { generateHTML, generateJSON } from '@tiptap/html';
 import DOMPurify from 'isomorphic-dompurify';
 import { renderBodyHtml, collectHtmlImageAlts } from './blog-html';
-import { buildBlogEditorExtensions } from './blog-editor-extensions';
+import { buildBlogEditorExtensions, BRAND_TEXT_COLOR_CLASSES } from './blog-editor-extensions';
 
 // Real TipTap emission for an input: parse to ProseMirror JSON then re-serialize through the EXACT
 // configured extension set (D1-F10) — the sanitizer is tested against what the editor truly emits,
@@ -179,6 +179,41 @@ describe('renderBodyHtml — V1 trust-boundary properties hold (hostile inputs)'
   it('returns "" for empty/non-string input', () => {
     expect(renderBodyHtml('')).toBe('');
     expect(renderBodyHtml(undefined as unknown as string)).toBe('');
+  });
+});
+
+describe('renderBodyHtml — PR B power tools (#114): highlight + brand text color', () => {
+  it('keeps a bare <mark> highlight (real TipTap emission), no attributes', () => {
+    const out = renderBodyHtml(tiptapHtml('<p><mark>highlighted</mark></p>'));
+    expect(out).toContain('<mark>highlighted</mark>');
+  });
+
+  it('round-trips every brand text color through the editor as a class-based <span>', () => {
+    for (const cls of BRAND_TEXT_COLOR_CLASSES) {
+      const out = renderBodyHtml(tiptapHtml(`<p><span class="${cls}">x</span></p>`));
+      expect(out).toContain(`<span class="${cls}">x</span>`);
+    }
+  });
+
+  it('strips style/id/event handlers off <mark> and brand-color <span> (sanitizer boundary)', () => {
+    const mark = renderBodyHtml('<mark style="background:red" onclick="x()">h</mark>');
+    expect(mark).toContain('<mark>h</mark>');
+    expect(mark).not.toContain('style=');
+    expect(mark).not.toContain('onclick');
+
+    const span = renderBodyHtml(
+      '<span class="text-forest-canopy" style="color:red" id="z">x</span>'
+    );
+    expect(span).toContain('class="text-forest-canopy"');
+    expect(span).not.toContain('style=');
+    expect(span).not.toContain('id=');
+  });
+
+  it('drops a non-brand class on <span>, leaving a bare span (no utility-class abuse)', () => {
+    const out = renderBodyHtml('<span class="bg-red-500 absolute inset-0">x</span>');
+    expect(out).not.toContain('bg-red-500');
+    expect(out).not.toContain('class=');
+    expect(out).toContain('>x</span>');
   });
 });
 

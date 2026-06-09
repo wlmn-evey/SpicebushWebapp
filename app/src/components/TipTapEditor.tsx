@@ -10,7 +10,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
-import { buildBlogEditorExtensions } from '@lib/blog-editor-extensions';
+import { buildBlogEditorExtensions, BRAND_TEXT_COLORS } from '@lib/blog-editor-extensions';
 import { renderBodyHtml } from '@lib/blog-html';
 
 type ImagePick = { src: string; alt: string };
@@ -56,6 +56,22 @@ function ToolbarButton({ onClick, isActive = false, label, children }: ToolbarBu
   );
 }
 
+/** Visual separator between toolbar groups (decorative). */
+function ToolbarDivider() {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        width: 1,
+        alignSelf: 'stretch',
+        minHeight: 20,
+        background: '#d1d5db',
+        margin: '0 2px'
+      }}
+    />
+  );
+}
+
 export default function TipTapEditor({
   initialHtml = '',
   fieldName = 'bodyRaw',
@@ -64,10 +80,19 @@ export default function TipTapEditor({
   const [showPreview, setShowPreview] = useState(false);
   const [previewHtml, setPreviewHtml] = useState('');
   const [isDirty, setIsDirty] = useState(false);
+  const [counts, setCounts] = useState({ words: 0, chars: 0 });
   const hiddenRef = useRef<HTMLInputElement | null>(null);
 
   const syncHidden = useCallback((editor: Editor) => {
     if (hiddenRef.current) hiddenRef.current.value = editor.getHTML();
+  }, []);
+
+  const updateCounts = useCallback((editor: Editor) => {
+    // Use getText with a block separator: doc.textContent joins blocks with an EMPTY separator, so
+    // "<p>hello</p><p>world</p>" would collapse to "helloworld" and undercount as one word.
+    const text = editor.getText({ blockSeparator: ' ' });
+    const trimmed = text.trim();
+    setCounts({ words: trimmed ? trimmed.split(/\s+/).length : 0, chars: text.length });
   }, []);
 
   const editor = useEditor({
@@ -83,9 +108,13 @@ export default function TipTapEditor({
         'aria-label': 'Post body'
       }
     },
-    onCreate: ({ editor }) => syncHidden(editor),
+    onCreate: ({ editor }) => {
+      syncHidden(editor);
+      updateCounts(editor);
+    },
     onUpdate: ({ editor }) => {
       syncHidden(editor);
+      updateCounts(editor);
       setIsDirty(true);
     }
   });
@@ -149,6 +178,17 @@ export default function TipTapEditor({
       <input type="hidden" name={fieldName} ref={hiddenRef} defaultValue={initialHtml} />
 
       <div className="blog-editor-toolbar" role="toolbar" aria-label="Text formatting">
+        {/* History */}
+        <ToolbarButton label="Undo" onClick={() => editor.chain().focus().undo().run()}>
+          ↶
+        </ToolbarButton>
+        <ToolbarButton label="Redo" onClick={() => editor.chain().focus().redo().run()}>
+          ↷
+        </ToolbarButton>
+
+        <ToolbarDivider />
+
+        {/* Inline text */}
         <ToolbarButton
           label="Bold"
           isActive={editor.isActive('bold')}
@@ -177,7 +217,42 @@ export default function TipTapEditor({
         >
           <s>S</s>
         </ToolbarButton>
+        <ToolbarButton
+          label="Highlight"
+          isActive={editor.isActive('highlight')}
+          onClick={() => editor.chain().focus().toggleHighlight().run()}
+        >
+          <mark>H</mark>
+        </ToolbarButton>
+        <select
+          aria-label="Text color"
+          value={(editor.getAttributes('brandTextColor').color as string) || ''}
+          onChange={e => {
+            const value = e.target.value;
+            if (value) editor.chain().focus().setBrandTextColor(value).run();
+            else editor.chain().focus().unsetBrandTextColor().run();
+          }}
+          style={{
+            font: 'inherit',
+            fontSize: '0.8125rem',
+            padding: '0.25rem 0.4rem',
+            border: '1px solid #d1d5db',
+            borderRadius: 6,
+            background: 'white',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="">Color</option>
+          {BRAND_TEXT_COLORS.map(color => (
+            <option key={color.key} value={color.key}>
+              {color.label}
+            </option>
+          ))}
+        </select>
 
+        <ToolbarDivider />
+
+        {/* Headings */}
         <ToolbarButton
           label="Heading 2"
           isActive={editor.isActive('heading', { level: 2 })}
@@ -200,6 +275,9 @@ export default function TipTapEditor({
           H4
         </ToolbarButton>
 
+        <ToolbarDivider />
+
+        {/* Blocks */}
         <ToolbarButton
           label="Bullet list"
           isActive={editor.isActive('bulletList')}
@@ -228,7 +306,16 @@ export default function TipTapEditor({
         >
           {'</>'}
         </ToolbarButton>
+        <ToolbarButton
+          label="Horizontal line"
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+        >
+          ―
+        </ToolbarButton>
 
+        <ToolbarDivider />
+
+        {/* Alignment */}
         <ToolbarButton
           label="Align left"
           isActive={editor.isActive({ textAlign: 'left' })}
@@ -251,6 +338,9 @@ export default function TipTapEditor({
           ⇥
         </ToolbarButton>
 
+        <ToolbarDivider />
+
+        {/* Insert */}
         <ToolbarButton label="Insert link" isActive={editor.isActive('link')} onClick={insertLink}>
           🔗
         </ToolbarButton>
@@ -266,6 +356,9 @@ export default function TipTapEditor({
           ▦
         </ToolbarButton>
 
+        <ToolbarDivider />
+
+        {/* View */}
         <ToolbarButton
           label={showPreview ? 'Back to editing' : 'Preview as visitor'}
           isActive={showPreview}
@@ -283,6 +376,12 @@ export default function TipTapEditor({
         />
       ) : (
         <EditorContent editor={editor} />
+      )}
+
+      {!showPreview && (
+        <p style={{ marginTop: 6, fontSize: '0.75rem', color: '#6b6256', textAlign: 'right' }}>
+          {counts.words} {counts.words === 1 ? 'word' : 'words'} · {counts.chars} characters
+        </p>
       )}
     </div>
   );

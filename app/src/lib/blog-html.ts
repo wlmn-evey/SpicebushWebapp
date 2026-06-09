@@ -48,7 +48,10 @@ export const STRICT_CONFIG_V2 = {
     'u', // underline (first-class)
     's', // strike (TipTap normalizes <del>/<strike> to <s>)
     'colgroup',
-    'col' // table column groups TipTap emits
+    'col', // table column groups TipTap emits
+    // PR B power tools (#114):
+    'mark', // highlight — emitted with NO attributes
+    'span' // brand text color — survives ONLY with an enumerated brand color class (see ALLOWED_CLASSES); bare otherwise
   ],
   // V1 baseline ['href','src','alt','title'] + V2 delta. NO 'id'. NO 'style' (text-align is class-based;
   // tables resizable:false). 'class'/'target'/'rel' are value-enumerated by the hook below; 'colwidth'
@@ -69,7 +72,13 @@ export const STRICT_CONFIG_V2 = {
   ADD_URI_SAFE_ATTR: ['class', 'target', 'rel', 'colspan', 'rowspan']
 };
 
-/** The ONLY `class` tokens kept on body content: code-block language hints + the four text-align classes. */
+/**
+ * The ONLY `class` tokens kept on body content: code-block language hints, the four text-align
+ * classes, and the four brand text-color classes (PR B #114). Any other class token is dropped.
+ * The brand color set must stay in lockstep with `BRAND_TEXT_COLOR_CLASSES` in
+ * `blog-editor-extensions.ts` (asserted by the sanitizer matrix test, not imported here — that file
+ * pulls in TipTap, which must not reach the SSR render path).
+ */
 const ALLOWED_CLASSES = new Set([
   'language-js',
   'language-ts',
@@ -84,7 +93,12 @@ const ALLOWED_CLASSES = new Set([
   'text-left',
   'text-center',
   'text-right',
-  'text-justify'
+  'text-justify',
+  // Brand text colors (PR B #114):
+  'text-forest-canopy',
+  'text-moss-green',
+  'text-sunlight-gold',
+  'text-earth-brown'
 ]);
 const ALLOWED_REL = new Set(['noopener', 'noreferrer', 'nofollow']);
 const ALLOWED_TARGET = new Set(['_blank', '_self']);
