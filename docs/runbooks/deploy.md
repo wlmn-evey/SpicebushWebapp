@@ -363,8 +363,20 @@ curl -sI "$SITE/blog/page/1"                                     # 301 → /blog
 curl -sI "$SITE/blog/page/9"                                     # 404 (out of range on the 1-page corpus)
 curl -sI "$SITE/blog/page/abc"                                   # 404 (non-integer param)
 
+# RSS feed (Phase-4 PR1): valid RSS 2.0 with the live posts
+curl -s "$SITE/blog/rss.xml" | grep -cE '<item>'                # 6 (one per published post)
+curl -s "$SITE/blog/rss.xml" | grep -E '<atom:link|<pubDate>' | head -2   # atom self-link + RFC-822 pubDate
+curl -s "$SITE/blog/<slug>"  | grep -oE 'rel="alternate"[^>]*application/rss' # RSS auto-discovery <link> in <head>
+
+# Article JSON-LD (Phase-4 PR2): the BlogPosting block coexists with the org block + parses
+curl -s "$SITE/blog/<slug>" | grep -oE '"@type":"BlogPosting"'  # present (alongside EducationalOrganization)
+curl -s "$SITE/blog/<slug>" | grep -oE '"datePublished":"[^"]*"|"dateModified":"[^"]*"'  # both ISO-8601 (dateModified normalized from updated_at)
+#   note: the legacy posts' dateModified = the cutover date — expected, not a bug.
+
 # Sitemap + robots (prod origin, exact slashless <loc>, draft-free)
-curl -s "$SITE/sitemap-blog.xml"                                # 200, XML; <loc>$SITE/blog</loc> and <loc>$SITE/blog/<slug></loc>; ≥6 posts; no drafts
+curl -s "$SITE/sitemap-blog.xml"                                # 200, XML; <loc>$SITE/blog</loc>, each <loc>$SITE/blog/<slug></loc>; ≥6 posts; no drafts
+curl -s "$SITE/sitemap-blog.xml" | grep -oE '<loc>[^<]*/blog/category/[^<]*</loc>'  # INDEXABLE categories only (education/philosophy/programs/nature, ≥2 members)
+curl -s "$SITE/sitemap-blog.xml" | grep -E '/blog/tag/|/blog/category/values|/blog/page/1<'  # expect NO matches (tags + thin cats + page/1 excluded)
 curl -s "$SITE/robots.txt" | grep sitemap-blog                  # Sitemap: $SITE/sitemap-blog.xml
 
 # Static sitemap must EXCLUDE blog / resources-blog / admin / auth

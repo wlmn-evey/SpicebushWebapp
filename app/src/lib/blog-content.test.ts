@@ -932,6 +932,62 @@ describe('escapeXml + renderBlogSitemapXml', () => {
     expect(xml).not.toContain('<loc>https://spicebushmontessori.org/blog/</loc>');
     expect(xml).not.toContain('/blog/first/</loc>');
   });
+
+  it('includes INDEXABLE categories (≥2), excludes thin categories AND all tags (R1-F31/R1-F21)', () => {
+    const origin = 'https://spicebushmontessori.org';
+    const xml = renderBlogSitemapXml(
+      [
+        makePost({ slug: 'a', categories: ['Education', 'Lonely'], tags: ['play'] }),
+        makePost({ slug: 'b', categories: ['Education'], tags: ['play'] })
+      ],
+      origin
+    );
+    // Education has 2 members → indexable → present.
+    expect(xml).toContain(`<loc>${origin}/blog/category/education</loc>`);
+    // "Lonely" has 1 member → thin → absent.
+    expect(xml).not.toContain('/blog/category/lonely');
+    // Tags are never sitemapped (noindex).
+    expect(xml).not.toContain('/blog/tag/');
+  });
+
+  it('lists pagination pages n≥2 only, never /blog/page/1 (R3-F19)', () => {
+    const origin = 'https://spicebushmontessori.org';
+    // 25 posts on a page size of 10 → 3 pages → /blog (p1), /blog/page/2, /blog/page/3.
+    const many = Array.from({ length: 25 }, (_, i) => makePost({ slug: `post-${i}` }));
+    const xml = renderBlogSitemapXml(many, origin);
+    expect(xml).toContain(`<loc>${origin}/blog/page/2</loc>`);
+    expect(xml).toContain(`<loc>${origin}/blog/page/3</loc>`);
+    // Exact <loc> (not a substring) — `/blog/page/1` must be absent even once the corpus reaches
+    // ≥10 pages, where `/blog/page/10` would contain the bare substring `/blog/page/1`.
+    expect(xml).not.toContain(`<loc>${origin}/blog/page/1</loc>`);
+    expect(xml).not.toContain(`<loc>${origin}/blog/page/4</loc>`);
+  });
+
+  it('the 6-post corpus paginates to a single page — no /blog/page/* in the sitemap (R4-F10)', () => {
+    const six = Array.from({ length: 6 }, (_, i) => makePost({ slug: `p${i}` }));
+    const xml = renderBlogSitemapXml(six, 'https://spicebushmontessori.org');
+    expect(xml).not.toContain('/blog/page/');
+  });
+
+  it('emits each route exactly once (R1-F28)', () => {
+    const origin = 'https://spicebushmontessori.org';
+    const xml = renderBlogSitemapXml(
+      [
+        makePost({ slug: 'a', categories: ['Education'] }),
+        makePost({ slug: 'b', categories: ['Education'] })
+      ],
+      origin
+    );
+    const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
+    expect(locs.length).toBe(new Set(locs).size); // no duplicates
+    // /blog + 2 posts + 1 indexable category (1 page → no pagination URLs).
+    expect(locs).toEqual([
+      `${origin}/blog`,
+      `${origin}/blog/a`,
+      `${origin}/blog/b`,
+      `${origin}/blog/category/education`
+    ]);
+  });
 });
 
 describe('toRfc822Date (R1-F30)', () => {
