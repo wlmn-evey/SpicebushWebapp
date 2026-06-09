@@ -939,9 +939,17 @@ describe('toRfc822Date (R1-F30)', () => {
   it('returns "" for a missing or malformed date (caller omits <pubDate>)', () => {
     expect(toRfc822Date('')).toBe('');
     expect(toRfc822Date(undefined)).toBe('');
-    expect(toRfc822Date('2024-5-20')).toBe(''); // not zero-padded → not our format
+    expect(toRfc822Date('2024-5-20')).toBe(''); // not zero-padded → fails DATE_FORMAT_REGEX
     expect(toRfc822Date('not-a-date')).toBe('');
-    expect(toRfc822Date('2024-13-40')).toBe(''); // calendar-invalid (Date NaN)
+    expect(toRfc822Date('2024-13-40')).toBe(''); // month 13 out of range → Date NaN → ''
+  });
+
+  it('faithfully formats a day-overflow date (V8 rolls it forward, matching the write validator)', () => {
+    // The NaN guard does NOT reject day overflow — `new Date('2024-02-30…')` rolls to Mar 1. This
+    // mirrors the write-path validator (which also accepts these), so a saved date is formatted as
+    // stored; the contract is only "never emit Invalid Date", which holds.
+    expect(toRfc822Date('2024-02-30')).toBe('Fri, 01 Mar 2024 12:00:00 GMT');
+    expect(toRfc822Date('2024-02-30')).not.toContain('Invalid');
   });
 });
 
@@ -977,21 +985,21 @@ describe('renderBlogRssXml (R1-F30)', () => {
     expect(xml).toContain('<lastBuildDate>Mon, 20 May 2024 12:00:00 GMT</lastBuildDate>');
   });
 
-  it('XML-escapes titles and excerpts so markup cannot break the feed', () => {
+  it('XML-escapes titles and excerpts (all 5 entities) so markup cannot break the feed', () => {
     const xml = renderBlogRssXml(
       [
         makePost({
           slug: 's',
-          title: 'Tom & Jerry <b>',
+          title: `Tom & Jerry <b> 'q'`,
           excerpt: 'a < b & "c"',
           date: '2024-05-20'
         })
       ],
       origin
     );
-    expect(xml).toContain('<title>Tom &amp; Jerry &lt;b&gt;</title>');
+    expect(xml).toContain('<title>Tom &amp; Jerry &lt;b&gt; &apos;q&apos;</title>');
     expect(xml).toContain('<description>a &lt; b &amp; &quot;c&quot;</description>');
-    expect(xml).not.toContain('<title>Tom & Jerry <b></title>');
+    expect(xml).not.toContain('<title>Tom & Jerry <b>');
   });
 
   it('omits the ITEM <description>/<pubDate> when absent rather than emitting empty/invalid values', () => {
