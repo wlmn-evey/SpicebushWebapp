@@ -71,10 +71,12 @@ function EditorDialog({ title, onClose, children }: EditorDialogProps) {
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
+    // Exclude :disabled controls — a disabled trailing button (e.g. Insert before alt is filled)
+    // is unfocusable, so including it as the "last" element would let Tab escape the trap.
     const focusables = (): HTMLElement[] =>
       Array.from(
         panelRef.current?.querySelectorAll<HTMLElement>(
-          'input, button, textarea, select, a[href]'
+          'input:not([disabled]), button:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href]'
         ) ?? []
       );
     focusables()[0]?.focus();
