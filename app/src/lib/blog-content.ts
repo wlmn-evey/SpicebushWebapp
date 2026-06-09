@@ -14,6 +14,7 @@ import type { ContentEntry } from '@lib/db/types';
 import { collectHtmlImageAlts, renderBodyHtml } from './blog-html';
 import { BLOG_PAGE_SIZE, indexableCategories } from './blog-discovery';
 import { isFutureScheduledPublishAt, isScheduledPublishAtFormat } from './blog-publish-schedule';
+import { logError } from './error-logger';
 
 export type BlogPost = {
   slug: string;
@@ -263,20 +264,29 @@ export async function getBlogPostViewCounts(slugs: string[]): Promise<Map<string
   if (cleanSlugs.length === 0) return counts;
 
   const paths = cleanSlugs.map(slug => `/blog/${slug}`);
-  const rows = await queryRows<{ page_path: string | null; views: number | string }>(
-    `SELECT page_path, COUNT(*)::int AS views
-       FROM analytics_events
-      WHERE event_name = 'page_view' AND page_path = ANY($1)
-      GROUP BY page_path`,
-    [paths]
-  );
+  try {
+    const rows = await queryRows<{ page_path: string | null; views: number | string }>(
+      `SELECT page_path, COUNT(*)::int AS views
+         FROM analytics_events
+        WHERE event_name = 'page_view' AND page_path = ANY($1)
+        GROUP BY page_path`,
+      [paths]
+    );
 
-  for (const row of rows) {
-    const slug = typeof row.page_path === 'string' ? row.page_path.replace(/^\/blog\//, '') : '';
-    if (!counts.has(slug)) continue; // ignore anything outside the requested set (belt-and-suspenders)
-    const views =
-      typeof row.views === 'number' ? row.views : Number.parseInt(String(row.views), 10);
-    counts.set(slug, Number.isFinite(views) && views > 0 ? Math.trunc(views) : 0);
+    for (const row of rows) {
+      const slug = typeof row.page_path === 'string' ? row.page_path.replace(/^\/blog\//, '') : '';
+      if (!counts.has(slug)) continue; // ignore anything outside the requested set (belt-and-suspenders)
+      const views =
+        typeof row.views === 'number' ? row.views : Number.parseInt(String(row.views), 10);
+      counts.set(slug, Number.isFinite(views) && views > 0 ? Math.trunc(views) : 0);
+    }
+  } catch (error) {
+    // Analytics is best-effort and must NEVER take down the admin dashboard — degrade to the
+    // zero-filled map (matching the try/catch convention in db/analytics.ts).
+    logError('blog.viewCounts', error, {
+      action: 'getBlogPostViewCounts',
+      count: cleanSlugs.length
+    });
   }
 
   return counts;

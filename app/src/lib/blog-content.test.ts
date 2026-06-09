@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getCollectionMock, getEntryMock, queryRowsMock } = vi.hoisted(() => ({
+const { getCollectionMock, getEntryMock, queryRowsMock, logErrorMock } = vi.hoisted(() => ({
   getCollectionMock: vi.fn(),
   getEntryMock: vi.fn(),
-  queryRowsMock: vi.fn()
+  queryRowsMock: vi.fn(),
+  logErrorMock: vi.fn()
 }));
 
 vi.mock('@lib/db', () => ({
@@ -17,6 +18,10 @@ vi.mock('@lib/db', () => ({
 
 vi.mock('@lib/db/client', () => ({
   queryRows: queryRowsMock
+}));
+
+vi.mock('./error-logger', () => ({
+  logError: logErrorMock
 }));
 
 import type { ContentEntry } from '@lib/db/types';
@@ -1260,5 +1265,19 @@ describe('getBlogPostViewCounts (Phase 5, R1-F13/R3-F3)', () => {
     expect(counts.get('a')).toBe(13);
     expect(counts.get('b')).toBe(0);
     expect(counts.get('c')).toBe(0); // negative coerced to 0
+  });
+
+  it('degrades to the zero-filled map (does NOT throw) when the analytics query fails', async () => {
+    logErrorMock.mockClear();
+    queryRowsMock.mockRejectedValueOnce(new Error('analytics_events unavailable'));
+    const counts = await getBlogPostViewCounts(['a', 'b']);
+    // Best-effort: a DB failure must never take down the admin dashboard.
+    expect(counts.get('a')).toBe(0);
+    expect(counts.get('b')).toBe(0);
+    expect(logErrorMock).toHaveBeenCalledWith(
+      'blog.viewCounts',
+      expect.any(Error),
+      expect.objectContaining({ action: 'getBlogPostViewCounts' })
+    );
   });
 });
