@@ -381,6 +381,15 @@ Pure functions over the already-published, already-sorted `BlogPost[]`:
   `≥ CATEGORY_INDEX_THRESHOLD` (= 2) members; below that a category route renders `noindex` (thin
   content). Category routes are PATH segments `/blog/category/[slug]` (R4-F15). Tags are a click-filter
   and `noindex` (R1-F21) — never sitemapped index routes.
+- **Robots three-state (`softNoIndex`).** `resolveSeoMetadata` resolves one of three robots states:
+  `index, follow` (default), soft `noindex, follow` (crawl links but don't index — thin/duplicate
+  routes: paginated pages, tag filters, below-threshold categories), or hard `noindex, nofollow`
+  (site-wide kill switch or a per-page DB override). A page opts into soft via the `Layout`
+  `robots="noindex-follow"` prop, which passes `softNoIndex: true`. **Hard always wins** — `softNoIndex`
+  only applies when the page isn't already hard-noindexed, and `ResolvedSeoMetadata.noIndex` keeps its
+  prior meaning (hard only). The rendered `<meta name="googlebot">` is derived from `robotsContent`
+  (`googlebotContent`, rendered only when noindex), so the two tags can never disagree. PR1b adds the
+  machinery as a no-op (no route passes the prop yet); routes opt in in PR2.
 - **Pagination (R3-F19 / R4-F10).** `paginate(items, page, BLOG_PAGE_SIZE)` with `BLOG_PAGE_SIZE` = 10
   (≥10 so the 6-post corpus is a single page — `/blog` shows all 6). An out-of-range / non-integer
   page is flagged `isValidPage:false` (the route 404s) while still returning a clamped renderable page;

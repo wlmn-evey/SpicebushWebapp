@@ -16,6 +16,12 @@ export interface Props {
   ogImageAlt?: string;
   ogType?: string;
   publishedTime?: string;
+  /**
+   * Request a soft `noindex, follow` for thin/duplicate routes (paginated lists, tag filters,
+   * below-threshold category pages). Defaults to `'index'`; a hard noindex (site-wide kill switch or
+   * a per-page DB override) still wins. Pages that don't pass this render exactly as before.
+   */
+  robots?: 'index' | 'noindex-follow';
 }
 
 const {
@@ -26,7 +32,8 @@ const {
   ogImage,
   ogImageAlt,
   ogType = 'website',
-  publishedTime
+  publishedTime,
+  robots = 'index'
 } = Astro.props;
 
 const seoMetadata = await resolveSeoMetadata({
@@ -34,7 +41,8 @@ const seoMetadata = await resolveSeoMetadata({
   title,
   description,
   keywords,
-  site: Astro.site
+  site: Astro.site,
+  softNoIndex: robots === 'noindex-follow'
 });
 
 const canonicalURL = seoMetadata.canonicalUrl;
@@ -63,7 +71,7 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
     <meta name="keywords" content={seoMetadata.keywords} />
     <link rel="canonical" href={canonicalURL} />
     <meta name="robots" content={seoMetadata.robotsContent} />
-    {seoMetadata.noIndex && <meta name="googlebot" content="noindex, nofollow" />}
+    {seoMetadata.googlebotContent && <meta name="googlebot" content={seoMetadata.googlebotContent} />}
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content={ogType} />

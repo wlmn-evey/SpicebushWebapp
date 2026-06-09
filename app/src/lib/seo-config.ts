@@ -98,6 +98,13 @@ export type ResolveSeoMetadataInput = {
   description: string;
   keywords: string;
   site?: URL | string;
+  /**
+   * Request a soft `noindex, follow` for this render (thin/duplicate pages such as paginated lists,
+   * tag filters, or below-threshold category pages — R1-F21/R1-F31). A hard noindex (site-wide kill
+   * switch or a per-page DB override) always wins; soft only applies when the page would otherwise be
+   * indexable. Defaults to `false` so every existing caller renders `index, follow` exactly as before.
+   */
+  softNoIndex?: boolean;
 };
 
 export type ResolvedSeoMetadata = {
@@ -107,8 +114,15 @@ export type ResolvedSeoMetadata = {
   canonicalUrl: string;
   ogImageUrl: string;
   twitterCard: TwitterCardType;
+  /** Hard noindex only (site-wide kill switch or per-page DB override) — unchanged meaning. */
   noIndex: boolean;
+  /** `index, follow` | `noindex, follow` (soft) | `noindex, nofollow` (hard). */
   robotsContent: string;
+  /**
+   * The explicit `googlebot` meta value, or `null` when the page is indexable (no tag rendered).
+   * Mirrors `robotsContent` whenever it carries a noindex so the two can never drift.
+   */
+  googlebotContent: string | null;
 };
 
 const asTrimmedString = (value: unknown): string => {
@@ -373,7 +387,8 @@ export const resolveSeoMetadata = async ({
   title,
   description,
   keywords,
-  site
+  site,
+  softNoIndex: requestSoftNoIndex
 }: ResolveSeoMetadataInput): Promise<ResolvedSeoMetadata> => {
   const siteOrigin = resolveSiteOrigin(site);
   const seoSettings = await getSeoSettings(siteOrigin);
@@ -406,7 +421,16 @@ export const resolveSeoMetadata = async ({
     seoSettings.global.ogImageUrl ||
     toAbsoluteUrl(FALLBACK_OG_IMAGE_PATH, siteOrigin);
 
+  // Hard noindex (site-wide kill switch or per-page DB override) keeps its exact prior meaning and is
+  // what `noIndex` reports. Soft noindex is a per-render request for thin/duplicate pages and only
+  // applies when the page is NOT already hard-noindexed — hard always wins.
   const noIndex = seoSettings.global.siteNoIndex || Boolean(override?.noIndex);
+  const softNoIndex = Boolean(requestSoftNoIndex) && !noIndex;
+  const robotsContent = noIndex
+    ? 'noindex, nofollow'
+    : softNoIndex
+      ? 'noindex, follow'
+      : 'index, follow';
 
   return {
     title: resolvedTitle,
@@ -416,7 +440,10 @@ export const resolveSeoMetadata = async ({
     ogImageUrl,
     twitterCard: seoSettings.global.twitterCard,
     noIndex,
-    robotsContent: noIndex ? 'noindex, nofollow' : 'index, follow'
+    robotsContent,
+    // Derived from robotsContent so the googlebot tag can never disagree: rendered only when the page
+    // carries a noindex, omitted (null) when it is indexable.
+    googlebotContent: robotsContent.startsWith('noindex') ? robotsContent : null
   };
 };
 
