@@ -30,14 +30,17 @@ Split the admin into a **list page** and **dedicated editor pages**, delivered a
   names, hidden inputs, `createOnly`/`baseDataJson`, `redirectTo`, validation, upload widget, flash
   logic) is **preserved exactly**; only the layout changes, so the backend, the client module
   (`blog-admin-client.ts`), and every R-numbered behavior carry over unchanged.
-- **PR B.** Polish + power tools (grouped/labeled/sticky toolbar, undo/redo, horizontal rule,
-  word/character count, in-editor link & image dialogs wired to `/admin/media`), plus **highlight**
-  (`<mark>`) and **brand-palette text colors** (class-based). The only new XSS surface is bounded:
-  `<mark>` + the brand color/highlight classes added to `STRICT_CONFIG_V2` (`blog-html.ts`) and the
-  extensions→sanitizer matrix test; `style`/`id` stay banned (ADR-009's render-time sanitization
-  remains the trust boundary).
-- **PR C.** A live side-by-side preview pane (rendered through the same `renderBodyHtml` the public
-  page uses) replacing the Edit/Preview toggle, plus a responsive/accessibility pass.
+- **PR B.** Polish + power tools (grouped/labeled toolbar, undo/redo, horizontal rule,
+  word/character count), plus **highlight** (`<mark>`) and **brand-palette text colors**
+  (class-based). The only new XSS surface is bounded: `<mark>` + the brand color/highlight classes
+  added to `STRICT_CONFIG_V2` (`blog-html.ts`) and the extensions→sanitizer matrix test; `style`/`id`
+  stay banned (ADR-009's render-time sanitization remains the trust boundary).
+- **PR C.** Accessible in-editor link & image dialogs (focus-trapped `role="dialog"` modals
+  replacing `window.prompt`; the image dialog links to `/admin/media` and requires alt text), plus a
+  **live side-by-side preview** pane (rendered through the same `renderBodyHtml` the public page uses)
+  replacing the Edit/Preview toggle, plus a responsive/accessibility pass. _(The B/C line was drawn at
+  formatting+sanitizer vs. dialogs+preview — a cleaner seam than the original plan, which grouped the
+  dialogs under PR B.)_
 
 This reverses **R3-F15**: the scannable list the owner previously declined is now the chosen design,
 because the dedicated editor makes the per-row accordion redundant.

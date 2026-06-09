@@ -1,37 +1,23 @@
 /**
- * Blog body editor — a TipTap (ProseMirror) React island that stores TipTap HTML (ADR-009).
+ * Blog body editor — a TipTap (ProseMirror) React island that stores TipTap HTML (ADR-009;
+ * redesigned to dedicated editor pages + a richer toolset in ADR-011 / #114).
  *
- * Built in the additive PR (code-present, mounted nowhere rendered); the cutover PR mounts it in the
- * admin add/edit forms in place of the body textarea, in the SAME deploy that converts the 6 posts
- * to HTML and flips the public render — so the editor (HTML) and the render (HTML) are never out of
- * step. On every change it writes `editor.getHTML()` into a hidden form field so the existing form
- * POST carries the body; the server re-sanitizes via `renderBodyHtml` at save AND at every render
- * (render-time sanitization is the trust boundary).
+ * On every change it writes `editor.getHTML()` into a hidden form field so the existing form POST
+ * carries the body; the server re-sanitizes via `renderBodyHtml` at render — render-time
+ * sanitization is the trust boundary. Links/images are inserted via accessible in-editor dialogs
+ * (no browser prompts), and a live side-by-side preview renders through the SAME `renderBodyHtml`
+ * the public page uses.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import { buildBlogEditorExtensions, BRAND_TEXT_COLORS } from '@lib/blog-editor-extensions';
 import { renderBodyHtml } from '@lib/blog-html';
 
-type ImagePick = { src: string; alt: string };
-
 type Props = {
   /** Stored HTML to hydrate the editor with (the post body). */
   initialHtml?: string;
   /** Hidden form field name the HTML is mirrored into so the form POST carries the body. */
   fieldName?: string;
-  /**
-   * Resolve an image to insert (src + alt). The cutover wiring passes the media-library picker;
-   * the default is a minimal URL+alt prompt so the island is usable without the bridge.
-   */
-  onPickImage?: () => Promise<ImagePick | null>;
-};
-
-const defaultPickImage = async (): Promise<ImagePick | null> => {
-  const src = window.prompt('Image URL (https:// or /media/…)')?.trim();
-  if (!src) return null;
-  const alt = window.prompt('Describe the image (alt text)')?.trim() ?? '';
-  return { src, alt };
 };
 
 type ToolbarButtonProps = {
@@ -72,16 +58,227 @@ function ToolbarDivider() {
   );
 }
 
-export default function TipTapEditor({
-  initialHtml = '',
-  fieldName = 'bodyRaw',
-  onPickImage = defaultPickImage
-}: Props) {
+type EditorDialogProps = {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+};
+
+/** Accessible modal: role=dialog + aria-modal, autofocus the first field, Esc/backdrop close, a
+ *  Tab focus-trap, and focus returned to the trigger on close. Replaces window.prompt (PR C). */
+function EditorDialog({ title, onClose, children }: EditorDialogProps) {
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const focusables = (): HTMLElement[] =>
+      Array.from(
+        panelRef.current?.querySelectorAll<HTMLElement>(
+          'input, button, textarea, select, a[href]'
+        ) ?? []
+      );
+    focusables()[0]?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const list = focusables();
+      if (list.length === 0) return;
+      const first = list[0];
+      const last = list[list.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      role="presentation"
+      onMouseDown={event => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+    >
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl"
+      >
+        <h2 className="mb-3 text-base font-semibold text-earth-brown">{title}</h2>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+type LinkDialogProps = {
+  initialUrl: string;
+  initialNewTab: boolean;
+  onSubmit: (url: string, newTab: boolean) => void;
+  onRemove: () => void;
+  onClose: () => void;
+};
+
+function LinkDialog({ initialUrl, initialNewTab, onSubmit, onRemove, onClose }: LinkDialogProps) {
+  const [url, setUrl] = useState(initialUrl);
+  const [newTab, setNewTab] = useState(initialNewTab);
+  return (
+    <EditorDialog title={initialUrl ? 'Edit link' : 'Add link'} onClose={onClose}>
+      <form
+        className="space-y-3"
+        onSubmit={event => {
+          event.preventDefault();
+          onSubmit(url, newTab);
+        }}
+      >
+        <label className="block text-sm font-medium">
+          Link address
+          <input
+            type="text"
+            value={url}
+            onChange={event => setUrl(event.target.value)}
+            placeholder="https://… , mailto:… , tel:… , or /page"
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={newTab}
+            onChange={event => setNewTab(event.target.checked)}
+          />
+          Open in a new tab
+        </label>
+        <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+          {initialUrl && (
+            <button
+              type="button"
+              onClick={onRemove}
+              className="mr-auto rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+            >
+              Remove link
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-earth-brown hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green"
+          >
+            {initialUrl ? 'Update' : 'Add'}
+          </button>
+        </div>
+      </form>
+    </EditorDialog>
+  );
+}
+
+type ImageDialogProps = {
+  onSubmit: (url: string, alt: string) => void;
+  onClose: () => void;
+};
+
+function ImageDialog({ onSubmit, onClose }: ImageDialogProps) {
+  const [url, setUrl] = useState('');
+  const [alt, setAlt] = useState('');
+  const canInsert = url.trim() !== '' && alt.trim().length >= 6;
+  return (
+    <EditorDialog title="Insert image" onClose={onClose}>
+      <form
+        className="space-y-3"
+        onSubmit={event => {
+          event.preventDefault();
+          if (canInsert) onSubmit(url, alt);
+        }}
+      >
+        <label className="block text-sm font-medium">
+          Image address
+          <input
+            type="text"
+            value={url}
+            onChange={event => setUrl(event.target.value)}
+            placeholder="/media/… or https://…"
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </label>
+        <p className="text-xs text-earth-brown/70">
+          Upload images at{' '}
+          <a
+            href="/admin/media"
+            target="_blank"
+            rel="noopener"
+            className="font-medium text-forest-canopy hover:underline"
+          >
+            Media (opens in a new tab)
+          </a>
+          , then paste the address here.
+        </p>
+        <label className="block text-sm font-medium">
+          Description (alt text)
+          <input
+            type="text"
+            value={alt}
+            onChange={event => setAlt(event.target.value)}
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+          <span className="mt-1 block text-xs text-earth-brown/70">
+            Required — describe what's in the picture (at least 6 characters).
+          </span>
+        </label>
+        <div className="flex items-center justify-end gap-2 pt-1">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-earth-brown hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!canInsert}
+            className="rounded-lg bg-forest-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-moss-green disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Insert
+          </button>
+        </div>
+      </form>
+    </EditorDialog>
+  );
+}
+
+export default function TipTapEditor({ initialHtml = '', fieldName = 'bodyRaw' }: Props) {
   const [showPreview, setShowPreview] = useState(false);
   const [previewHtml, setPreviewHtml] = useState('');
   const [isDirty, setIsDirty] = useState(false);
   const [counts, setCounts] = useState({ words: 0, chars: 0 });
+  const [dialog, setDialog] = useState<'link' | 'image' | null>(null);
+  const [linkInitial, setLinkInitial] = useState({ url: '', newTab: false });
   const hiddenRef = useRef<HTMLInputElement | null>(null);
+  // Mirror showPreview into a ref so the (created-once) editor onUpdate can refresh the live preview
+  // without being recreated on every toggle.
+  const showPreviewRef = useRef(false);
 
   const syncHidden = useCallback((editor: Editor) => {
     if (hiddenRef.current) hiddenRef.current.value = editor.getHTML();
@@ -116,6 +313,7 @@ export default function TipTapEditor({
       syncHidden(editor);
       updateCounts(editor);
       setIsDirty(true);
+      if (showPreviewRef.current) setPreviewHtml(renderBodyHtml(editor.getHTML()));
     }
   });
 
@@ -140,6 +338,10 @@ export default function TipTapEditor({
     return () => form.removeEventListener('submit', onSubmit);
   }, [editor]);
 
+  useEffect(() => {
+    showPreviewRef.current = showPreview;
+  }, [showPreview]);
+
   const togglePreview = useCallback(() => {
     setShowPreview(prev => {
       const next = !prev;
@@ -150,26 +352,49 @@ export default function TipTapEditor({
     });
   }, [editor]);
 
-  const insertLink = useCallback(() => {
+  const openLinkDialog = useCallback(() => {
     if (!editor) return;
-    const previous = editor.getAttributes('link').href as string | undefined;
-    const url = window
-      .prompt('Link URL (https://, mailto:, tel:, or /path)', previous ?? '')
-      ?.trim();
-    if (url === undefined) return; // cancelled
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
-    }
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    const attrs = editor.getAttributes('link');
+    setLinkInitial({
+      url: typeof attrs.href === 'string' ? attrs.href : '',
+      newTab: attrs.target === '_blank'
+    });
+    setDialog('link');
   }, [editor]);
 
-  const insertImage = useCallback(async () => {
+  const applyLink = useCallback(
+    (url: string, newTab: boolean) => {
+      if (!editor) return;
+      const trimmed = url.trim();
+      if (trimmed === '') {
+        editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      } else {
+        editor
+          .chain()
+          .focus()
+          .extendMarkRange('link')
+          .setLink({ href: trimmed, target: newTab ? '_blank' : null })
+          .run();
+      }
+      setDialog(null);
+    },
+    [editor]
+  );
+
+  const removeLink = useCallback(() => {
     if (!editor) return;
-    const pick = await onPickImage();
-    if (!pick) return;
-    editor.chain().focus().setImage({ src: pick.src, alt: pick.alt }).run();
-  }, [editor, onPickImage]);
+    editor.chain().focus().extendMarkRange('link').unsetLink().run();
+    setDialog(null);
+  }, [editor]);
+
+  const applyImage = useCallback(
+    (url: string, alt: string) => {
+      if (!editor) return;
+      editor.chain().focus().setImage({ src: url.trim(), alt: alt.trim() }).run();
+      setDialog(null);
+    },
+    [editor]
+  );
 
   if (!editor) return null;
 
@@ -341,10 +566,14 @@ export default function TipTapEditor({
         <ToolbarDivider />
 
         {/* Insert */}
-        <ToolbarButton label="Insert link" isActive={editor.isActive('link')} onClick={insertLink}>
+        <ToolbarButton
+          label="Insert link"
+          isActive={editor.isActive('link')}
+          onClick={openLinkDialog}
+        >
           🔗
         </ToolbarButton>
-        <ToolbarButton label="Insert image" onClick={insertImage}>
+        <ToolbarButton label="Insert image" onClick={() => setDialog('image')}>
           🖼
         </ToolbarButton>
         <ToolbarButton
@@ -360,29 +589,47 @@ export default function TipTapEditor({
 
         {/* View */}
         <ToolbarButton
-          label={showPreview ? 'Back to editing' : 'Preview as visitor'}
+          label={showPreview ? 'Hide live preview' : 'Show live preview'}
           isActive={showPreview}
           onClick={togglePreview}
         >
-          {showPreview ? 'Edit' : 'Preview'}
+          {showPreview ? 'Hide' : 'Preview'}
         </ToolbarButton>
       </div>
 
-      {showPreview ? (
-        // previewHtml is sanitized by renderBodyHtml — the same render-time guard the public page uses.
-        <div
-          className="blog-body blog-editor-preview"
-          dangerouslySetInnerHTML={{ __html: previewHtml }}
-        />
-      ) : (
-        <EditorContent editor={editor} />
-      )}
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="min-w-0 flex-1" style={{ flexBasis: '20rem' }}>
+          <EditorContent editor={editor} />
+          <p style={{ marginTop: 6, fontSize: '0.75rem', color: '#6b6256', textAlign: 'right' }}>
+            {counts.words} {counts.words === 1 ? 'word' : 'words'} · {counts.chars} characters
+          </p>
+        </div>
+        {showPreview && (
+          <div className="min-w-0 flex-1" style={{ flexBasis: '20rem' }} aria-label="Live preview">
+            <p
+              style={{ margin: '0 0 6px', fontSize: '0.75rem', fontWeight: 600, color: '#6b6256' }}
+            >
+              Live preview
+            </p>
+            {/* previewHtml is sanitized by renderBodyHtml — the same render-time guard the public page uses. */}
+            <div
+              className="blog-body blog-editor-preview"
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
+            />
+          </div>
+        )}
+      </div>
 
-      {!showPreview && (
-        <p style={{ marginTop: 6, fontSize: '0.75rem', color: '#6b6256', textAlign: 'right' }}>
-          {counts.words} {counts.words === 1 ? 'word' : 'words'} · {counts.chars} characters
-        </p>
+      {dialog === 'link' && (
+        <LinkDialog
+          initialUrl={linkInitial.url}
+          initialNewTab={linkInitial.newTab}
+          onSubmit={applyLink}
+          onRemove={removeLink}
+          onClose={() => setDialog(null)}
+        />
       )}
+      {dialog === 'image' && <ImageDialog onSubmit={applyImage} onClose={() => setDialog(null)} />}
     </div>
   );
 }
