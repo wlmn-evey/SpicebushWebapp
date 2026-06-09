@@ -152,6 +152,35 @@ const baseDataFor = (post: BlogPost): string => JSON.stringify(blogPostToEditDat
       </p>
     </section>
 
+    {
+      /* Phase 7 placeholder — AI writing is planned but NOT built (issue #110). It activates only once
+        the school supplies its own Anthropic API key. Purely informational: no inputs, no API calls. */
+    }
+    <section
+      class="rounded-2xl border border-dashed border-forest-canopy/40 bg-forest-canopy/5 p-5"
+      aria-label="AI writing assistant — coming soon"
+    >
+      <div class="flex flex-wrap items-center gap-2">
+        <h2 class="text-lg font-semibold text-earth-brown">AI Writing Assistant</h2>
+        <span
+          class="rounded-full bg-forest-canopy/15 px-2.5 py-0.5 text-xs font-semibold text-forest-canopy"
+        >
+          Coming soon
+        </span>
+      </div>
+      <p class="mt-2 text-sm text-earth-brown/80">
+        Draft generation, rewrite/expand helpers, SEO title &amp; description suggestions, and a
+        school "voice" profile are planned for the editor. They are <strong>not enabled yet</strong
+        >.
+      </p>
+      <p class="mt-2 text-sm text-earth-brown/80">
+        Because the AI runs on a paid service, this feature activates only when the school provides
+        its own <strong>Anthropic API key</strong>. When you're ready to turn it on (or want to talk
+        through whether it's worth it), reach out to your site developer — nothing here needs setup
+        until then.
+      </p>
+    </section>
+
     <section class="space-y-4">
       <details class="rounded-xl border border-gray-200 bg-white shadow-sm">
         <summary class="cursor-pointer px-5 py-4 text-base font-semibold text-earth-brown"
