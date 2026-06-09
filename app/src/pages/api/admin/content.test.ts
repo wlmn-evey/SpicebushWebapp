@@ -161,6 +161,87 @@ describe('POST /api/admin/content — allowlist + delete + origin + redirect (te
     expect(invalidateMock).toHaveBeenCalledWith('blog');
   });
 
+  it('handles action=archive for blog (status=archived + invalidate)', async () => {
+    const response = await callPost(
+      formRequest({ collection: 'blog', slug: 'old-post', action: 'archive' })
+    );
+    expect(response.status).toBe(200);
+    expect(queryMock.mock.calls[0][0]).toContain('SET status = $2');
+    expect(queryMock.mock.calls[0][1]).toEqual(['old-post', 'archived']);
+    expect(invalidateMock).toHaveBeenCalledWith('blog');
+  });
+
+  it('handles action=restore for blog (status=draft — archived is reversible, R4-F12)', async () => {
+    const response = await callPost(
+      formRequest({ collection: 'blog', slug: 'old-post', action: 'restore' })
+    );
+    expect(response.status).toBe(200);
+    expect(queryMock.mock.calls[0][1]).toEqual(['old-post', 'draft']);
+  });
+
+  it('rejects archive/restore for a non-blog collection with 400', async () => {
+    const response = await callPost(
+      formRequest({ collection: 'faq', slug: 'q1', action: 'archive' })
+    );
+    expect(response.status).toBe(400);
+    expect(queryMock).not.toHaveBeenCalled();
+  });
+
+  it('handles action=bulk-archive (UPDATE … slug = ANY, deduped + lowercased)', async () => {
+    const body = new URLSearchParams();
+    body.append('collection', 'blog');
+    body.append('action', 'bulk-archive');
+    body.append('slugs', 'Post-A');
+    body.append('slugs', 'post-b');
+    body.append('slugs', 'post-a'); // dup of the lowercased Post-A
+    const response = await callPost(
+      new Request(ENDPOINT, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      })
+    );
+    expect(response.status).toBe(200);
+    expect(queryMock.mock.calls[0][0]).toContain('UPDATE content');
+    expect(queryMock.mock.calls[0][0]).toContain('slug = ANY($1)');
+    expect(queryMock.mock.calls[0][1]).toEqual([['post-a', 'post-b']]); // deduped + lowercased
+    expect(invalidateMock).toHaveBeenCalledWith('blog');
+  });
+
+  it('handles action=bulk-delete (DELETE … slug = ANY)', async () => {
+    const body = new URLSearchParams();
+    body.append('collection', 'blog');
+    body.append('action', 'bulk-delete');
+    body.append('slugs', 'a');
+    body.append('slugs', 'b');
+    const response = await callPost(
+      new Request(ENDPOINT, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      })
+    );
+    expect(response.status).toBe(200);
+    expect(queryMock.mock.calls[0][0]).toContain('DELETE FROM content');
+    expect(queryMock.mock.calls[0][1]).toEqual([['a', 'b']]);
+  });
+
+  it('rejects a bulk action with no valid slugs (400, no query)', async () => {
+    const body = new URLSearchParams();
+    body.append('collection', 'blog');
+    body.append('action', 'bulk-archive');
+    body.append('slugs', 'Bad Slug!'); // fails the charset filter → dropped → empty set
+    const response = await callPost(
+      new Request(ENDPOINT, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      })
+    );
+    expect(response.status).toBe(400);
+    expect(queryMock).not.toHaveBeenCalled();
+  });
+
   it('rejects a non-allowlisted collection with 400', async () => {
     const response = await callPost(
       formRequest({ collection: 'users', slug: 'x', title: 'x', status: 'draft' })

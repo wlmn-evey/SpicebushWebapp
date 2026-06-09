@@ -28,6 +28,9 @@ type ContentPayload = {
   redirectTo?: string;
   createOnly?: boolean;
   action?: string;
+  // Selected slugs for a bulk lifecycle action (dashboard checkboxes named `slugs`). Distinct from
+  // the single `slug`; only read by the bulk-archive / bulk-delete branches.
+  slugs?: string[];
 };
 
 const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
@@ -125,7 +128,9 @@ const parseFormDataPayload = (formData: FormData): ContentPayload => {
     baseDataJson: String(formData.get('baseDataJson') ?? ''),
     redirectTo: String(formData.get('redirectTo') ?? ''),
     createOnly: parseBooleanValue(formData.get('createOnly'), false),
-    action: String(formData.get('action') ?? '')
+    action: String(formData.get('action') ?? ''),
+    // Repeated `slugs` checkbox values for a bulk action.
+    slugs: formData.getAll('slugs').map(value => String(value))
   };
 };
 
@@ -459,6 +464,49 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return responseByFormat(redirectTo, { error: 'Collection is not allowed' }, 400);
   }
 
+  // Bulk lifecycle actions (blog only): archive or delete a SET of posts selected in the dashboard.
+  // Uses the repeated `slugs` field (NOT the single `slug`), so it runs BEFORE the single-slug
+  // validation below. The count-aware irreversibility confirmation (R4-F14) is enforced in the
+  // dashboard UI (data-confirm); the endpoint is the auth + persistence boundary. Origin/CSRF is
+  // already checked above for every POST.
+  if (payload.action === 'bulk-archive' || payload.action === 'bulk-delete') {
+    if (collection !== 'blog') {
+      return responseByFormat(
+        redirectTo,
+        { error: 'Bulk actions are only available for blog posts' },
+        400
+      );
+    }
+    const slugs = [
+      ...new Set(
+        (Array.isArray(payload.slugs) ? payload.slugs : [])
+          .map(value => String(value).trim().toLowerCase())
+          .filter(value => /^[a-z0-9-_]+$/.test(value))
+      )
+    ];
+    if (slugs.length === 0) {
+      return responseByFormat(redirectTo, { error: 'Select at least one post' }, 400);
+    }
+    try {
+      if (payload.action === 'bulk-delete') {
+        await query("DELETE FROM content WHERE type = 'blog' AND slug = ANY($1)", [slugs]);
+      } else {
+        await query(
+          "UPDATE content SET status = 'archived' WHERE type = 'blog' AND slug = ANY($1)",
+          [slugs]
+        );
+      }
+      db.cache.invalidateCollection('blog');
+      return responseByFormat(redirectTo, {
+        success: true,
+        collection: 'blog',
+        count: slugs.length
+      });
+    } catch {
+      return responseByFormat(redirectTo, { error: 'Failed to update posts' }, 500);
+    }
+  }
+
   if (!slug || !/^[a-z0-9-_]+$/.test(slug)) {
     return responseByFormat(
       redirectTo,
@@ -484,6 +532,35 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return responseByFormat(redirectTo, { success: true, collection, slug });
     } catch {
       return responseByFormat(redirectTo, { error: 'Failed to delete content' }, 500);
+    }
+  }
+
+  // Single-post lifecycle quick actions (blog only): `archive` (status='archived') or `restore`
+  // (status='draft' — archived is reversible, R4-F12). The full editor save path also performs
+  // these; these are the dashboard per-row quick actions. `slug` is already shape-validated above.
+  if (payload.action === 'archive' || payload.action === 'restore') {
+    if (collection !== 'blog') {
+      return responseByFormat(
+        redirectTo,
+        { error: 'This action is only available for blog posts' },
+        400
+      );
+    }
+    const nextStatus = payload.action === 'archive' ? 'archived' : 'draft';
+    try {
+      await query("UPDATE content SET status = $2 WHERE type = 'blog' AND slug = $1", [
+        slug,
+        nextStatus
+      ]);
+      db.cache.invalidateCollection('blog');
+      return responseByFormat(redirectTo, {
+        success: true,
+        collection: 'blog',
+        slug,
+        status: nextStatus
+      });
+    } catch {
+      return responseByFormat(redirectTo, { error: 'Failed to update post' }, 500);
     }
   }
 
