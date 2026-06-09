@@ -1,6 +1,6 @@
 ---
 import type { BlogPost } from '@lib/blog-content';
-import { categoryHref, tagHref } from '@lib/blog-routes';
+import TaxonomyChips from '@components/blog/TaxonomyChips.astro';
 
 interface Props {
   posts: BlogPost[];
@@ -25,8 +25,6 @@ const formatDate = (date: string | undefined): string | null => {
   {
     posts.map(post => {
       const formattedDate = formatDate(post.date);
-      const categories = post.categories ?? [];
-      const tags = post.tags ?? [];
       return (
         <article>
           {post.image && (
@@ -51,42 +49,7 @@ const formatDate = (date: string | undefined): string | null => {
             <span>By {post.author}</span>
           </p>
           <p class="text-earth-brown/80">{post.excerpt}</p>
-          {(categories.length > 0 || tags.length > 0) && (
-            <div class="mt-3 text-sm">
-              {categories.length > 0 && (
-                <p class="text-earth-brown/80">
-                  <span class="font-semibold">Categories:</span>{' '}
-                  {categories.map((cat, i) => (
-                    <>
-                      {i > 0 && <span aria-hidden="true">, </span>}
-                      <a
-                        href={categoryHref(cat)}
-                        class="text-forest-canopy underline hover:text-moss-green"
-                      >
-                        {cat}
-                      </a>
-                    </>
-                  ))}
-                </p>
-              )}
-              {tags.length > 0 && (
-                <p class="text-earth-brown/80 mt-1">
-                  <span class="font-semibold">Tags:</span>{' '}
-                  {tags.map((tag, i) => (
-                    <>
-                      {i > 0 && <span aria-hidden="true">, </span>}
-                      <a
-                        href={tagHref(tag)}
-                        class="text-forest-canopy underline hover:text-moss-green"
-                      >
-                        {tag}
-                      </a>
-                    </>
-                  ))}
-                </p>
-              )}
-            </div>
-          )}
+          <TaxonomyChips categories={post.categories} tags={post.tags} class="mt-3" />
         </article>
       );
     })

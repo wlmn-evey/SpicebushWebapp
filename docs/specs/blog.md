@@ -161,9 +161,24 @@ Markdown remains recoverable via git history.
   to a **published** post (no loops, no draft leakage, no redirect-to-404). The write path can never
   mint slugs in this namespace.
 - **Missing or draft** → `404` (drafts are indistinguishable from missing by design).
-- The post renders `<article>` with a single `<h1>` title, a `<time datetime>` + author byline, an
+- The post renders `<article>` with a single `<h1>` title, a `<time datetime>` + author byline (the
+  byline string is already resolver-resolved on the read path — `resolveAuthorByline`, R4-F9), an
   optional featured `<img>`, then `<div class="blog-body" set:html={renderPostBody(post.body)} />` —
   the only `set:html` in the feature.
+- **Post-page surfaces (Phase 3 PR3)**, appended after the body, each an `<h2>` section under the
+  single `<h1>` (heading outline continuous — R3-F21):
+  - **Taxonomy chips** (`TaxonomyChips.astro`) — the post's own category/tag links (same component the
+    index cards use).
+  - **Share** (`ShareButtons.astro`) — NAMED anchors for X / Facebook / email, each with an accessible
+    name (R3-F23); links are built from the ABSOLUTE canonical URL with `encodeURIComponent` on both
+    URL and title (`buildShareLinks`, blog-share.ts) and work without JS. A **Copy-link** button uses
+    `navigator.clipboard` (secure context) and announces success/failure into a `aria-live="polite"`
+    status region; with no JS / no clipboard it degrades to a no-op (the named anchors still work).
+  - **Related posts** (`RelatedPosts.astro`) — up to 3 from `getRelatedPosts` (shared taxonomy, recency
+    tiebreak, self + zero-overlap excluded); the section is omitted when there are none.
+- **Author bios are deferred** (issue #100) — no author registry / admin exists yet, so all posts use
+  the `data.author` fallback and no bio block renders. The render-time bio sanitizer is built with that
+  feature, against a real caller.
 
 The Footer link to `/blog` (`app/src/components/Footer.astro:141`) is unchanged — making `/blog`
 real fixes the previously-broken link that 301'd to `/contact`.

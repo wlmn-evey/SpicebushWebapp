@@ -2,7 +2,16 @@
 import Layout from '@layouts/Layout.astro';
 import Header from '@components/Header.astro';
 import Footer from '@components/Footer.astro';
-import { getPublishedPost, resolveLegacyBlogRedirect, renderPostBody } from '@lib/blog-content';
+import TaxonomyChips from '@components/blog/TaxonomyChips.astro';
+import ShareButtons from '@components/blog/ShareButtons.astro';
+import RelatedPosts from '@components/blog/RelatedPosts.astro';
+import {
+  getPublishedPost,
+  getPublishedPosts,
+  resolveLegacyBlogRedirect,
+  renderPostBody
+} from '@lib/blog-content';
+import { getRelatedPosts } from '@lib/blog-discovery';
 import { resolveSiteOrigin } from '@lib/site-origin';
 
 const slug = Astro.params.slug ?? '';
@@ -24,6 +33,14 @@ if (!post) {
   return new Response(null, { status: 404 });
 }
 
+// Related posts share the most categories/tags (excludes self + zero-overlap; recency tiebreak).
+const allPosts = await getPublishedPosts();
+const relatedPosts = getRelatedPosts(post, allPosts, 3);
+
+// Absolute canonical post URL for the share intents (share the canonical, not a relative path).
+const siteOrigin = resolveSiteOrigin(Astro.site);
+const postUrl = new URL(`/blog/${post.slug}`, siteOrigin).href;
+
 const formatDate = (date: string | undefined): string | null => {
   if (!date) return null;
   const parsed = new Date(date);
@@ -44,7 +61,7 @@ const bodyHtml = renderPostBody(post.body);
   title={post.seoTitle || post.title}
   description={post.seoDescription || post.excerpt}
   ogType="article"
-  ogImage={post.image ? new URL(post.image, resolveSiteOrigin(Astro.site)).href : undefined}
+  ogImage={post.image ? new URL(post.image, siteOrigin).href : undefined}
   ogImageAlt={post.imageAlt}
   publishedTime={post.date ? `${post.date}T12:00:00Z` : undefined}
 >
@@ -76,6 +93,12 @@ const bodyHtml = renderPostBody(post.body);
       }
 
       <div class="blog-body" set:html={bodyHtml} />
+
+      <TaxonomyChips categories={post.categories} tags={post.tags} class="mt-8" />
+
+      <ShareButtons url={postUrl} title={post.title} />
+
+      <RelatedPosts posts={relatedPosts} />
 
       <p class="mt-12">
         <a href="/blog" class="text-forest-canopy underline hover:text-moss-green">
