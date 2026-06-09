@@ -781,8 +781,19 @@ the defense-in-depth Origin/CSRF check (R2-F1 / #85 — see Admin API above).
 
 ## Deferred Features
 
-Each item below is intentionally **out of V1**. The generic content pipeline already does ~90% of the
-work; every deferred item would add files, migrations, or UI that the maintainability gate penalizes.
+Each item below was intentionally **out of V1**. The generic content pipeline already did ~90% of the
+work; every deferred item would have added files, migrations, or UI that the maintainability gate
+penalized.
+
+> **V2 update (Phases 2–6, 2026-06).** Blog V2 **shipped** several items once listed below — the
+> TipTap WYSIWYG editor (ADR-009), scheduled publishing, categories/tags discovery + pagination +
+> related posts, RSS, `BlogPosting` JSON-LD, and the ticker. The table is kept as the V1 rationale
+> snapshot; the live behavior is documented in the sections above. **AI writing + voice** remains
+> deferred — see the new row below and issue #110.
+
+| Deferred                         | Rationale                                                                                                                                                                                                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **AI writing + voice (Phase 7)** | Deferred per owner (2026-06-09): the school must supply its own paid **Anthropic API key**, and may not want it. `/admin/blog` shows a non-functional "Coming Soon" panel; the full build-ready spec is **issue #110**. No code, key, or cost until the org commits |
 
 | Deferred                                                                                | Rationale                                                                                                                                                                   |
 | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
