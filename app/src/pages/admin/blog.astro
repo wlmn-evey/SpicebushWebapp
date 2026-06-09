@@ -14,9 +14,15 @@ const errorMessage = Astro.url.searchParams.get('error');
 const savedSlug = errorMessage ? null : Astro.url.searchParams.get('saved'); // success never shows alongside an error (R1-F15)
 const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD default for the date input
 
-// Split into groups; comparator already applied inside getManagedBlogPosts (do NOT re-sort).
+// Split into the four lifecycle sections; comparator already applied inside getManagedBlogPosts
+// (do NOT re-sort). Drafts catch any stray/unknown status too (R1-F9) — though the Phase-2 DB CHECK
+// now constrains blog rows to the four states.
 const publishedPosts = posts.filter(p => p.status === 'published');
-const draftPosts = posts.filter(p => p.status !== 'published'); // every other/stray status under Drafts (R1-F9)
+const scheduledPosts = posts.filter(p => p.status === 'scheduled');
+const archivedPosts = posts.filter(p => p.status === 'archived');
+const draftPosts = posts.filter(
+  p => p.status !== 'published' && p.status !== 'scheduled' && p.status !== 'archived'
+);
 
 // Existing-slug list for the client collision check (server-rendered into a data- attribute).
 const existingSlugs = posts.map(p => p.slug);
@@ -133,9 +139,11 @@ const baseDataFor = (post: BlogPost): string => JSON.stringify(blogPostToEditDat
     <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 class="mb-2 text-lg font-semibold">Blog Manager</h2>
       <p class="text-sm text-earth-brown/80">
-        Write a post, save it as a draft to keep it private, or publish it to make it live. Drafts
-        are listed below the published posts. The blog index, and edits to already-published posts,
-        can take up to 5 minutes to update.
+        Write a post and choose how it goes out: keep it a <strong>Draft</strong> (private),
+        <strong>Publish</strong> it now, <strong>Schedule</strong> it to go live automatically later,
+        or <strong>Archive</strong> an old post to hide it without deleting (you can restore it any time).
+        Posts are grouped by state below; tick the boxes to archive or delete several at once. The blog
+        index, and edits to already-published posts, can take up to 5 minutes to update.
       </p>
     </section>
 
@@ -432,9 +440,54 @@ const baseDataFor = (post: BlogPost): string => JSON.stringify(blogPostToEditDat
     </section>
 
     {
+      /* Bulk-actions toolbar. The per-post checkboxes live in each row and associate with this form
+        via the `form="bulk-blog-form"` attribute (HTML forbids nesting them inside the per-post edit
+        forms). The submit buttons carry the action; the client adds a count-aware confirm (R4-F14)
+        and `data-no-loading` keeps the shared loading-state handler from disabling them on cancel. */
+    }
+    <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+      <form
+        id="bulk-blog-form"
+        method="post"
+        action="/api/admin/content"
+        data-bulk-blog-form
+        class="flex flex-wrap items-center gap-3 text-sm"
+      >
+        <input type="hidden" name={BLOG_FORM_FIELDS.collection} value="blog" />
+        <input type="hidden" name={BLOG_FORM_FIELDS.redirectTo} value="/admin/blog" />
+        <span class="font-medium text-earth-brown">With the posts you tick below:</span>
+        <button
+          type="submit"
+          name={BLOG_FORM_FIELDS.action}
+          value="bulk-archive"
+          data-bulk-action="archive"
+          data-no-loading="true"
+          class="rounded-lg border border-stone-300 bg-white px-3 py-2 font-semibold text-earth-brown hover:bg-stone-50"
+        >
+          Archive selected
+        </button>
+        <button
+          type="submit"
+          name={BLOG_FORM_FIELDS.action}
+          value="bulk-delete"
+          data-bulk-action="delete"
+          data-no-loading="true"
+          class="rounded-lg border border-red-300 bg-white px-3 py-2 font-semibold text-red-700 hover:bg-red-50"
+        >
+          Delete selected
+        </button>
+        <span class="text-xs text-earth-brown/70">
+          Archived posts are hidden from the public but kept; deleting cannot be undone.
+        </span>
+      </form>
+    </section>
+
+    {
       [
         { heading: 'Published posts', group: publishedPosts },
-        { heading: 'Drafts', group: draftPosts }
+        { heading: 'Scheduled posts', group: scheduledPosts },
+        { heading: 'Drafts', group: draftPosts },
+        { heading: 'Archived posts', group: archivedPosts }
       ].map(({ heading, group }) => (
         <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <h2 class="mb-3 text-lg font-semibold">{heading}</h2>
@@ -445,351 +498,405 @@ const baseDataFor = (post: BlogPost): string => JSON.stringify(blogPostToEditDat
           ) : (
             <div class="space-y-3">
               {group.map(post => (
-                <details
-                  open={post.slug === savedSlug}
-                  class="rounded-lg border border-gray-200 bg-white"
-                >
-                  <summary class="cursor-pointer px-4 py-3">
-                    <span class="flex flex-wrap items-center justify-between gap-2">
-                      <span class="font-semibold text-earth-brown">{post.title}</span>
-                      <span class="flex items-center gap-2 text-xs">
-                        <span class={`rounded-full px-2 py-1 ${statusBadgeClass(post)}`}>
-                          {statusBadgeLabel(post)}
+                <div class="flex items-start gap-2">
+                  {/* Bulk-select checkbox — beside the row, NOT inside <summary> (a click there
+                      would toggle the accordion). Associated with the toolbar form via `form=`. */}
+                  <input
+                    type="checkbox"
+                    name="slugs"
+                    value={post.slug}
+                    form="bulk-blog-form"
+                    aria-label={`Select ${post.title} for a bulk action`}
+                    class="mt-4 ml-1 h-4 w-4 shrink-0"
+                  />
+                  <details
+                    open={post.slug === savedSlug}
+                    class="flex-1 rounded-lg border border-gray-200 bg-white"
+                  >
+                    <summary class="cursor-pointer px-4 py-3">
+                      <span class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="font-semibold text-earth-brown">{post.title}</span>
+                        <span class="flex items-center gap-2 text-xs">
+                          <span class={`rounded-full px-2 py-1 ${statusBadgeClass(post)}`}>
+                            {statusBadgeLabel(post)}
+                          </span>
+                          {post.date && <span class="text-earth-brown/70">{post.date}</span>}
                         </span>
-                        {post.date && <span class="text-earth-brown/70">{post.date}</span>}
                       </span>
-                    </span>
-                  </summary>
+                    </summary>
 
-                  <div class="border-t border-gray-200 p-4">
-                    {/* Edit form — NO createOnly (R deviation 6 status select below). */}
-                    <form
-                      method="post"
-                      action="/api/admin/content"
-                      class="space-y-4"
-                      data-blog-form
-                    >
-                      <input type="hidden" name={BLOG_FORM_FIELDS.collection} value="blog" />
-                      <input type="hidden" name={BLOG_FORM_FIELDS.slug} value={post.slug} />
-                      <input
-                        type="hidden"
-                        name={BLOG_FORM_FIELDS.redirectTo}
-                        value={`/admin/blog?saved=${encodeURIComponent(post.slug)}`}
-                      />
-                      <input
-                        type="hidden"
-                        name={BLOG_FORM_FIELDS.baseDataJson}
-                        value={baseDataFor(post)}
-                      />
-
-                      <div class="grid gap-3 md:grid-cols-2">
-                        <label class="block text-sm font-medium md:col-span-2">
-                          Title
-                          <input
-                            type="text"
-                            name={BLOG_FORM_FIELDS.title}
-                            required
-                            maxlength="300"
-                            value={post.title}
-                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                          />
-                        </label>
-
-                        <label class="block text-sm font-medium md:col-span-2">
-                          Web address (slug)
-                          <input
-                            type="text"
-                            value={post.slug}
-                            readonly
-                            class="mt-1 w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-earth-brown/80"
-                          />
-                          <span class="mt-1 block text-xs text-earth-brown/70">
-                            Need to change a post's address? Create a new post, copy the content
-                            over, publish it, then delete the old one.
-                          </span>
-                        </label>
-
-                        {/* PR-2 deviation 1 (R2-F14): status select top-level. */}
-                        {/* R3-F10/R4-F12: each option's `selected` matches the post's EXACT status,
-                            so an untouched edit re-submits the current status. The prior
-                            `selected={post.status !== 'draft'}` collapsed scheduled/archived into
-                            "Published" and would silently publish them on save — fixed here. */}
-                        <label class="block text-sm font-medium">
-                          Status
-                          <select
-                            name={BLOG_FORM_FIELDS.status}
-                            aria-describedby={`edit-status-help-${post.slug}`}
-                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                          >
-                            <option value="draft" selected={post.status === 'draft'}>
-                              Draft
-                            </option>
-                            <option value="published" selected={post.status === 'published'}>
-                              Published
-                            </option>
-                            <option value="scheduled" selected={post.status === 'scheduled'}>
-                              Scheduled
-                            </option>
-                            <option value="archived" selected={post.status === 'archived'}>
-                              Archived
-                            </option>
-                          </select>
-                          {/* PR-2 R1-F38: staleness helper text linked to the edit-form status control. */}
-                          <span
-                            id={`edit-status-help-${post.slug}`}
-                            class="mt-1 block text-xs text-earth-brown/70"
-                          >
-                            Set <strong>Archived</strong> to hide a post without deleting it (you
-                            can restore it any time). New posts appear at their link immediately
-                            after publishing. The blog index, and edits to already-published posts,
-                            can take up to 5 minutes to update.
-                          </span>
-                        </label>
-
-                        {/* Schedule control — shown when this post is (or is being set) Scheduled.
-                            No static `required`; the client toggles visibility + `required` in
-                            lockstep and round-trips the time through the hidden UTC field. */}
-                        <div
-                          class="block text-sm font-medium"
-                          data-schedule-group
-                          hidden={post.status !== 'scheduled'}
-                        >
-                          <label class="block">
-                            Go live on (your local time)
-                            <input
-                              type="datetime-local"
-                              name={BLOG_FORM_FIELDS.publishedAtLocal}
-                              aria-describedby={`edit-schedule-help-${post.slug}`}
-                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                            />
-                          </label>
-                          <input
-                            type="hidden"
-                            name={BLOG_FORM_FIELDS.publishedAt}
-                            value={post.publishedAt ?? ''}
-                          />
-                          <span
-                            id={`edit-schedule-help-${post.slug}`}
-                            class="mt-1 block text-xs text-earth-brown/70"
-                          >
-                            Pick a future date and time — the post stays hidden until then, when it
-                            publishes automatically (checked every 5 minutes). Not ready? Set Status
-                            back to Draft instead.
-                          </span>
-                        </div>
-
-                        <label class="block text-sm font-medium">
-                          Date (required to publish)
-                          <input
-                            type="date"
-                            name={BLOG_FORM_FIELDS.date}
-                            value={post.date}
-                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                          />
-                        </label>
-
-                        <label class="block text-sm font-medium md:col-span-2">
-                          Author
-                          <input
-                            type="text"
-                            name={BLOG_FORM_FIELDS.author}
-                            value={post.author}
-                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                          />
-                        </label>
-
-                        <label class="block text-sm font-medium md:col-span-2">
-                          Excerpt (required to publish)
-                          {/* prettier-ignore */}
-                          <textarea name={BLOG_FORM_FIELDS.excerptRaw} rows="3" maxlength="1000" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">{post.excerpt}</textarea>
-                        </label>
-
-                        <div class="block text-sm font-medium md:col-span-2">
-                          <span class="mb-1 block">Body (required to publish)</span>
-                          {/* Per-post island hydrates when the accordion opens (client:visible). initialHtml is
-                              the server render of the stored body, so markdown or HTML both load as HTML. */}
-                          <TipTapEditor
-                            client:visible
-                            fieldName={BLOG_FORM_FIELDS.bodyRaw}
-                            initialHtml={renderPostBody(post.body)}
-                          />
-                        </div>
-                      </div>
-
-                      <div
-                        class="rounded-lg border border-gray-200 bg-gray-50 p-3"
-                        data-blog-upload
-                        data-upload-context="edit"
-                      >
-                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-earth-brown/70">
-                          Featured image (optional)
-                        </p>
-                        <label class="block text-sm font-medium">
-                          Featured image address
-                          <input
-                            type="text"
-                            name={BLOG_FORM_FIELDS.image}
-                            data-photo-url-input
-                            pattern="(/(?![/\\]).*|https://.*)"
-                            value={post.image}
-                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                          />
-                        </label>
-                        <div class="mt-2 flex flex-wrap items-center gap-2">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            data-upload-file
-                            aria-label="Choose an image file to upload"
-                            class="max-w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs"
-                          />
-                          <button
-                            type="button"
-                            data-upload-button
-                            class="rounded-lg bg-forest-canopy px-3 py-2 text-xs font-semibold text-white hover:bg-moss-green"
-                          >
-                            Upload
-                          </button>
-                          <a
-                            href="/admin/media"
-                            data-upload-crop-link
-                            target="_blank"
-                            rel="noopener"
-                            class="hidden rounded-lg border border-forest-canopy bg-white px-3 py-2 text-xs font-semibold text-forest-canopy hover:bg-forest-canopy hover:text-white"
-                          >
-                            Crop &amp; focal editor (opens in a new tab)
-                          </a>
-                        </div>
-                        <div class="mt-2 hidden" data-copy-row>
-                          <label class="block text-xs font-medium text-earth-brown/80">
-                            Image address
-                            <input
-                              type="text"
-                              data-copy-source
-                              readonly
-                              aria-label="Uploaded image address"
-                              class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs"
-                            />
-                          </label>
-                          <button
-                            type="button"
-                            data-copy-button
-                            class="mt-1 rounded-lg border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-earth-brown hover:bg-gray-50"
-                          >
-                            Copy address
-                          </button>
-                          <span class="mt-1 block text-xs text-earth-brown/70">
-                            To put this image inside your post, copy this address into
-                            <code>![description](address)</code>.
-                          </span>
-                        </div>
-                        {/* PR-2 deviation 7 (R4-F14): permanently rendered, visually-empty live region (no hidden/display:none). */}
-                        <p
-                          data-upload-status
-                          aria-live="polite"
-                          class="mt-2 min-h-[1.25rem] text-xs text-earth-brown/80"
-                        />
-                      </div>
-
-                      <label class="block text-sm font-medium md:col-span-2">
-                        Image description (required to publish when an image is set)
-                        <input
-                          type="text"
-                          name={BLOG_FORM_FIELDS.imageAlt}
-                          minlength="6"
-                          value={post.imageAlt}
-                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                        />
-                        <span class="mt-1 block text-xs text-earth-brown/70">
-                          At least 6 characters describing what's in the picture — not a file name,
-                          and not just "photo" or "picture".
-                        </span>
-                      </label>
-
-                      <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                        <summary class="cursor-pointer text-sm font-semibold text-earth-brown">
-                          SEO (optional)
-                        </summary>
-                        <div class="mt-3 grid gap-3 md:grid-cols-2">
-                          <label class="block text-sm font-medium md:col-span-2">
-                            SEO title
-                            <input
-                              type="text"
-                              name={BLOG_FORM_FIELDS.seoTitle}
-                              value={post.seoTitle}
-                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                            />
-                          </label>
-                          <label class="block text-sm font-medium md:col-span-2">
-                            SEO description
-                            <input
-                              type="text"
-                              name={BLOG_FORM_FIELDS.seoDescription}
-                              value={post.seoDescription}
-                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                            />
-                          </label>
-                        </div>
-                      </details>
-
-                      <button
-                        type="submit"
-                        class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green"
-                      >
-                        Save post
-                      </button>
-                    </form>
-
-                    {/* Preview — server-rendered through the public pipeline. */}
-                    {/* render previews lazily via ?preview={slug} if the collection exceeds ~30 posts */}
-                    <details open={post.slug === savedSlug} class="mt-4">
-                      <summary class="cursor-pointer text-sm font-semibold text-earth-brown">
-                        Preview
-                      </summary>
-                      <p class="mt-2 text-xs text-earth-brown/70">
-                        Save first — the preview shows your last saved version.
-                      </p>
-                      <div
-                        class="prose mt-2 max-w-none text-sm"
-                        set:html={renderPostBody(post.body)}
-                      />
-                    </details>
-
-                    <div class="mt-4 flex flex-wrap items-center gap-3">
-                      {post.status === 'published' && (
-                        <a
-                          href={`/blog/${post.slug}`}
-                          target="_blank"
-                          rel="noopener"
-                          class="text-sm font-medium text-forest-canopy hover:underline"
-                        >
-                          View on site ↗
-                        </a>
-                      )}
-
+                    <div class="border-t border-gray-200 p-4">
+                      {/* Edit form — NO createOnly (R deviation 6 status select below). */}
                       <form
                         method="post"
                         action="/api/admin/content"
-                        data-confirm="Delete this post? If you are renaming its address, make sure the new copy is saved first. This cannot be undone."
+                        class="space-y-4"
+                        data-blog-form
                       >
-                        <input type="hidden" name={BLOG_FORM_FIELDS.action} value="delete" />
                         <input type="hidden" name={BLOG_FORM_FIELDS.collection} value="blog" />
                         <input type="hidden" name={BLOG_FORM_FIELDS.slug} value={post.slug} />
                         <input
                           type="hidden"
                           name={BLOG_FORM_FIELDS.redirectTo}
-                          value="/admin/blog?saved=deleted"
+                          value={`/admin/blog?saved=${encodeURIComponent(post.slug)}`}
                         />
+                        <input
+                          type="hidden"
+                          name={BLOG_FORM_FIELDS.baseDataJson}
+                          value={baseDataFor(post)}
+                        />
+
+                        <div class="grid gap-3 md:grid-cols-2">
+                          <label class="block text-sm font-medium md:col-span-2">
+                            Title
+                            <input
+                              type="text"
+                              name={BLOG_FORM_FIELDS.title}
+                              required
+                              maxlength="300"
+                              value={post.title}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium md:col-span-2">
+                            Web address (slug)
+                            <input
+                              type="text"
+                              value={post.slug}
+                              readonly
+                              class="mt-1 w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-earth-brown/80"
+                            />
+                            <span class="mt-1 block text-xs text-earth-brown/70">
+                              Need to change a post's address? Create a new post, copy the content
+                              over, publish it, then delete the old one.
+                            </span>
+                          </label>
+
+                          {/* PR-2 deviation 1 (R2-F14): status select top-level. */}
+                          {/* R3-F10/R4-F12: each option's `selected` matches the post's EXACT status,
+                            so an untouched edit re-submits the current status. The prior
+                            `selected={post.status !== 'draft'}` collapsed scheduled/archived into
+                            "Published" and would silently publish them on save — fixed here. */}
+                          <label class="block text-sm font-medium">
+                            Status
+                            <select
+                              name={BLOG_FORM_FIELDS.status}
+                              aria-describedby={`edit-status-help-${post.slug}`}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            >
+                              <option value="draft" selected={post.status === 'draft'}>
+                                Draft
+                              </option>
+                              <option value="published" selected={post.status === 'published'}>
+                                Published
+                              </option>
+                              <option value="scheduled" selected={post.status === 'scheduled'}>
+                                Scheduled
+                              </option>
+                              <option value="archived" selected={post.status === 'archived'}>
+                                Archived
+                              </option>
+                            </select>
+                            {/* PR-2 R1-F38: staleness helper text linked to the edit-form status control. */}
+                            <span
+                              id={`edit-status-help-${post.slug}`}
+                              class="mt-1 block text-xs text-earth-brown/70"
+                            >
+                              Set <strong>Archived</strong> to hide a post without deleting it (you
+                              can restore it any time). New posts appear at their link immediately
+                              after publishing. The blog index, and edits to already-published
+                              posts, can take up to 5 minutes to update.
+                            </span>
+                          </label>
+
+                          {/* Schedule control — shown when this post is (or is being set) Scheduled.
+                            No static `required`; the client toggles visibility + `required` in
+                            lockstep and round-trips the time through the hidden UTC field. */}
+                          <div
+                            class="block text-sm font-medium"
+                            data-schedule-group
+                            hidden={post.status !== 'scheduled'}
+                          >
+                            <label class="block">
+                              Go live on (your local time)
+                              <input
+                                type="datetime-local"
+                                name={BLOG_FORM_FIELDS.publishedAtLocal}
+                                aria-describedby={`edit-schedule-help-${post.slug}`}
+                                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                              />
+                            </label>
+                            <input
+                              type="hidden"
+                              name={BLOG_FORM_FIELDS.publishedAt}
+                              value={post.publishedAt ?? ''}
+                            />
+                            <span
+                              id={`edit-schedule-help-${post.slug}`}
+                              class="mt-1 block text-xs text-earth-brown/70"
+                            >
+                              Pick a future date and time — the post stays hidden until then, when
+                              it publishes automatically (checked every 5 minutes). Not ready? Set
+                              Status back to Draft instead.
+                            </span>
+                          </div>
+
+                          <label class="block text-sm font-medium">
+                            Date (required to publish)
+                            <input
+                              type="date"
+                              name={BLOG_FORM_FIELDS.date}
+                              value={post.date}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium md:col-span-2">
+                            Author
+                            <input
+                              type="text"
+                              name={BLOG_FORM_FIELDS.author}
+                              value={post.author}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+
+                          <label class="block text-sm font-medium md:col-span-2">
+                            Excerpt (required to publish)
+                            {/* prettier-ignore */}
+                            <textarea name={BLOG_FORM_FIELDS.excerptRaw} rows="3" maxlength="1000" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">{post.excerpt}</textarea>
+                          </label>
+
+                          <div class="block text-sm font-medium md:col-span-2">
+                            <span class="mb-1 block">Body (required to publish)</span>
+                            {/* Per-post island hydrates when the accordion opens (client:visible). initialHtml is
+                              the server render of the stored body, so markdown or HTML both load as HTML. */}
+                            <TipTapEditor
+                              client:visible
+                              fieldName={BLOG_FORM_FIELDS.bodyRaw}
+                              initialHtml={renderPostBody(post.body)}
+                            />
+                          </div>
+                        </div>
+
+                        <div
+                          class="rounded-lg border border-gray-200 bg-gray-50 p-3"
+                          data-blog-upload
+                          data-upload-context="edit"
+                        >
+                          <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-earth-brown/70">
+                            Featured image (optional)
+                          </p>
+                          <label class="block text-sm font-medium">
+                            Featured image address
+                            <input
+                              type="text"
+                              name={BLOG_FORM_FIELDS.image}
+                              data-photo-url-input
+                              pattern="(/(?![/\\]).*|https://.*)"
+                              value={post.image}
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                            />
+                          </label>
+                          <div class="mt-2 flex flex-wrap items-center gap-2">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              data-upload-file
+                              aria-label="Choose an image file to upload"
+                              class="max-w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs"
+                            />
+                            <button
+                              type="button"
+                              data-upload-button
+                              class="rounded-lg bg-forest-canopy px-3 py-2 text-xs font-semibold text-white hover:bg-moss-green"
+                            >
+                              Upload
+                            </button>
+                            <a
+                              href="/admin/media"
+                              data-upload-crop-link
+                              target="_blank"
+                              rel="noopener"
+                              class="hidden rounded-lg border border-forest-canopy bg-white px-3 py-2 text-xs font-semibold text-forest-canopy hover:bg-forest-canopy hover:text-white"
+                            >
+                              Crop &amp; focal editor (opens in a new tab)
+                            </a>
+                          </div>
+                          <div class="mt-2 hidden" data-copy-row>
+                            <label class="block text-xs font-medium text-earth-brown/80">
+                              Image address
+                              <input
+                                type="text"
+                                data-copy-source
+                                readonly
+                                aria-label="Uploaded image address"
+                                class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs"
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              data-copy-button
+                              class="mt-1 rounded-lg border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-earth-brown hover:bg-gray-50"
+                            >
+                              Copy address
+                            </button>
+                            <span class="mt-1 block text-xs text-earth-brown/70">
+                              To put this image inside your post, copy this address into
+                              <code>![description](address)</code>.
+                            </span>
+                          </div>
+                          {/* PR-2 deviation 7 (R4-F14): permanently rendered, visually-empty live region (no hidden/display:none). */}
+                          <p
+                            data-upload-status
+                            aria-live="polite"
+                            class="mt-2 min-h-[1.25rem] text-xs text-earth-brown/80"
+                          />
+                        </div>
+
+                        <label class="block text-sm font-medium md:col-span-2">
+                          Image description (required to publish when an image is set)
+                          <input
+                            type="text"
+                            name={BLOG_FORM_FIELDS.imageAlt}
+                            minlength="6"
+                            value={post.imageAlt}
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                          />
+                          <span class="mt-1 block text-xs text-earth-brown/70">
+                            At least 6 characters describing what's in the picture — not a file
+                            name, and not just "photo" or "picture".
+                          </span>
+                        </label>
+
+                        <details class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                          <summary class="cursor-pointer text-sm font-semibold text-earth-brown">
+                            SEO (optional)
+                          </summary>
+                          <div class="mt-3 grid gap-3 md:grid-cols-2">
+                            <label class="block text-sm font-medium md:col-span-2">
+                              SEO title
+                              <input
+                                type="text"
+                                name={BLOG_FORM_FIELDS.seoTitle}
+                                value={post.seoTitle}
+                                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                              />
+                            </label>
+                            <label class="block text-sm font-medium md:col-span-2">
+                              SEO description
+                              <input
+                                type="text"
+                                name={BLOG_FORM_FIELDS.seoDescription}
+                                value={post.seoDescription}
+                                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                              />
+                            </label>
+                          </div>
+                        </details>
+
                         <button
                           type="submit"
-                          class="rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                          class="rounded-lg bg-forest-canopy px-4 py-2 font-semibold text-white hover:bg-moss-green"
                         >
-                          Delete post
+                          Save post
                         </button>
                       </form>
+
+                      {/* Preview — server-rendered through the public pipeline. */}
+                      {/* render previews lazily via ?preview={slug} if the collection exceeds ~30 posts */}
+                      <details open={post.slug === savedSlug} class="mt-4">
+                        <summary class="cursor-pointer text-sm font-semibold text-earth-brown">
+                          Preview
+                        </summary>
+                        <p class="mt-2 text-xs text-earth-brown/70">
+                          Save first — the preview shows your last saved version.
+                        </p>
+                        <div
+                          class="prose mt-2 max-w-none text-sm"
+                          set:html={renderPostBody(post.body)}
+                        />
+                      </details>
+
+                      <div class="mt-4 flex flex-wrap items-center gap-3">
+                        {post.status === 'published' && (
+                          <a
+                            href={`/blog/${post.slug}`}
+                            target="_blank"
+                            rel="noopener"
+                            class="text-sm font-medium text-forest-canopy hover:underline"
+                          >
+                            View on site ↗
+                          </a>
+                        )}
+
+                        {/* Per-row lifecycle quick actions (R4-F12): Archive any non-archived post,
+                          Restore (→ Draft) an archived one. Both POST the PR3 endpoint actions. */}
+                        {post.status === 'archived' ? (
+                          <form method="post" action="/api/admin/content">
+                            <input type="hidden" name={BLOG_FORM_FIELDS.action} value="restore" />
+                            <input type="hidden" name={BLOG_FORM_FIELDS.collection} value="blog" />
+                            <input type="hidden" name={BLOG_FORM_FIELDS.slug} value={post.slug} />
+                            <input
+                              type="hidden"
+                              name={BLOG_FORM_FIELDS.redirectTo}
+                              value={`/admin/blog?saved=${encodeURIComponent(post.slug)}`}
+                            />
+                            <button
+                              type="submit"
+                              class="rounded-lg border border-forest-canopy/40 bg-white px-3 py-2 text-sm font-semibold text-forest-canopy hover:bg-moss-green/10"
+                            >
+                              Restore to draft
+                            </button>
+                          </form>
+                        ) : (
+                          <form
+                            method="post"
+                            action="/api/admin/content"
+                            data-confirm="Archive this post? It will be hidden from the public but kept — you can restore it any time."
+                          >
+                            <input type="hidden" name={BLOG_FORM_FIELDS.action} value="archive" />
+                            <input type="hidden" name={BLOG_FORM_FIELDS.collection} value="blog" />
+                            <input type="hidden" name={BLOG_FORM_FIELDS.slug} value={post.slug} />
+                            <input
+                              type="hidden"
+                              name={BLOG_FORM_FIELDS.redirectTo}
+                              value={`/admin/blog?saved=${encodeURIComponent(post.slug)}`}
+                            />
+                            <button
+                              type="submit"
+                              class="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-earth-brown hover:bg-stone-50"
+                            >
+                              Archive
+                            </button>
+                          </form>
+                        )}
+
+                        <form
+                          method="post"
+                          action="/api/admin/content"
+                          data-confirm="Delete this post? If you are renaming its address, make sure the new copy is saved first. This cannot be undone."
+                        >
+                          <input type="hidden" name={BLOG_FORM_FIELDS.action} value="delete" />
+                          <input type="hidden" name={BLOG_FORM_FIELDS.collection} value="blog" />
+                          <input type="hidden" name={BLOG_FORM_FIELDS.slug} value={post.slug} />
+                          <input
+                            type="hidden"
+                            name={BLOG_FORM_FIELDS.redirectTo}
+                            value="/admin/blog?saved=deleted"
+                          />
+                          <button
+                            type="submit"
+                            class="rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                          >
+                            Delete post
+                          </button>
+                        </form>
+                      </div>
                     </div>
-                  </div>
-                </details>
+                  </details>
+                </div>
               ))}
             </div>
           )}
