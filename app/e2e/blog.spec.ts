@@ -150,6 +150,36 @@ test.describe('Blog V1 — public routes + SEO', () => {
     // Post's own taxonomy chips (discovery parity with the index cards).
     expect(html, 'taxonomy chips on post').toMatch(/href=["']\/blog\/category\/[a-z0-9-]+["']/i);
 
+    // PR4 PR2: Article JSON-LD (R1-F29) — extract every ld+json block, find the BlogPosting one, and
+    // confirm it JSON.parses (the inline-script escapes are JSON-valid) with the required fields.
+    const ldBlocks = [
+      ...html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)
+    ].map(m => {
+      try {
+        return JSON.parse(m[1]);
+      } catch {
+        return null;
+      }
+    });
+    const articleLd = ldBlocks.find(o => o && o['@type'] === 'BlogPosting');
+    expect(articleLd, 'BlogPosting JSON-LD present and valid JSON').toBeTruthy();
+    expect(articleLd.headline.length, 'headline <= 110 (R4-F17)').toBeLessThanOrEqual(110);
+    expect(articleLd.datePublished, 'datePublished ISO').toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(articleLd.dateModified, 'dateModified ISO (R3-F18)').toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(articleLd.author['@type']).toBe('Organization');
+    expect(articleLd.publisher['@type']).toBe('Organization');
+    expect(articleLd.mainEntityOfPage['@id']?.startsWith(origin)).toBe(true);
+    // The org block still coexists (R2-F24).
+    expect(
+      ldBlocks.some(o => o && o['@type'] === 'EducationalOrganization'),
+      'org JSON-LD still present alongside the article block'
+    ).toBe(true);
+    // RSS auto-discovery + article:modified_time.
+    expect(html, 'RSS auto-discovery link').toContain('type="application/rss+xml"');
+    expect(metaContent(html, 'article:modified_time'), 'article:modified_time ISO').toMatch(
+      /^\d{4}-\d{2}-\d{2}T/
+    );
+
     // Same robots discipline on /blog index.
     const indexHtml = await (await request.get('/blog')).text();
     expect(metaContent(indexHtml, 'robots', 'name')?.toLowerCase()).toContain('index');

@@ -304,4 +304,11 @@ export interface ContentEntry<T = Record<string, unknown>> {
   collection: string;
   data: T & { title?: string };
   body?: string;
+  /**
+   * Raw `content.updated_at` carried through for consumers that need a modified timestamp (e.g. the
+   * blog's JSON-LD `dateModified`). The DB driver may return a Postgres-format string (space, not
+   * `T`) or a `Date`, so callers that need ISO-8601 MUST normalize (`new Date(v).toISOString()`).
+   * Optional: absent when the row/mocks don't provide it.
+   */
+  updatedAt?: string;
 }

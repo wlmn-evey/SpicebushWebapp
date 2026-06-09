@@ -15,7 +15,7 @@ const posts = await getPublishedPosts();
 const pagination = paginate(posts, 1);
 ---
 
-<Layout title="Blog">
+<Layout title="Blog" feedUrl="/blog/rss.xml">
   <Header />
 
   <main id="main-content" class="container mx-auto px-4 py-12">

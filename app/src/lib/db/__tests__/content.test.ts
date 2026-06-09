@@ -36,7 +36,9 @@ describe('db.content facade', () => {
         body: 'Hello world'
       },
       status: 'published',
-      created_at: '2024-01-01T00:00:00.000Z'
+      created_at: '2024-01-01T00:00:00.000Z',
+      // Postgres-format (space, not `T`) — toContentEntry passes it through raw as `updatedAt`.
+      updated_at: '2024-01-02 03:04:05+00'
     };
 
     const secondRow = {
@@ -62,7 +64,9 @@ describe('db.content facade', () => {
           title: 'Welcome Override',
           body: 'Hello world'
         },
-        body: 'Hello world'
+        body: 'Hello world',
+        // Raw passthrough of content.updated_at (R3-F18 plumbing) — not normalized at this layer.
+        updatedAt: '2024-01-02 03:04:05+00'
       }
     ]);
 
