@@ -1,5 +1,6 @@
 import type { APIContext, MiddlewareNext } from 'astro';
 import { isAdminEmail } from '@lib/admin-config';
+import { isProductionHostname } from '@lib/site-origin';
 import { ADMIN_SESSION_COOKIE_NAME, validateAdminSession } from '@lib/auth/admin-session';
 import { evaluateCampMode, parseCampModeSettings, type CampModeEvaluation } from '@lib/camp-mode';
 import { queryFirst, queryRows } from '@lib/db/client';
@@ -225,7 +226,31 @@ const handleComingSoon = async (context: APIContext, next: MiddlewareNext) => {
   return handleCampMode(context, next);
 };
 
-export const onRequest = async (context: APIContext, next: MiddlewareNext) => {
+const NOINDEX_HEADER_VALUE = 'noindex, nofollow';
+
+/**
+ * Non-production hosts (the spicebush-testing.netlify.app default subdomain,
+ * deploy previews, branch deploys) serve the same app but must never be
+ * indexed by search engines (#127). robots.txt intentionally keeps these hosts
+ * crawlable so Googlebot can see this header and drop already-indexed URLs.
+ */
+const applyIndexingPolicy = (context: APIContext, response: Response): Response => {
+  if (isProductionHostname(context.url.hostname)) {
+    return response;
+  }
+
+  try {
+    response.headers.set('X-Robots-Tag', NOINDEX_HEADER_VALUE);
+    return response;
+  } catch {
+    // Responses proxied from fetch() carry immutable headers; clone before stamping.
+    const copy = new Response(response.body, response);
+    copy.headers.set('X-Robots-Tag', NOINDEX_HEADER_VALUE);
+    return copy;
+  }
+};
+
+const handleRequest = async (context: APIContext, next: MiddlewareNext) => {
   const locals = context.locals as unknown as Record<string, unknown>;
   const sessionToken = context.cookies.get(ADMIN_SESSION_COOKIE_NAME)?.value;
   let userId: string | null = null;
@@ -272,4 +297,9 @@ export const onRequest = async (context: APIContext, next: MiddlewareNext) => {
   }
 
   return handleComingSoon(context, next);
+};
+
+export const onRequest = async (context: APIContext, next: MiddlewareNext) => {
+  const response = await handleRequest(context, next);
+  return applyIndexingPolicy(context, response);
 };

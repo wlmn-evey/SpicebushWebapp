@@ -58,7 +58,18 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Redirects configuration 
+# Redirects configuration
+
+# The default Netlify subdomain serves the same deploy as the production domain.
+# 301 it to the canonical domain so search engines consolidate there (issue #127).
+# Deploy previews / branch deploys are NOT redirected; Astro middleware serves
+# them X-Robots-Tag: noindex instead.
+[[redirects]]
+  from = "https://spicebush-testing.netlify.app/*"
+  to = "https://spicebushmontessori.org/:splat"
+  status = 301
+  force = true
+
 [[redirects]]
   from = "/admin/*"
   to = "/admin/:splat"

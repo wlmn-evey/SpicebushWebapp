@@ -209,6 +209,30 @@ curl -I https://<preview-url>/donate
 curl -I https://<preview-url>/enrollment
 ```
 
+### 5c. Non-Production Host Indexing Protection (#127)
+
+The default Netlify subdomain serves the same deploy as the production domain, and
+deploy previews/branch deploys serve work in progress. None of them may be indexed:
+
+```bash
+# Default subdomain 301s to the canonical domain (netlify.toml host redirect)
+curl -sI https://spicebush-testing.netlify.app/ | grep -iE '^(HTTP|location)'
+#   → HTTP/2 301, location: https://spicebushmontessori.org/
+
+# Previews and branch deploys stay reachable but carry a noindex header (middleware)
+curl -sI https://<preview-url>/ | grep -i x-robots-tag
+#   → x-robots-tag: noindex, nofollow
+
+# Non-production robots.txt keeps crawl open (so the noindex header is visible
+# to Googlebot) but advertises no sitemaps
+curl -s https://<preview-url>/robots.txt
+#   → Allow: / + Disallow rules, NO "Sitemap:" lines
+
+# Production must NOT carry the header and must advertise sitemaps
+curl -sI https://spicebushmontessori.org/ | grep -i x-robots-tag   # → (empty)
+curl -s https://spicebushmontessori.org/robots.txt | grep Sitemap  # → 2 lines
+```
+
 ---
 
 ## 6. Deploy
