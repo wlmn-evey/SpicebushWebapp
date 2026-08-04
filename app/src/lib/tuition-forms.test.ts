@@ -6,6 +6,7 @@ import {
   renderPrograms,
   renderRates
 } from './tuition-forms';
+import { getCurrentSchoolYear } from './school-year';
 
 describe('tuition-forms helpers', () => {
   it('creates program form markup for defaults and existing records', () => {
@@ -189,7 +190,9 @@ describe('tuition-forms helpers', () => {
     expect(Number((document.getElementById('annual-increase') as HTMLInputElement).value)).toBe(4);
 
     populateSettings({});
-    expect((document.getElementById('school-year') as HTMLInputElement).value).toBe('2025-2026');
+    expect((document.getElementById('school-year') as HTMLInputElement).value).toBe(
+      getCurrentSchoolYear()
+    );
     expect((document.getElementById('upfront-discount') as HTMLInputElement).value).toBe('5');
     expect((document.getElementById('sibling-discount') as HTMLInputElement).value).toBe('10');
     expect((document.getElementById('annual-increase') as HTMLInputElement).value).toBe('4');

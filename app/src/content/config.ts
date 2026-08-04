@@ -1,5 +1,7 @@
 import { z, defineCollection } from 'astro:content';
 
+import { getCurrentSchoolYear } from '../lib/school-year';
+
 const staffCollection = defineCollection({
   type: 'content',
   schema: z.object({
@@ -31,7 +33,7 @@ const tuitionCollection = defineCollection({
     extended_care_price: z.number().default(0).optional(),
     extended_care_available: z.boolean().default(false).optional(),
     is_constant_rate: z.boolean().default(false).optional(),
-    school_year: z.string().default('2025-2026').optional(),
+    school_year: z.string().default(getCurrentSchoolYear).optional(),
     income_threshold_type: z
       .enum(['Greater Than or Equal To', 'Less Than'])
       .default('Greater Than or Equal To')
