@@ -8,6 +8,17 @@
  * NOTE: a structurally-similar private `resolveSiteOrigin` exists in `seo-config.ts`
  * (accepts `URL | string`); this file is NOT a refactor of that helper.
  */
+/**
+ * Hostnames that serve the canonical production site. Anything else — the
+ * spicebush-testing.netlify.app default subdomain, deploy previews, branch
+ * deploys, localhost — must never be indexed by search engines (#127).
+ */
+const PRODUCTION_HOSTNAMES = new Set(['spicebushmontessori.org', 'www.spicebushmontessori.org']);
+
+export function isProductionHostname(hostname: string): boolean {
+  return PRODUCTION_HOSTNAMES.has(hostname.toLowerCase());
+}
+
 export function resolveSiteOrigin(site?: URL): string {
   if (site?.origin) return site.origin;
 

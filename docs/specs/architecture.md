@@ -78,7 +78,7 @@ SpicebushWebapp/              (repo root -- deploy from here)
 Defined in `src/middleware.ts`. Request handling chain:
 
 ```
-Auth check -> Coming-soon gate -> Camp mode routing -> Page render
+Auth check -> Coming-soon gate -> Camp mode routing -> Page render -> Indexing policy header
 ```
 
 ### Auth
@@ -100,6 +100,17 @@ Auth check -> Coming-soon gate -> Camp mode routing -> Page render
 - Camp mode redirects `/camp` to `/camp-coming-soon` when camp is inactive (non-admin visitors)
 - Camp mode redirects `/camp-coming-soon` to `/camp` when camp is active
 - Admins can see camp pages in prep mode regardless of public visibility
+
+### Indexing Policy (#127)
+
+- Every response from a non-production hostname (anything other than
+  `spicebushmontessori.org` / `www.spicebushmontessori.org` — see
+  `isProductionHostname()` in `@lib/site-origin`) gets `X-Robots-Tag: noindex, nofollow`
+- This covers deploy previews and branch deploys; the bare
+  `spicebush-testing.netlify.app` subdomain is additionally 301-redirected to the
+  canonical domain via a host-scoped rule in `netlify.toml`
+- `robots.txt` on non-production hosts keeps crawl open (so the noindex header is
+  visible to crawlers) but omits the `Sitemap:` lines
 
 ---
 
