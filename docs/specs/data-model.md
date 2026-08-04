@@ -73,6 +73,7 @@ Key-value site settings. Used for coming-soon mode, camp mode, email routing con
 | ---------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ticker_items`   | JSON array of `{ text, href?, expiresAt?, type? }` | Phase 6 news ticker. No dedicated table — the array order _is_ the display order. Value-level safety (href scheme, expiry, ≤5) is enforced at render in `getActiveTickerItems`, not on write (the endpoint validates the key only). |
 | `ticker_enabled` | `boolean` (default absent → `false`)               | Master on/off. Absent/falsey → the ticker renders nothing. Read with a dedicated 5-min TTL (R4-F11), never via `getAllSettings()`.                                                                                                  |
+| `current_school_year` | `string` (`"YYYY-YYYY"`)                      | Drives the school-year label on the public tuition calculator and admin tuition forms. When absent, code falls back to `getCurrentSchoolYear()` (`@lib/school-year`), which rolls over every July 1 — never a hardcoded year (#128). |
 
 **Seeded keys (by migration):**
 

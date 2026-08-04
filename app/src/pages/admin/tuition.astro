@@ -1,6 +1,7 @@
 ---
 import AdminLayout from '@layouts/AdminLayout.astro';
 import { db, type ContentEntry } from '@lib/db';
+import { getCurrentSchoolYear } from '@lib/school-year';
 
 type TuitionEntry = ContentEntry<Record<string, unknown>>;
 
@@ -185,7 +186,7 @@ const allRates = entries
       programId: stringFrom(data.program_id, ''),
       rateLabel,
       tuitionPrice: numberInputValue(data.tuition_price, ''),
-      schoolYear: stringFrom(data.school_year, '2025-2026'),
+      schoolYear: stringFrom(data.school_year, getCurrentSchoolYear()),
       displayOrder: numberFrom(data.display_order, levelOrder),
       extendedCareAvailable:
         data.extended_care_available === undefined ? true : boolFrom(data.extended_care_available),
@@ -669,7 +670,7 @@ const totalRates =
             {allPrograms.map(program => {
               const nextLevel = nextLevelForRates(program.rates);
               const nextLevelOrder = rateLevelOrder.get(nextLevel) ?? 1;
-              const defaultYear = program.rates[0]?.schoolYear || '2025-2026';
+              const defaultYear = program.rates[0]?.schoolYear || getCurrentSchoolYear();
 
               return (
                 <details class="rounded-lg border border-gray-200 bg-gray-50">

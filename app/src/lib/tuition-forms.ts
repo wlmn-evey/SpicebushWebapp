@@ -1,6 +1,8 @@
 // Tuition Form Templates and Utilities
 // Extracted from tuition.astro to reduce complexity
 
+import { getCurrentSchoolYear } from './school-year';
+
 interface Program {
   id: string;
   name: string;
@@ -142,7 +144,7 @@ export function createRateForm(rate: TuitionRate | null = null, programs: Progra
         </div>
         <div>
           <label class="block text-sm font-medium text-earth-brown mb-2">School Year</label>
-          <input type="text" id="rate-school-year" value="${rate?.school_year || '2025-2026'}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent" />
+          <input type="text" id="rate-school-year" value="${rate?.school_year || getCurrentSchoolYear()}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-canopy focus:border-transparent" />
         </div>
       </div>
 
@@ -249,7 +251,7 @@ export function populateSettings(settings: Record<string, unknown>): void {
   if (schoolYearInput) {
     const schoolYear = settings.current_school_year;
     schoolYearInput.value =
-      typeof schoolYear === 'string' && schoolYear.trim() ? schoolYear : '2025-2026';
+      typeof schoolYear === 'string' && schoolYear.trim() ? schoolYear : getCurrentSchoolYear();
   }
   if (upfrontDiscountInput)
     upfrontDiscountInput.value = String(toNumber(settings.upfront_discount_rate, 0.05) * 100);
