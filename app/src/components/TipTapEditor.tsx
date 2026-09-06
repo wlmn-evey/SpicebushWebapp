@@ -2,8 +2,9 @@
  * Blog body editor — a TipTap (ProseMirror) React island that stores TipTap HTML (ADR-009;
  * redesigned to dedicated editor pages + a richer toolset in ADR-011 / #114).
  *
- * On every change it writes `editor.getHTML()` into a hidden form field so the existing form POST
- * carries the body; the server re-sanitizes via `renderBodyHtml` at render — render-time
+ * On every change it mirrors `editor.getHTML()` into a CONTROLLED hidden form field (React state,
+ * never an imperative write — see the `bodyHtml` note, #132) so the existing form POST carries the
+ * body; the server re-sanitizes via `renderBodyHtml` at render — render-time
  * sanitization is the trust boundary. Links/images are inserted via accessible in-editor dialogs
  * (no browser prompts), and a live side-by-side preview renders through the SAME `renderBodyHtml`
  * the public page uses.
@@ -278,13 +279,20 @@ export default function TipTapEditor({ initialHtml = '', fieldName = 'bodyRaw' }
   const [counts, setCounts] = useState({ words: 0, chars: 0 });
   const [dialog, setDialog] = useState<'link' | 'image' | null>(null);
   const [linkInitial, setLinkInitial] = useState({ url: '', newTab: false });
+  // The body HTML mirrored into the hidden form field — a CONTROLLED input on purpose. For a
+  // `type="hidden"` input the `value` IDL attribute IS the `value` content attribute, so writing
+  // `ref.current.value = …` to an uncontrolled `defaultValue` input is silently reverted to
+  // `defaultValue` on the next React re-render (which the word counter triggers on every update).
+  // That wiped the body on every keystroke: new posts could not publish and edits reverted (#132).
+  const [bodyHtml, setBodyHtml] = useState(initialHtml);
+  // Only used to reach the owning <form> for the submit listener below.
   const hiddenRef = useRef<HTMLInputElement | null>(null);
   // Mirror showPreview into a ref so the (created-once) editor onUpdate can refresh the live preview
   // without being recreated on every toggle.
   const showPreviewRef = useRef(false);
 
   const syncHidden = useCallback((editor: Editor) => {
-    if (hiddenRef.current) hiddenRef.current.value = editor.getHTML();
+    setBodyHtml(editor.getHTML());
   }, []);
 
   const updateCounts = useCallback((editor: Editor) => {
@@ -403,7 +411,7 @@ export default function TipTapEditor({ initialHtml = '', fieldName = 'bodyRaw' }
 
   return (
     <div className="blog-editor">
-      <input type="hidden" name={fieldName} ref={hiddenRef} defaultValue={initialHtml} />
+      <input type="hidden" name={fieldName} ref={hiddenRef} value={bodyHtml} />
 
       <div className="blog-editor-toolbar" role="toolbar" aria-label="Text formatting">
         {/* History */}

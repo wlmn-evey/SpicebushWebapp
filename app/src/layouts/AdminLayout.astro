@@ -69,19 +69,25 @@ const userEmail = typeof locals.userEmail === 'string' ? locals.userEmail : 'Adm
           });
         });
 
-        // Submit button loading state — prevent double-submit
+        // Submit button loading state — prevent double-submit. Deferred one macrotask so it runs
+        // AFTER every other submit listener (whatever the registration order) and can see whether
+        // one of them cancelled the submit — a page-level guard (e.g. the blog editor's
+        // "Body is required to publish") must not leave a dead, "Saving…" button behind (#132).
         document.querySelectorAll('form').forEach(form => {
-          form.addEventListener('submit', () => {
-            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
-            if (!btn || btn.dataset.noLoading === 'true') return;
-            btn.dataset.originalText = btn.textContent?.trim() ?? '';
-            btn.disabled = true;
-            btn.textContent =
-              btn.dataset.loadingText ??
-              (btn.dataset.originalText.toLowerCase().startsWith('delete')
-                ? 'Deleting\u2026'
-                : 'Saving\u2026');
-            btn.classList.add('opacity-70', 'cursor-not-allowed');
+          form.addEventListener('submit', event => {
+            setTimeout(() => {
+              if (event.defaultPrevented) return;
+              const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+              if (!btn || btn.dataset.noLoading === 'true') return;
+              btn.dataset.originalText = btn.textContent?.trim() ?? '';
+              btn.disabled = true;
+              btn.textContent =
+                btn.dataset.loadingText ??
+                (btn.dataset.originalText.toLowerCase().startsWith('delete')
+                  ? 'Deleting\u2026'
+                  : 'Saving\u2026');
+              btn.classList.add('opacity-70', 'cursor-not-allowed');
+            }, 0);
           });
         });
       }

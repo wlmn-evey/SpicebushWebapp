@@ -9,6 +9,7 @@
  * `initBlogAdmin(doc)` takes an optional Document so jsdom unit tests can pass a constructed one.
  */
 import { BLOG_FORM_FIELDS } from '@lib/blog-form-fields';
+import { isBlogBodyEmpty } from './blog-body-text';
 import { localInputToUtcIso, utcIsoToLocalInput } from './blog-publish-schedule';
 
 const COLLISION_MESSAGE =
@@ -87,13 +88,17 @@ function initConditionalRequired(form: HTMLFormElement): void {
 
   // Body moved from a <textarea> to the TipTap island's hidden field, and `required` does NOT apply
   // to a hidden input — so the publish-time "body required" guard moves to a SUBMIT-TIME check
-  // (R3-F10). The server (validateBlogData) stays the source of truth; this is immediate feedback.
-  // The field is queried at submit time because the island hydrates after init.
-  const isEditorEmpty = (html: string): boolean =>
-    html
-      .replace(/<p>\s*<\/p>/gi, '')
-      .replace(/<[^>]*>/g, '')
-      .trim().length === 0;
+  // (R3-F10). The server (validateBlogData) stays the source of truth and applies the SAME
+  // `isBlogBodyEmpty` rule; this is immediate feedback. The field is queried at submit time because
+  // the island hydrates after init.
+  //
+  // Every client-side rejection below calls `stopImmediatePropagation()` after `preventDefault()`:
+  // AdminLayout's shared loading-state handler listens on the same form and would otherwise leave
+  // the primary Save button disabled/"Saving…" for a submit that never happened (#132).
+  const reject = (event: Event): void => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
 
   form.addEventListener('submit', event => {
     const status = currentStatus();
@@ -126,7 +131,7 @@ function initConditionalRequired(form: HTMLFormElement): void {
           'You picked a future date and time, but the status is Published — this publishes the post NOW, not at that time. Choose Scheduled if you want it to go live later. Publish now anyway?'
         );
         if (!proceed) {
-          event.preventDefault();
+          reject(event);
           return;
         }
       }
@@ -139,8 +144,8 @@ function initConditionalRequired(form: HTMLFormElement): void {
       bodyField instanceof HTMLInputElement || bodyField instanceof HTMLTextAreaElement
         ? bodyField.value
         : '';
-    if (isEditorEmpty(value)) {
-      event.preventDefault();
+    if (isBlogBodyEmpty(value)) {
+      reject(event);
       window.alert('Body is required to publish.');
     }
   });

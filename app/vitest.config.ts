@@ -17,6 +17,8 @@ const aliasConfig = {
 
 export default defineConfig({
   ...aliasConfig,
+  // React islands (e.g. TipTapEditor.test.ts) use the automatic JSX runtime, as Astro does.
+  esbuild: { jsx: 'automatic' },
   test: {
     globals: true,
     environment: 'jsdom',
