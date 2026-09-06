@@ -24,9 +24,7 @@ describe('resolveSiteOrigin', () => {
   });
 
   it('prefers the provided site URL origin', () => {
-    expect(resolveSiteOrigin(new URL('https://example.org/some/path'))).toBe(
-      'https://example.org'
-    );
+    expect(resolveSiteOrigin(new URL('https://example.org/some/path'))).toBe('https://example.org');
   });
 
   it('falls back to PUBLIC_SITE_URL, then the hardcoded production origin', () => {
