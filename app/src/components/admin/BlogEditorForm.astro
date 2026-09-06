@@ -194,8 +194,13 @@ const idns = isEdit ? `edit-${post!.slug}` : 'new';
           /* Schedule control — shown only when Status = Scheduled (client toggles visibility +
             `required` in lockstep; the client writes the UTC-Z instant into the hidden field). */
         }
+        {
+          /* No Tailwind `block` here: `.block` shares specificity with preflight's `[hidden]` and
+            sits later in the cascade, so it would override `hidden` and show this for every
+            status (#132). A <div> is block-level by default. */
+        }
         <div
-          class="mt-3 block text-sm font-medium"
+          class="mt-3 text-sm font-medium"
           data-schedule-group
           hidden={isEdit ? post!.status !== 'scheduled' : true}
         >
@@ -261,6 +266,9 @@ const idns = isEdit ? `edit-${post!.slug}` : 'new';
                   required
                   maxlength="100"
                   pattern="[a-z0-9-_]+"
+                  autocapitalize="none"
+                  autocorrect="off"
+                  spellcheck="false"
                   aria-describedby={`slug-help-${idns}`}
                   class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                 />

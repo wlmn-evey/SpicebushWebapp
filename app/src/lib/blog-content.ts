@@ -11,6 +11,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import { db } from '@lib/db';
 import { queryRows } from '@lib/db/client';
 import type { ContentEntry } from '@lib/db/types';
+import { isBlogBodyEmpty } from './blog-body-text';
 import { collectHtmlImageAlts, renderBodyHtml } from './blog-html';
 import { BLOG_PAGE_SIZE, indexableCategories } from './blog-discovery';
 import { isFutureScheduledPublishAt, isScheduledPublishAtFormat } from './blog-publish-schedule';
@@ -522,7 +523,8 @@ export function validateBlogData(
   if (!excerpt.trim()) {
     return 'Excerpt is required to publish';
   }
-  if (!body.trim()) {
+  // Shared with the client guard: a tag-only TipTap body (`<p></p>`) is empty content (#132).
+  if (isBlogBodyEmpty(body)) {
     return 'Body is required to publish';
   }
   const date = typeof data.date === 'string' ? data.date.trim() : '';

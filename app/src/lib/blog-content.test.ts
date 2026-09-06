@@ -644,6 +644,24 @@ describe('validateBlogData', () => {
 
   const FOUR_STATE_ERROR = 'Status must be Draft, Published, Scheduled, or Archived';
 
+  it('#132: a tag-only TipTap body (<p></p>) is "empty" for publish AND scheduled, fine for a draft', () => {
+    const emptyEditor = { ...validDraft, body: '<p></p>' };
+    expect(validateBlogData(emptyEditor, 'T', 'published')).toBe('Body is required to publish');
+    expect(
+      validateBlogData({ ...emptyEditor, publishedAt: '2099-01-01T09:00:00Z' }, 'T', 'scheduled')
+    ).toBe('Body is required to publish');
+    expect(validateBlogData(emptyEditor, 'T', 'draft')).toBeNull();
+    // Real content and an image-only body still publish.
+    expect(validateBlogData({ ...validDraft, body: '<p>Hi</p>' }, 'T', 'published')).toBeNull();
+    expect(
+      validateBlogData(
+        { ...validDraft, body: '<img src="/media/x.jpg" alt="Children planting seedlings">' },
+        'T',
+        'published'
+      )
+    ).toBeNull();
+  });
+
   it('rejects missing/empty/whitespace-only rawStatus FIRST (R2-F2)', () => {
     expect(validateBlogData({ ...validDraft }, 'T', undefined)).toBe(FOUR_STATE_ERROR);
     expect(validateBlogData({ ...validDraft }, 'T', '')).toBe(FOUR_STATE_ERROR);

@@ -158,6 +158,33 @@ describe('initBlogAdmin — conditional required', () => {
     expect(allowed.defaultPrevented).toBe(false);
   });
 
+  it('a client-side rejection stops later submit listeners (no dead "Saving…" button, #132)', () => {
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const { doc } = buildDoc({ kind: 'add', status: 'published' });
+    initBlogAdmin(doc);
+    const form = doc.querySelector('form[data-blog-form]') as HTMLFormElement;
+    // Stands in for AdminLayout's shared loading-state handler, registered AFTER the guard.
+    const later = vi.fn();
+    form.addEventListener('submit', later);
+
+    // Empty body → guard rejects; the later listener must not run.
+    field(doc, BLOG_FORM_FIELDS.bodyRaw).value = '<p></p>';
+    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    expect(later).not.toHaveBeenCalled();
+
+    // Two-gesture confirm cancelled → same.
+    field(doc, BLOG_FORM_FIELDS.bodyRaw).value = '<p>Body.</p>';
+    field(doc, BLOG_FORM_FIELDS.publishedAtLocal).value = '2099-01-01T09:00';
+    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    expect(later).not.toHaveBeenCalled();
+
+    // An accepted submit still reaches it.
+    field(doc, BLOG_FORM_FIELDS.publishedAtLocal).value = '';
+    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    expect(later).toHaveBeenCalledOnce();
+  });
+
   it('requires imageAlt when an image value is set, releases it when cleared', () => {
     const { doc } = buildDoc({ kind: 'add', status: 'draft' });
     initBlogAdmin(doc);

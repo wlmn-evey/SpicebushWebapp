@@ -259,6 +259,20 @@ through this module so drift fails a test.
   (`<textarea …>{post.excerpt}</textarea>`, zero whitespace) under a `<!-- prettier-ignore -->` guard,
   because the `_raw` form path deliberately skips the parser's trim; `normalizeBlogData` is the
   backstop trim. (The body is the TipTap island's hidden field, not a textarea.)
+- The island's hidden `data.body_raw` is a **controlled** React input (`value` = state updated on
+  every editor `update`), never an uncontrolled `defaultValue` input written imperatively. For a
+  `type="hidden"` input the `value` IDL attribute IS the `value` content attribute, and React
+  re-syncs `defaultValue` onto it on every re-render — so an imperative `ref.value = …` was wiped
+  on every keystroke (the word counter re-renders per update), which blocked every publish/schedule
+  of a new post and silently reverted every body edit on save (#132).
+  `TipTapEditor.test.tsx` renders the real island and pins this.
+- The schedule group (`[data-schedule-group]`) is toggled with the `hidden` attribute, so its
+  wrapper must not carry Tailwind's `block` class: `.block` shares specificity with preflight's
+  `[hidden]` rule and wins the cascade, showing the control for every status (#132).
+- Client-side submit rejections (empty body, cancelled two-gesture confirm) call
+  `stopImmediatePropagation()` after `preventDefault()`, and `AdminLayout`'s shared loading-state
+  handler defers one macrotask and skips a `defaultPrevented` submit — otherwise the primary Save
+  button was left disabled/"Saving…" for a submit that never happened (#132).
 
 ### Featured image (media system reuse)
 
@@ -487,7 +501,9 @@ Pure functions over the already-published, already-sorted `BlogPost[]`:
   body ≤ 200,000).
 - **`data.image`, when set:** must match `^(\/(?![/\\])\|https:\/\/)`, else `400`.
 - **When `status='published'`:** `excerpt`, `body`, and a valid `date` (`YYYY-MM-DD`, real date) are
-  required; if `image` is set, `imageAlt` is required, ≥ 6 chars, not filename-like
+  required — "body" via the dependency-free `isBlogBodyEmpty` (`app/src/lib/blog-body-text.ts`),
+  shared with the client submit guard so the two never disagree: a tag-only TipTap body such as
+  `<p></p>` is empty, an image-only body is content (#132); if `image` is set, `imageAlt` is required, ≥ 6 chars, not filename-like
   (`/\.(jpg|jpeg|png|gif|webp)$/i`), not a generic word (`/^(image|photo|picture)$/i`);
   **additionally, every image token in the body Markdown must carry alt text meeting the same quality
   bar** (walks the marked token tree, rejects with a plain-language error naming the offending
