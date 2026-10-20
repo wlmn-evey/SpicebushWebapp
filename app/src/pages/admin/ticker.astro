@@ -129,8 +129,10 @@ const errorKey = Astro.url.searchParams.get('error');
 
     {
       /* Initial items for the client to hydrate the editor. Passed via a data- attribute (Astro
-        auto-escapes attribute values) NOT an inline <script>, so item text containing `</script>`
-        or quotes can't break out — no admin self-XSS. */
+        auto-escapes attribute values) NOT an inline script element, so item text containing a
+        closing script tag or quotes can't break out — no admin self-XSS. (Don't write literal
+        script tags in this comment: Vite's dependency scanner extracts them with a regex that
+        ignores comments, and the fragment fails to parse.) */
     }
     <div id="ticker-initial" data-items={JSON.stringify(items)} hidden></div>
 
