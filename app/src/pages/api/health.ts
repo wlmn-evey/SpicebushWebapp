@@ -9,7 +9,8 @@ export const GET: APIRoute = async () => {
   const startTime = Date.now();
 
   try {
-    const databaseUrl = import.meta.env.NETLIFY_DATABASE_URL || import.meta.env.DATABASE_URL;
+    // Read at runtime: Astro 6+ inlines import.meta.env values at build time.
+    const databaseUrl = process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL;
     if (!databaseUrl) {
       throw new Error('Database URL not configured');
     }

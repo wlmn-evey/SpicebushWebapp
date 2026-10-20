@@ -2,15 +2,14 @@
 // Development-specific Astro config (without Netlify adapter)
 import { defineConfig } from 'astro/config';
 import { fileURLToPath, URL } from 'node:url';
-import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
   // site: 'https://spicebushmontessori.org', // Commented out for development to avoid redirects
+  // Tailwind CSS 3 runs through PostCSS (postcss.config.mjs).
   integrations: [
-    tailwind(),
     sitemap(),
     react()
   ],

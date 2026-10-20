@@ -1,6 +1,6 @@
 # Production Deployment Runbook
 
-_Spicebush Montessori -- Astro 5 SSR on Netlify + Neon PostgreSQL_
+_Spicebush Montessori -- Astro 7 SSR on Netlify + Neon PostgreSQL_
 
 ---
 
@@ -10,7 +10,7 @@ Before starting, confirm:
 
 - [ ] You have `NETLIFY_SITE_ID` and `NETLIFY_AUTH_TOKEN` available
 - [ ] You are on the correct branch and all changes are committed
-- [ ] Node 20+ is installed locally
+- [ ] Node 22.22.0+ is installed locally (`node -v`; required by Astro 7)
 - [ ] Working directory is the repo root (`SpicebushWebapp/`)
 
 ---

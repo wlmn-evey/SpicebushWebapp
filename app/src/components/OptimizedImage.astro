@@ -155,7 +155,7 @@ const resolvePhotoData = async (
     const contentPhoto = await getContentEntry('photos', slugToLookup);
     if (contentPhoto?.data) {
       return {
-        resolvedSlug: contentPhoto.slug,
+        resolvedSlug: contentPhoto.id,
         photoData: asRecord(contentPhoto.data)
       };
     }

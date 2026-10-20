@@ -169,7 +169,11 @@ export function isDevEnvironment(): boolean {
     }
 
     // Check for explicit local database environment values.
-    const databaseUrl = import.meta.env.DATABASE_URL ?? import.meta.env.NETLIFY_DATABASE_URL;
+    // Read at runtime: Astro 6+ inlines import.meta.env values at build time.
+    const databaseUrl =
+      typeof process !== 'undefined'
+        ? (process.env.DATABASE_URL ?? process.env.NETLIFY_DATABASE_URL)
+        : undefined;
     if (
       databaseUrl &&
       (databaseUrl.includes('localhost') ||

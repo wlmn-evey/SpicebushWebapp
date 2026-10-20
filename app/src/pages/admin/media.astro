@@ -278,7 +278,7 @@ const toEditorPhoto = (slug: string, source: PhotoSource, input: unknown): Edito
 
 const bySlug = new Map<string, EditorPhoto>();
 for (const entry of fileEntries) {
-  bySlug.set(entry.slug, toEditorPhoto(entry.slug, 'content', entry.data));
+  bySlug.set(entry.id, toEditorPhoto(entry.id, 'content', entry.data));
 }
 
 for (const entry of dbEntries) {

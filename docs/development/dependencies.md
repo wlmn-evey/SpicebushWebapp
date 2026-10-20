@@ -4,14 +4,18 @@
 - `astro`
 - `@astrojs/netlify`
 - `@astrojs/react`
-- `@astrojs/tailwind`
 - `@astrojs/sitemap`
 - `react`, `react-dom`
 - `pg`
 - `sharp`
+- TipTap 3 (`@tiptap/*`), `marked`, `isomorphic-dompurify`, `jose`, `nanoid`, `csv-parse`, `lucide-astro`
 
 ## Tooling Dependencies
-- `typescript`
+These live in `devDependencies`: nothing in `src/` or `netlify/functions/` imports them at runtime.
+- `typescript`, `@types/pg`
+- `tailwindcss` 3 + `postcss` + `autoprefixer` (build-time CSS; see `postcss.config.mjs`)
+- `@netlify/functions` (type-only `Handler` import in `netlify/functions/*`)
+- `playwright`
 - `eslint` + `@typescript-eslint/*` + `eslint-plugin-astro`
 - `prettier` + `prettier-plugin-astro`
 - `vitest` + `jsdom`

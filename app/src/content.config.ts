@@ -1,14 +1,18 @@
-import { z, defineCollection } from 'astro:content';
+// Content Layer collections. Astro 6 removed the legacy src/content/config.ts form;
+// entries are keyed by `id` (the slugified file path), which replaces `slug`.
+import { defineCollection } from 'astro:content';
+import { glob } from 'astro/loaders';
+import { z } from 'astro/zod';
 
-import { getCurrentSchoolYear } from '../lib/school-year';
+import { getCurrentSchoolYear } from './lib/school-year';
 
 const staffCollection = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.md', base: './src/content/staff' }),
   schema: z.object({
     name: z.string(),
     role: z.string(),
     photo: z.string(),
-    email: z.string().email().optional(),
+    email: z.email().optional(),
     credentials: z.array(z.string()).default([]),
     languages: z.array(z.string()).default(['English']),
     startYear: z.number(),
@@ -17,7 +21,7 @@ const staffCollection = defineCollection({
 });
 
 const tuitionCollection = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.md', base: './src/content/tuition' }),
   schema: z.object({
     type: z.enum(['program', 'rate']),
     // Program fields
@@ -51,7 +55,7 @@ const tuitionCollection = defineCollection({
 });
 
 const settingsCollection = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.md', base: './src/content/settings' }),
   schema: z.object({
     name: z.string(),
     key: z.string(),
@@ -62,7 +66,7 @@ const settingsCollection = defineCollection({
 });
 
 const hoursCollection = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.md', base: './src/content/hours' }),
   schema: z.object({
     day: z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
     open_time: z.string(),
@@ -74,7 +78,7 @@ const hoursCollection = defineCollection({
 });
 
 const testimonialsCollection = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.md', base: './src/content/testimonials' }),
   schema: z.object({
     author: z.string(),
     name: z.string().optional(),
@@ -97,11 +101,11 @@ const testimonialsCollection = defineCollection({
 });
 
 const schoolInfoCollection = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.md', base: './src/content/school-info' }),
   schema: z.object({
     // Contact Information
     phone: z.string(),
-    email: z.string().email(),
+    email: z.email(),
     address: z.object({
       street: z.string(),
       city: z.string(),
@@ -117,9 +121,9 @@ const schoolInfoCollection = defineCollection({
     // Social Media
     socialMedia: z
       .object({
-        facebook: z.string().url().optional(),
-        instagram: z.string().url().optional(),
-        twitter: z.string().url().optional()
+        facebook: z.url().optional(),
+        instagram: z.url().optional(),
+        twitter: z.url().optional()
       })
       .optional(),
 
@@ -131,7 +135,7 @@ const schoolInfoCollection = defineCollection({
 });
 
 const photosCollection = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.md', base: './src/content/photos' }),
   schema: z.object({
     // File information
     originalFilename: z.string(),
@@ -225,7 +229,7 @@ const photosCollection = defineCollection({
 });
 
 const comingSoonCollection = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.md', base: './src/content/coming-soon' }),
   schema: z.object({
     enabled: z.boolean().default(false),
     launchDate: z.coerce.date(),

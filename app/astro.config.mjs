@@ -1,7 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import { fileURLToPath, URL } from 'node:url';
-import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 import react from '@astrojs/react';
 import netlify from '@astrojs/netlify';
@@ -9,8 +8,9 @@ import netlify from '@astrojs/netlify';
 // https://astro.build/config
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || 'https://spicebushmontessori.org',
+  // Tailwind CSS 3 runs through PostCSS (postcss.config.mjs + the @tailwind
+  // directives in src/styles/global.css). @astrojs/tailwind does not support Astro 6+.
   integrations: [
-    tailwind(),
     sitemap({
       // Exclude routes that are owned by the dynamic blog sitemap, are redirect-only,
       // or are admin/auth surfaces that should not be advertised to crawlers (R3-F8/R4-F4).
@@ -26,6 +26,9 @@ export default defineConfig({
     react()
   ],
   output: 'server',
+  // Astro 7 changed the default to 'jsx', which can drop whitespace between inline
+  // elements. Keep the pre-7 behavior.
+  compressHTML: true,
   adapter: netlify(),
   vite: {
     define: {

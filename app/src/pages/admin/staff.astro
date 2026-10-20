@@ -31,7 +31,7 @@ const asRecord = (value: unknown): Record<string, unknown> => {
 const photoLookupBySlug = new Map<string, ReturnType<typeof toPhotoLookupEntry>>();
 
 for (const entry of filePhotoEntries) {
-  photoLookupBySlug.set(entry.slug, toPhotoLookupEntry(entry.slug, asRecord(entry.data)));
+  photoLookupBySlug.set(entry.id, toPhotoLookupEntry(entry.id, asRecord(entry.data)));
 }
 
 for (const entry of dbPhotoEntries) {

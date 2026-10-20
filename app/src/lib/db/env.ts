@@ -2,22 +2,18 @@ import { logError } from '@lib/error-logger';
 
 type EnvRecord = Record<string, string | undefined>;
 
-function readImportMetaEnv(): EnvRecord {
-  try {
-    const meta = import.meta as unknown;
-    if (meta && typeof meta === 'object' && 'env' in (meta as Record<string, unknown>)) {
-      const candidate = (meta as { env?: unknown }).env;
-      if (candidate && typeof candidate === 'object') {
-        return candidate as EnvRecord;
-      }
+// Astro 6+ inlines `import.meta.env` values at build time (non-public vars are no
+// longer rewritten to `process.env`), and Vite 8's dev module runner throws on
+// dynamic `import.meta.env[key]` access. Runtime secrets therefore come from
+// `process.env`; the static reads below only exist in dev, where `.env` files are
+// exposed through `import.meta.env`, and are compiled out of production builds so
+// no build-machine secret is inlined into the server bundle.
+const devImportMetaEnv: EnvRecord = import.meta.env.DEV
+  ? {
+      NETLIFY_DATABASE_URL: import.meta.env.NETLIFY_DATABASE_URL,
+      DATABASE_URL: import.meta.env.DATABASE_URL
     }
-  } catch {
-    // ignore - fall back to process.env
-  }
-  return {};
-}
-
-const importMetaEnv: EnvRecord = readImportMetaEnv();
+  : {};
 
 const envCache = new Map<string, string>();
 
@@ -27,7 +23,7 @@ function readEnv(key: string, { required = false }: { required?: boolean } = {})
   }
 
   const value =
-    importMetaEnv[key] ?? (typeof process !== 'undefined' ? process.env?.[key] : undefined);
+    (typeof process !== 'undefined' ? process.env?.[key] : undefined) || devImportMetaEnv[key];
 
   if (!value) {
     if (required) {

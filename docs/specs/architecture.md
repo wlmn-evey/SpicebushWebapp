@@ -1,6 +1,6 @@
 # Architecture Specification
 
-Spicebush Montessori School website -- an Astro 5 SSR application deployed on Netlify with a Neon PostgreSQL database. The site serves as the public face for the school plus a CMS-driven admin panel for content, camp, tuition, media, and analytics management.
+Spicebush Montessori School website -- an Astro 7 SSR application deployed on Netlify with a Neon PostgreSQL database. The site serves as the public face for the school plus a CMS-driven admin panel for content, camp, tuition, media, and analytics management.
 
 Live site: https://spicebushmontessori.org
 
@@ -10,10 +10,12 @@ Live site: https://spicebushmontessori.org
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| Framework | Astro 5 (^5.2.5) | `output: 'server'` (SSR) |
-| Adapter | `@astrojs/netlify` | Deployed as Netlify Functions |
-| Styling | Tailwind CSS 3 | Custom brand theme |
+| Runtime | Node.js >= 22.22.0 | Required by Astro 7 and `@astrojs/react` 7 |
+| Framework | Astro 7 (^7.3.8) | `output: 'server'` (SSR), `compressHTML: true` (pre-7 whitespace behavior) |
+| Adapter | `@astrojs/netlify` 8 | Deployed as Netlify Functions |
+| Styling | Tailwind CSS 3 | Custom brand theme; compiled by PostCSS (`postcss.config.mjs`), not `@astrojs/tailwind` |
 | Icons | `lucide-astro` | |
+| File content | Astro content collections | `src/content.config.ts` (glob loaders over `src/content/*`) |
 | React | Selective islands | `TuitionCalculator.tsx`, admin components |
 | Database | Neon PostgreSQL | Via `NETLIFY_DATABASE_URL`, accessed through `pg` client |
 | Auth | Magic-link admin sessions | Cookie-based validation |
