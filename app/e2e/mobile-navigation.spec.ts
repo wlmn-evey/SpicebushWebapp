@@ -85,7 +85,7 @@ test.describe('Mobile Navigation', () => {
     await expect(tuitionButton).toBeVisible();
     await expect(tuitionButton).toContainText('Calculate Tuition');
     
-    const tourButton = mobileMenu.locator('a[href="/admissions/schedule-tour"]');
+    const tourButton = mobileMenu.getByRole('link', { name: /Schedule Tour/ });
     await expect(tourButton).toBeVisible();
     await expect(tourButton).toContainText('Schedule Tour');
   });
@@ -143,7 +143,7 @@ test.describe('Mobile Navigation', () => {
     
     // Check all three buttons
     const tuitionBtn = bottomNav.locator('a[href="/admissions/tuition-calculator"]');
-    const tourBtn = bottomNav.locator('a[href="/admissions/schedule-tour"]');
+    const tourBtn = bottomNav.getByRole('link', { name: 'Schedule a tour' });
     const callBtn = bottomNav.locator('a[href^="tel:"]');
     
     await expect(tuitionBtn).toBeVisible();

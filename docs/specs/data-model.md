@@ -1,7 +1,7 @@
 # Data Model Specification
 
 Database: **Neon PostgreSQL** via `NETLIFY_DATABASE_URL`
-Migrations: `app/db/migrations/001` through `014`
+Migrations: `app/db/migrations/001` through `016`
 
 ---
 
@@ -22,6 +22,31 @@ set_updated_at_column()
 ```
 
 A shared `BEFORE UPDATE` trigger function that sets `NEW.updated_at = NOW()`. Attached to every table that has an `updated_at` column.
+
+### Date/time values in application code
+
+The `pg` pool registers **no custom type parsers**, so `DATE`, `TIMESTAMP` and `TIMESTAMPTZ`
+columns arrive in JS as `Date` objects even though the TypeScript row/view types declare strings.
+Rules for `app/src/lib/db/**` (helpers in `app/src/lib/db/row-values.ts`):
+
+- Cast in SQL where practical: `DATE` columns as `col::text AS col` (`YYYY-MM-DD`), `TIMESTAMPTZ`
+  columns via `isoTimestampSql(col)` (`to_char(col AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`,
+  identical to `Date#toISOString()`). Qualify `ORDER BY` columns (e.g. `table.created_at`) when the
+  select list aliases a cast expression to the same name.
+- Normalize defensively when mapping rows (`toIsoTimestampOrNull`, `toIsoTimestamp`,
+  `toDateOnlyOrNull`); never let a `Date` fall through a `typeof value === 'string'` check (that
+  previously blanked admin announcement dates and NULLed `starts_at`/`ends_at` on re-save).
+- All timestamps are stored and returned as UTC instants. Human-entered, zone-less values
+  (`datetime-local` inputs) are interpreted as **America/New_York** wall-clock time and
+  converted DST-correctly by `app/src/lib/eastern-time.ts`; values carrying `Z`/an offset are kept
+  as-is. Admin forms render stored instants back in Eastern time.
+
+### Content read cache
+
+`app/src/lib/db/content.ts` caches collection/entry/settings reads in-process (5-30 min TTL). Only
+successful DB results are cached; the error-path fallbacks (`[]` / `null` / `{}`) are returned to
+the caller but **not** cached, so a transient DB error no longer blanks staff/tuition sections or
+404s a valid blog post for the whole TTL.
 
 ---
 
@@ -446,8 +471,8 @@ Individual camp weeks with seat management and enrollment URLs. Introduced in mi
 | `is_published`          | `BOOLEAN`     | NOT NULL, DEFAULT `FALSE`                            |
 | `display_order`         | `INTEGER`     | NOT NULL, DEFAULT `0`                                |
 | `hero_media_slug`       | `TEXT`        | nullable                                             |
-| `registration_open_at`  | `TIMESTAMPTZ` | nullable                                             |
-| `registration_close_at` | `TIMESTAMPTZ` | nullable                                             |
+| `registration_open_at`  | `TIMESTAMPTZ` | nullable -- NULL inherits `camp_seasons.registration_open_at` |
+| `registration_close_at` | `TIMESTAMPTZ` | nullable -- NULL inherits `camp_seasons.registration_close_at` |
 | `last_synced_at`        | `TIMESTAMPTZ` | nullable                                             |
 | `sync_source`           | `TEXT`        | nullable                                             |
 | `created_at`            | `TIMESTAMPTZ` | NOT NULL, DEFAULT `NOW()`                            |

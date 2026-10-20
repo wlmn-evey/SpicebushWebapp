@@ -4,7 +4,9 @@ import {
   formatHolidayDate,
   formatTime,
   getDefaultHoursData,
+  getFallbackHolidaysForYear,
   getHolidayEmoji,
+  nthWeekdayOfMonth,
   processHoursData,
   updateCurrentTime
 } from './hours-utils';
@@ -77,6 +79,75 @@ describe('hours-utils', () => {
 
     const holidays = await fetchUpcomingHolidays();
     expect(holidays).toEqual([]);
+  });
+
+  it('computes floating holidays for the requested year instead of hardcoding 2024 dates', () => {
+    const byName = (year: number) =>
+      Object.fromEntries(getFallbackHolidaysForYear(year).map(h => [h.name, h.date]));
+
+    expect(byName(2026)).toMatchObject({
+      "New Year's Day": '2026-01-01',
+      'Martin Luther King Jr. Day': '2026-01-19',
+      'Presidents Day': '2026-02-16',
+      'Memorial Day': '2026-05-25',
+      'Independence Day': '2026-07-04',
+      'Labor Day': '2026-09-07',
+      'Columbus Day': '2026-10-12',
+      'Veterans Day': '2026-11-11',
+      'Thanksgiving Day': '2026-11-26',
+      'Christmas Day': '2026-12-25'
+    });
+    expect(byName(2027)).toMatchObject({
+      'Martin Luther King Jr. Day': '2027-01-18',
+      'Presidents Day': '2027-02-15',
+      'Memorial Day': '2027-05-31',
+      'Labor Day': '2027-09-06',
+      'Columbus Day': '2027-10-11',
+      'Thanksgiving Day': '2027-11-25'
+    });
+  });
+
+  it('finds nth and last weekdays of a month', () => {
+    expect(nthWeekdayOfMonth(2026, 0, 1, 3)).toBe(19); // 3rd Monday Jan 2026
+    expect(nthWeekdayOfMonth(2026, 4, 1, -1)).toBe(25); // last Monday May 2026
+    expect(nthWeekdayOfMonth(2026, 10, 4, 4)).toBe(26); // 4th Thursday Nov 2026
+    expect(nthWeekdayOfMonth(2025, 8, 1, 1)).toBe(1); // Sep 1 2025 is a Monday
+  });
+
+  it('uses the computed fallback dates (Thanksgiving 2026 is Nov 26, not Nov 28)', async () => {
+    vi.setSystemTime(new Date('2026-11-22T12:00:00'));
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network issue')));
+
+    const holidays = await fetchUpcomingHolidays();
+    expect(holidays).toEqual([{ date: '2026-11-26', name: 'Thanksgiving Day' }]);
+  });
+
+  it("includes next year's holidays in late December (API path)", async () => {
+    vi.setSystemTime(new Date('2026-12-29T12:00:00'));
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => ({
+      ok: true,
+      json: async () =>
+        url.includes('/2027/')
+          ? [
+              { date: '2027-01-01', name: "New Year's Day" },
+              { date: '2027-01-18', name: 'Martin Luther King Jr. Day' }
+            ]
+          : [{ date: '2026-12-25', name: 'Christmas Day' }]
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const holidays = await fetchUpcomingHolidays();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledWith('https://date.nager.at/api/v3/publicholidays/2027/US');
+    expect(holidays).toEqual([{ date: '2027-01-01', name: "New Year's Day" }]);
+  });
+
+  it("includes next year's holidays in late December (fallback path)", async () => {
+    vi.setSystemTime(new Date('2026-12-29T12:00:00'));
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network issue')));
+
+    const holidays = await fetchUpcomingHolidays();
+    expect(holidays).toEqual([{ date: '2027-01-01', name: "New Year's Day" }]);
   });
 
   it('provides expected default hours data for weekdays and weekends', () => {

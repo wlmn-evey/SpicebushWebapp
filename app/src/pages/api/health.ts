@@ -4,15 +4,15 @@
  */
 import type { APIRoute } from 'astro';
 import { queryFirst } from '@lib/db/client';
+import { getNetlifyDatabaseUrl } from '@lib/db/env';
+import { logServerError } from '@lib/server-logger';
 
 export const GET: APIRoute = async () => {
   const startTime = Date.now();
 
   try {
-    const databaseUrl = import.meta.env.NETLIFY_DATABASE_URL || import.meta.env.DATABASE_URL;
-    if (!databaseUrl) {
-      throw new Error('Database URL not configured');
-    }
+    // Throws when neither database URL is set; read at runtime, never inlined into the bundle.
+    getNetlifyDatabaseUrl();
 
     // Quick database ping with timeout
     const timeoutPromise = new Promise((_, reject) =>
@@ -48,10 +48,12 @@ export const GET: APIRoute = async () => {
       }
     );
   } catch (error) {
+    // Public endpoint: keep driver/connection details in server logs only.
+    logServerError('Health check failed', error, { route: '/api/health' });
     return new Response(
       JSON.stringify({
         status: 'unhealthy',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Database check failed',
         responseTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
         service: 'spicebush-webapp'

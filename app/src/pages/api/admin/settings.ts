@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth-check';
 import { db } from '@lib/db';
 import { queryRows, query } from '@lib/db/client';
+import { safeRedirectPath } from '@lib/safe-redirect';
 
 const jsonResponse = (payload: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(payload), {
@@ -9,11 +10,7 @@ const jsonResponse = (payload: Record<string, unknown>, status = 200) =>
     headers: { 'Content-Type': 'application/json' }
   });
 
-const parseRedirectPath = (value: unknown): string | null => {
-  if (typeof value !== 'string') return null;
-  if (!value.startsWith('/') || value.startsWith('//')) return null;
-  return value;
-};
+const parseRedirectPath = (value: unknown): string | null => safeRedirectPath(value);
 
 const parseValue = (raw: unknown): unknown => {
   if (typeof raw !== 'string') return raw;

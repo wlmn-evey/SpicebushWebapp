@@ -1,5 +1,7 @@
+import { normalizeSchoolTimestamp } from '@lib/eastern-time';
 import { logError } from '@lib/error-logger';
 import { query, queryFirst, queryRows, withTransaction } from './client';
+import { toIsoTimestamp, toIsoTimestampOrNull } from './row-values';
 
 type CampWeekStatus = 'draft' | 'open' | 'limited' | 'full' | 'waitlist' | 'closed';
 
@@ -29,13 +31,9 @@ const asBoolean = (value: unknown, fallback = false): boolean => {
   return fallback;
 };
 
-const asNullableIso = (value: unknown): string | null => {
-  const text = asString(value);
-  if (!text) return null;
-  const parsed = Date.parse(text);
-  if (!Number.isFinite(parsed)) return null;
-  return new Date(parsed).toISOString();
-};
+// Zoned ISO strings pass through; zone-less wall-clock values mean Eastern time at the school
+// (the runtime is UTC). See @lib/eastern-time.
+const asNullableIso = (value: unknown): string | null => normalizeSchoolTimestamp(value);
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
@@ -114,8 +112,15 @@ export interface CampWeekView {
   isPublished: boolean;
   displayOrder: number;
   heroMediaSlug: string | null;
+  /** EFFECTIVE window: the week's own value, else the season's. Use for status/display. */
   registrationOpenAt: string | null;
   registrationCloseAt: string | null;
+  /**
+   * The week's OWN stored values (null = inherit from season). Use these to pre-fill edit forms;
+   * pre-filling with the effective value would persist the season's window onto the week.
+   */
+  weekRegistrationOpenAt: string | null;
+  weekRegistrationCloseAt: string | null;
   lastSyncedAt: string | null;
   syncSource: string | null;
   status: CampWeekStatus;
@@ -207,20 +212,21 @@ const mapSeason = (row: {
   name: string;
   year: number | string;
   is_active: boolean | number | string;
-  registration_open_at: string | null;
-  registration_close_at: string | null;
-  created_at: string;
-  updated_at: string;
+  registration_open_at: string | Date | null;
+  registration_close_at: string | Date | null;
+  created_at: string | Date;
+  updated_at: string | Date;
 }): CampSeasonView => ({
   id: row.id,
   slug: row.slug,
   name: row.name,
   year: asInteger(row.year),
   isActive: asBoolean(row.is_active),
-  registrationOpenAt: row.registration_open_at,
-  registrationCloseAt: row.registration_close_at,
-  createdAt: row.created_at,
-  updatedAt: row.updated_at
+  // `pg` returns TIMESTAMPTZ as Date objects; normalize to ISO strings for the view types.
+  registrationOpenAt: toIsoTimestampOrNull(row.registration_open_at),
+  registrationCloseAt: toIsoTimestampOrNull(row.registration_close_at),
+  createdAt: toIsoTimestamp(row.created_at),
+  updatedAt: toIsoTimestamp(row.updated_at)
 });
 
 export async function getCampAdminData(): Promise<CampAdminData> {
@@ -240,10 +246,10 @@ export async function getCampAdminData(): Promise<CampAdminData> {
         name: string;
         year: number | string;
         is_active: boolean | number | string;
-        registration_open_at: string | null;
-        registration_close_at: string | null;
-        created_at: string;
-        updated_at: string;
+        registration_open_at: string | Date | null;
+        registration_close_at: string | Date | null;
+        created_at: string | Date;
+        updated_at: string | Date;
       }>(
         `
           SELECT
@@ -285,12 +291,14 @@ export async function getCampAdminData(): Promise<CampAdminData> {
         is_published: boolean | number | string;
         display_order: number | string;
         hero_media_slug: string | null;
-        registration_open_at_effective: string | null;
-        registration_close_at_effective: string | null;
-        last_synced_at: string | null;
+        registration_open_at: string | Date | null;
+        registration_close_at: string | Date | null;
+        registration_open_at_effective: string | Date | null;
+        registration_close_at_effective: string | Date | null;
+        last_synced_at: string | Date | null;
         sync_source: string | null;
-        created_at: string;
-        updated_at: string;
+        created_at: string | Date;
+        updated_at: string | Date;
       }>(
         `
           SELECT
@@ -318,6 +326,8 @@ export async function getCampAdminData(): Promise<CampAdminData> {
             cw.is_published,
             cw.display_order,
             cw.hero_media_slug,
+            cw.registration_open_at,
+            cw.registration_close_at,
             COALESCE(cw.registration_open_at, cs.registration_open_at) AS registration_open_at_effective,
             COALESCE(cw.registration_close_at, cs.registration_close_at) AS registration_close_at_effective,
             cw.last_synced_at,
@@ -343,7 +353,7 @@ export async function getCampAdminData(): Promise<CampAdminData> {
         after_capacity: number | string | null;
         note: string | null;
         actor_email: string | null;
-        created_at: string;
+        created_at: string | Date;
       }>(
         `
           SELECT
@@ -428,8 +438,8 @@ export async function getCampAdminData(): Promise<CampAdminData> {
       const waitlistEnabled = asBoolean(row.waitlist_enabled, true);
       const limitedThreshold = Math.max(0, asInteger(row.limited_threshold, 4));
       const isPublished = asBoolean(row.is_published, false);
-      const registrationOpenAt = row.registration_open_at_effective;
-      const registrationCloseAt = row.registration_close_at_effective;
+      const registrationOpenAt = toIsoTimestampOrNull(row.registration_open_at_effective);
+      const registrationCloseAt = toIsoTimestampOrNull(row.registration_close_at_effective);
 
       return {
         id: row.id,
@@ -459,7 +469,9 @@ export async function getCampAdminData(): Promise<CampAdminData> {
         heroMediaSlug: row.hero_media_slug,
         registrationOpenAt,
         registrationCloseAt,
-        lastSyncedAt: row.last_synced_at,
+        weekRegistrationOpenAt: toIsoTimestampOrNull(row.registration_open_at),
+        weekRegistrationCloseAt: toIsoTimestampOrNull(row.registration_close_at),
+        lastSyncedAt: toIsoTimestampOrNull(row.last_synced_at),
         syncSource: row.sync_source,
         status: computeWeekStatus({
           isPublished,
@@ -470,8 +482,8 @@ export async function getCampAdminData(): Promise<CampAdminData> {
           registrationCloseAt
         }),
         variants: variantsByWeekId.get(row.id) ?? [],
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
+        createdAt: toIsoTimestamp(row.created_at),
+        updatedAt: toIsoTimestamp(row.updated_at)
       };
     });
 
@@ -489,7 +501,7 @@ export async function getCampAdminData(): Promise<CampAdminData> {
       afterCapacity: row.after_capacity === null ? null : asInteger(row.after_capacity),
       note: row.note,
       actorEmail: row.actor_email,
-      createdAt: row.created_at
+      createdAt: toIsoTimestamp(row.created_at)
     }));
 
     return {
@@ -539,8 +551,8 @@ export async function getCampPromotionSummary(): Promise<CampPromotionSummary> {
       seats_held: number | string;
       waitlist_enabled: boolean | number | string;
       limited_threshold: number | string;
-      registration_open_at_effective: string | null;
-      registration_close_at_effective: string | null;
+      registration_open_at_effective: string | Date | null;
+      registration_close_at_effective: string | Date | null;
       is_published: boolean | number | string;
     }>(
       `
@@ -571,8 +583,8 @@ export async function getCampPromotionSummary(): Promise<CampPromotionSummary> {
       const waitlistEnabled = asBoolean(row.waitlist_enabled, true);
       const limitedThreshold = Math.max(0, asInteger(row.limited_threshold, 4));
       const isPublished = asBoolean(row.is_published, false);
-      const registrationOpenAt = row.registration_open_at_effective;
-      const registrationCloseAt = row.registration_close_at_effective;
+      const registrationOpenAt = toIsoTimestampOrNull(row.registration_open_at_effective);
+      const registrationCloseAt = toIsoTimestampOrNull(row.registration_close_at_effective);
 
       return {
         slug: row.slug,

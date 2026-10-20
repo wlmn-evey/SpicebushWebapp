@@ -11,17 +11,18 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup Node.js 22
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: '22'
         cache: 'npm'
         cache-dependency-path: 'app/package-lock.json'
 
     - name: Install dependencies
-      # --force needed: lockfile contains platform-specific @rollup packages from macOS
+      # --force is a workaround for the lockfile's platform-specific optional packages;
+      # removing it is tracked in issues #42 and #140.
       run: cd app && npm ci --force
 
     - name: Lint (zero warnings)

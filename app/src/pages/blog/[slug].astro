@@ -95,7 +95,7 @@ const bodyHtml = renderPostBody(post.body);
         post.image && (
           <img
             src={post.image}
-            alt={post.imageAlt}
+            alt={post.imageAlt ?? ''}
             class="w-full rounded-lg mb-8"
             loading="eager"
           />

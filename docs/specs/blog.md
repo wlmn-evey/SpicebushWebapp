@@ -32,7 +32,15 @@ intentionally out and why.
 - Links and images are inserted via **accessible in-editor dialogs** (PR C / #114) — focus-trapped
   `role="dialog"` modals with Esc/backdrop close, replacing the old `window.prompt` boxes. The link
   dialog offers an "open in a new tab" option (`target="_blank"`, both enumerated-safe); the image
-  dialog requires alt text. A **live side-by-side preview** renders the body through the same
+  dialog requires alt text meeting the server's quality bar (`isValidImageAlt`). Both dialogs only
+  accept addresses the render-time sanitizer keeps (`normalizeEditorUrl`,
+  `app/src/lib/blog-editor-validation.ts`, built on `STRICT_CONFIG_V2.ALLOWED_URI_REGEXP`): links
+  https/mailto/tel/site-relative, images https/site-relative. `http://…`, `//host…`, and a bare
+  `example.com` are **upgraded to `https://`** with a visible "Will be saved as …" note; anything else
+  is refused with an inline error and the dialog stays open. StarterKit's bundled Link is configured
+  with `defaultProtocol: 'https'` and never autolinks explicit `http://` text (its href would be
+  stripped at render). The dialogs are portaled to `<body>` so their `<form>` is never nested inside
+  the post form. A **live side-by-side preview** renders the body through the same
   `renderBodyHtml` the public page uses, updating as you type.
 - The body is **re-sanitized at every render** through `renderBodyHtml` (DOMPurify `STRICT_CONFIG_V2`,
   `app/src/lib/blog-html.ts`) — sanitize-at-render is the trust boundary, never sanitize-at-write only.
@@ -60,7 +68,7 @@ PR1) — nothing ever read or wrote it.
 | `slug`                         | URL slug, matches `^[a-z0-9-_]{1,100}$`; must NOT match `^\d{4}-\d{2}-\d{2}-` (that prefix shape is reserved for the legacy-redirect namespace); immutable after creation in the admin UI                                                                                                                                                          |
 | `title` (column)               | Post title, ≤ 300 chars. Overrides `data.title` on read (via `toContentEntry`)                                                                                                                                                                                                                                                                     |
 | `status`                       | `'published'` or `'draft'` — the entire draft/published representation. Blog POSTs must carry an **explicit** status; a missing/empty value is a 400, never a silent publish                                                                                                                                                                       |
-| `data.date`                    | `'YYYY-MM-DD'` string — display and sort date                                                                                                                                                                                                                                                                                                      |
+| `data.date`                    | `'YYYY-MM-DD'` string — display and sort date. The editor defaults it to today in **America/New_York** (`schoolDateString`; the server runs in UTC). When the scheduled-publish job publishes a post it overwrites `data.date` with the go-live day (the America/New_York calendar day of `publishedAt`)                                          |
 | `data.author`                  | string, default `'Spicebush Team'`                                                                                                                                                                                                                                                                                                                 |
 | `data.excerpt`                 | string, ≤ 1,000 chars, trimmed                                                                                                                                                                                                                                                                                                                     |
 | `data.body`                    | **HTML** string from the TipTap editor, ≤ 200,000 chars (~200 KB), trimmed of leading/trailing whitespace; **stored as authored — the write path does not sanitize** (`normalizeBlogData` only trims; `validateBlogData` checks length/non-empty/image-alt). Sanitize-at-render is the sole trust boundary: the body is sanitized to safe HTML on every render via `renderPostBody` → `renderBodyHtml` (DOMPurify `STRICT_CONFIG_V2`). Not-yet-converted legacy rows still hold V1 Markdown rendered via the transitional `marked` path — see [Authoring Model](#authoring-model)                                                                                                |
@@ -283,8 +291,9 @@ URL path, with an inline upload widget that POSTs to `/api/media/upload` (FormDa
 it." status in a live region, and offers a "Copy address" affordance plus a "(opens in a new tab)"
 crop link to `/admin/media`. Inline **post-body** images are inserted via the editor's **image
 dialog** (PR C / #114): an accessible modal with an address field, a "Media (opens in a new tab)"
-link to `/admin/media`, and a **required alt-text** field (Insert is disabled until both are filled)
-— no more `window.prompt`. The photo category `'blog'` already exists in `app/src/types/photo.ts`.
+link to `/admin/media`, and a **required alt-text** field (Insert is disabled until the address is
+filled and the description passes `isValidImageAlt`; an address the sanitizer would strip is refused
+inline, `http://` is upgraded to `https://`) — no more `window.prompt`. The photo category `'blog'` already exists in `app/src/types/photo.ts`.
 
 - **New-tab editor links (R2-F11).** The crop/focal link and the in-body-image Media link both
   carry `target="_blank" rel="noopener"` and a visible "(opens in a new tab)" suffix, so the owner
@@ -304,16 +313,39 @@ the initial field values) and re-runs on status `change` / image-URL `input`:
 - **Conditional `required`** — `status=published` ⇒ `required` on excerpt/body/date; a non-empty
   image ⇒ `required` on imageAlt; reversed when the condition clears. Static `required` stays only on
   title + slug.
-- **Native-attribute mirrors** — `minlength="6"` on imageAlt and a `pattern` on the image URL input
-  express the cheap floor checks declaratively.
+- **Native-attribute mirrors** — `minlength="6"` on imageAlt and `pattern` on the slug and image URL
+  inputs express the cheap floor checks declaratively. The pattern strings are the exported
+  constants `SLUG_PATTERN_ATTR` / `IMAGE_URL_PATTERN_ATTR` (`blog-editor-validation.ts`) with `-` and
+  `/` escaped: browsers compile `pattern` with the `v` RegExp flag, where the old unescaped
+  `[a-z0-9-_]+` / `[/\\]` were syntax errors and so were silently ignored (a unit test compiles both
+  under `v`).
+- **Pre-submit server-rule guard** — before the POST the client runs `validateBlogFormSnapshot`
+  (`blog-editor-validation.ts`), which reuses the server's own predicates (`SLUG_REGEX`,
+  `IMAGE_SCHEME_REGEX`, `isValidImageAlt`, `collectHtmlImageAlts`, `isFutureScheduledPublishAt`):
+  editable slug shape / no date prefix, featured-image scheme and description quality (every
+  status), featured-image description presence and **every body image's description** (publishing
+  statuses), and a **scheduled time already in the past**. A failure cancels the submit and shows the
+  message in the form's inline `[data-blog-form-error]` `role="alert"` region (focused + scrolled into
+  view), as does the empty-body guard. Rationale: a server `400` redirects to `/admin/blog?error=…`
+  and **discards every unsaved edit**, so any rule the server enforces should fail here first.
+  (Deferred: a fetch-based submit that keeps the page on a server error.)
 - **Slug-collision block** — the page server-renders the existing slug list into a `data-` attribute;
   on collision the module shows an inline `role="alert"` adjacent to the slug input (mutated only on
   state transition) and calls `setCustomValidity(...)`, which blocks submission and focuses the slug
   field even if the inline warning was never seen.
 
 Native browser validation blocks submission and focuses the first invalid field; the server remains
-the source of truth. The body-image alt-quality bar and the imageAlt filename/generic-word rejection
-are enforced **server-side** at publish (the client does not mirror those).
+the source of truth (the client guard above mirrors the same predicates — it does not replace them).
+
+### Unsaved-changes guard
+
+The editor island (`TipTapEditor.tsx`) arms a `beforeunload` leave-page warning on any body edit
+**or** any `input` event in the owning form (title, slug, excerpt, image, SEO, status…). Submitting
+the form clears it only if the submit is **not cancelled** (`!event.defaultPrevented`, checked one
+macrotask later so every validator has run) — a client-rejected save keeps the author protected. The
+handler uses `preventDefault()` only (the deprecated `returnValue = ''` is gone). AdminLayout's
+loading state disables **every** submit button in the submitted form (the editor has two), labelling
+the pressed one "Saving…".
 
 ### Flash messages
 
@@ -341,11 +373,10 @@ are enforced **server-side** at publish (the client does not mirror those).
   endpoint's `createOnly` insert (`ON CONFLICT … DO NOTHING` → `400`). A genuine collision is
   therefore only possible under concurrent creation of the same slug between page render and submit,
   and the server rejects it.
-- **Body-image alt quality is enforced server-side at publish (R4-F7).** The client module does NOT
-  scan body Markdown for image alt text; a publish with a weak or empty in-body image description is
-  blocked by `validateBlogData` with a `400`. For a single author this surfaces as a publish-time
-  error rather than an inline warning — an accepted residual that keeps the client at faq.astro's
-  complexity class.
+- **Body-image alt quality is enforced server-side at publish AND pre-checked at submit.** (Supersedes
+  R4-F7's server-only choice.) The client's pre-submit guard runs the server's own
+  `collectHtmlImageAlts` + `isValidImageAlt` over the editor HTML once per submit (not per
+  keystroke), because the server's `400` redirect discards every unsaved edit.
 
 ## Admin API
 
@@ -401,7 +432,9 @@ lifecycle.
   must be publish-ready now AND carry a future `data.publishedAt`. Invisible publicly until the
   every-5-min scheduled-publish cron flips it to `published`
   (`netlify/functions/publish-scheduled-blog-posts.ts` → `blog-scheduled-publish.ts`; see
-  `docs/runbooks/scheduled-publish.md`).
+  `docs/runbooks/scheduled-publish.md`). The same `UPDATE` sets `data.date` to the go-live day — the
+  America/New_York calendar day of `publishedAt` (`schoolDateString`) — so a post scheduled days
+  ahead does not go live carrying its draft-creation date.
 - **`archived`** — non-publishing (exempt like a draft) and **reversible**: round-trips back to
   `draft`/`published` through the normal save path (R4-F12), so it is never a one-way trip.
 
@@ -846,7 +879,6 @@ penalized.
 | In-post heading anchors / table of contents / "back to top" fragment links              | Documentation-grade for a low-volume school blog, and the root of an author-controlled-`id` security surface; the renderer emits no ids and DOMPurify strips all author ids |
 | Rich-text / WYSIWYG editor                                                              | A new dependency + a new XSS surface; Markdown + server preview achieves owner confidence within MVP. A V2 candidate only if owners struggle                                |
 | Client-side autosave / restore                                                          | Prevention (client validation) replaces recovery; the residual loss risk is recorded below                                                                                  |
-| Body-image-alt client scanner                                                           | A per-keystroke parallel validation engine with no admin-surface precedent; the server enforces body-image alt quality at publish                                           |
 | Featured-image thumbnail preview in the editor                                          | Additive UI with its own load/error/empty states and a11y; the field is text-box-only, matching the staff/media clone source. A high-value V2 candidate                     |
 | `BlogPosting` JSON-LD structured data                                                   | Per-post meta + OG/Twitter tags cover V1; a V2 candidate                                                                                                                    |
 | Meta-description length capping / bespoke index meta                                    | Search engines truncate gracefully; the `/blog` index meta is owner-tunable via `/admin/seo`                                                                                |
@@ -857,9 +889,11 @@ penalized.
 - **Create-collision concurrency** — with the blocking `setCustomValidity` slug check, the residual
   state-losing `400` is concurrent-only (two admins creating simultaneously, or a slug created after
   the page's server-rendered slug list was emitted).
-- **Single-user body-image-alt publish 400** — an owner who pastes `![](url)` or `![photo](url)` and
-  clicks Publish gets a server `400` (the client does not pre-catch body-image alt quality). The
-  error flash is focused and names the offending image; no saved-draft state is destroyed.
+- **Server-only rejections still discard unsaved edits** — the form is a plain POST whose error path
+  redirects to `/admin/blog?error=…`. The pre-submit guard now mirrors the rules most likely to fire
+  (slug, image scheme/descriptions incl. body images, past schedule time), so the residual `400`s are
+  rules it does not mirror (length caps the inputs' `maxlength` already enforce, concurrent slug
+  creation). A fetch-based submit that keeps the page on error is deferred.
 - **Single top-of-page error flash** — does not name which collapsed form failed (deferred; the rare
   residual errors name the slug or the image). The flash is `role="alert"`, focused once, never
   auto-dismissed.

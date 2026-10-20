@@ -11,6 +11,7 @@ import {
   parseSeoPageOverrides,
   type SeoPageOverride
 } from '@lib/seo-config';
+import { safeRedirectPath } from '@lib/safe-redirect';
 
 const jsonResponse = (payload: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(payload), {
@@ -18,11 +19,7 @@ const jsonResponse = (payload: Record<string, unknown>, status = 200) =>
     headers: { 'Content-Type': 'application/json' }
   });
 
-const parseRedirectPath = (value: unknown): string | null => {
-  if (typeof value !== 'string') return null;
-  if (!value.startsWith('/') || value.startsWith('//')) return null;
-  return value;
-};
+const parseRedirectPath = (value: unknown): string | null => safeRedirectPath(value);
 
 const asString = (value: unknown): string => {
   if (typeof value !== 'string') return '';

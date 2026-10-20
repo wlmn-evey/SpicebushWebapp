@@ -181,4 +181,47 @@ describe('db.content facade', () => {
     expect(setting).toBeNull();
     expect(logErrorMock).toHaveBeenCalledTimes(3);
   });
+  it('does not cache error-path fallbacks, so a DB blip is not pinned for the TTL', async () => {
+    const row = {
+      slug: 'jane',
+      type: 'staff',
+      title: 'Jane',
+      data: {},
+      status: 'published',
+      created_at: '2024-01-01T00:00:00.000Z'
+    };
+    queryRowsMock.mockRejectedValueOnce(new Error('blip')).mockResolvedValueOnce([row]);
+    queryFirstMock.mockRejectedValueOnce(new Error('blip')).mockResolvedValueOnce(row);
+
+    expect(await getCollection('staff')).toEqual([]);
+    expect(await getEntry('staff', 'jane')).toBeNull();
+
+    // Next request retries the DB instead of serving the cached empty/null result.
+    const collection = await getCollection('staff');
+    expect(collection).toHaveLength(1);
+    expect(await getEntry('staff', 'jane')).toMatchObject({ slug: 'jane' });
+    expect(queryRowsMock).toHaveBeenCalledTimes(2);
+    expect(queryFirstMock).toHaveBeenCalledTimes(2);
+
+    // A successful result IS cached.
+    await getCollection('staff');
+    expect(queryRowsMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('serializes a Date updated_at (real pg output) to ISO rather than Date#toString', async () => {
+    queryRowsMock.mockResolvedValueOnce([
+      {
+        slug: 'post',
+        type: 'blog',
+        title: 'Post',
+        data: {},
+        status: 'published',
+        created_at: new Date('2024-01-01T00:00:00.000Z'),
+        updated_at: new Date('2024-01-02T03:04:05.000Z')
+      }
+    ]);
+
+    const [entry] = await getCollection('blog');
+    expect(entry.updatedAt).toBe('2024-01-02T03:04:05.000Z');
+  });
 });

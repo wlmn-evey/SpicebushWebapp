@@ -1,5 +1,7 @@
 import { logError } from '@lib/error-logger';
+import { normalizeSchoolTimestamp } from '@lib/eastern-time';
 import { query, queryRows } from './client';
+import { isoTimestampSql, toDateOnlyOrNull, toIsoTimestampOrNull } from './row-values';
 
 export type AnnouncementSeverity = 'info' | 'reminder' | 'urgent' | 'closure';
 export type AnnouncementPlacement = 'global' | 'homepage' | 'camp' | 'coming-soon';
@@ -91,6 +93,9 @@ const isUuidLike = (value: string): boolean => UUID_PATTERN.test(value);
 const asString = (value: unknown): string => {
   if (typeof value === 'string') return value.trim();
   if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  // `pg` returns DATE/TIMESTAMPTZ as Date objects; never collapse those to '' (that blanked
+  // admin date fields and NULLed starts_at/ends_at on re-save). Queries cast to text as well.
+  if (value instanceof Date) return toIsoTimestampOrNull(value) ?? '';
   return '';
 };
 
@@ -149,13 +154,11 @@ const normalizeIsoDate = (value: unknown): string | null => {
   return normalized;
 };
 
-const normalizeIsoTimestamp = (value: unknown): string | null => {
-  const normalized = asString(value);
-  if (!normalized) return null;
-  const parsed = Date.parse(normalized);
-  if (!Number.isFinite(parsed)) return null;
-  return new Date(parsed).toISOString();
-};
+/**
+ * Admin forms submit `datetime-local` values (zone-less wall-clock). Those mean Eastern time at
+ * the school, not UTC (the runtime zone) — see `@lib/eastern-time`. Zoned ISO strings pass through.
+ */
+const normalizeIsoTimestamp = (value: unknown): string | null => normalizeSchoolTimestamp(value);
 
 const toAnnouncement = (row: Record<string, unknown>): SchoolAnnouncement => ({
   id: asString(row.id),
@@ -166,8 +169,8 @@ const toAnnouncement = (row: Record<string, unknown>): SchoolAnnouncement => ({
   placement: parsePlacement(row.placement),
   ctaLabel: nullableString(row.cta_label),
   ctaUrl: nullableString(row.cta_url),
-  startsAt: nullableString(row.starts_at),
-  endsAt: nullableString(row.ends_at),
+  startsAt: toIsoTimestampOrNull(row.starts_at),
+  endsAt: toIsoTimestampOrNull(row.ends_at),
   isPublished: asBoolean(row.is_published, false),
   createdBy: nullableString(row.created_by),
   createdAt: asString(row.created_at),
@@ -178,8 +181,8 @@ const toScheduleException = (row: Record<string, unknown>): SchoolScheduleExcept
   id: asString(row.id),
   title: asString(row.title),
   reason: nullableString(row.reason),
-  startDate: asString(row.start_date),
-  endDate: asString(row.end_date),
+  startDate: toDateOnlyOrNull(row.start_date) ?? '',
+  endDate: toDateOnlyOrNull(row.end_date) ?? '',
   exceptionType: parseExceptionType(row.exception_type),
   openTimeDecimal: asNumber(row.open_time_decimal),
   closeTimeDecimal: asNumber(row.close_time_decimal),
@@ -273,12 +276,12 @@ export async function getActiveAnnouncements(options?: {
           placement,
           cta_label,
           cta_url,
-          starts_at,
-          ends_at,
+          ${isoTimestampSql('starts_at')} AS starts_at,
+          ${isoTimestampSql('ends_at')} AS ends_at,
           is_published,
           created_by,
-          created_at,
-          updated_at
+          ${isoTimestampSql('created_at')} AS created_at,
+          ${isoTimestampSql('updated_at')} AS updated_at
         FROM school_announcements
         WHERE
           is_published = true
@@ -295,7 +298,7 @@ export async function getActiveAnnouncements(options?: {
             WHEN 'reminder' THEN 2
             ELSE 3
           END,
-          created_at DESC
+          school_announcements.created_at DESC
         LIMIT $3
       `,
       [now.toISOString(), placement, limit]
@@ -323,8 +326,8 @@ export async function getScheduleExceptionsInRange(
           se.id,
           se.title,
           se.reason,
-          se.start_date,
-          se.end_date,
+          se.start_date::text AS start_date,
+          se.end_date::text AS end_date,
           se.exception_type,
           se.open_time_decimal,
           se.close_time_decimal,
@@ -333,8 +336,8 @@ export async function getScheduleExceptionsInRange(
           se.linked_announcement_id,
           se.is_published,
           se.created_by,
-          se.created_at,
-          se.updated_at,
+          ${isoTimestampSql('se.created_at')} AS created_at,
+          ${isoTimestampSql('se.updated_at')} AS updated_at,
           sa.title AS linked_announcement_title
         FROM school_schedule_exceptions se
         LEFT JOIN school_announcements sa
@@ -372,14 +375,14 @@ export async function getAnnouncementAdminData(): Promise<AnnouncementAdminData>
             placement,
             cta_label,
             cta_url,
-            starts_at,
-            ends_at,
+            ${isoTimestampSql('starts_at')} AS starts_at,
+            ${isoTimestampSql('ends_at')} AS ends_at,
             is_published,
             created_by,
-            created_at,
-            updated_at
+            ${isoTimestampSql('created_at')} AS created_at,
+            ${isoTimestampSql('updated_at')} AS updated_at
           FROM school_announcements
-          ORDER BY is_published DESC, created_at DESC
+          ORDER BY is_published DESC, school_announcements.created_at DESC
           LIMIT 200
         `
       ),
@@ -389,8 +392,8 @@ export async function getAnnouncementAdminData(): Promise<AnnouncementAdminData>
             se.id,
             se.title,
             se.reason,
-            se.start_date,
-            se.end_date,
+            se.start_date::text AS start_date,
+            se.end_date::text AS end_date,
             se.exception_type,
             se.open_time_decimal,
             se.close_time_decimal,
@@ -399,8 +402,8 @@ export async function getAnnouncementAdminData(): Promise<AnnouncementAdminData>
             se.linked_announcement_id,
             se.is_published,
             se.created_by,
-            se.created_at,
-            se.updated_at,
+            ${isoTimestampSql('se.created_at')} AS created_at,
+            ${isoTimestampSql('se.updated_at')} AS updated_at,
             sa.title AS linked_announcement_title
           FROM school_schedule_exceptions se
           LEFT JOIN school_announcements sa

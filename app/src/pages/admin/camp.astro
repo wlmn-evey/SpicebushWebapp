@@ -2,6 +2,7 @@
 import AdminLayout from '@layouts/AdminLayout.astro';
 import { db } from '@lib/db';
 import type { CampWeekView } from '@lib/db/camp';
+import { SCHOOL_TIME_ZONE, toEasternDateTimeInputValue } from '@lib/eastern-time';
 
 const [campData, settings] = await Promise.all([
   db.camp.getCampAdminData(),
@@ -42,14 +43,33 @@ const parseCampModeOverride = (value: unknown): 'auto' | 'prep' | 'on' | 'off' =
 };
 
 const formatDate = (value: string): string => {
+  // Bare YYYY-MM-DD (DATE columns) is a calendar day, not an instant: format it as-is in UTC so
+  // it never shifts a day. Timestamps are shown on the school's (Eastern) calendar.
+  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
   const parsed = Date.parse(value);
   if (!Number.isFinite(parsed)) return value;
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
-    year: 'numeric'
+    year: 'numeric',
+    timeZone: isDateOnly ? 'UTC' : SCHOOL_TIME_ZONE
   }).format(new Date(parsed));
 };
+
+const formatDateTime = (value: string): string => {
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) return value;
+  return new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: SCHOOL_TIME_ZONE
+  }).format(new Date(parsed));
+};
+
+// Registration window text inputs: show stored instants as Eastern wall-clock (YYYY-MM-DDTHH:mm).
+// Zone-less input is interpreted as Eastern on save; an explicit offset/Z is still honored.
+const toRegistrationInputValue = (value: string | null): string =>
+  toEasternDateTimeInputValue(value);
 
 const campModeOverride = parseCampModeOverride(settings.camp_mode_override);
 const campModeStartAt = asString(settings.camp_mode_start_at);
@@ -652,7 +672,7 @@ const tabLabel: Record<CampTab, string> = {
                         <input
                           type="text"
                           name="registrationOpenAt"
-                          value={season.registrationOpenAt ?? ''}
+                          value={toRegistrationInputValue(season.registrationOpenAt)}
                           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                         />
                       </label>
@@ -662,7 +682,7 @@ const tabLabel: Record<CampTab, string> = {
                         <input
                           type="text"
                           name="registrationCloseAt"
-                          value={season.registrationCloseAt ?? ''}
+                          value={toRegistrationInputValue(season.registrationCloseAt)}
                           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                         />
                       </label>
@@ -1210,21 +1230,31 @@ const tabLabel: Record<CampTab, string> = {
                           </label>
 
                           <label class="block text-sm font-medium text-earth-brown">
-                            Registration Open At
+                            Registration Open At (blank = use season)
                             <input
                               type="text"
                               name="registrationOpenAt"
-                              value={week.registrationOpenAt ?? ''}
+                              value={toRegistrationInputValue(week.weekRegistrationOpenAt)}
+                              placeholder={
+                                week.registrationOpenAt
+                                  ? `Season: ${toRegistrationInputValue(week.registrationOpenAt)}`
+                                  : ''
+                              }
                               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                             />
                           </label>
 
                           <label class="block text-sm font-medium text-earth-brown">
-                            Registration Close At
+                            Registration Close At (blank = use season)
                             <input
                               type="text"
                               name="registrationCloseAt"
-                              value={week.registrationCloseAt ?? ''}
+                              value={toRegistrationInputValue(week.weekRegistrationCloseAt)}
+                              placeholder={
+                                week.registrationCloseAt
+                                  ? `Season: ${toRegistrationInputValue(week.registrationCloseAt)}`
+                                  : ''
+                              }
                               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                             />
                           </label>
@@ -1397,7 +1427,7 @@ const tabLabel: Record<CampTab, string> = {
                   {campData.recentAdjustments.map(entry => (
                     <tr>
                       <td class="border border-gray-200 px-3 py-2 text-xs text-earth-brown/80">
-                        {entry.createdAt}
+                        {formatDateTime(entry.createdAt)}
                       </td>
                       <td class="border border-gray-200 px-3 py-2">{entry.weekTitle}</td>
                       <td class="border border-gray-200 px-3 py-2">{entry.action}</td>

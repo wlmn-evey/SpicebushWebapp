@@ -11,6 +11,7 @@ import {
   type SeoPageOverride
 } from '@lib/seo-config';
 import { logServerError } from '@lib/server-logger';
+import { safeRedirectPath } from '@lib/safe-redirect';
 
 type GeminiResponsePayload = {
   candidates?: Array<{
@@ -64,11 +65,7 @@ const limitLength = (value: string, max: number): string => {
   return value.slice(0, max).trim();
 };
 
-const parseRedirectPath = (value: unknown): string | null => {
-  if (typeof value !== 'string') return null;
-  if (!value.startsWith('/') || value.startsWith('//')) return null;
-  return value;
-};
+const parseRedirectPath = (value: unknown): string | null => safeRedirectPath(value);
 
 const jsonResponse = (payload: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(payload), {
@@ -83,16 +80,23 @@ const getRuntimeEnvValue = (key: string): string => {
     return runtimeValue.trim();
   }
 
-  const meta = import.meta as unknown;
-  if (meta && typeof meta === 'object' && 'env' in (meta as Record<string, unknown>)) {
-    const candidate = (meta as { env?: unknown }).env;
-    if (candidate && typeof candidate === 'object') {
-      const importEnv = candidate as Record<string, string | undefined>;
-      const importValue = importEnv[key];
-      if (typeof importValue === 'string' && importValue.trim().length > 0) {
-        return importValue.trim();
+  // Aliased on purpose: a direct `import.meta.env` read would let Astro inline this secret into the
+  // server bundle on local builds. In dev, Vite's module runner hands back a proxy that throws on
+  // every read, so treat that as "not set" instead of crashing the request.
+  try {
+    const meta = import.meta as unknown;
+    if (meta && typeof meta === 'object' && 'env' in (meta as Record<string, unknown>)) {
+      const candidate = (meta as { env?: unknown }).env;
+      if (candidate && typeof candidate === 'object') {
+        const importEnv = candidate as Record<string, string | undefined>;
+        const importValue = importEnv[key];
+        if (typeof importValue === 'string' && importValue.trim().length > 0) {
+          return importValue.trim();
+        }
       }
     }
+  } catch {
+    // fall through to "not set"
   }
 
   return '';

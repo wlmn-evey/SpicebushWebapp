@@ -30,7 +30,10 @@ An Auth0 provider abstraction exists as a legacy path but is not active in produ
 | `src/lib/auth/provider.ts` | Auth provider abstraction (`netlify-magic-link` vs `auth0`) |
 | `src/lib/auth/auth0.ts` | Legacy Auth0 provider (login request, code exchange, logout URL) |
 | `src/lib/admin-config.ts` | Admin email/domain allow-list checking |
-| `src/middleware.ts` | Auth enforcement in request pipeline |
+| `src/middleware.ts` | Auth enforcement in request pipeline; stamps baseline security headers |
+| `src/lib/auth/protected-routes.ts` | `PROTECTED_PREFIXES` + decoded/normalized protected-route check |
+| `src/lib/safe-redirect.ts` | Shared same-origin validator for `next` / `redirectTo` values |
+| `src/lib/security-headers.ts` | Baseline security headers applied to every SSR response |
 | `src/pages/auth/sign-in.astro` | Sign-in page with email form (or Auth0 button if enabled) |
 | `src/pages/auth/login.astro` | Magic link verification endpoint (consumes token, sets cookie) |
 | `src/pages/auth/logout.astro` | Logout: revokes session, deletes cookie, redirects |
@@ -81,8 +84,18 @@ These route prefixes require a valid admin session:
 - `/api/cms` (and all sub-paths)
 - `/api/media/upload`
 - `/api/storage/stats`
+- `/api/email/send` (also handler-enforced; added to the middleware list for defense in depth, #31)
+- `/api/test-email` (same)
 
 Route matching uses exact prefix comparison: a pathname must equal the prefix or start with `{prefix}/`.
+
+The comparison runs on a **normalized** pathname, not the raw `url.pathname`, because the
+Astro router matches the decoded path (`GET /%61dmin/...` used to render an admin page with
+no session). `normalizePathForAuth()` percent-decodes with `decodeURIComponent` (so `%2F`
+counts as `/`), repeats for double-encoding (up to 3 passes), collapses repeated slashes and
+lowercases. A raw path that cannot be decoded (e.g. `/%E0%A4%A`) or never stabilises is
+treated as **protected** (fail closed). Astro 5.18.2+ also decodes `context.url` before
+middleware runs; the normalization is defense in depth.
 
 ## Middleware Behavior
 
@@ -130,7 +143,8 @@ In non-production environments (`NODE_ENV !== 'production'`):
 - **Rate limiting**: Per-email rate limit of 5 magic-link requests within a 5-minute window, enforced by counting rows in `admin_login_tokens`.
 - **Transactional token consumption**: Token validation and session creation happen within a single database transaction to prevent race conditions.
 - **Session revocation on allow-list change**: If an admin's email is removed from the allow-list, their existing session is revoked on the next validation attempt.
-- **Open redirect prevention**: The `next` parameter is validated to ensure it starts with `/` and does not start with `//`.
+- **Open redirect prevention**: Every user-supplied redirect target (`next` on sign-in/login/Auth0 start+callback/request-link and the magic-link email, `redirectTo` on request-link, contact submit and all admin form endpoints, `redirect` on preview-mode) goes through `safeRedirectPath()` in `src/lib/safe-redirect.ts`. It rejects non-strings, any control character (`\x00`–`\x1f`, `\x7f`; blocks `/<TAB>/evil.com` and header splitting), anything not matching `^\/(?![/\\])` (blocks `//evil.com` and `/\evil.com`), and anything that does not resolve to the same origin. Percent-encoded forms (`/%2F%2Fevil.com`) are allowed because browsers keep them on-site as literal path segments. Rejected values fall back to the route's default (`/admin`, `/auth/sign-in`, `/`, or no redirect).
+- **Security headers on SSR responses**: `netlify.toml` `[[headers]]` only reach CDN-served static files, so the middleware adds `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()` and `Strict-Transport-Security: max-age=31536000; includeSubDomains` to every response that doesn't already set them (route-specific headers such as the blob route's CSP are never overwritten). No CSP is applied globally.
 
 ### Known Audit Findings
 

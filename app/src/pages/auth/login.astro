@@ -4,6 +4,7 @@ import {
   ADMIN_SESSION_MAX_AGE_SECONDS,
   consumeAdminMagicLink
 } from '@lib/auth/admin-session';
+import { safeRedirectPathOr } from '@lib/safe-redirect';
 
 const token = Astro.url.searchParams.get('token');
 const nextPathParam = Astro.url.searchParams.get('next');
@@ -35,10 +36,7 @@ Astro.cookies.set(ADMIN_SESSION_COOKIE_NAME, session.sessionToken, {
   maxAge: ADMIN_SESSION_MAX_AGE_SECONDS
 });
 
-const safeNextPath =
-  nextPathParam && nextPathParam.startsWith('/') && !nextPathParam.startsWith('//')
-    ? nextPathParam
-    : '/admin';
+const safeNextPath = safeRedirectPathOr(nextPathParam, '/admin');
 
 if (safeNextPath === '/admin') {
   return Astro.redirect('/admin');

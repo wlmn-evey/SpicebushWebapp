@@ -36,4 +36,3 @@ npm run test -- --run
 ## Related Docs
 - `docs/development/getting-started.md`
 - `app/README.md`
-- `docs/refactor-master-plan.md`

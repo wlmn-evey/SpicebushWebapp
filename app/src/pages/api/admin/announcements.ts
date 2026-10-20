@@ -8,6 +8,7 @@ import {
   sendAnnouncementEmailNow
 } from '@lib/announcement-email';
 import { db } from '@lib/db';
+import { safeRedirectPath } from '@lib/safe-redirect';
 
 const jsonResponse = (payload: unknown, status = 200) =>
   new Response(JSON.stringify(payload), {
@@ -15,11 +16,7 @@ const jsonResponse = (payload: unknown, status = 200) =>
     headers: { 'Content-Type': 'application/json' }
   });
 
-const parseRedirectPath = (value: unknown): string | null => {
-  if (typeof value !== 'string') return null;
-  if (!value.startsWith('/') || value.startsWith('//')) return null;
-  return value;
-};
+const parseRedirectPath = (value: unknown): string | null => safeRedirectPath(value);
 
 const asString = (value: unknown): string => {
   if (typeof value !== 'string') return '';
@@ -221,11 +218,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       message: asString(body.message),
       severity: asString(body.severity) as 'info' | 'reminder' | 'urgent' | 'closure' | undefined,
       placement: asString(body.placement) as
-        | 'global'
-        | 'homepage'
-        | 'camp'
-        | 'coming-soon'
-        | undefined,
+        'global' | 'homepage' | 'camp' | 'coming-soon' | undefined,
       audience: asString(body.audience),
       ctaLabel: asString(body.ctaLabel) || null,
       ctaUrl: asString(body.ctaUrl) || null,
@@ -253,11 +246,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       message: asString(body.message),
       severity: asString(body.severity) as 'info' | 'reminder' | 'urgent' | 'closure' | undefined,
       placement: asString(body.placement) as
-        | 'global'
-        | 'homepage'
-        | 'camp'
-        | 'coming-soon'
-        | undefined,
+        'global' | 'homepage' | 'camp' | 'coming-soon' | undefined,
       audience: asString(body.audience),
       ctaLabel: asString(body.ctaLabel) || null,
       ctaUrl: asString(body.ctaUrl) || null,

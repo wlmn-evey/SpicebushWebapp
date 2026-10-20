@@ -51,6 +51,10 @@ const extendedCareUntil = toDisplayString(
 );
 const phoneDigits = phone.replace(/[^0-9]/g, '');
 const tourLink = await getTourLink();
+// Admins can point the tour CTA at an external scheduler; open those in a new tab.
+const tourLinkIsExternal = /^https?:\/\//.test(tourLink);
+const tourLinkTarget = tourLinkIsExternal ? '_blank' : undefined;
+const tourLinkRel = tourLinkIsExternal ? 'noopener noreferrer' : undefined;
 
 let settings: Record<string, unknown> = {};
 try {
@@ -248,6 +252,8 @@ const weekdayHours = {
           </a>
           <a
             href={tourLink}
+            target={tourLinkTarget}
+            rel={tourLinkRel}
             class="bg-sunlight-gold hover:bg-orange-600 text-white px-4 xl:px-5 py-2 xl:py-2.5 rounded-lg font-semibold text-sm xl:text-base transition-colors focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 whitespace-nowrap"
             aria-label="Schedule a tour"
             data-analytics-event="tour_click"
@@ -342,7 +348,9 @@ const weekdayHours = {
             Calculate Tuition
           </a>
           <a
-            href="/admissions"
+            href={tourLink}
+            target={tourLinkTarget}
+            rel={tourLinkRel}
             class="w-full bg-sunlight-gold hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 text-center block text-base tracking-wide"
             data-analytics-event="tour_click"
             data-analytics-label="header-schedule-tour-mobile"

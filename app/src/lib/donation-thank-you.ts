@@ -1,5 +1,11 @@
 import { db } from '@lib/db';
 import { query, queryFirst, queryRows } from '@lib/db/client';
+import { SCHOOL_TIME_ZONE, normalizeSchoolTimestamp } from '@lib/eastern-time';
+import {
+  buildAbandonedJobSweepSql,
+  buildClaimableJobsWhereSql,
+  jobRetryParams
+} from '@lib/email-job-retry';
 import { emailService } from '@lib/email-service';
 import {
   buildSchoolContactFooterHtml,
@@ -384,7 +390,7 @@ const toEventSummary = (row: DonationEventRow): DonationEventSummary => ({
   donationKind: parseDonationKind(row.donation_kind),
   eventCreatedAt: asString(row.event_created_at),
   thankYouEmailStatus: parseEventEmailStatus(row.thank_you_email_status),
-  thankYouEmailSentAt: row.thank_you_email_sent_at,
+  thankYouEmailSentAt: asString(row.thank_you_email_sent_at) || null,
   thankYouEmailError: row.thank_you_email_error,
   createdAt: asString(row.created_at)
 });
@@ -403,7 +409,7 @@ const toJobSummary = (row: DonationEmailJobRow): DonationEmailJobSummary => ({
   scheduledFor: asString(row.scheduled_for),
   status: parseJobStatus(row.status),
   attemptCount: typeof row.attempt_count === 'number' ? row.attempt_count : 0,
-  sentAt: row.sent_at,
+  sentAt: asString(row.sent_at) || null,
   lastError: row.last_error,
   createdBy: row.created_by,
   createdAt: asString(row.created_at)
@@ -505,7 +511,8 @@ const buildDonationEmail = (input: {
   const firstName = firstNameFrom(donorName);
   const amount = formatCurrency(input.event.amountCents, input.event.currency);
   const donationDate = new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'long'
+    dateStyle: 'long',
+    timeZone: SCHOOL_TIME_ZONE
   }).format(new Date(input.event.eventCreatedAt));
   const frequencyLabel =
     input.event.donationKind === 'one-time'
@@ -573,7 +580,8 @@ const buildDonationNotificationEmail = (input: {
   const amount = formatCurrency(input.event.amountCents, input.event.currency);
   const donationDate = new Intl.DateTimeFormat('en-US', {
     dateStyle: 'long',
-    timeStyle: 'short'
+    timeStyle: 'short',
+    timeZone: SCHOOL_TIME_ZONE
   }).format(new Date(input.event.eventCreatedAt));
   const donationType =
     input.event.donationKind === 'one-time'
@@ -1079,11 +1087,9 @@ const parseStripeDonationEvent = (
   return { ignore: 'unsupported_event_type' };
 };
 
-const parseDateTimeInput = (value: string): string | null => {
-  const parsed = Date.parse(value);
-  if (!Number.isFinite(parsed)) return null;
-  return new Date(parsed).toISOString();
-};
+// Admin forms submit zone-less datetime-local values meaning Eastern time at the school;
+// zoned ISO strings (e.g. computed defaults) pass through unchanged.
+const parseDateTimeInput = (value: string): string | null => normalizeSchoolTimestamp(value);
 
 const markJobResult = async (input: {
   jobId: string;
@@ -1107,13 +1113,21 @@ const markJobResult = async (input: {
 
 const claimDueJobs = async (limit: number): Promise<DonationEmailJobSummary[]> => {
   const boundedLimit = Math.max(1, Math.min(limit, 100));
+  const retryParams = jobRetryParams();
+
+  // Retire abandoned `processing` rows that are out of attempts/window (see email-job-retry.ts).
+  await query(buildAbandonedJobSweepSql('donation_email_jobs'), retryParams);
+
   const rows = await queryRows<DonationEmailJobRow>(
     `
       WITH due AS (
         SELECT id
         FROM donation_email_jobs
-        WHERE status = 'scheduled'
-          AND scheduled_for <= NOW()
+        WHERE ${buildClaimableJobsWhereSql({
+          maxAttemptsParam: '$2',
+          staleMinutesParam: '$3',
+          retryWindowHoursParam: '$4'
+        })}
         ORDER BY scheduled_for ASC
         LIMIT $1
         FOR UPDATE SKIP LOCKED
@@ -1175,7 +1189,7 @@ const claimDueJobs = async (limit: number): Promise<DonationEmailJobSummary[]> =
           LIMIT 1
         ) AS currency
     `,
-    [boundedLimit]
+    [boundedLimit, ...retryParams]
   );
 
   return rows.map(toJobSummary);
@@ -1529,30 +1543,42 @@ export const processDueDonationEmailJobs = async (
 
   for (const job of claimedJobs) {
     processed += 1;
-    const sendResult = await sendDonationThankYouNow({
-      eventId: job.donationEventId,
-      templateSelection: job.templateKey,
-      createdBy: job.createdBy
-    });
+    try {
+      const sendResult = await sendDonationThankYouNow({
+        eventId: job.donationEventId,
+        templateSelection: job.templateKey,
+        createdBy: job.createdBy
+      });
 
-    if (sendResult.success) {
-      sent += 1;
+      if (sendResult.success) {
+        sent += 1;
+        await markJobResult({
+          jobId: job.id,
+          status: 'sent',
+          sentAt: new Date().toISOString(),
+          lastError: null
+        });
+        continue;
+      }
+
+      failed += 1;
       await markJobResult({
         jobId: job.id,
-        status: 'sent',
-        sentAt: new Date().toISOString(),
-        lastError: null
+        status: 'failed',
+        sentAt: null,
+        lastError: sendResult.error || 'Failed sending donor thank-you email'
       });
-      continue;
+    } catch (error) {
+      // One job throwing must not strand the rest of the batch in `processing`.
+      failed += 1;
+      const message = error instanceof Error ? error.message : String(error);
+      logServerWarn('Donation email job threw while processing', { jobId: job.id, error: message });
+      try {
+        await markJobResult({ jobId: job.id, status: 'failed', sentAt: null, lastError: message });
+      } catch {
+        // Leave it in `processing`; the stale-job reclaim will retry it.
+      }
     }
-
-    failed += 1;
-    await markJobResult({
-      jobId: job.id,
-      status: 'failed',
-      sentAt: null,
-      lastError: sendResult.error || 'Failed sending donor thank-you email'
-    });
   }
 
   return {

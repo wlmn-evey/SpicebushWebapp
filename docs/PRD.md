@@ -22,7 +22,7 @@ The Spicebush Montessori website is the public-facing web presence for Spicebush
 - Use the tuition calculator to estimate costs
 - Submit contact forms and tour requests
 - Access summer camp information and enrollment links
-- Make donations via external link
+- Make one-time donations on-site via Stripe Checkout (`/donate`)
 - Start enrollment via external link (Transparent Classroom)
 
 ### School Administrators (Authenticated)
@@ -93,9 +93,12 @@ The Spicebush Montessori website is the public-facing web presence for Spicebush
 
 #### Donations & Enrollment
 
-- External link placeholders managed via admin settings
-- Currently redirect to `/contact` if external links are not yet configured
-- Intended to link to external donation platform and Transparent Classroom enrollment
+- **Donations are live on-site:** `/donate` starts a Stripe Checkout session (`/api/donations/checkout`);
+  the `/api/webhooks/stripe` webhook records the donation, and thank-you emails are queued and sent by
+  the `process-donation-email-jobs` scheduled function. Admins view records at `/admin/donations`.
+- `donation_external_link` (admin settings) is an optional backup portal used when Stripe is not configured
+- Enrollment still uses an external link (Transparent Classroom); `/enrollment` redirects to `/contact`
+  until that link is configured
 
 #### Coming-Soon Mode
 
@@ -177,7 +180,7 @@ When camp promotions are enabled, promotional content appears on: announcement b
 These features are explicitly deferred and not part of active development:
 
 - **Newsletter / mailing list capture** — removed from active scope
-- **Stripe / payment processing** — deferred; donation and enrollment use external links
+- **Tuition / enrollment payments** — not handled on-site (Stripe is used only for donations)
 - **On-site enrollment checkout** — Transparent Classroom is the system of record
 
 **Blog scope shipped in V1** (previously out of scope): a DB-backed `/blog` index plus

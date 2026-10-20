@@ -3,25 +3,18 @@ import { requestAdminMagicLink } from '@lib/auth/admin-session';
 import { isAllowedAdminLoginEmail } from '@lib/admin-config';
 import { isAuth0Provider } from '@lib/auth/provider';
 import { logServerError } from '@lib/server-logger';
+import { safeRedirectPathOr } from '@lib/safe-redirect';
 
 const DEFAULT_REDIRECT = '/auth/sign-in';
 const SUCCESS_NOTICE = 'check-email';
 const ERROR_NOTICE = 'request-failed';
 const DOMAIN_NOTICE = 'invalid-domain';
 
-const parseRedirectPath = (value: FormDataEntryValue | string | null | undefined): string => {
-  if (typeof value !== 'string') return DEFAULT_REDIRECT;
-  if (!value.startsWith('/')) return DEFAULT_REDIRECT;
-  if (value.startsWith('//')) return DEFAULT_REDIRECT;
-  return value;
-};
+const parseRedirectPath = (value: FormDataEntryValue | string | null | undefined): string =>
+  safeRedirectPathOr(value, DEFAULT_REDIRECT);
 
-const parseNextPath = (value: FormDataEntryValue | string | null | undefined): string => {
-  if (typeof value !== 'string') return '/admin';
-  if (!value.startsWith('/')) return '/admin';
-  if (value.startsWith('//')) return '/admin';
-  return value;
-};
+const parseNextPath = (value: FormDataEntryValue | string | null | undefined): string =>
+  safeRedirectPathOr(value, '/admin');
 
 const appendPathParam = (path: string, key: string, value: string): string => {
   const url = new URL(path, 'http://localhost');

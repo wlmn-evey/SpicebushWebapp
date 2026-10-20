@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
+import { safeRedirectPathOr } from '@lib/safe-redirect';
 
 export const AUTH0_STATE_COOKIE_NAME = 'sbms-auth0-state';
 export const AUTH0_NONCE_COOKIE_NAME = 'sbms-auth0-nonce';
@@ -25,14 +26,8 @@ const normalizeDomain = (domain: string): string =>
     .replace(/^https?:\/\//i, '')
     .replace(/\/$/, '');
 
-const normalizeInternalPath = (value: string | null | undefined): string => {
-  if (!value) return DEFAULT_AFTER_LOGIN_PATH;
-  const trimmed = value.trim();
-  if (!trimmed.startsWith('/') || trimmed.startsWith('//')) {
-    return DEFAULT_AFTER_LOGIN_PATH;
-  }
-  return trimmed;
-};
+const normalizeInternalPath = (value: string | null | undefined): string =>
+  safeRedirectPathOr(value?.trim(), DEFAULT_AFTER_LOGIN_PATH);
 
 const getSiteOrigin = (requestUrl?: string): string => {
   if (requestUrl) {

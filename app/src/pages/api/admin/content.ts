@@ -3,6 +3,7 @@ import { checkAdminAuth } from '@lib/admin-auth-check';
 import { db } from '@lib/db';
 import { query } from '@lib/db/client';
 import { normalizeBlogData, validateBlogData } from '@lib/blog-content';
+import { safeRedirectPath } from '@lib/safe-redirect';
 
 const ALLOWED_COLLECTIONS = new Set([
   'hours',
@@ -149,16 +150,9 @@ const parseJsonObject = (value: string): Record<string, unknown> | null => {
   }
 };
 
-const parseRedirectPath = (value: unknown): string | null => {
-  if (typeof value !== 'string') return null;
-  // Reject any control character (CR/LF included) so a redirectTo can never carry a
-  // header-splitting payload regardless of which response branch sets the Location header
-  // (defense-in-depth — the success branch sets Location directly, unnormalized). R2-F1.
-  // eslint-disable-next-line no-control-regex -- intentionally matching control chars to reject them
-  if (/[\x00-\x1f]/.test(value)) return null;
-  // Reject backslash-leading paths (`/\evil.com`) that browsers resolve off-site as `//evil.com`.
-  return /^\/(?![/\\])/.test(value) ? value : null;
-};
+// Shared validator rejects control chars (CR/LF header splitting, R2-F1), `//` and
+// backslash-leading paths (`/\evil.com`) that browsers resolve off-site.
+const parseRedirectPath = (value: unknown): string | null => safeRedirectPath(value);
 
 const parseBody = async (request: Request): Promise<ContentPayload | null> => {
   const contentType = request.headers.get('content-type') ?? '';

@@ -7,12 +7,16 @@
  * body; the server re-sanitizes via `renderBodyHtml` at render — render-time
  * sanitization is the trust boundary. Links/images are inserted via accessible in-editor dialogs
  * (no browser prompts), and a live side-by-side preview renders through the SAME `renderBodyHtml`
- * the public page uses.
+ * the public page uses. Both dialogs only accept addresses the sanitizer keeps (https:, mailto:,
+ * tel:, site-relative), upgrading `http://` / bare `example.com` to `https://` with a visible note —
+ * an `http:` link or image would otherwise be stripped silently at render.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import { buildBlogEditorExtensions, BRAND_TEXT_COLORS } from '@lib/blog-editor-extensions';
 import { renderBodyHtml } from '@lib/blog-html';
+import { isValidImageAlt, normalizeEditorUrl } from '@lib/blog-editor-validation';
 import '@styles/blog-editor.css';
 
 type Props = {
@@ -67,7 +71,10 @@ type EditorDialogProps = {
 };
 
 /** Accessible modal: role=dialog + aria-modal, autofocus the first field, Esc/backdrop close, a
- *  Tab focus-trap, and focus returned to the trigger on close. Replaces window.prompt (PR C). */
+ *  Tab focus-trap, and focus returned to the trigger on close. Replaces window.prompt (PR C).
+ *  Portaled to <body>: the dialogs contain their own <form>, and the island sits inside the post's
+ *  <form> — a nested form is invalid HTML and its submit would bubble into the post form's
+ *  listeners (validators, loading state, the dirty-flag reset). */
 function EditorDialog({ title, onClose, children }: EditorDialogProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
 
@@ -110,7 +117,7 @@ function EditorDialog({ title, onClose, children }: EditorDialogProps) {
     };
   }, [onClose]);
 
-  return (
+  return createPortal(
     <div
       role="presentation"
       onMouseDown={event => {
@@ -128,7 +135,8 @@ function EditorDialog({ title, onClose, children }: EditorDialogProps) {
         <h2 className="mb-3 text-base font-semibold text-earth-brown">{title}</h2>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -140,16 +148,48 @@ type LinkDialogProps = {
   onClose: () => void;
 };
 
+/** Inline note/error under a dialog's address field: the https upgrade note, or why it's refused. */
+function UrlFeedback({ id, result, showError }: UrlFeedbackProps) {
+  if (result && result.ok && result.note) {
+    return (
+      <span id={id} className="mt-1 block text-xs text-forest-canopy">
+        {result.note}
+      </span>
+    );
+  }
+  if (result && !result.ok && showError) {
+    return (
+      <span id={id} role="alert" className="mt-1 block text-xs font-medium text-red-700">
+        {result.error}
+      </span>
+    );
+  }
+  return null;
+}
+
+type UrlFeedbackProps = {
+  id: string;
+  result: ReturnType<typeof normalizeEditorUrl> | null;
+  showError: boolean;
+};
+
 function LinkDialog({ initialUrl, initialNewTab, onSubmit, onRemove, onClose }: LinkDialogProps) {
   const [url, setUrl] = useState(initialUrl);
   const [newTab, setNewTab] = useState(initialNewTab);
+  const [attempted, setAttempted] = useState(false);
+  // Empty means "remove the link" (handled by the caller), so only a non-empty value is checked.
+  const result = url.trim() === '' ? null : normalizeEditorUrl(url, 'link');
   return (
     <EditorDialog title={initialUrl ? 'Edit link' : 'Add link'} onClose={onClose}>
       <form
         className="space-y-3"
         onSubmit={event => {
           event.preventDefault();
-          onSubmit(url, newTab);
+          if (result && !result.ok) {
+            setAttempted(true);
+            return;
+          }
+          onSubmit(result ? result.url : '', newTab);
         }}
       >
         <label className="block text-sm font-medium">
@@ -159,8 +199,11 @@ function LinkDialog({ initialUrl, initialNewTab, onSubmit, onRemove, onClose }: 
             value={url}
             onChange={event => setUrl(event.target.value)}
             placeholder="https://… , mailto:… , tel:… , or /page"
+            aria-invalid={attempted && result !== null && !result.ok}
+            aria-describedby="blog-link-url-feedback"
             className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
           />
+          <UrlFeedback id="blog-link-url-feedback" result={result} showError={attempted} />
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input
@@ -207,14 +250,23 @@ type ImageDialogProps = {
 function ImageDialog({ onSubmit, onClose }: ImageDialogProps) {
   const [url, setUrl] = useState('');
   const [alt, setAlt] = useState('');
-  const canInsert = url.trim() !== '' && alt.trim().length >= 6;
+  const [attempted, setAttempted] = useState(false);
+  const result = url.trim() === '' ? null : normalizeEditorUrl(url, 'image');
+  // Same alt-quality bar the server applies at publish (isValidImageAlt), so an inserted image can
+  // never be the reason a publish is rejected.
+  const canInsert = url.trim() !== '' && isValidImageAlt(alt.trim());
   return (
     <EditorDialog title="Insert image" onClose={onClose}>
       <form
         className="space-y-3"
         onSubmit={event => {
           event.preventDefault();
-          if (canInsert) onSubmit(url, alt);
+          if (!canInsert) return;
+          if (!result || !result.ok) {
+            setAttempted(true);
+            return;
+          }
+          onSubmit(result.url, alt);
         }}
       >
         <label className="block text-sm font-medium">
@@ -224,8 +276,11 @@ function ImageDialog({ onSubmit, onClose }: ImageDialogProps) {
             value={url}
             onChange={event => setUrl(event.target.value)}
             placeholder="/media/… or https://…"
+            aria-invalid={attempted && result !== null && !result.ok}
+            aria-describedby="blog-image-url-feedback"
             className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
           />
+          <UrlFeedback id="blog-image-url-feedback" result={result} showError={attempted} />
         </label>
         <p className="text-xs text-earth-brown/70">
           Upload images at{' '}
@@ -248,7 +303,8 @@ function ImageDialog({ onSubmit, onClose }: ImageDialogProps) {
             className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
           />
           <span className="mt-1 block text-xs text-earth-brown/70">
-            Required — describe what's in the picture (at least 6 characters).
+            Required — describe what's in the picture (at least 6 characters, not a file name or
+            just &ldquo;photo&rdquo;).
           </span>
         </label>
         <div className="flex items-center justify-end gap-2 pt-1">
@@ -332,21 +388,39 @@ export default function TipTapEditor({ initialHtml = '', fieldName = 'bodyRaw' }
   useEffect(() => {
     const handler = (event: BeforeUnloadEvent) => {
       if (!isDirty) return;
+      // preventDefault() alone triggers the browser's leave-page prompt (the legacy
+      // `returnValue = ''` assignment is deprecated and no longer needed).
       event.preventDefault();
-      event.returnValue = '';
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);
 
-  // Submitting the owning form is a save, not a navigation-away — clear the dirty flag so the
-  // beforeunload guard does not fire on the redirect that follows a successful POST.
+  // Owning-form wiring:
+  // - `input` anywhere in the form (title, excerpt, slug, image, SEO, status…) marks the post dirty,
+  //   so the leave-page warning covers every field, not only body edits.
+  // - Submitting the form is a save, not a navigation-away — clear the dirty flag so the guard does
+  //   not fire on the redirect after the POST. But ONLY once the submit actually proceeds: the
+  //   client validators (blog-admin-client.ts) cancel invalid submits with preventDefault, and the
+  //   author must stay protected then. Deferred one macrotask (like AdminLayout's loading state) so
+  //   every other submit listener has run, whatever the registration order. Submits bubbling up
+  //   from the nested link/image dialog <form>s are not saves and are ignored.
   useEffect(() => {
     const form = hiddenRef.current?.form ?? null;
     if (!form) return;
-    const onSubmit = () => setIsDirty(false);
+    const onInput = () => setIsDirty(true);
+    const onSubmit = (event: Event) => {
+      if (event.target !== form) return;
+      setTimeout(() => {
+        if (!event.defaultPrevented) setIsDirty(false);
+      }, 0);
+    };
+    form.addEventListener('input', onInput);
     form.addEventListener('submit', onSubmit);
-    return () => form.removeEventListener('submit', onSubmit);
+    return () => {
+      form.removeEventListener('input', onInput);
+      form.removeEventListener('submit', onSubmit);
+    };
   }, [editor]);
 
   useEffect(() => {
@@ -376,6 +450,7 @@ export default function TipTapEditor({ initialHtml = '', fieldName = 'bodyRaw' }
   const applyLink = useCallback(
     (url: string, newTab: boolean) => {
       if (!editor) return;
+      // `url` arrives already normalized by LinkDialog (sanitizer-safe, https-upgraded) or ''.
       const trimmed = url.trim();
       if (trimmed === '') {
         editor.chain().focus().extendMarkRange('link').unsetLink().run();

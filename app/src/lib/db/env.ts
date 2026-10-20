@@ -1,33 +1,35 @@
 import { logError } from '@lib/error-logger';
 
-type EnvRecord = Record<string, string | undefined>;
+type DbEnvKey = 'NETLIFY_DATABASE_URL' | 'DATABASE_URL';
 
-function readImportMetaEnv(): EnvRecord {
-  try {
-    const meta = import.meta as unknown;
-    if (meta && typeof meta === 'object' && 'env' in (meta as Record<string, unknown>)) {
-      const candidate = (meta as { env?: unknown }).env;
-      if (candidate && typeof candidate === 'object') {
-        return candidate as EnvRecord;
-      }
+/**
+ * Runtime secrets come from `process.env`. Astro inlines `import.meta.env.NAME` values at build
+ * time, and Vite loads `.env` files into it, so an ungated read would bake the build machine's
+ * database URL into the SSR bundle (local `npm run build` with `.env.local` present, then
+ * `netlify deploy --dir=app/dist`). `import.meta.env.DEV` is statically false in production builds,
+ * so these static reads are compiled out there; in `astro dev` they expose `.env` values, which
+ * Vite does not copy into `process.env`. Static property access only: Vite's dev module runner
+ * rejects dynamic `import.meta.env[name]` access.
+ */
+const devImportMetaEnv: Partial<Record<DbEnvKey, string | undefined>> = import.meta.env.DEV
+  ? {
+      NETLIFY_DATABASE_URL: import.meta.env.NETLIFY_DATABASE_URL,
+      DATABASE_URL: import.meta.env.DATABASE_URL
     }
-  } catch {
-    // ignore - fall back to process.env
-  }
-  return {};
-}
+  : {};
 
-const importMetaEnv: EnvRecord = readImportMetaEnv();
+function readProcessEnv(key: DbEnvKey): string | undefined {
+  return typeof process !== 'undefined' ? process.env?.[key] : undefined;
+}
 
 const envCache = new Map<string, string>();
 
-function readEnv(key: string, { required = false }: { required?: boolean } = {}): string {
+function readEnv(key: DbEnvKey, { required = false }: { required?: boolean } = {}): string {
   if (envCache.has(key)) {
     return envCache.get(key) as string;
   }
 
-  const value =
-    importMetaEnv[key] ?? (typeof process !== 'undefined' ? process.env?.[key] : undefined);
+  const value = readProcessEnv(key) || devImportMetaEnv[key];
 
   if (!value) {
     if (required) {

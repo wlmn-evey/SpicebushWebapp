@@ -93,13 +93,31 @@ Computed by `computeWeekStatus()` in `app/src/lib/db/camp.ts`. Status precedence
 | Status | Condition |
 |--------|-----------|
 | `draft` | `is_published = false` (never shown to public) |
-| `closed` | Current time is outside the week's `registration_open_at` / `registration_close_at` window |
+| `closed` | Current time is outside the week's **effective** registration window (see below) |
 | `waitlist` | `available <= 0` AND `waitlist_enabled = true` |
 | `full` | `available <= 0` AND `waitlist_enabled = false` |
 | `limited` | `available > 0` AND `available <= limited_threshold` |
 | `open` | `available > 0` AND above threshold |
 
 The `limited_threshold` defaults to 4 when creating a week (set in the admin API).
+
+**Effective registration window (week-then-season fallback).** Each bound is resolved
+independently: `COALESCE(camp_weeks.registration_open_at, camp_seasons.registration_open_at)` and
+likewise for `registration_close_at`. A week with a NULL bound inherits the season's value; a
+week with its own value overrides it. A bound that is NULL on both is open-ended. `CampWeekView`
+exposes both forms:
+
+- `registrationOpenAt` / `registrationCloseAt` — the effective (fallback-resolved) values, used for
+  status and display.
+- `weekRegistrationOpenAt` / `weekRegistrationCloseAt` — the week's own stored values (NULL =
+  inherit). The admin week edit form pre-fills from these, so saving a week without touching the
+  window keeps it NULL/inherit instead of copying the season's window onto the week (which would
+  freeze it against later season edits). Clearing the field returns the week to inheriting.
+
+**Time zone.** Registration timestamps are stored as UTC `TIMESTAMPTZ` and returned as ISO strings.
+Admin text inputs display them as Eastern wall-clock time (`YYYY-MM-DDTHH:mm`); on save, a
+zone-less value is interpreted as America/New_York (DST-aware, `app/src/lib/eastern-time.ts`),
+while a value with an explicit `Z`/offset is stored as that exact instant.
 
 Type: `CampWeekStatus = 'draft' | 'open' | 'limited' | 'full' | 'waitlist' | 'closed'`
 
@@ -124,7 +142,7 @@ Weekly seat pools with capacity tracking. Key fields:
 - `enrollment_url`, `waitlist_url` — external action URLs
 - `is_published`, `display_order` — visibility and ordering
 - `hero_media_slug` — optional media reference
-- `registration_open_at`, `registration_close_at` — per-week registration window
+- `registration_open_at`, `registration_close_at` — optional per-week override of the season's registration window (NULL = inherit from season)
 - `last_synced_at`, `sync_source` — sync metadata
 
 ### `camp_week_variants`

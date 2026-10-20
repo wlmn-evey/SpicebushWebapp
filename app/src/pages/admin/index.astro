@@ -2,6 +2,7 @@
 import AdminLayout from '@layouts/AdminLayout.astro';
 import { db } from '@lib/db';
 import { evaluateCampMode, parseCampModeSettings } from '@lib/camp-mode';
+import { toEasternDateString } from '@lib/eastern-time';
 import { logServerError } from '@lib/server-logger';
 import { Mail, Bell, Tent, CalendarX, ArrowRight } from 'lucide-astro';
 
@@ -23,17 +24,27 @@ try {
 
   contactCount = contactResult.total;
 
+  const now = new Date();
+  const nowMs = now.getTime();
+  // "Active" = published AND inside its optional starts_at/ends_at window.
   activeAnnouncements = announcementData.announcements
-    .filter(a => a.isPublished)
+    .filter(
+      a =>
+        a.isPublished &&
+        (!a.startsAt || Date.parse(a.startsAt) <= nowMs) &&
+        (!a.endsAt || Date.parse(a.endsAt) >= nowMs)
+    )
     .slice(0, 5)
     .map(a => ({ title: a.title, severity: a.severity }));
 
-  const now = new Date();
-  const sevenDaysOut = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const nowStr = now.toISOString().slice(0, 10);
-  const futureStr = sevenDaysOut.toISOString().slice(0, 10);
+  // Calendar days are the school's (Eastern), not the UTC runtime's.
+  const sevenDaysOut = new Date(nowMs + 7 * 24 * 60 * 60 * 1000);
+  const nowStr = toEasternDateString(now);
+  const futureStr = toEasternDateString(sevenDaysOut);
   upcomingClosures = announcementData.scheduleExceptions
     .filter(e => e.isPublished && e.endDate >= nowStr && e.startDate <= futureStr)
+    // Admin data is ordered newest start first; show the soonest closure first here.
+    .sort((a, b) => a.startDate.localeCompare(b.startDate))
     .slice(0, 3)
     .map(e => ({ title: e.title, startDate: e.startDate, endDate: e.endDate }));
 

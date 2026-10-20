@@ -180,12 +180,37 @@ declare module '@tiptap/core' {
 }
 
 /**
+ * Autolink predicate for the blog editor: TipTap's default rules (explicit-scheme URLs link; bare
+ * hosts need a dot and must not be an IP address), EXCEPT an explicit `http:` URL is never autolinked
+ * — the sanitizer would strip its href at render, so the author would see a link that never ships.
+ * Exported for the unit test.
+ */
+export function shouldAutoLinkBlogUrl(url: string): boolean {
+  if (/^http:/i.test(url)) return false;
+  const hasProtocol = /^[a-z][a-z0-9+.-]*:\/\//i.test(url);
+  const hasMaybeProtocol = /^[a-z][a-z0-9+.-]*:/i.test(url);
+  if (hasProtocol || (hasMaybeProtocol && !url.includes('@'))) return true;
+  const withoutUserinfo = url.includes('@') ? (url.split('@').pop() ?? '') : url;
+  const hostname = withoutUserinfo.split(/[/?#:]/)[0];
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return false;
+  return /\./.test(hostname);
+}
+
+/**
  * Build the configured Blog V2 editor extension set. Call (rather than export a frozen array) so the
  * island and the test each get an independent instance — TipTap extensions hold per-editor state.
  */
 export function buildBlogEditorExtensions(): Extensions {
   return [
-    StarterKit.configure({ heading: { levels: [2, 3, 4, 5, 6] } }),
+    StarterKit.configure({
+      heading: { levels: [2, 3, 4, 5, 6] },
+      // StarterKit 3.x bundles Link with autolink and defaultProtocol 'http' — but the render-time
+      // sanitizer (blog-html.ts) only keeps https:/mailto:/tel:/site-relative hrefs, so an autolinked
+      // `example.com` (→ http://example.com) or typed `http://…` link silently vanished from the
+      // published post. Scheme-less autolinks now become https://, and explicit `http://` text is not
+      // autolinked at all (the link dialog upgrades it to https:// with a visible note instead).
+      link: { defaultProtocol: 'https', shouldAutoLink: shouldAutoLinkBlogUrl }
+    }),
     ClassTextAlign.configure({ types: ['heading', 'paragraph'] }),
     Table.configure({ resizable: false }),
     TableRow,

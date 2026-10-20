@@ -1,6 +1,6 @@
 # Spicebush Montessori Website -- Consolidated Roadmap
 
-Last updated: April 5, 2026
+Last updated: October 20, 2026
 
 This is the living roadmap for the Spicebush Montessori website (spicebushmontessori.org). It reflects actual project state, not aspirations.
 
@@ -39,7 +39,7 @@ Key merged work:
 ### Removed or Deferred
 
 - Newsletter
-- Stripe / payments integration
+- Tuition / enrollment payments (Stripe is used only for donations; see Completed)
 
 ### Completed
 
@@ -55,6 +55,14 @@ Key merged work:
   **Gates 3 (full coverage) and 4 (E2E green) are satisfied via RECORDED MANUAL RUNS WITH ATTACHED
   ARTIFACTS, not automated CI** (R4-F23 — CI runs no Playwright; coverage is a recorded manual
   `npm run test:coverage` step with a json-summary artifact).
+- **On-site donations (shipped)** — Stripe Checkout at `/donate` (`/api/donations/checkout`), the
+  `/api/webhooks/stripe` webhook, queued thank-you emails (`process-donation-email-jobs`), and
+  `/admin/donations` records.
+- **Maintenance 2026-10** (#148) — unknown URLs return a real 404 instead of 302 → `/`; mobile tour
+  CTAs honor the admin tour link; FAQ accordion ARIA; sitemap drops redirect/noindex/utility pages
+  and matches canonical (no trailing slash); `.env.example` defaults to magic-link auth; Netlify
+  headers (HSTS, Permissions-Policy) and dead self-rewrites cleaned up; CI actions bumped, prod-only
+  blocking audit, serialized prod deploys; Node `engines >=22` (#39); docs drift fixes (#117).
 
 ---
 
@@ -94,7 +102,7 @@ Key merged work:
 
 - Media management refactor
 - Newsletter
-- Payments / Stripe
+- Tuition / enrollment payments
 
 > Blog shipped as V1 (see Phase 1 → Completed). Remaining blog enhancements (categories/tags UI,
 > RSS, pagination, scheduled publishing, related posts, search, comments, rich-text editor) stay
@@ -155,7 +163,7 @@ npm run test:e2e
 
 2. **Close remaining P2 security findings.** Review open P2 GitHub Issues and resolve them. P3 items can wait but should not accumulate.
 
-3. **Replace hardcoded redirects with DB configuration.** The `/donate` and `/enrollment` redirects should pull from the database so admins can change them without a deploy.
+3. **Replace hardcoded redirects with DB configuration.** The `/enrollment` redirect should pull from the database so admins can change it without a deploy (#22). (`/donate` is now on-site Stripe Checkout.)
 
 4. **Increase test coverage to 25%.** Prioritize: error branches in API routes, admin auth flow E2E, camp mode edge cases.
 
@@ -165,4 +173,4 @@ npm run test:e2e
 
 7. **Remove newsletter remnants.** Clean up any remaining newsletter-specific code, routes, and UI references.
 
-8. **Evaluate Phase 3 candidates.** Once Phase 2 is complete and the codebase scores above 7.5/10 on maintainability, evaluate which deferred features (media refactor, blog, newsletter, payments) are worth reintroducing.
+8. **Evaluate Phase 3 candidates.** Once Phase 2 is complete and the codebase scores above 7.5/10 on maintainability, evaluate which deferred features (media refactor, newsletter, tuition/enrollment payments) are worth reintroducing.

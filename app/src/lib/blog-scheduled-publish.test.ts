@@ -81,6 +81,21 @@ describe('publishDueScheduledPosts', () => {
     expect(summary.published).toEqual(['edge']);
   });
 
+  it('stamps data.date with the go-live day in America/New_York, not the draft date or the UTC day', async () => {
+    queryRowsMock.mockResolvedValueOnce([
+      // 21:30 EDT on Oct 20 — already Oct 21 in UTC.
+      { slug: 'evening', published_at: '2026-10-21T01:30:00Z' },
+      { slug: 'morning', published_at: '2026-10-20T13:00:00Z' }
+    ]);
+    await publishDueScheduledPosts({ now: Date.parse('2026-10-21T02:00:00Z') });
+
+    expect(queryMock).toHaveBeenCalledTimes(2);
+    const [sql, params] = queryMock.mock.calls[0];
+    expect(sql).toMatch(/jsonb_set\(data, '\{date\}', to_jsonb\(\$2::text\)/);
+    expect(params).toEqual(['evening', '2026-10-20']);
+    expect(queryMock.mock.calls[1][1]).toEqual(['morning', '2026-10-20']);
+  });
+
   it('queries only scheduled blog rows', async () => {
     queryRowsMock.mockResolvedValueOnce([]);
     await publishDueScheduledPosts({ now: NOW });
