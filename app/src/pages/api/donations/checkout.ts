@@ -188,8 +188,7 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
     const responsePayload = (await stripeResponse.json().catch(() => ({}))) as
-      | StripeCheckoutSessionPayload
-      | StripeErrorPayload;
+      StripeCheckoutSessionPayload | StripeErrorPayload;
 
     if (!stripeResponse.ok) {
       const fallbackUrl = await getFallbackDonationUrl();

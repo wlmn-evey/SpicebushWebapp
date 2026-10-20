@@ -22,8 +22,7 @@ let root: Root;
 /** TipTap exposes the Editor on its ProseMirror root element (`dom.editor = this`). */
 const editorOn = (form: HTMLElement): Editor => {
   const surface = form.querySelector('.blog-editor-surface') as
-    | (HTMLElement & { editor?: Editor })
-    | null;
+    (HTMLElement & { editor?: Editor }) | null;
   if (!surface?.editor) throw new Error('editor not mounted');
   return surface.editor;
 };

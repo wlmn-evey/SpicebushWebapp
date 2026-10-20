@@ -221,11 +221,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       message: asString(body.message),
       severity: asString(body.severity) as 'info' | 'reminder' | 'urgent' | 'closure' | undefined,
       placement: asString(body.placement) as
-        | 'global'
-        | 'homepage'
-        | 'camp'
-        | 'coming-soon'
-        | undefined,
+        'global' | 'homepage' | 'camp' | 'coming-soon' | undefined,
       audience: asString(body.audience),
       ctaLabel: asString(body.ctaLabel) || null,
       ctaUrl: asString(body.ctaUrl) || null,
@@ -253,11 +249,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       message: asString(body.message),
       severity: asString(body.severity) as 'info' | 'reminder' | 'urgent' | 'closure' | undefined,
       placement: asString(body.placement) as
-        | 'global'
-        | 'homepage'
-        | 'camp'
-        | 'coming-soon'
-        | undefined,
+        'global' | 'homepage' | 'camp' | 'coming-soon' | undefined,
       audience: asString(body.audience),
       ctaLabel: asString(body.ctaLabel) || null,
       ctaUrl: asString(body.ctaUrl) || null,

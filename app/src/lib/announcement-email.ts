@@ -19,11 +19,7 @@ const DEFAULT_RECIPIENT = 'information@spicebushmontessori.org';
 export type AnnouncementEmailTemplateKey = 'info' | 'reminder' | 'urgent' | 'closure';
 export type AnnouncementEmailRequestedTemplateKey = 'auto' | AnnouncementEmailTemplateKey;
 export type AnnouncementEmailJobStatus =
-  | 'scheduled'
-  | 'processing'
-  | 'sent'
-  | 'failed'
-  | 'cancelled';
+  'scheduled' | 'processing' | 'sent' | 'failed' | 'cancelled';
 export type AnnouncementEmailJobKind = 'initial' | 'reminder';
 
 const TEMPLATE_KEYS: AnnouncementEmailTemplateKey[] = ['info', 'reminder', 'urgent', 'closure'];
