@@ -1,4 +1,4 @@
-// ESLint 10 flat config. Ported 1:1 from the legacy .eslintrc.json + .eslintignore.
+// ESLint 9 flat config (official eslint-plugin-jsx-a11y; eslint-plugin-astro 1.x is the last line supporting ESLint 9). Ported 1:1 from the legacy .eslintrc.json + .eslintignore.
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import astro from 'eslint-plugin-astro';
@@ -38,7 +38,7 @@ export default tseslint.config(
       'object-shorthand': 'error',
       'no-var': 'error',
       'prefer-arrow-callback': 'error',
-      // New in ESLint 10's eslint:recommended; 11 existing hits (mostly `let x = default` before try/catch).
+      // In eslint:recommended from ESLint 10; 11 existing hits (mostly `let x = default` before try/catch).
       // Off to keep rule parity with the ESLint 8 setup; enabling it is a tracked follow-up.
       'no-useless-assignment': 'off',
 
