@@ -4,14 +4,15 @@
 - `astro`
 - `@astrojs/netlify`
 - `@astrojs/react`
-- `@astrojs/tailwind`
 - `@astrojs/sitemap`
 - `react`, `react-dom`
 - `pg`
 - `sharp`
+- TipTap 3 (`@tiptap/*`), `marked`, `isomorphic-dompurify`, `jose`, `nanoid`, `csv-parse`, `lucide-astro`
 
 ## Tooling Dependencies
-- `typescript`
+These live in `devDependencies`: nothing in `src/` or `netlify/functions/` imports them at runtime.
+- `typescript`, `@types/pg`
 - `eslint` 10 (flat config, `app/eslint.config.js`) + `typescript-eslint` + `eslint-plugin-astro` 3 + `eslint-plugin-jsx-a11y-x`
   - `eslint-plugin-jsx-a11y-x` (es-tooling fork) replaces `eslint-plugin-jsx-a11y`, whose peer range stops at ESLint 9; `eslint-plugin-astro`'s `jsx-a11y-recommended` config accepts either.
   - `eslint-plugin-astro` 3 / `astro-eslint-parser` 3 declare Node `^22.22.3 || ^24.16.0`. Older Node 22 releases still run them but npm prints EBADENGINE warnings; CI uses the latest Node 22.
@@ -21,6 +22,8 @@
   - `@emnapi/runtime` is listed explicitly: it is a required peer of `@napi-rs/wasm-runtime` (via `@astrojs/language-server`), but npm marks it optional because `sharp`'s wasm build also pulls it, and then skips installing it — `astro check` fails with "Cannot find package '@emnapi/runtime'" without it.
 - `@playwright/test` + `@axe-core/playwright`
 - `netlify-cli` is **not** installed. Use `npx netlify-cli@27 <command>` (the deploy/env scripts in `app/scripts/` already do). Installing it locally pulled in most of the `npm audit` high/critical findings (issue #43).
+- `tailwindcss` 3 + `postcss` + `autoprefixer` (build-time CSS; see `postcss.config.mjs`)
+- `@netlify/functions` (type-only `Handler` import in `netlify/functions/*`)
 
 ## Critical Coupling Points
 - DB access layer: `app/src/lib/db/*` plus migration scripts in `app/scripts/`.

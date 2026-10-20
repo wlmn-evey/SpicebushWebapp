@@ -2,7 +2,7 @@
 # Supports both development and production builds
 
 # Stage 1: Base image with dependencies
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 
 # Install system dependencies for sharp image processing
 RUN apk add --no-cache \

@@ -11,6 +11,8 @@ Spicebush Montessori School needed a website that serves both as a public-facing
 
 Use Astro 5 with `output: 'server'` (full server-side rendering) as the application framework. Interactive components (tuition calculator, admin panel widgets) use React islands via Astro's partial hydration model. Tailwind CSS 3 provides styling with a custom brand theme.
 
+**Update (2026-10):** Upgraded from Astro 5 to Astro 7 (`@astrojs/netlify` 8, `@astrojs/react` 7) to clear the SSR security advisories tracked in #122; no 5.x or 6.x release fixes all of them. Tailwind CSS 3 now runs through PostCSS because `@astrojs/tailwind` does not support Astro 6+. The decision itself (Astro SSR + React islands + Tailwind 3) is unchanged.
+
 ## Consequences
 
 - **Easier**: Content pages are fast and lightweight since most ship zero JavaScript. The islands architecture means React is only loaded where interactivity is actually needed. Astro's file-based routing and `.astro` component model make content pages straightforward to build.

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Spicebush Montessori School website — Astro 5 SSR on Netlify, Neon PostgreSQL, magic-link admin auth.
+Spicebush Montessori School website — Astro 7 SSR on Netlify, Neon PostgreSQL, magic-link admin auth.
 Live: https://spicebushmontessori.org
 
 ## Commands
@@ -39,7 +39,7 @@ npx netlify-cli@27 deploy --prod --dir=app/dist   # netlify-cli is not an app de
 - We use Netlify for hosting, not Vercel
 - We use Neon PostgreSQL via `NETLIFY_DATABASE_URL`, not Supabase
 - We use custom magic-link auth, not Auth0 or Clerk
-- We use Tailwind CSS 3, not CSS modules or styled-components
+- We use Tailwind CSS 3 via PostCSS (`postcss.config.mjs`), not CSS modules or styled-components. `@astrojs/tailwind` was dropped in the Astro 7 upgrade (it does not support Astro 6+)
 - We use React islands selectively (TuitionCalculator), not as the primary renderer
 - Email providers: SendGrid + Unione, both called via REST (`fetch`) — no email SDK packages are installed.
 - Blog: DB-backed via /admin/blog; posts are content rows with type='blog'. V2 authoring is a TipTap WYSIWYG editor storing sanitized HTML in data.body (ADR-009; `blog-html.ts` STRICT_CONFIG_V2 is the render-time trust boundary)
@@ -71,7 +71,9 @@ Low-level: `queryFirst()` and `queryRows()` from `@lib/db/client`.
 - **CSS `* { max-width: 100% }`** in `global.css` clamps ALL elements. Override with `max-width: none` when needed.
 - **Deploy from repo root, not `app/`.** Deploying from repo root with `--dir=app/dist` is the working, current path; there is no `base=app` in the committed `netlify.toml`. The repo-root deploy empirically uploads the SSR function and prod serves SSR.
 - **SVGs with `preserveAspectRatio="none"`** need explicit width values (`width: auto` won't work).
+- **Node >= 22.22.0 is required** (Astro 7, `@astrojs/react` 7). Older Node 22 releases print EBADENGINE warnings and are unsupported.
 - **Never read server secrets with a bare `import.meta.env.SECRET`.** Astro inlines it at build time (Vite loads `.env.local`), so a local build bakes the secret into the SSR bundle. Read `process.env` at runtime; for dev-only `.env` access, gate static reads behind `import.meta.env.DEV` (see `src/lib/db/env.ts`). Dynamic `import.meta.env[key]` throws in `astro dev`.
+- **Content collections live in `src/content.config.ts`** (glob loaders). Entries are keyed by `entry.id`; the legacy `entry.slug` is gone.
 
 ## Conventions (Beyond Linter)
 

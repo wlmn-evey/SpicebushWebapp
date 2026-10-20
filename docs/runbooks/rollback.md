@@ -1,6 +1,6 @@
 # Rollback Runbook
 
-*Spicebush Montessori -- Astro 5 SSR on Netlify + Neon PostgreSQL*
+*Spicebush Montessori -- Astro 7 SSR on Netlify + Neon PostgreSQL*
 
 ---
 
