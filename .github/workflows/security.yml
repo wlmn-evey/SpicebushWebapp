@@ -1,8 +1,8 @@
 name: Security
 
 on:
+  # Every PR, including ones stacked on another PR's branch.
   pull_request:
-    branches: [main]
   push:
     # CodeQL needs default-branch runs to give PR alerts a baseline.
     branches: [main]

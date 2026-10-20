@@ -1,8 +1,8 @@
 name: CI
 
 on:
+  # Every PR, including ones stacked on another PR's branch.
   pull_request:
-    branches: [main]
 
 permissions:
   contents: read
@@ -44,6 +44,21 @@ jobs:
     - name: Unit tests
       run: cd app && npm run test
 
-    - name: Build
-      # Astro SSR defers DB connections to request time — no DATABASE_URL needed at build
-      run: cd app && npm run build
+    - name: Build (with sentinel secrets)
+      # Astro SSR defers DB connections to request time, so the build needs no real DATABASE_URL.
+      # Sentinel values in both .env.local and the process env make this build double as a leak
+      # check: Astro inlines any private var referenced through import.meta.env (see CLAUDE.md).
+      env:
+        NETLIFY_DATABASE_URL: postgres://ci-sentinel-7f3a@localhost/process-env
+      run: |
+        cd app
+        printf 'NETLIFY_DATABASE_URL=postgres://ci-sentinel-7f3a@localhost/dotenv\nDATABASE_URL=postgres://ci-sentinel-7f3a@localhost/dotenv\n' > .env.local
+        npm run build
+
+    - name: Check build output for inlined secrets
+      run: |
+        cd app
+        if grep -rl "ci-sentinel-7f3a" dist .netlify; then
+          echo "::error::A server secret was inlined into the build output (files above). Read it from process.env, not import.meta.env."
+          exit 1
+        fi
