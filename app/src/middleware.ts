@@ -2,6 +2,8 @@ import type { APIContext, MiddlewareNext } from 'astro';
 import { isAdminEmail } from '@lib/admin-config';
 import { isProductionHostname } from '@lib/site-origin';
 import { ADMIN_SESSION_COOKIE_NAME, validateAdminSession } from '@lib/auth/admin-session';
+import { isProtectedRoute, normalizePathForAuth } from '@lib/auth/protected-routes';
+import { applySecurityHeaders } from '@lib/security-headers';
 import { evaluateCampMode, parseCampModeSettings, type CampModeEvaluation } from '@lib/camp-mode';
 import { queryFirst, queryRows } from '@lib/db/client';
 
@@ -14,17 +16,6 @@ let cachedComingSoonExpiresAt = 0;
 let cachedCampModeEvaluation: CampModeEvaluation | null = null;
 let cachedCampModeExpiresAt = 0;
 
-const PROTECTED_PREFIXES = [
-  '/admin',
-  '/api/admin',
-  '/api/cms',
-  '/api/media/upload',
-  '/api/storage/stats'
-];
-
-const isProtectedRoute = (pathname: string): boolean =>
-  PROTECTED_PREFIXES.some(prefix => pathname === prefix || pathname.startsWith(`${prefix}/`));
-
 const parseBoolean = (value: unknown): boolean => {
   if (typeof value === 'boolean') return value;
   if (typeof value === 'number') return value === 1;
@@ -35,7 +26,9 @@ const parseBoolean = (value: unknown): boolean => {
   return false;
 };
 
-const isApiRoute = (pathname: string): boolean => pathname.startsWith('/api/');
+// Uses the same decoded/normalized path as the protection check (fail closed → API-style 401).
+const isApiRoute = (pathname: string): boolean =>
+  (normalizePathForAuth(pathname) ?? '/api/').startsWith('/api/');
 
 const unauthorizedResponse = (status: 401 | 403, message: string) =>
   new Response(JSON.stringify({ error: message }), {
@@ -301,5 +294,5 @@ const handleRequest = async (context: APIContext, next: MiddlewareNext) => {
 
 export const onRequest = async (context: APIContext, next: MiddlewareNext) => {
   const response = await handleRequest(context, next);
-  return applyIndexingPolicy(context, response);
+  return applySecurityHeaders(applyIndexingPolicy(context, response));
 };

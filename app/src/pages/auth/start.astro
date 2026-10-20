@@ -7,15 +7,12 @@ import {
   getAuth0StateCookieTtlSeconds
 } from '@lib/auth/auth0';
 import { isAuth0Provider } from '@lib/auth/provider';
+import { safeRedirectPathOr } from '@lib/safe-redirect';
 
 const DEFAULT_AFTER_LOGIN_PATH = '/admin';
 
-const normalizeInternalPath = (value: string | null): string => {
-  if (!value) return DEFAULT_AFTER_LOGIN_PATH;
-  if (!value.startsWith('/')) return DEFAULT_AFTER_LOGIN_PATH;
-  if (value.startsWith('//')) return DEFAULT_AFTER_LOGIN_PATH;
-  return value;
-};
+const normalizeInternalPath = (value: string | null): string =>
+  safeRedirectPathOr(value, DEFAULT_AFTER_LOGIN_PATH);
 
 if (!isAuth0Provider()) {
   return Astro.redirect('/auth/sign-in');

@@ -4,6 +4,7 @@
  */
 import type { APIRoute } from 'astro';
 import { queryFirst } from '@lib/db/client';
+import { logServerError } from '@lib/server-logger';
 
 export const GET: APIRoute = async () => {
   const startTime = Date.now();
@@ -48,10 +49,12 @@ export const GET: APIRoute = async () => {
       }
     );
   } catch (error) {
+    // Public endpoint: keep driver/connection details in server logs only.
+    logServerError('Health check failed', error, { route: '/api/health' });
     return new Response(
       JSON.stringify({
         status: 'unhealthy',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Database check failed',
         responseTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
         service: 'spicebush-webapp'

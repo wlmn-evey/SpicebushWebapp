@@ -9,6 +9,7 @@ import {
   verifyTurnstileToken
 } from '@lib/form-security';
 import { logServerError, logServerWarn } from '@lib/server-logger';
+import { safeRedirectPath } from '@lib/safe-redirect';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -17,11 +18,9 @@ const parseString = (value: FormDataEntryValue | null): string => {
   return value.trim();
 };
 
-const parseRedirectPath = (value: FormDataEntryValue | null): string | null => {
-  if (typeof value !== 'string') return null;
-  if (!value.startsWith('/') || value.startsWith('//')) return null;
-  return value;
-};
+// Validated before any branch (including the honeypot early-return) can redirect to it.
+const parseRedirectPath = (value: FormDataEntryValue | null): string | null =>
+  safeRedirectPath(value);
 
 const parseBoolean = (value: FormDataEntryValue | null): boolean => {
   if (typeof value !== 'string') return false;

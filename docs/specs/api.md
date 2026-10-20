@@ -23,6 +23,19 @@ and populates `locals.userId`, `locals.userEmail`, and `locals.isAdmin`.
 | `/api/cms`          | Admin only  |
 | `/api/media/upload` | Admin only  |
 | `/api/storage/stats`| Admin only  |
+| `/api/email/send`   | Admin only (also handler-enforced) |
+| `/api/test-email`   | Admin only (also handler-enforced) |
+
+Prefix matching runs on the percent-decoded, slash-collapsed, lowercased path, and fails
+closed (treated as protected) on undecodable paths — see `docs/specs/auth.md` → Protected
+Routes. `GET /%61dmin/...` is therefore gated like `/admin/...`.
+
+Every SSR response also gets baseline security headers from the middleware
+(`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`,
+`Permissions-Policy`, HSTS) unless the route already set that header.
+
+User-supplied redirect targets (`next`, `redirectTo`, `redirect`) on every endpoint are
+validated by the shared `safeRedirectPath()` (`src/lib/safe-redirect.ts`).
 
 Unauthenticated requests to protected API routes receive `401`; authenticated
 non-admins receive `403`. Browser requests (Accept: text/html) are redirected to
@@ -44,7 +57,8 @@ handler as defense-in-depth.
 
 Health check. Pings the database with a 5-second timeout and returns service
 status, response time, and environment label. Returns `200` when healthy, `503`
-when unhealthy.
+when unhealthy. The `503` body carries a generic `"error": "Database check failed"`;
+the underlying driver/connection error is logged server-side only (`logServerError`).
 
 ---
 
@@ -149,14 +163,16 @@ appropriate `Content-Type`, long-lived `Cache-Control`, and `X-Content-Type-Opti
 | File     | `api/media/render.ts` |
 
 On-the-fly image crop and resize proxy using Sharp. Query parameters:
-- `src` -- source image path (must start with `/images/`, `/uploads/`, or `/api/media/blob/`, or be a same-origin/approved absolute URL)
+- `src` -- source image path (must start with `/images/`, `/uploads/`, or `/api/media/blob/`, or be an `https:` URL on the request host, `spicebushmontessori.org`, `www.spicebushmontessori.org`, `spicebush-testing.netlify.app`, or a `<prefix>--spicebush-testing.netlify.app` deploy preview / branch deploy). Other `*.netlify.app` hosts are rejected (anyone can register one).
 - `x`, `y`, `w`, `h` -- crop region in percentages (0--100)
 - `ow`, `oh` -- output pixel dimensions (120--2400)
 - `q` -- quality (40--95, default 82)
 - `fm` -- output format (`webp` | `jpg` | `png`)
 
 Falls back to passthrough if Sharp is unavailable or transformation fails.
-Immutable cache headers on success.
+Immutable cache headers on success. The fetched source is capped at 15 MB
+(`MAX_RENDER_SOURCE_BYTES`, `src/lib/media-render-source.ts`): an oversized
+`Content-Length` or streamed body returns `404 Source image not found`.
 
 ---
 
@@ -333,7 +349,8 @@ cache-invalidated, and `303`/JSON via the shared helper:
   `DELETE … WHERE slug = ANY($1)`. The count-aware irreversibility confirmation for bulk-delete
   (R4-F14) is enforced in the dashboard UI; the endpoint is the authorization + persistence boundary.
 
-**`parseRedirectPath` hardening**: the `redirectTo` validator rejects
+**`parseRedirectPath` hardening** (now the shared `safeRedirectPath()` used by every
+endpoint, which additionally rejects `\x7f` and anything not resolving same-origin): the `redirectTo` validator rejects
 backslash-leading paths (`/\evil.com`) that browsers resolve off-site as
 `//evil.com` — regex `^\/(?![/\\])`. It also rejects any value containing a
 control character (`\x00`–`\x1f`, CR/LF included) so a `redirectTo` can never
@@ -593,7 +610,7 @@ and database media count (`dbCount`).
 
 | Property | Value |
 |----------|-------|
-| Auth     | Admin only (handler-enforced, not in middleware prefix list) |
+| Auth     | Admin only (middleware prefix + handler) |
 | File     | `api/email/send.ts` |
 
 **POST**: Sends an email via the configured email service. JSON body with `to`,
@@ -607,24 +624,28 @@ Now returns generic `"Failed to send email"` on failure, with a separate
 **GET**: Returns email service status -- which providers are configured and the
 preferred provider.
 
-**Note**: This endpoint is NOT in the middleware's protected prefix list but
+**Note**: Covered by the middleware's protected prefix list (#31) and also
 enforces admin auth in the handler itself.
 
 ---
 
-### `GET /api/test-email`
+### `POST /api/test-email`
 
 | Property | Value |
 |----------|-------|
-| Auth     | Admin only (handler-enforced) |
+| Auth     | Admin only (middleware prefix + handler) |
 | File     | `api/test-email.ts` |
 
-Sends a test email to a specified address (query param `email`, defaults to the
-admin's email or `information@spicebushmontessori.org`). Returns send result,
-provider info, and service status.
+Sends a test email to a specified address (`email` from the query string, a JSON
+body, or a form body; defaults to the admin's email or
+`information@spicebushmontessori.org`). Returns send result, provider info, and
+service status. An unexpected exception returns a generic
+`"Failed to send test email"`; the detail is logged server-side only.
 
-**Note**: Like `/api/email/send`, this is not in the middleware prefix list but
-enforces admin auth in the handler.
+**POST only.** `GET` returns `405` (`Allow: POST`) without sending: a send is a side
+effect, and SameSite=Lax session cookies ride along on cross-site top-level GET
+navigations, so a link to `?email=` must never trigger mail. No admin UI calls this
+endpoint; use `curl -X POST` with an admin session cookie.
 
 ---
 
@@ -640,15 +661,9 @@ enforces admin auth in the handler.
 
 ---
 
-## Endpoints Not in Middleware Protected List
+## Endpoints Formerly Not in Middleware Protected List
 
-The following endpoints enforce admin auth in their handlers but are **not**
-covered by the middleware's `PROTECTED_PREFIXES` array:
-
-- `/api/email/send` (GET + POST)
-- `/api/test-email` (GET)
-
-These rely solely on `checkAdminAuth()` in the handler. If handler-level auth
-were accidentally removed, these would become publicly accessible. Consider
-adding `/api/email` and `/api/test-email` to the middleware prefix list for
-defense-in-depth.
+`/api/email/send` and `/api/test-email` previously relied solely on
+`checkAdminAuth()` in their handlers. Both are now in the middleware's
+`PROTECTED_PREFIXES` (#31), so removing the handler check can no longer expose
+them. The handler checks remain as defense in depth.

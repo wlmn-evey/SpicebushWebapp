@@ -11,6 +11,7 @@ import {
   type SeoPageOverride
 } from '@lib/seo-config';
 import { logServerError } from '@lib/server-logger';
+import { safeRedirectPath } from '@lib/safe-redirect';
 
 type GeminiResponsePayload = {
   candidates?: Array<{
@@ -64,11 +65,7 @@ const limitLength = (value: string, max: number): string => {
   return value.slice(0, max).trim();
 };
 
-const parseRedirectPath = (value: unknown): string | null => {
-  if (typeof value !== 'string') return null;
-  if (!value.startsWith('/') || value.startsWith('//')) return null;
-  return value;
-};
+const parseRedirectPath = (value: unknown): string | null => safeRedirectPath(value);
 
 const jsonResponse = (payload: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(payload), {

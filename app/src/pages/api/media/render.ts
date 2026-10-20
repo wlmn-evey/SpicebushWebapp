@@ -1,4 +1,9 @@
 import type { APIRoute } from 'astro';
+import {
+  isAllowedRenderHost,
+  readBodyWithLimit,
+  resolveRedirectTarget
+} from '@lib/media-render-source';
 
 const ALLOWED_RELATIVE_PREFIXES = ['/images/', '/uploads/', '/api/media/blob/'];
 
@@ -24,11 +29,6 @@ const parseQuality = (value: string | null): number => {
   return parsed ?? 82;
 };
 
-const isAllowedAbsoluteHost = (hostname: string, requestHostname: string): boolean =>
-  hostname === requestHostname ||
-  hostname === 'spicebushmontessori.org' ||
-  (hostname.endsWith('.netlify.app') && hostname.includes('spicebush'));
-
 const resolveSourceUrl = (rawSrc: string, requestUrl: URL): URL | null => {
   if (!rawSrc) return null;
   const src = rawSrc.trim();
@@ -50,7 +50,7 @@ const resolveSourceUrl = (rawSrc: string, requestUrl: URL): URL | null => {
     if (absolute.protocol !== 'https:') {
       return null;
     }
-    if (!isAllowedAbsoluteHost(absolute.hostname, requestUrl.hostname)) {
+    if (!isAllowedRenderHost(absolute.hostname, requestUrl.hostname)) {
       return null;
     }
     return absolute;
@@ -102,20 +102,37 @@ const contentTypeForFormat = (format: OutputFormat): string => {
   return 'image/webp';
 };
 
-const fetchImage = async (sourceUrl: URL): Promise<FetchedImage | null> => {
+const MAX_REDIRECTS = 3;
+
+const fetchImage = async (
+  sourceUrl: URL,
+  requestHostname: string
+): Promise<FetchedImage | null> => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
 
   try {
-    const response = await fetch(sourceUrl, {
-      method: 'GET',
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'SpicebushImageRender/1.0'
-      }
-    });
+    // Redirects are followed by hand so every hop is re-checked against the host
+    // allowlist; automatic following would let an allowed host bounce us anywhere.
+    let currentUrl = sourceUrl;
+    let response: Response | null = null;
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
+      response = await fetch(currentUrl, {
+        method: 'GET',
+        redirect: 'manual',
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'SpicebushImageRender/1.0'
+        }
+      });
+      const nextUrl = resolveRedirectTarget(response, currentUrl, requestHostname);
+      if (nextUrl === undefined) break;
+      await response.body?.cancel().catch(() => undefined);
+      if (nextUrl === null || hop === MAX_REDIRECTS) return null;
+      currentUrl = nextUrl;
+    }
 
-    if (!response.ok) {
+    if (!response || !response.ok) {
       return null;
     }
 
@@ -124,13 +141,14 @@ const fetchImage = async (sourceUrl: URL): Promise<FetchedImage | null> => {
       return null;
     }
 
-    const arrayBuffer = await response.arrayBuffer();
-    if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+    // Capped read so a huge (or endless) upstream body can't exhaust function memory.
+    const buffer = await readBodyWithLimit(response);
+    if (!buffer || buffer.byteLength === 0) {
       return null;
     }
 
     return {
-      buffer: Buffer.from(arrayBuffer),
+      buffer,
       contentType
     };
   } catch {
@@ -160,7 +178,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   const quality = parseQuality(url.searchParams.get('q'));
   const format = parseFormat(url.searchParams.get('fm'));
 
-  const image = await fetchImage(sourceUrl);
+  const image = await fetchImage(sourceUrl, new URL(request.url).hostname);
   if (!image) {
     return new Response(JSON.stringify({ error: 'Source image not found' }), {
       status: 404,

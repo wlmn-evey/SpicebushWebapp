@@ -1,14 +1,10 @@
 import type { APIRoute } from 'astro';
+import { safeRedirectPathOr } from '@lib/safe-redirect';
 
 const PREVIEW_MODE_COOKIE = 'sbms-preview-mode';
 const VALID_MODES = new Set(['site', 'coming-soon']);
 
-const parseRedirectPath = (value: string | null): string => {
-  if (!value) return '/';
-  if (!value.startsWith('/')) return '/';
-  if (value.startsWith('//')) return '/';
-  return value;
-};
+const parseRedirectPath = (value: string | null): string => safeRedirectPathOr(value, '/');
 
 const parseMode = (value: string | null): 'site' | 'coming-soon' => {
   if (value && VALID_MODES.has(value)) {

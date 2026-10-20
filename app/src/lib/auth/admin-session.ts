@@ -8,6 +8,7 @@ import {
   resolveSchoolEmailContactInfo
 } from '@lib/email-template-footer';
 import { query, queryFirst, withTransaction } from '@lib/db/client';
+import { safeRedirectPathOr } from '@lib/safe-redirect';
 
 const MAGIC_LINK_TTL_MINUTES = 15;
 const MAGIC_LINK_RATE_LIMIT_WINDOW_MINUTES = 5;
@@ -56,14 +57,8 @@ export interface CreateAdminSessionParams {
 const normalizeEmail = (value: string): string => value.trim().toLowerCase();
 const DEFAULT_AFTER_LOGIN_PATH = '/admin';
 
-const normalizeInternalPath = (value: string | null | undefined): string => {
-  if (!value) return DEFAULT_AFTER_LOGIN_PATH;
-  const trimmed = value.trim();
-  if (!trimmed.startsWith('/') || trimmed.startsWith('//')) {
-    return DEFAULT_AFTER_LOGIN_PATH;
-  }
-  return trimmed;
-};
+const normalizeInternalPath = (value: string | null | undefined): string =>
+  safeRedirectPathOr(value?.trim(), DEFAULT_AFTER_LOGIN_PATH);
 
 const hashToken = (value: string): string => createHash('sha256').update(value).digest('hex');
 

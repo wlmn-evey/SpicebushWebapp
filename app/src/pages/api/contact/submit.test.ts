@@ -225,3 +225,32 @@ describe('POST /api/contact/submit — error code specificity (P2 fix)', () => {
     expect(response.headers.get('Location')).toBe('/contact?error=server-error');
   });
 });
+
+describe('POST /api/contact/submit — redirectTo validation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(verifyTurnstileToken).mockResolvedValue({ success: true });
+    vi.mocked(checkContactSubmissionRateLimit).mockResolvedValue({
+      blocked: false,
+      ipCount: 0,
+      emailCount: 0
+    });
+  });
+
+  it.each(['//evil.com', '/\\evil.com', '/\t/evil.com', 'https://evil.com'])(
+    'ignores off-site redirectTo %j on the honeypot branch',
+    async redirectTo => {
+      const fd = makeFormData({ ...validContactFields, 'bot-field': 'spam', redirectTo });
+      const response = await POST(makeContext(makeRequest(fd)));
+      expect(response.status).toBe(302);
+      expect(response.headers.get('Location')).toBe('/contact-success');
+      expect(verifyTurnstileToken).not.toHaveBeenCalled();
+    }
+  );
+
+  it('honours a same-origin redirectTo on success', async () => {
+    const fd = makeFormData({ ...validContactFields, redirectTo: '/contact-success?ref=tour' });
+    const response = await POST(makeContext(makeRequest(fd)));
+    expect(response.headers.get('Location')).toBe('/contact-success?ref=tour');
+  });
+});

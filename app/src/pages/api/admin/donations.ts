@@ -10,6 +10,7 @@ import {
   scheduleDonationEmailReminder,
   sendDonationThankYouNow
 } from '@lib/donation-thank-you';
+import { safeRedirectPath } from '@lib/safe-redirect';
 
 const TEMPLATE_KEYS = new Set(['one-time', 'recurring-start', 'recurring-renewal']);
 const JOB_KINDS = new Set(['reminder', 'manual-resend']);
@@ -20,11 +21,7 @@ const jsonResponse = (payload: unknown, status = 200) =>
     headers: { 'Content-Type': 'application/json' }
   });
 
-const parseRedirectPath = (value: unknown): string | null => {
-  if (typeof value !== 'string') return null;
-  if (!value.startsWith('/') || value.startsWith('//')) return null;
-  return value;
-};
+const parseRedirectPath = (value: unknown): string | null => safeRedirectPath(value);
 
 const asString = (value: unknown): string => {
   if (typeof value !== 'string') return '';
