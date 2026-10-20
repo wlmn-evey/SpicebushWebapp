@@ -4,6 +4,13 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ci:
     name: Lint, Typecheck, Test, Build
@@ -11,18 +18,19 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
-    - name: Setup Node.js 22
-      uses: actions/setup-node@v4
+    - name: Setup Node.js (app/.nvmrc)
+      uses: actions/setup-node@v6
       with:
-        node-version: '22'
+        node-version-file: 'app/.nvmrc'
         cache: 'npm'
         cache-dependency-path: 'app/package-lock.json'
 
     - name: Install dependencies
-      # --force needed: lockfile contains platform-specific @rollup packages from macOS
-      run: cd app && npm ci --force
+      # Plain `npm ci` on purpose: it must fail if the lockfile can't install
+      # cleanly (see issue #140). Do not add --force.
+      run: cd app && npm ci
 
     - name: Lint (zero warnings)
       run: cd app && npm run lint -- --max-warnings=0

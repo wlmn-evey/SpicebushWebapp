@@ -4,6 +4,15 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+# Serialize production deploys so two quick merges can't race and leave the
+# older build live. Never cancel a deploy that is already uploading.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Build & Deploy to Netlify
@@ -11,18 +20,18 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
-    - name: Setup Node.js 22
-      uses: actions/setup-node@v4
+    - name: Setup Node.js (app/.nvmrc)
+      uses: actions/setup-node@v6
       with:
-        node-version: '22'
+        node-version-file: 'app/.nvmrc'
         cache: 'npm'
         cache-dependency-path: 'app/package-lock.json'
 
     - name: Install dependencies
-      # --force needed: lockfile contains platform-specific @rollup packages from macOS
-      run: cd app && npm ci --force
+      # Plain `npm ci`: the lockfile must install cleanly (issue #140). No --force.
+      run: cd app && npm ci
 
     - name: Build
       # Astro SSR defers DB connections to request time — no DATABASE_URL needed at build
