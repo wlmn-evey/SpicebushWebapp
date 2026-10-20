@@ -18,15 +18,13 @@ const aliasConfig = {
 export default defineConfig({
   ...aliasConfig,
   // React islands (e.g. TipTapEditor.test.ts) use the automatic JSX runtime, as Astro does.
-  esbuild: { jsx: 'automatic' },
+  // Vite 8 (vitest 5) transforms with Oxc; the old `esbuild.jsx` option is ignored there.
+  oxc: { jsx: { runtime: 'automatic' } },
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    include: [
-      'src/**/*.{test,spec}.{js,ts,jsx,tsx}',
-      'tests/**/*.{test,spec}.{js,ts,jsx,tsx}'
-    ],
+    include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}', 'tests/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     exclude: ['node_modules', 'dist', '.astro', 'archived-directories/**', 'archive/**'],
     coverage: {
       provider: 'v8',
