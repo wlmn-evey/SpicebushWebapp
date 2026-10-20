@@ -3,6 +3,7 @@ import AdminLayout from '@layouts/AdminLayout.astro';
 import { db } from '@lib/db';
 import { getAnalyticsConfig } from '@lib/analytics-config';
 import { getGa4OverviewReport } from '@lib/ga4-reporting';
+import { SCHOOL_TIME_ZONE } from '@lib/eastern-time';
 import {
   SEO_MANAGED_PAGES,
   parseSeoGlobalSettings,
@@ -74,9 +75,11 @@ const formatCurrency = (value: number): string =>
 const formatDate = (value: string): string => {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
-  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(
-    parsed
-  );
+  return new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: SCHOOL_TIME_ZONE
+  }).format(parsed);
 };
 
 const configuredGaEnabled = parseBoolean(ga4EnabledSetting);

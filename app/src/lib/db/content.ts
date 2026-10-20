@@ -32,6 +32,21 @@ let queryCount = 0;
 let cacheHits = 0;
 let cacheMisses = 0;
 
+const toUpdatedAtString = (value: unknown): string | undefined => {
+  if (value == null) return undefined;
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? undefined : value.toISOString();
+  }
+  return String(value);
+};
+
+/**
+ * Loader result that distinguishes "the DB answered" from "the DB errored". Only `ok: true`
+ * results are cached — caching the error-path fallback ([]/null) would blank staff/tuition
+ * sections or 404 valid blog posts for the whole TTL after a brief DB blip.
+ */
+type LoadResult<T> = { ok: true; data: T } | { ok: false; data: T };
+
 const toContentEntry = (row: ContentRow): ContentEntry => {
   const dataRecord = { ...(row.data ?? {}) } as Record<string, unknown>;
   const originalTitle =
@@ -49,10 +64,11 @@ const toContentEntry = (row: ContentRow): ContentEntry => {
     collection: row.type,
     data: mergedData,
     body: bodyValue,
-    // Raw passthrough (not normalized here — the generic layer stays generic; the blog JSON-LD
-    // normalizes to ISO at the point of use). Coerce to string so a driver that hands back a `Date`
-    // still round-trips through `new Date(...)`. `undefined` when the row/mock omits it.
-    updatedAt: row.updated_at != null ? String(row.updated_at) : undefined
+    // Raw passthrough for strings (not normalized here — the generic layer stays generic; the blog
+    // JSON-LD normalizes to ISO at the point of use). `pg` has no custom type parsers, so a real
+    // TIMESTAMPTZ arrives as a JS `Date` — serialize that to ISO (a bare `String(date)` would give
+    // the locale-ish `Date#toString` form). `undefined` when the row/mock omits it.
+    updatedAt: toUpdatedAtString(row.updated_at)
   };
 };
 
@@ -71,9 +87,9 @@ const parseSettingValue = (value: unknown) => {
   return value;
 };
 
-async function fetchCollection(collection: string): Promise<ContentEntry[]> {
+async function fetchCollection(collection: string): Promise<LoadResult<ContentEntry[]>> {
   if (!DATABASE_COLLECTIONS.has(collection)) {
-    return [];
+    return { ok: true, data: [] };
   }
 
   try {
@@ -86,16 +102,19 @@ async function fetchCollection(collection: string): Promise<ContentEntry[]> {
       `,
       [collection]
     );
-    return rows.map(toContentEntry);
+    return { ok: true, data: rows.map(toContentEntry) };
   } catch (error) {
     logError('db.content', error, { action: 'fetchCollection', collection });
-    return [];
+    return { ok: false, data: [] };
   }
 }
 
-async function fetchEntry(collection: string, slug: string): Promise<ContentEntry | null> {
+async function fetchEntry(
+  collection: string,
+  slug: string
+): Promise<LoadResult<ContentEntry | null>> {
   if (!DATABASE_COLLECTIONS.has(collection)) {
-    return null;
+    return { ok: true, data: null };
   }
 
   try {
@@ -108,10 +127,10 @@ async function fetchEntry(collection: string, slug: string): Promise<ContentEntr
       `,
       [collection, slug]
     );
-    return row ? toContentEntry(row) : null;
+    return { ok: true, data: row ? toContentEntry(row) : null };
   } catch (error) {
     logError('db.content', error, { action: 'fetchEntry', collection, slug });
-    return null;
+    return { ok: false, data: null };
   }
 }
 
@@ -145,9 +164,11 @@ export async function getCollection(
   }
 
   cacheMisses++;
-  const data = await fetchCollection(collection);
-  cache.set(cacheKey, data, getCollectionTtl(collection, maxAge));
-  return data;
+  const result = await fetchCollection(collection);
+  if (result.ok) {
+    cache.set(cacheKey, result.data, getCollectionTtl(collection, maxAge));
+  }
+  return result.data;
 }
 
 export async function getEntry(
@@ -165,9 +186,11 @@ export async function getEntry(
   }
 
   cacheMisses++;
-  const entry = await fetchEntry(collection, slug);
-  cache.set(cacheKey, entry, getCollectionTtl(collection, maxAge));
-  return entry;
+  const result = await fetchEntry(collection, slug);
+  if (result.ok) {
+    cache.set(cacheKey, result.data, getCollectionTtl(collection, maxAge));
+  }
+  return result.data;
 }
 
 export async function getEntries(

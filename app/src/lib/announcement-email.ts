@@ -1,6 +1,13 @@
 import { db } from '@lib/db';
 import { query, queryFirst, queryRows } from '@lib/db/client';
+import { SCHOOL_TIME_ZONE, normalizeSchoolTimestamp } from '@lib/eastern-time';
+import {
+  buildAbandonedJobSweepSql,
+  buildClaimableJobsWhereSql,
+  jobRetryParams
+} from '@lib/email-job-retry';
 import { emailService } from '@lib/email-service';
+import { isoTimestampSql } from '@lib/db/row-values';
 import {
   buildSchoolContactFooterHtml,
   buildSchoolContactFooterText,
@@ -19,11 +26,7 @@ const DEFAULT_RECIPIENT = 'information@spicebushmontessori.org';
 export type AnnouncementEmailTemplateKey = 'info' | 'reminder' | 'urgent' | 'closure';
 export type AnnouncementEmailRequestedTemplateKey = 'auto' | AnnouncementEmailTemplateKey;
 export type AnnouncementEmailJobStatus =
-  | 'scheduled'
-  | 'processing'
-  | 'sent'
-  | 'failed'
-  | 'cancelled';
+  'scheduled' | 'processing' | 'sent' | 'failed' | 'cancelled';
 export type AnnouncementEmailJobKind = 'initial' | 'reminder';
 
 const TEMPLATE_KEYS: AnnouncementEmailTemplateKey[] = ['info', 'reminder', 'urgent', 'closure'];
@@ -188,9 +191,15 @@ const isTemplateKey = (value: string): value is AnnouncementEmailTemplateKey =>
 
 const asString = (value: unknown): string => {
   if (typeof value === 'string') return value.trim();
+  // `pg` returns TIMESTAMPTZ columns as Date objects (no custom type parsers).
+  if (value instanceof Date) {
+    return Number.isFinite(value.getTime()) ? value.toISOString() : '';
+  }
   if (typeof value === 'number' || typeof value === 'boolean') return String(value).trim();
   return '';
 };
+
+const asNullableString = (value: unknown): string | null => asString(value) || null;
 
 const escapeHtml = (value: string): string =>
   value
@@ -226,13 +235,8 @@ const normalizeRequestedTemplateKey = (value: unknown): AnnouncementEmailRequest
   return 'auto';
 };
 
-const parseDateTime = (value: unknown): string | null => {
-  const raw = asString(value);
-  if (!raw) return null;
-  const parsed = Date.parse(raw);
-  if (!Number.isFinite(parsed)) return null;
-  return new Date(parsed).toISOString();
-};
+// Admin forms submit zone-less datetime-local values meaning Eastern time at the school.
+const parseDateTime = (value: unknown): string | null => normalizeSchoolTimestamp(value);
 
 const severityToTemplateKey = (severity: AnnouncementSeverity): AnnouncementEmailTemplateKey => {
   if (isTemplateKey(severity)) return severity;
@@ -251,9 +255,11 @@ const formatTimestamp = (value: string | null): string => {
   if (!value) return 'Not specified';
   const parsed = Date.parse(value);
   if (!Number.isFinite(parsed)) return 'Not specified';
+  // Families read these in school-local time; the runtime is UTC.
   return new Intl.DateTimeFormat('en-US', {
     dateStyle: 'full',
-    timeStyle: 'short'
+    timeStyle: 'short',
+    timeZone: SCHOOL_TIME_ZONE
   }).format(new Date(parsed));
 };
 
@@ -279,8 +285,8 @@ const loadAnnouncementById = async (id: string): Promise<AnnouncementRow | null>
         placement,
         cta_label,
         cta_url,
-        starts_at,
-        ends_at,
+        ${isoTimestampSql('starts_at')} AS starts_at,
+        ${isoTimestampSql('ends_at')} AS ends_at,
         is_published
       FROM school_announcements
       WHERE id = $1::uuid
@@ -439,7 +445,7 @@ const toJobSummary = (row: AnnouncementEmailJobRow): AnnouncementEmailJobSummary
   status: row.status,
   attemptCount: Number(row.attempt_count || 0),
   sentCount: Number(row.sent_count || 0),
-  sentAt: row.sent_at,
+  sentAt: asNullableString(row.sent_at),
   lastError: row.last_error,
   createdBy: row.created_by,
   createdAt: asString(row.created_at),
@@ -508,12 +514,14 @@ const sendRenderedAnnouncementEmail = async (input: {
   const template = templateMap[resolvedTemplateKey] ?? DEFAULT_TEMPLATES[resolvedTemplateKey];
   const rendered = buildAnnouncementEmailContent(input.announcement, template, input.contactInfo);
 
+  // Broadcast to families: each recipient gets their own copy, never the whole list in To:.
   const sendResult = await emailService.send({
     to: input.recipients,
     subject: rendered.subject,
     html: rendered.html,
     text: rendered.text,
-    fromName: BRAND_NAME
+    fromName: BRAND_NAME,
+    individualRecipients: true
   });
 
   return {
@@ -767,13 +775,21 @@ export const cancelAnnouncementEmailJob = async (jobId: string): Promise<boolean
 
 const claimDueJobs = async (limit: number): Promise<AnnouncementEmailJobSummary[]> => {
   const boundedLimit = Math.max(1, Math.min(limit, 100));
+  const retryParams = jobRetryParams();
+
+  // Retire abandoned `processing` rows that are out of attempts/window (see email-job-retry.ts).
+  await query(buildAbandonedJobSweepSql('announcement_email_jobs'), retryParams);
+
   const rows = await queryRows<AnnouncementEmailJobRow>(
     `
       WITH due AS (
         SELECT id
         FROM announcement_email_jobs
-        WHERE status = 'scheduled'
-          AND scheduled_for <= NOW()
+        WHERE ${buildClaimableJobsWhereSql({
+          maxAttemptsParam: '$2',
+          staleMinutesParam: '$3',
+          retryWindowHoursParam: '$4'
+        })}
         ORDER BY scheduled_for ASC
         LIMIT $1
         FOR UPDATE SKIP LOCKED
@@ -807,7 +823,7 @@ const claimDueJobs = async (limit: number): Promise<AnnouncementEmailJobSummary[
           LIMIT 1
         ) AS announcement_title
     `,
-    [boundedLimit]
+    [boundedLimit, ...retryParams]
   );
 
   return rows.map(toJobSummary);
@@ -835,6 +851,88 @@ const markJobResult = async (input: {
   );
 };
 
+const processClaimedJob = async (
+  job: AnnouncementEmailJobSummary,
+  settings: AnnouncementEmailSettings
+): Promise<'sent' | 'failed'> => {
+  const announcement = await loadAnnouncementById(job.announcementId);
+  if (!announcement) {
+    await markJobResult({
+      jobId: job.id,
+      status: 'failed',
+      sentAt: null,
+      error: 'Announcement not found'
+    });
+    return 'failed';
+  }
+
+  const recipients = normalizeRecipients(
+    job.recipients.length > 0 ? job.recipients : settings.recipients
+  );
+  const sendResult = await sendRenderedAnnouncementEmail({
+    announcement,
+    requestedTemplateKey: job.templateKey,
+    recipients,
+    contactInfo: settings.contactInfo
+  });
+
+  if (!sendResult.success) {
+    await markJobResult({
+      jobId: job.id,
+      status: 'failed',
+      sentAt: null,
+      error: sendResult.error || 'Failed to send announcement email'
+    });
+
+    await logAnnouncementEmailMessage({
+      subject: sendResult.subject,
+      bodyText: announcement.message,
+      scheduledFor: job.scheduledFor || null,
+      sentAt: null,
+      status: 'failed',
+      recipients,
+      createdBy: job.createdBy,
+      metadata: {
+        source: 'announcement_scheduled',
+        announcementId: announcement.id,
+        jobId: job.id,
+        templateKey: sendResult.templateKey,
+        provider: sendResult.provider,
+        error: sendResult.error || null
+      }
+    });
+    return 'failed';
+  }
+
+  const sentAt = new Date().toISOString();
+  await markJobResult({
+    jobId: job.id,
+    status: 'sent',
+    sentAt,
+    sentCount: recipients.length,
+    error: null
+  });
+
+  await logAnnouncementEmailMessage({
+    subject: sendResult.subject,
+    bodyText: announcement.message,
+    scheduledFor: job.scheduledFor || null,
+    sentAt,
+    status: 'sent',
+    recipients,
+    createdBy: job.createdBy,
+    metadata: {
+      source: 'announcement_scheduled',
+      announcementId: announcement.id,
+      jobId: job.id,
+      templateKey: sendResult.templateKey,
+      provider: sendResult.provider,
+      messageId: sendResult.messageId || null
+    }
+  });
+  return 'sent';
+};
+
 export const processDueAnnouncementEmailJobs = async (options?: {
   limit?: number;
 }): Promise<ProcessAnnouncementEmailJobsResult> => {
@@ -851,84 +949,25 @@ export const processDueAnnouncementEmailJobs = async (options?: {
 
   for (const job of claimedJobs) {
     processed += 1;
-    const announcement = await loadAnnouncementById(job.announcementId);
-    if (!announcement) {
+    try {
+      const outcome = await processClaimedJob(job, settings);
+      if (outcome === 'sent') sent += 1;
+      else failed += 1;
+    } catch (error) {
+      // One job throwing (DB blip, provider bug) must not strand the rest of the batch in
+      // `processing`; record it as failed so the retry policy can pick it up later.
       failed += 1;
-      await markJobResult({
+      const message = error instanceof Error ? error.message : String(error);
+      logServerWarn('Announcement email job threw while processing', {
         jobId: job.id,
-        status: 'failed',
-        sentAt: null,
-        error: 'Announcement not found'
+        error: message
       });
-      continue;
-    }
-
-    const recipients = normalizeRecipients(
-      job.recipients.length > 0 ? job.recipients : settings.recipients
-    );
-    const sendResult = await sendRenderedAnnouncementEmail({
-      announcement,
-      requestedTemplateKey: job.templateKey,
-      recipients,
-      contactInfo: settings.contactInfo
-    });
-
-    if (!sendResult.success) {
-      failed += 1;
-      await markJobResult({
-        jobId: job.id,
-        status: 'failed',
-        sentAt: null,
-        error: sendResult.error || 'Failed to send announcement email'
-      });
-
-      await logAnnouncementEmailMessage({
-        subject: sendResult.subject,
-        bodyText: announcement.message,
-        scheduledFor: job.scheduledFor,
-        sentAt: null,
-        status: 'failed',
-        recipients,
-        createdBy: job.createdBy,
-        metadata: {
-          source: 'announcement_scheduled',
-          announcementId: announcement.id,
-          jobId: job.id,
-          templateKey: sendResult.templateKey,
-          provider: sendResult.provider,
-          error: sendResult.error || null
-        }
-      });
-      continue;
-    }
-
-    sent += 1;
-    const sentAt = new Date().toISOString();
-    await markJobResult({
-      jobId: job.id,
-      status: 'sent',
-      sentAt,
-      sentCount: recipients.length,
-      error: null
-    });
-
-    await logAnnouncementEmailMessage({
-      subject: sendResult.subject,
-      bodyText: announcement.message,
-      scheduledFor: job.scheduledFor,
-      sentAt,
-      status: 'sent',
-      recipients,
-      createdBy: job.createdBy,
-      metadata: {
-        source: 'announcement_scheduled',
-        announcementId: announcement.id,
-        jobId: job.id,
-        templateKey: sendResult.templateKey,
-        provider: sendResult.provider,
-        messageId: sendResult.messageId || null
+      try {
+        await markJobResult({ jobId: job.id, status: 'failed', sentAt: null, error: message });
+      } catch {
+        // Leave it in `processing`; the stale-job reclaim will retry it.
       }
-    });
+    }
   }
 
   return {

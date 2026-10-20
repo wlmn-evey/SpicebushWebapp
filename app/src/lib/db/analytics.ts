@@ -1,5 +1,6 @@
 import { logError } from '@lib/error-logger';
 import { query, queryFirst, queryRows } from './client';
+import { toIsoTimestamp } from './row-values';
 
 type AnalyticsScalar = string | number | boolean | null;
 
@@ -303,7 +304,7 @@ export async function getRecentAnalyticsEvents(limit = 25): Promise<RecentAnalyt
       page_path: string | null;
       page_url: string | null;
       properties: Record<string, unknown> | null;
-      created_at: string;
+      created_at: string | Date;
     }>(
       `
         SELECT id, event_name, page_path, page_url, properties, created_at
@@ -319,7 +320,8 @@ export async function getRecentAnalyticsEvents(limit = 25): Promise<RecentAnalyt
       eventName: row.event_name,
       pagePath: row.page_path,
       pageUrl: row.page_url,
-      createdAt: row.created_at,
+      // `pg` returns TIMESTAMPTZ as a Date; the view type (and admin formatting) expects a string.
+      createdAt: toIsoTimestamp(row.created_at),
       properties: row.properties ?? {}
     }));
   } catch (error) {

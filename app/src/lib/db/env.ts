@@ -1,33 +1,44 @@
 import { logError } from '@lib/error-logger';
 
-type EnvRecord = Record<string, string | undefined>;
+type DbEnvKey = 'NETLIFY_DATABASE_URL' | 'DATABASE_URL';
 
-function readImportMetaEnv(): EnvRecord {
+/**
+ * Read a DB env var from `import.meta.env` using STATIC property access only.
+ *
+ * Vite (and Astro's dev module runner) rewrites `import.meta.env.NAME` at transform time but
+ * rejects dynamic access (`import.meta.env[name]`, or grabbing the `env` object and indexing it)
+ * with "[module runner] Dynamic access of "import.meta.env" is not supported" — which broke every
+ * DB call under `astro dev`. Each key therefore gets its own literal expression. The try/catch
+ * covers runtimes where `import.meta.env` is undefined (plain Node scripts); those fall back to
+ * `process.env` below.
+ */
+function readImportMetaEnv(key: DbEnvKey): string | undefined {
   try {
-    const meta = import.meta as unknown;
-    if (meta && typeof meta === 'object' && 'env' in (meta as Record<string, unknown>)) {
-      const candidate = (meta as { env?: unknown }).env;
-      if (candidate && typeof candidate === 'object') {
-        return candidate as EnvRecord;
-      }
+    switch (key) {
+      case 'NETLIFY_DATABASE_URL':
+        return import.meta.env.NETLIFY_DATABASE_URL;
+      case 'DATABASE_URL':
+        return import.meta.env.DATABASE_URL;
+      default:
+        return undefined;
     }
   } catch {
-    // ignore - fall back to process.env
+    return undefined;
   }
-  return {};
 }
 
-const importMetaEnv: EnvRecord = readImportMetaEnv();
+function readProcessEnv(key: DbEnvKey): string | undefined {
+  return typeof process !== 'undefined' ? process.env?.[key] : undefined;
+}
 
 const envCache = new Map<string, string>();
 
-function readEnv(key: string, { required = false }: { required?: boolean } = {}): string {
+function readEnv(key: DbEnvKey, { required = false }: { required?: boolean } = {}): string {
   if (envCache.has(key)) {
     return envCache.get(key) as string;
   }
 
-  const value =
-    importMetaEnv[key] ?? (typeof process !== 'undefined' ? process.env?.[key] : undefined);
+  const value = readImportMetaEnv(key) ?? readProcessEnv(key);
 
   if (!value) {
     if (required) {

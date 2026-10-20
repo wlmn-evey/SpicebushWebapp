@@ -1,5 +1,6 @@
 import { logError } from '@lib/error-logger';
 import { queryRows } from './client';
+import { toIsoTimestamp, toIsoTimestampOrNull } from './row-values';
 import type { CommunicationMessageRow, CommunicationTemplateRow } from './types';
 
 export interface CommunicationStatsSummary {
@@ -35,9 +36,25 @@ const toRecord = (value: unknown): Record<string, unknown> => {
   return {};
 };
 
+// `pg` returns TIMESTAMPTZ columns as Date objects; the row types promise ISO strings.
+const normalizeMessageRow = (row: CommunicationMessageRow): CommunicationMessageRow => ({
+  ...row,
+  scheduled_for: toIsoTimestampOrNull(row.scheduled_for),
+  sent_at: toIsoTimestampOrNull(row.sent_at),
+  created_at: toIsoTimestamp(row.created_at),
+  updated_at: toIsoTimestamp(row.updated_at)
+});
+
+const normalizeTemplateRow = (row: CommunicationTemplateRow): CommunicationTemplateRow => ({
+  ...row,
+  last_used_at: toIsoTimestampOrNull(row.last_used_at),
+  created_at: toIsoTimestamp(row.created_at),
+  updated_at: toIsoTimestamp(row.updated_at)
+});
+
 export async function getRecentMessages(limit = 10): Promise<CommunicationMessageRow[]> {
   try {
-    return await queryRows<CommunicationMessageRow>(
+    const rows = await queryRows<CommunicationMessageRow>(
       `
         SELECT
           id,
@@ -59,6 +76,7 @@ export async function getRecentMessages(limit = 10): Promise<CommunicationMessag
       `,
       [limit]
     );
+    return rows.map(normalizeMessageRow);
   } catch (error) {
     logError('db.communications', error, { action: 'getRecentMessages', limit });
     return [];
@@ -136,7 +154,7 @@ export async function getCommunicationStats(): Promise<CommunicationStatsSummary
 
 export async function getTemplates(): Promise<CommunicationTemplateRow[]> {
   try {
-    return await queryRows<CommunicationTemplateRow>(
+    const rows = await queryRows<CommunicationTemplateRow>(
       `
         SELECT
           id,
@@ -154,6 +172,7 @@ export async function getTemplates(): Promise<CommunicationTemplateRow[]> {
         ORDER BY usage_count DESC NULLS LAST, name ASC
       `
     );
+    return rows.map(normalizeTemplateRow);
   } catch (error) {
     logError('db.communications', error, { action: 'getTemplates' });
     return [];

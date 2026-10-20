@@ -1,5 +1,6 @@
 import { logError } from '@lib/error-logger';
 import { query, queryRows } from './client';
+import { toIsoTimestamp } from './row-values';
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
@@ -171,7 +172,7 @@ export async function getRecentAdSpendEntries(limit = 30): Promise<AdSpendEntryV
       currency: string;
       notes: string | null;
       created_by: string | null;
-      created_at: string;
+      created_at: string | Date;
     }>(
       `
         SELECT
@@ -200,7 +201,7 @@ export async function getRecentAdSpendEntries(limit = 30): Promise<AdSpendEntryV
       currency: row.currency,
       notes: row.notes,
       createdBy: row.created_by,
-      createdAt: row.created_at
+      createdAt: toIsoTimestamp(row.created_at)
     }));
   } catch (error) {
     logError('db.ad-spend', error, { action: 'getRecentAdSpendEntries' });

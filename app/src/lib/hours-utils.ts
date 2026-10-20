@@ -52,61 +52,110 @@ export function updateCurrentTime(timeElement: HTMLElement): void {
   timeElement.textContent = `${displayHour}:${minutes.toString().padStart(2, '0')} ${ampm}`;
 }
 
+const HOLIDAY_LOOKAHEAD_DAYS = 7;
+
+const getHolidayWindow = (): { today: Date; windowEnd: Date } => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const windowEnd = new Date(today);
+  windowEnd.setDate(today.getDate() + HOLIDAY_LOOKAHEAD_DAYS);
+  windowEnd.setHours(23, 59, 59, 999);
+  return { today, windowEnd };
+};
+
+/** Calendar years the lookahead window touches (two in late December). */
+const getWindowYears = (today: Date, windowEnd: Date): number[] => {
+  const years: number[] = [];
+  for (let year = today.getFullYear(); year <= windowEnd.getFullYear(); year++) {
+    years.push(year);
+  }
+  return years;
+};
+
+const isWithinWindow = (dateString: string, today: Date, windowEnd: Date): boolean => {
+  const [year, month, day] = dateString.split('-').map(Number);
+  const holidayDate = new Date(year, month - 1, day);
+  return holidayDate >= today && holidayDate <= windowEnd;
+};
+
 // Fetch US holidays from public API
 export async function fetchUpcomingHolidays(): Promise<Holiday[]> {
+  const { today, windowEnd } = getHolidayWindow();
+
   try {
-    const currentYear = new Date().getFullYear();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const sevenDaysFromNow = new Date();
-    sevenDaysFromNow.setDate(today.getDate() + 7);
-    sevenDaysFromNow.setHours(23, 59, 59, 999);
+    const holidaysByYear = await Promise.all(
+      getWindowYears(today, windowEnd).map(async year => {
+        const response = await fetch(`https://date.nager.at/api/v3/publicholidays/${year}/US`);
+        if (!response.ok) {
+          throw new Error(`Holiday API responded ${response.status}`);
+        }
+        return (await response.json()) as Holiday[];
+      })
+    );
 
-    const response = await fetch(`https://date.nager.at/api/v3/publicholidays/${currentYear}/US`);
-
-    if (!response.ok) {
-      return getFallbackHolidays(today, sevenDaysFromNow);
-    }
-
-    const allHolidays = await response.json();
-    return allHolidays.filter((holiday: Holiday) => {
-      const [year, month, day] = holiday.date.split('-').map(Number);
-      const holidayDate = new Date(year, month - 1, day);
-      return holidayDate >= today && holidayDate <= sevenDaysFromNow;
-    });
+    return holidaysByYear
+      .flat()
+      .filter((holiday: Holiday) => isWithinWindow(holiday.date, today, windowEnd));
   } catch {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const sevenDaysFromNow = new Date();
-    sevenDaysFromNow.setDate(today.getDate() + 7);
-    sevenDaysFromNow.setHours(23, 59, 59, 999);
-
-    return getFallbackHolidays(today, sevenDaysFromNow);
+    return getFallbackHolidays(today, windowEnd);
   }
 }
 
-// Fallback holiday data
-function getFallbackHolidays(today: Date, sevenDaysFromNow: Date): Holiday[] {
-  const currentYear = today.getFullYear();
+const pad2 = (value: number): string => String(value).padStart(2, '0');
 
-  const commonHolidays = [
-    { date: `${currentYear}-01-01`, name: "New Year's Day" },
-    { date: `${currentYear}-01-15`, name: 'Martin Luther King Jr. Day' },
-    { date: `${currentYear}-02-19`, name: 'Presidents Day' },
-    { date: `${currentYear}-05-27`, name: 'Memorial Day' },
-    { date: `${currentYear}-07-04`, name: 'Independence Day' },
-    { date: `${currentYear}-09-02`, name: 'Labor Day' },
-    { date: `${currentYear}-10-14`, name: 'Columbus Day' },
-    { date: `${currentYear}-11-11`, name: 'Veterans Day' },
-    { date: `${currentYear}-11-28`, name: 'Thanksgiving Day' },
-    { date: `${currentYear}-12-25`, name: 'Christmas Day' }
+const toDateString = (year: number, monthIndex: number, day: number): string =>
+  `${year}-${pad2(monthIndex + 1)}-${pad2(day)}`;
+
+/**
+ * Day-of-month of the nth `weekday` (0=Sun..6=Sat) in a month; n = -1 means the last one.
+ * Exported for tests.
+ */
+export function nthWeekdayOfMonth(
+  year: number,
+  monthIndex: number,
+  weekday: number,
+  n: number
+): number {
+  if (n === -1) {
+    const lastDay = new Date(year, monthIndex + 1, 0);
+    const back = (lastDay.getDay() - weekday + 7) % 7;
+    return lastDay.getDate() - back;
+  }
+  const firstWeekday = new Date(year, monthIndex, 1).getDay();
+  const firstMatch = 1 + ((weekday - firstWeekday + 7) % 7);
+  return firstMatch + (n - 1) * 7;
+}
+
+const MONDAY = 1;
+const THURSDAY = 4;
+
+/** Built-in US federal holiday list for a given year (floating holidays computed, not hardcoded). */
+export function getFallbackHolidaysForYear(year: number): Holiday[] {
+  return [
+    { date: toDateString(year, 0, 1), name: "New Year's Day" },
+    {
+      date: toDateString(year, 0, nthWeekdayOfMonth(year, 0, MONDAY, 3)),
+      name: 'Martin Luther King Jr. Day'
+    },
+    { date: toDateString(year, 1, nthWeekdayOfMonth(year, 1, MONDAY, 3)), name: 'Presidents Day' },
+    { date: toDateString(year, 4, nthWeekdayOfMonth(year, 4, MONDAY, -1)), name: 'Memorial Day' },
+    { date: toDateString(year, 6, 4), name: 'Independence Day' },
+    { date: toDateString(year, 8, nthWeekdayOfMonth(year, 8, MONDAY, 1)), name: 'Labor Day' },
+    { date: toDateString(year, 9, nthWeekdayOfMonth(year, 9, MONDAY, 2)), name: 'Columbus Day' },
+    { date: toDateString(year, 10, 11), name: 'Veterans Day' },
+    {
+      date: toDateString(year, 10, nthWeekdayOfMonth(year, 10, THURSDAY, 4)),
+      name: 'Thanksgiving Day'
+    },
+    { date: toDateString(year, 11, 25), name: 'Christmas Day' }
   ];
+}
 
-  return commonHolidays.filter(holiday => {
-    const [year, month, day] = holiday.date.split('-').map(Number);
-    const holidayDate = new Date(year, month - 1, day);
-    return holidayDate >= today && holidayDate <= sevenDaysFromNow;
-  });
+// Fallback holiday data
+function getFallbackHolidays(today: Date, windowEnd: Date): Holiday[] {
+  return getWindowYears(today, windowEnd)
+    .flatMap(getFallbackHolidaysForYear)
+    .filter(holiday => isWithinWindow(holiday.date, today, windowEnd));
 }
 
 // Get default hours data

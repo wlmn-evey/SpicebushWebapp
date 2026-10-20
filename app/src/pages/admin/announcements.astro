@@ -7,22 +7,14 @@ import {
   getRecentAnnouncementEmailJobs
 } from '@lib/announcement-email';
 import { db } from '@lib/db';
+import { SCHOOL_TIME_ZONE, toEasternDateTimeInputValue } from '@lib/eastern-time';
 
 const savedKey = Astro.url.searchParams.get('saved');
 const errorKey = Astro.url.searchParams.get('error');
 
-const toDateTimeInputValue = (value: string | null): string => {
-  if (!value) return '';
-  const parsed = Date.parse(value);
-  if (!Number.isFinite(parsed)) return '';
-  const date = new Date(parsed);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
+// datetime-local inputs are zone-less: render stored UTC instants as school-local (Eastern)
+// wall-clock time. The DB layer interprets submitted naive values as Eastern too.
+const toDateTimeInputValue = (value: string | null): string => toEasternDateTimeInputValue(value);
 
 const formatRange = (startDate: string, endDate: string): string => {
   if (startDate === endDate) return startDate;
@@ -34,7 +26,8 @@ const formatDateTimeDisplay = (value: string): string => {
   if (!Number.isFinite(parsed)) return value;
   return new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
-    timeStyle: 'short'
+    timeStyle: 'short',
+    timeZone: SCHOOL_TIME_ZONE
   }).format(new Date(parsed));
 };
 

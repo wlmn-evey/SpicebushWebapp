@@ -16,6 +16,13 @@ export interface EmailMessage {
   text?: string;
   html?: string;
   replyTo?: string;
+  /**
+   * Bulk/broadcast sends: deliver a separate copy to each recipient so nobody sees the others'
+   * addresses (SendGrid: one personalization per recipient; UniOne already delivers each
+   * `recipients` entry as its own message). Leave unset for the normal single-envelope
+   * behavior (e.g. the contact form's internal notification).
+   */
+  individualRecipients?: boolean;
   attachments?: Array<{
     filename: string;
     content: string | Buffer;
@@ -168,6 +175,15 @@ const messageHasBody = (message: EmailMessage): boolean => {
   return hasText || hasHtml;
 };
 
+/** SendGrid's documented per-request cap on `personalizations`. */
+const SENDGRID_MAX_PERSONALIZATIONS = 1000;
+const DEFAULT_PROVIDER_TIMEOUT_MS = 15000;
+
+const parseTimeoutMs = (value: string | undefined): number => {
+  const parsed = Number.parseInt(value || String(DEFAULT_PROVIDER_TIMEOUT_MS), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_PROVIDER_TIMEOUT_MS;
+};
+
 const providerError = (provider: string, error: string): EmailResult => ({
   success: false,
   error,
@@ -186,8 +202,7 @@ class SendGridProvider implements EmailProvider {
   constructor() {
     this.apiKey = process.env.SENDGRID_API_KEY || '';
     this.baseUrl = process.env.SENDGRID_API_BASE_URL || 'https://api.sendgrid.com/v3';
-    const parsedTimeout = Number.parseInt(process.env.SENDGRID_TIMEOUT_MS || '15000', 10);
-    this.timeoutMs = Number.isFinite(parsedTimeout) && parsedTimeout > 0 ? parsedTimeout : 15000;
+    this.timeoutMs = parseTimeoutMs(process.env.SENDGRID_TIMEOUT_MS);
   }
 
   isConfigured(): boolean {
@@ -234,12 +249,21 @@ class SendGridProvider implements EmailProvider {
           : Buffer.from(attachment.content).toString('base64')
       })) ?? [];
 
+    if (message.individualRecipients && recipients.length > SENDGRID_MAX_PERSONALIZATIONS) {
+      return providerError(
+        this.name,
+        `Too many recipients for one send (${recipients.length} > ${SENDGRID_MAX_PERSONALIZATIONS})`
+      );
+    }
+
+    // Individual mode: one personalization per recipient, so each copy's To: header holds only
+    // that recipient. Default mode keeps everyone in one personalization (one shared To:).
+    const personalizations = message.individualRecipients
+      ? recipients.map(email => ({ to: [{ email }] }))
+      : [{ to: recipients.map(email => ({ email })) }];
+
     const payload: Record<string, unknown> = {
-      personalizations: [
-        {
-          to: recipients.map(email => ({ email }))
-        }
-      ],
+      personalizations,
       from: { email: sender.email, name: sender.name },
       subject: message.subject,
       content
@@ -303,9 +327,14 @@ class UnioneProvider implements EmailProvider {
   name = 'Unione';
   private apiKey: string;
   private baseUrl: string;
+  private timeoutMs: number;
 
   constructor() {
     this.apiKey = process.env.UNIONE_API_KEY || '';
+    // Same default as SendGrid; UNIONE_TIMEOUT_MS overrides, else SENDGRID_TIMEOUT_MS is shared.
+    this.timeoutMs = parseTimeoutMs(
+      process.env.UNIONE_TIMEOUT_MS || process.env.SENDGRID_TIMEOUT_MS
+    );
     // Use EU region by default, can be overridden with UNIONE_REGION=us
     const region = process.env.UNIONE_REGION || 'eu';
     this.baseUrl =
@@ -340,10 +369,16 @@ class UnioneProvider implements EmailProvider {
       return providerError(this.name, 'Email body is required (text or html)');
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
+
     try {
       const replyTo = parseReplyTo(message.replyTo);
 
-      // Prepare the message payload without API key (will use header instead)
+      // Prepare the message payload without API key (will use header instead).
+      // UniOne's `recipients` is a per-recipient list: each entry is delivered as its own message
+      // (that is what makes per-recipient `substitutions` possible), so `individualRecipients`
+      // needs no special payload here.
       const payload = {
         message: {
           body: {
@@ -366,7 +401,8 @@ class UnioneProvider implements EmailProvider {
           Accept: 'application/json',
           'X-API-KEY': this.apiKey
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
 
       const data = await response.json();
@@ -385,7 +421,12 @@ class UnioneProvider implements EmailProvider {
         provider: this.name
       };
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return providerError(this.name, 'Unione request timed out');
+      }
       return providerError(this.name, error instanceof Error ? error.message : 'Unknown error');
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 }

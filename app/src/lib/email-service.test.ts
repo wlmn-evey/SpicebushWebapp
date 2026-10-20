@@ -21,6 +21,7 @@ const setBaseEnv = () => {
   delete process.env.SENDGRID_TIMEOUT_MS;
   delete process.env.UNIONE_API_KEY;
   delete process.env.UNIONE_REGION;
+  delete process.env.UNIONE_TIMEOUT_MS;
   delete process.env.EMAIL_SERVICE;
 };
 
@@ -143,6 +144,100 @@ describe('EmailService', () => {
     const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
     const payload = JSON.parse(String(request.body)) as { from?: { email?: string } };
     expect(payload.from?.email).toBe('information@spicebushmontessori.org');
+  });
+
+  it('keeps a single shared personalization by default (contact-form path unchanged)', async () => {
+    process.env.SENDGRID_API_KEY = 'SG.test-key';
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 202 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await new EmailService().send({
+      to: ['a@example.com', 'b@example.com'],
+      subject: 'Contact',
+      text: 'Body'
+    });
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const payload = JSON.parse(String(request.body)) as { personalizations: unknown[] };
+    expect(payload.personalizations).toEqual([
+      { to: [{ email: 'a@example.com' }, { email: 'b@example.com' }] }
+    ]);
+  });
+
+  it('sends one SendGrid personalization per recipient when individualRecipients is set', async () => {
+    process.env.SENDGRID_API_KEY = 'SG.test-key';
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 202 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await new EmailService().send({
+      to: ['a@example.com', 'b@example.com', 'c@example.com'],
+      subject: 'Announcement',
+      text: 'Body',
+      individualRecipients: true
+    });
+
+    expect(result.success).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const payload = JSON.parse(String(request.body)) as { personalizations: unknown[] };
+    expect(payload.personalizations).toEqual([
+      { to: [{ email: 'a@example.com' }] },
+      { to: [{ email: 'b@example.com' }] },
+      { to: [{ email: 'c@example.com' }] }
+    ]);
+  });
+
+  it('passes the recipient list to UniOne as its per-recipient array', async () => {
+    process.env.EMAIL_SERVICE = 'unione';
+    process.env.UNIONE_API_KEY = 'unione-key';
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ job_id: 'u-1' }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await new EmailService().send({
+      to: ['a@example.com', 'b@example.com'],
+      subject: 'Announcement',
+      text: 'Body',
+      individualRecipients: true
+    });
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const payload = JSON.parse(String(request.body)) as {
+      message: { recipients: Array<{ email: string }> };
+    };
+    expect(payload.message.recipients).toEqual([
+      { email: 'a@example.com' },
+      { email: 'b@example.com' }
+    ]);
+    expect(request.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('times out a hung UniOne request instead of waiting forever', async () => {
+    process.env.EMAIL_SERVICE = 'unione';
+    process.env.UNIONE_API_KEY = 'unione-key';
+    process.env.UNIONE_TIMEOUT_MS = '20';
+
+    const fetchMock = vi.fn().mockImplementation(
+      (_url: string, init: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          init.signal?.addEventListener('abort', () => {
+            const abortError = new Error('aborted');
+            abortError.name = 'AbortError';
+            reject(abortError);
+          });
+        })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await new EmailService().send({
+      to: 'family@example.com',
+      subject: 'Hello',
+      text: 'Body'
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Unione request timed out');
   });
 
   it('normalizes preferred provider aliases', () => {

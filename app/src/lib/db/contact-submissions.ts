@@ -1,6 +1,7 @@
 import { logError } from '@lib/error-logger';
 import { query, queryFirst, queryRows } from './client';
 import { normalizeCount, normalizePage, normalizePageSize } from './pagination';
+import { toIsoTimestamp } from './row-values';
 import type { ContactFormSubmissionRow } from './types';
 
 export interface ContactSubmissionQueryOptions {
@@ -89,7 +90,9 @@ export async function getContactSubmissions(
     );
 
     return {
-      items,
+      // `pg` returns TIMESTAMPTZ as a Date; the row type, admin formatter and CSV export expect
+      // an ISO string (a raw Date would stringify as "Tue Oct 20 2026 ... GMT+0000 ...").
+      items: items.map(item => ({ ...item, submitted_at: toIsoTimestamp(item.submitted_at) })),
       total,
       page,
       pageSize

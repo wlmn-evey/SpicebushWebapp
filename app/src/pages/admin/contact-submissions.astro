@@ -1,6 +1,7 @@
 ---
 import AdminLayout from '@layouts/AdminLayout.astro';
 import { db } from '@lib/db';
+import { SCHOOL_TIME_ZONE } from '@lib/eastern-time';
 
 const PAGE_SIZE = 50;
 const rawSearch = Astro.url.searchParams.get('q');
@@ -75,7 +76,8 @@ const attributedLeadsOnPage = result.items.filter(submission => {
 
 const submittedDateFormatter = new Intl.DateTimeFormat('en-US', {
   dateStyle: 'medium',
-  timeStyle: 'short'
+  timeStyle: 'short',
+  timeZone: SCHOOL_TIME_ZONE
 });
 
 const formatSubmittedAt = (value: string): string => {

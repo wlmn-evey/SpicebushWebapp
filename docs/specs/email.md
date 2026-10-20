@@ -19,9 +19,18 @@ The email system is built on a provider-agnostic abstraction defined in `app/src
 | Provider | Class | API Key Env Var | Additional Env Vars |
 |----------|-------|----------------|---------------------|
 | **SendGrid** | `SendGridProvider` | `SENDGRID_API_KEY` | `SENDGRID_API_BASE_URL` (default `https://api.sendgrid.com/v3`), `SENDGRID_TIMEOUT_MS` (default 15000) |
-| **Unione.io** | `UnioneProvider` | `UNIONE_API_KEY` | `UNIONE_REGION` (`eu` or `us`, default `eu`) |
+| **Unione.io** | `UnioneProvider` | `UNIONE_API_KEY` | `UNIONE_REGION` (`eu` or `us`, default `eu`), `UNIONE_TIMEOUT_MS` (default: `SENDGRID_TIMEOUT_MS`, else 15000) |
 
-Both providers are always instantiated. Only providers with a non-empty API key are considered "configured."
+Both providers are always instantiated. Only providers with a non-empty API key are considered "configured." Both abort a hung request after their timeout (`AbortController`) and return a "request timed out" error, which lets the service fall back to the other provider.
+
+### Recipient Privacy (`individualRecipients`)
+
+`EmailMessage.individualRecipients` (default off) is for broadcasts: each recipient receives their own copy and never sees the other addresses.
+
+- **SendGrid:** one `personalizations` entry per recipient in a single request (max 1000 recipients per send; larger lists are rejected with an error rather than silently split).
+- **UniOne:** the `recipients` array is already per-recipient (each entry is delivered as its own message, which is what enables per-recipient substitutions), so the payload is unchanged.
+
+Default (flag unset) keeps every recipient in one shared personalization -- the contact-form and donation internal-notification paths are unchanged. Announcement emails set the flag.
 
 ### Provider Selection and Fallback
 
@@ -99,7 +108,23 @@ Admins can override the template selection when sending. Templates are loaded fr
 
 Content interpolation supports: `{{title}}`, `{{message}}`, `{{severity}}`, `{{severity_label}}`, `{{placement}}`, `{{placement_label}}`, `{{starts_at}}`, `{{ends_at}}`, `{{schedule_window}}`, `{{cta_label}}`, `{{cta_url}}`, `{{school_name}}`.
 
-Job processing (`processDueAnnouncementEmailJobs`) uses `SELECT ... FOR UPDATE SKIP LOCKED` to safely claim due jobs in concurrent environments. Jobs track `attempt_count`, `sent_count`, `sent_at`, and `last_error`.
+Announcement emails are sent with `individualRecipients: true`, so families never see each other's addresses. Times in the email body (`{{starts_at}}`, `{{ends_at}}`, `{{schedule_window}}`) are formatted in America/New_York. The admin "Reminder Send Time" (`datetime-local`, zone-less) is interpreted as Eastern wall-clock time.
+
+Job processing (`processDueAnnouncementEmailJobs`) uses `SELECT ... FOR UPDATE SKIP LOCKED` to safely claim due jobs in concurrent environments. Jobs track `attempt_count`, `sent_count`, `sent_at`, and `last_error`. See **Job Claim and Retry Policy** below.
+
+### Job Claim and Retry Policy (announcement and donation jobs)
+
+**Source:** `app/src/lib/email-job-retry.ts` (shared by `announcement-email.ts` and `donation-thank-you.ts`).
+
+Claiming sets `status = 'processing'` and increments `attempt_count`. A job is claimable when:
+
+| Current status | Condition |
+|----------------|-----------|
+| `scheduled` | `scheduled_for <= NOW()` |
+| `processing` | untouched (`updated_at`) for 15 minutes -- presumed abandoned by a crashed/timed-out function -- AND `attempt_count < 3` AND `scheduled_for` within the last 24 hours |
+| `failed` | same as `processing`: 15-minute back-off since the last attempt, `attempt_count < 3`, `scheduled_for` within 24 hours |
+
+Before claiming, abandoned `processing` rows that can no longer be retried (out of attempts or older than the 24-hour window) are swept to `failed` with `last_error = 'Abandoned while processing (timed out or crashed)'`. The 24-hour window keeps old failures from being re-sent long after the fact (e.g., right after a deploy). Each job is processed inside its own `try/catch`: a throw marks that job `failed` (with the error in `last_error`) and the batch continues. `failed` therefore means "will be retried until 3 attempts"; cancel a failed job to stop retries. Trade-off: if a send succeeds but recording the result fails, the reclaim can produce one duplicate email.
 
 ### 2.4 Donation Thank-You Emails
 
@@ -120,7 +145,7 @@ Controlled by settings:
 
 The `donation_events` table tracks per-event email status (`pending`, `sent`, `skipped`, `failed`) via the `thank_you_email_status` column.
 
-The `donation_email_jobs` table supports scheduled retries and manual resends with job kinds: `reminder`, `retry`, `manual-resend`.
+The `donation_email_jobs` table supports scheduled retries and manual resends with job kinds: `reminder`, `retry`, `manual-resend`. Job claiming/retry follows the shared **Job Claim and Retry Policy** (section 2.3). Donation dates in emails are formatted in America/New_York, and the admin "Custom Reminder Time" is interpreted as Eastern wall-clock time.
 
 ### 2.5 Donation Internal Notifications
 
@@ -329,7 +354,8 @@ Note: The current provider implementations (`SendGridProvider`, `UnioneProvider`
 | `SENDGRID_API_KEY` | For SendGrid | -- | SendGrid API key |
 | `SENDGRID_FROM_EMAIL` | No | (fallback for `EMAIL_FROM`) | Legacy sender address env var |
 | `SENDGRID_API_BASE_URL` | No | `https://api.sendgrid.com/v3` | SendGrid API base URL |
-| `SENDGRID_TIMEOUT_MS` | No | `15000` | SendGrid request timeout in ms |
+| `SENDGRID_TIMEOUT_MS` | No | `15000` | SendGrid request timeout in ms (also UniOne's default) |
+| `UNIONE_TIMEOUT_MS` | No | `SENDGRID_TIMEOUT_MS` or `15000` | UniOne request timeout in ms |
 | `UNIONE_API_KEY` | For Unione | -- | Unione.io API key |
 | `UNIONE_REGION` | No | `eu` | Unione region: `eu` or `us` |
 
