@@ -15,7 +15,7 @@
 - `cd app && npm run test:e2e [-- --ui]`: Runs Playwright E2E tests; add `--ui` for interactive runner.
 
 ## Coding Style & Naming Conventions
-- Use TypeScript in `app/` with 2-space indentation; follow ESLint (`app/.eslintrc.json`) and Prettier defaults.
+- Use TypeScript in `app/` with 2-space indentation; follow ESLint (`app/eslint.config.js`, flat config) and Prettier defaults.
 - Components are PascalCase (`Button.tsx`); pages are kebab-case route files (`tuition-policy.astro`).
 - Utilities follow camelCase naming in `app/src/lib/` or `app/src/utils/`.
 
