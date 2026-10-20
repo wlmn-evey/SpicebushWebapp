@@ -62,7 +62,7 @@ if ! DB_URL_RAW="$(
   NETLIFY_SITE_ID="${NETLIFY_SITE_ID}" \
   NETLIFY_CLI_DISABLE_UPDATE_NOTIFIER=1 \
   XDG_CONFIG_HOME="${CONFIG_HOME_DIR}" \
-  npx --prefix "${APP_DIR}" netlify env:get "${DB_ENV_VAR}" --context "${CONTEXT}" --scope any
+  npx --yes netlify-cli@27 env:get "${DB_ENV_VAR}" --context "${CONTEXT}" --scope any
 )"; then
   echo "Error: failed to resolve ${DB_ENV_VAR} from Netlify."
   echo "Ensure NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID are correct."

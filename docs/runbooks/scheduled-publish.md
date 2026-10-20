@@ -41,7 +41,7 @@ The function runs unauthenticated on Netlify's scheduler; confirm it is register
 ```bash
 # It appears in the deployed function list and the Netlify scheduled-functions logs show a
 # ~5-min cadence with a 200 + JSON summary { scannedScheduled, published, notYetDue, skippedMalformed }.
-npx netlify functions:list | grep publish-scheduled-blog-posts
+npx netlify-cli@27 functions:list | grep publish-scheduled-blog-posts
 ```
 
 End-to-end smoke: save a draft as `scheduled` with `publishedAt` ~6 minutes out, wait two cron

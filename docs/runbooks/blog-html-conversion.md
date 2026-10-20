@@ -39,7 +39,7 @@ overwrites `data.body`. A row that is **not equivalent is SKIPPED, not converted
 gate never launders content loss; handle such a post by hand. Already-converted rows (already HTML or
 carrying a backup) are skipped, so the script is idempotent.
 
-> Get the Neon pooler URL from the **repo root**: `npx netlify env:get NETLIFY_DATABASE_URL`
+> Get the Neon pooler URL from the **repo root**: `npx netlify-cli@27 env:get NETLIFY_DATABASE_URL`
 > (`apply-migrations.sh` echoes the host — confirm it is the Neon pooler, not localhost).
 
 ### Verify after converting

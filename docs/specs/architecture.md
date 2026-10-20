@@ -67,7 +67,7 @@ SpicebushWebapp/              (repo root -- deploy from here)
 
 - **Build command**: `npm run build` (from `app/`)
 - **Output**: `app/dist/`
-- **Deploy**: `npx netlify deploy --prod --dir=app/dist` (from repo root, NOT `app/`)
+- **Deploy**: `npx netlify-cli@27 deploy --prod --dir=app/dist` (from repo root, NOT `app/`; netlify-cli is fetched by npx, not installed as an app dependency)
 - **Netlify config**: `netlify.toml` has no `base` key; deploy from the repo root with `--dir=app/dist`
 - **Email**: SendGrid and Unione are called over REST (`src/lib/email-service.ts`); there are no email SDK packages or Rollup externals
 
@@ -221,4 +221,4 @@ Low-level SQL uses `queryFirst()` and `queryRows()` from `@lib/db/client`.
 - Utilities: camelCase in `src/lib/` and `src/utils/`
 - Tests: `*.test.ts` co-located with source or under `src/test/`
 - Commit prefixes: `feat(scope):`, `fix(scope):`, `[BUILD-FIX]`
-- ESLint config: `app/.eslintrc.json` with `eslint-plugin-astro` and `eslint-plugin-jsx-a11y`
+- ESLint config: `app/eslint.config.js` (ESLint 10 flat config) with `typescript-eslint`, `eslint-plugin-astro` and `eslint-plugin-jsx-a11y-x`

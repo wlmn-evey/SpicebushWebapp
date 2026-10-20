@@ -539,7 +539,6 @@ describe('renderPostBody — URI / XSS matrix', () => {
     expect(renderPostBody('[anchor](#top)')).not.toContain('#top');
     // Positive companions: the safe shell survives (only the dangerous href is dropped),
     // so a mutation that nukes the whole link structure — not just the scheme — is also caught.
-    // eslint-disable-next-line no-script-url -- intentional XSS test vector
     expect(renderPostBody('[x](javascript:alert(1))')).toContain('>x<');
     expect(renderPostBody('[anchor](#top)')).toContain('anchor');
   });

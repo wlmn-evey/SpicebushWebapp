@@ -606,7 +606,7 @@ try {
       orderedDays.forEach((day, index) => {
         const info = processedHoursData[day];
         const isToday = day === days[todayIdx];
-        let effectiveInfo = info ? { ...info } : null;
+        const effectiveInfo = info ? { ...info } : null;
 
         const li = document.createElement('li');
         li.className = 'p-3 rounded-lg transition-all duration-300';

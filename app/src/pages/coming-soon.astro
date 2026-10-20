@@ -604,6 +604,7 @@ const seoMetadata = await resolveSeoMetadata({
     {analyticsEnabled && (
       <script is:inline define:vars={{ gaMeasurementId, shouldLoadGaScript }}>
         window.dataLayer = window.dataLayer || [];
+        // eslint-disable-next-line prefer-rest-params -- gtag.js requires the real arguments object
         function gtag() { window.dataLayer.push(arguments); }
         window.gtag = gtag;
         if (shouldLoadGaScript && gaMeasurementId) {

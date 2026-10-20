@@ -30,7 +30,7 @@ export default defineConfig({
     exclude: ['node_modules', 'dist', '.astro', 'archived-directories/**', 'archive/**'],
     coverage: {
       provider: 'v8',
-      all: true,
+      // vitest 4+: files matching 'include' are reported even when untested (replaces 'all: true')
       include: ['src/lib/**/*.ts'],
       exclude: ['src/**/*.test.ts', 'src/test/**'],
       reporter: ['text', 'json-summary', 'html']
