@@ -85,7 +85,7 @@ Once the `/admin/blog` authoring page (PR-2) is live, the owner/tester can see t
 From `app/`:
 
 ```bash
-NETLIFY_DATABASE_URL="$(npx netlify env:get NETLIFY_DATABASE_URL --context production)" npm run db:migrate
+NETLIFY_DATABASE_URL="$(npx netlify-cli@27 env:get NETLIFY_DATABASE_URL --context production)" npm run db:migrate
 ```
 
 `--context production` is **MANDATORY** — `env:get` defaults to the dev context, and this site carries context-divergent values.
@@ -262,8 +262,10 @@ No Netlify git integration is used — GitHub Actions owns the build and deploy 
 cd app && npm run build
 
 # Deploy from repo root
-cd .. && npx netlify deploy --prod --dir=app/dist
+cd .. && npx netlify-cli@27 deploy --prod --dir=app/dist
 ```
+
+`netlify-cli` is intentionally **not** an `app/` dependency (its transitive tree was the bulk of the `npm audit` findings, issue #43). `npx netlify-cli@27 …` downloads the pinned major on demand; bump the major here, in `CLAUDE.md` and in `app/scripts/netlify-deploy.sh` / `seed-netlify-db.sh` / `check-migrations-netlify.sh` together.
 
 ---
 
@@ -317,7 +319,7 @@ flipped only at the supervised launch. The PR build does **not** execute any of 
    origin and per-post canonical/OG origins are baked from `PUBLIC_SITE_URL` at `astro build`
    time. The production build **must** run with `PUBLIC_SITE_URL=https://spicebushmontessori.org`:
    ```bash
-   npx netlify env:set PUBLIC_SITE_URL https://spicebushmontessori.org
+   npx netlify-cli@27 env:set PUBLIC_SITE_URL https://spicebushmontessori.org
    ```
    (all contexts; currently the production context is `https://spicebush-testing.netlify.app`,
    which is the confirmed canonicals bug.)

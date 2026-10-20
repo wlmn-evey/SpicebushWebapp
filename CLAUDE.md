@@ -21,7 +21,7 @@ npm run db:migrate              # Apply migrations
 npm run db:seed                 # Seed critical data
 
 # Deploy from REPO ROOT, not app/
-npx netlify deploy --prod --dir=app/dist
+npx netlify-cli@27 deploy --prod --dir=app/dist   # netlify-cli is not an app dependency; npx fetches the pinned major
 ```
 
 ## Workflow Rules

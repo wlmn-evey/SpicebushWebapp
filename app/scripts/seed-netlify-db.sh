@@ -41,7 +41,7 @@ if ! DB_URL_RAW="$(
   NETLIFY_SITE_ID="${NETLIFY_SITE_ID}" \
   NETLIFY_CLI_DISABLE_UPDATE_NOTIFIER=1 \
   XDG_CONFIG_HOME="${CONFIG_HOME_DIR}" \
-  npx --prefix "${APP_DIR}" netlify env:get "${DB_ENV_VAR}" --context "${CONTEXT}" --scope any
+  npx --yes netlify-cli@27 env:get "${DB_ENV_VAR}" --context "${CONTEXT}" --scope any
 )"; then
   echo "Error: failed to resolve ${DB_ENV_VAR} from Netlify."
   echo "Ensure NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID are correct."
@@ -52,13 +52,13 @@ DB_URL="$(printf '%s' "${DB_URL_RAW}" | tr -d '\r' | awk 'NF{line=$0} END{print 
 
 if [[ -z "${DB_URL}" || "${DB_URL}" == "null" ]]; then
   echo "Error: Netlify env var ${DB_ENV_VAR} is empty for context ${CONTEXT}."
-  echo "Set it with: npx netlify env:set ${DB_ENV_VAR} '<postgres-url>'"
+  echo "Set it with: npx netlify-cli@27 env:set ${DB_ENV_VAR} '<postgres-url>'"
   exit 1
 fi
 
 if [[ ! "${DB_URL}" =~ ^postgres(ql)?:// ]]; then
   echo "Error: Netlify env var ${DB_ENV_VAR} for context ${CONTEXT} is not a Postgres URL."
-  echo "Set it with: NETLIFY_SITE_ID='${NETLIFY_SITE_ID}' npx netlify env:set ${DB_ENV_VAR} '<postgres-url>'"
+  echo "Set it with: NETLIFY_SITE_ID='${NETLIFY_SITE_ID}' npx netlify-cli@27 env:set ${DB_ENV_VAR} '<postgres-url>'"
   exit 1
 fi
 

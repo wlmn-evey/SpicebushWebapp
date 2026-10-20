@@ -67,7 +67,7 @@ SpicebushWebapp/              (repo root -- deploy from here)
 
 - **Build command**: `npm run build` (from `app/`)
 - **Output**: `app/dist/`
-- **Deploy**: `npx netlify deploy --prod --dir=app/dist` (from repo root, NOT `app/`)
+- **Deploy**: `npx netlify-cli@27 deploy --prod --dir=app/dist` (from repo root, NOT `app/`; netlify-cli is fetched by npx, not installed as an app dependency)
 - **Netlify config**: `netlify.toml` has `base=app`, so deploying from `app/` causes path doubling
 - **Externalized packages**: `resend`, `@sendgrid/mail`, `postmark` are marked as Rollup externals and resolved at runtime on Netlify, not at build time
 
@@ -221,4 +221,4 @@ Low-level SQL uses `queryFirst()` and `queryRows()` from `@lib/db/client`.
 - Utilities: camelCase in `src/lib/` and `src/utils/`
 - Tests: `*.test.ts` co-located with source or under `src/test/`
 - Commit prefixes: `feat(scope):`, `fix(scope):`, `[BUILD-FIX]`
-- ESLint config: `app/.eslintrc.json` with `eslint-plugin-astro` and `eslint-plugin-jsx-a11y`
+- ESLint config: `app/eslint.config.js` (ESLint 10 flat config) with `typescript-eslint`, `eslint-plugin-astro` and `eslint-plugin-jsx-a11y-x`

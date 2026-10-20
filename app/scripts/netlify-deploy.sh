@@ -41,4 +41,4 @@ fi
 
 echo "Deploying ${DEPLOY_DIR} to Netlify site ${SITE_ID}..."
 cd "${NETLIFY_LINK_DIR}"
-npx --prefix "${APP_DIR}" netlify deploy --dir "${DEPLOY_DIR}" --site "${SITE_ID}" "$@"
+npx --yes netlify-cli@27 deploy --dir "${DEPLOY_DIR}" --site "${SITE_ID}" "$@"
