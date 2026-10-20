@@ -3,29 +3,20 @@ import { logError } from '@lib/error-logger';
 type DbEnvKey = 'NETLIFY_DATABASE_URL' | 'DATABASE_URL';
 
 /**
- * Read a DB env var from `import.meta.env` using STATIC property access only.
- *
- * Vite (and Astro's dev module runner) rewrites `import.meta.env.NAME` at transform time but
- * rejects dynamic access (`import.meta.env[name]`, or grabbing the `env` object and indexing it)
- * with "[module runner] Dynamic access of "import.meta.env" is not supported" — which broke every
- * DB call under `astro dev`. Each key therefore gets its own literal expression. The try/catch
- * covers runtimes where `import.meta.env` is undefined (plain Node scripts); those fall back to
- * `process.env` below.
+ * Runtime secrets come from `process.env`. Astro inlines `import.meta.env.NAME` values at build
+ * time, and Vite loads `.env` files into it, so an ungated read would bake the build machine's
+ * database URL into the SSR bundle (local `npm run build` with `.env.local` present, then
+ * `netlify deploy --dir=app/dist`). `import.meta.env.DEV` is statically false in production builds,
+ * so these static reads are compiled out there; in `astro dev` they expose `.env` values, which
+ * Vite does not copy into `process.env`. Static property access only: Vite's dev module runner
+ * rejects dynamic `import.meta.env[name]` access.
  */
-function readImportMetaEnv(key: DbEnvKey): string | undefined {
-  try {
-    switch (key) {
-      case 'NETLIFY_DATABASE_URL':
-        return import.meta.env.NETLIFY_DATABASE_URL;
-      case 'DATABASE_URL':
-        return import.meta.env.DATABASE_URL;
-      default:
-        return undefined;
+const devImportMetaEnv: Partial<Record<DbEnvKey, string | undefined>> = import.meta.env.DEV
+  ? {
+      NETLIFY_DATABASE_URL: import.meta.env.NETLIFY_DATABASE_URL,
+      DATABASE_URL: import.meta.env.DATABASE_URL
     }
-  } catch {
-    return undefined;
-  }
-}
+  : {};
 
 function readProcessEnv(key: DbEnvKey): string | undefined {
   return typeof process !== 'undefined' ? process.env?.[key] : undefined;
@@ -38,7 +29,7 @@ function readEnv(key: DbEnvKey, { required = false }: { required?: boolean } = {
     return envCache.get(key) as string;
   }
 
-  const value = readImportMetaEnv(key) ?? readProcessEnv(key);
+  const value = readProcessEnv(key) || devImportMetaEnv[key];
 
   if (!value) {
     if (required) {

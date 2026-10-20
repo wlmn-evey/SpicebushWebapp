@@ -4,16 +4,15 @@
  */
 import type { APIRoute } from 'astro';
 import { queryFirst } from '@lib/db/client';
+import { getNetlifyDatabaseUrl } from '@lib/db/env';
 import { logServerError } from '@lib/server-logger';
 
 export const GET: APIRoute = async () => {
   const startTime = Date.now();
 
   try {
-    const databaseUrl = import.meta.env.NETLIFY_DATABASE_URL || import.meta.env.DATABASE_URL;
-    if (!databaseUrl) {
-      throw new Error('Database URL not configured');
-    }
+    // Throws when neither database URL is set; read at runtime, never inlined into the bundle.
+    getNetlifyDatabaseUrl();
 
     // Quick database ping with timeout
     const timeoutPromise = new Promise((_, reject) =>

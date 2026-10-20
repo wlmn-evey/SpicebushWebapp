@@ -71,6 +71,7 @@ Low-level: `queryFirst()` and `queryRows()` from `@lib/db/client`.
 - **CSS `* { max-width: 100% }`** in `global.css` clamps ALL elements. Override with `max-width: none` when needed.
 - **Deploy from repo root, not `app/`.** Deploying from repo root with `--dir=app/dist` is the working, current path; there is no `base=app` in the committed `netlify.toml`. The repo-root deploy empirically uploads the SSR function and prod serves SSR.
 - **SVGs with `preserveAspectRatio="none"`** need explicit width values (`width: auto` won't work).
+- **Never read server secrets with a bare `import.meta.env.SECRET`.** Astro inlines it at build time (Vite loads `.env.local`), so a local build bakes the secret into the SSR bundle. Read `process.env` at runtime; for dev-only `.env` access, gate static reads behind `import.meta.env.DEV` (see `src/lib/db/env.ts`). Dynamic `import.meta.env[key]` throws in `astro dev`.
 
 ## Conventions (Beyond Linter)
 

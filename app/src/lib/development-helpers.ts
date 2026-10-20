@@ -169,7 +169,12 @@ export function isDevEnvironment(): boolean {
     }
 
     // Check for explicit local database environment values.
-    const databaseUrl = import.meta.env.DATABASE_URL ?? import.meta.env.NETLIFY_DATABASE_URL;
+    // process.env, not import.meta.env: a static import.meta.env read of a secret is inlined
+    // into the production bundle at build time.
+    const databaseUrl =
+      typeof process !== 'undefined'
+        ? (process.env?.DATABASE_URL ?? process.env?.NETLIFY_DATABASE_URL)
+        : undefined;
     if (
       databaseUrl &&
       (databaseUrl.includes('localhost') ||

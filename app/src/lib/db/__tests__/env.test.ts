@@ -12,7 +12,7 @@ describe('db env', () => {
     clearEnvCache();
   });
 
-  it('reads NETLIFY_DATABASE_URL via static import.meta.env access', () => {
+  it('reads NETLIFY_DATABASE_URL', () => {
     vi.stubEnv('NETLIFY_DATABASE_URL', 'postgres://netlify-url');
     expect(getNetlifyDatabaseUrl()).toBe('postgres://netlify-url');
   });
@@ -38,5 +38,21 @@ describe('db env', () => {
     expect(source).not.toMatch(/import\.meta\.env\s*\[/);
     expect(source).not.toMatch(/\(import\.meta as [^)]*\)\.env/);
     expect(source).toContain('import.meta.env.NETLIFY_DATABASE_URL');
+  });
+
+  it('gates every import.meta.env secret read behind import.meta.env.DEV (no build-time inlining)', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { resolve } = await import('node:path');
+    const source = readFileSync(resolve(process.cwd(), 'src/lib/db/env.ts'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/.*$/gm, '');
+    const gated = source.slice(source.indexOf('import.meta.env.DEV'), source.indexOf(': {};'));
+    const ungated = source.replace(gated, '');
+    expect(ungated).not.toMatch(/import\.meta\.env\.(NETLIFY_DATABASE_URL|DATABASE_URL)/);
+  });
+
+  it('prefers process.env over the dev-only import.meta.env values', () => {
+    vi.stubEnv('NETLIFY_DATABASE_URL', 'postgres://runtime-url');
+    expect(getNetlifyDatabaseUrl()).toBe('postgres://runtime-url');
   });
 });
