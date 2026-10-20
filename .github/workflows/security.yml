@@ -57,8 +57,11 @@ jobs:
 
     - name: Production audit (blocking, high+)
       # Gate: anything in `dependencies` can end up in the deployed SSR
-      # function, so a high or critical advisory there fails the check.
-      run: cd app && npm audit --omit=dev --audit-level=high
+      # function, so a high or critical advisory there fails the check unless
+      # app/audit-allowlist.json lists it with an unexpired, documented reason
+      # (only for advisories with no patched release that are verified absent
+      # from the deployed function). Expired entries fail too.
+      run: cd app && node scripts/audit-gate.mjs
 
   codeql:
     name: CodeQL Analysis

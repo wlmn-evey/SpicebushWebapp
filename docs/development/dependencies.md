@@ -43,3 +43,14 @@ These live in `devDependencies`: nothing in `src/` or `netlify/functions/` impor
 ## Rules
 - Keep auth/database dependencies aligned with Netlify + Neon architecture.
 - Avoid reintroducing removed feature dependencies for payments, public blog, or mailing-list capture.
+
+## Security audit gate
+
+The Security workflow blocks on high/critical advisories in production dependencies (`npm audit --omit=dev`) via `app/scripts/audit-gate.mjs`. An advisory can be tolerated only through `app/audit-allowlist.json`, and only if:
+
+- no patched release exists (if one does, upgrade, or pin the nested copy with `overrides` — e.g. `ipx`'s `sharp` is forced to the root `sharp` 0.35.5), and
+- the package is verified absent from the deployed SSR function (`app/.netlify/v1/functions/ssr` after `npm run build`).
+
+Every entry has a reason and an `expires` date (~90 days). Once it expires the gate fails until someone re-checks upstream and either removes the entry or extends it. Entries that no longer match anything show as warnings; delete them.
+
+As of 2026-10-20 the allowlist holds `braces` (GHSA-vfj7-8cjw-p6xm) and `node-forge` (GHSA-86w9-cpqp-85rv). Both reach production deps only through `@astrojs/netlify`'s local dev-server tooling (`@netlify/vite-plugin` → `@netlify/dev`).
