@@ -30,7 +30,7 @@ out of `scheduled` in the same window is never double-flipped.
 
 ### Cache (R1-F16)
 
-The cron flips `status` only and does **not** invalidate the SSR collection cache — that cache lives
+The cron flips `status` to `published` and sets `data.date` to the go-live day (America/New_York date of `publishedAt`). It does **not** invalidate the SSR collection cache — that cache lives
 in other function instances, so a cross-process invalidate is impossible from the cron. Visibility
 lag is the 5-minute collection TTL (`DEFAULT_COLLECTION_TTL`) by design.
 

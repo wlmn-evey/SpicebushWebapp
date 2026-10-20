@@ -5,6 +5,7 @@ import {
   isFutureScheduledPublishAt,
   isScheduledPublishAtFormat,
   localInputToUtcIso,
+  schoolDateString,
   utcIsoToLocalInput
 } from './blog-publish-schedule';
 
@@ -127,5 +128,21 @@ describe('localInputToUtcIso / utcIsoToLocalInput (offset injected — determini
     expect(localInputToUtcIso('not-a-date', 0)).toBe('');
     expect(localInputToUtcIso('2026-06-15', 0)).toBe(''); // date only, no time
     expect(utcIsoToLocalInput('garbage', 0)).toBe('');
+  });
+});
+
+describe('schoolDateString (America/New_York calendar day)', () => {
+  it('keeps the Eastern day after 8 PM EDT, when UTC has already rolled over', () => {
+    // 2026-10-20 21:30 EDT === 2026-10-21T01:30Z
+    expect(schoolDateString(Date.parse('2026-10-21T01:30:00Z'))).toBe('2026-10-20');
+  });
+
+  it('handles EST (winter) offsets and midnight boundaries', () => {
+    expect(schoolDateString(Date.parse('2026-01-15T04:59:59Z'))).toBe('2026-01-14'); // 23:59:59 EST
+    expect(schoolDateString(Date.parse('2026-01-15T05:00:00Z'))).toBe('2026-01-15'); // 00:00 EST
+  });
+
+  it('matches the UTC day during the Eastern daytime', () => {
+    expect(schoolDateString(Date.parse('2026-06-01T15:00:00Z'))).toBe('2026-06-01');
   });
 });

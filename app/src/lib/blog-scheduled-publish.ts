@@ -13,13 +13,21 @@
  * fetched candidate set, a garbage value simply fails the format guard; there is no statement-level
  * `::timestamptz` cast that could abort the whole batch.
  *
- * Cache (R1-F16): the worker flips `status` only and does NOT invalidate the SSR collection cache —
+ * Date: the flip also stamps `data.date` with the go-live day — the America/New_York calendar day
+ * of `publishedAt` (`schoolDateString`) — so a post scheduled days ahead does not go live carrying
+ * its draft-creation date (and sort below older posts on the index).
+ *
+ * Cache (R1-F16): the worker flips `status` (+ `data.date`) and does NOT invalidate the SSR collection cache —
  * that cache lives in OTHER function instances, so a cross-process invalidate is impossible from
  * here; visibility lag is the 5-min collection TTL by design (and the cadence is every 5 min so a
  * post never appears visibly overdue, R3-F12).
  */
 import { query, queryRows } from '@lib/db/client';
-import { isDueScheduledPublishAt, isScheduledPublishAtFormat } from './blog-publish-schedule';
+import {
+  isDueScheduledPublishAt,
+  isScheduledPublishAtFormat,
+  schoolDateString
+} from './blog-publish-schedule';
 
 export type ScheduledPublishSummary = {
   /** Count of `status='scheduled'` blog rows examined this run. */
@@ -63,13 +71,14 @@ export async function publishDueScheduledPosts(
       summary.notYetDue += 1;
       continue;
     }
-    // Flip status ONLY. The WHERE re-asserts status='scheduled' so a concurrent owner edit that
-    // already moved the row (published/archived/back-to-draft) is not double-flipped. `updated_at`
-    // is left to the `trigger_content_set_updated_at` BEFORE-UPDATE trigger (001_core_schema.sql),
-    // which sets it to NOW() — passing it here would only be overwritten.
+    // Flip status and stamp data.date with the go-live day (school zone, YYYY-MM-DD). The WHERE
+    // re-asserts status='scheduled' so a concurrent owner edit that already moved the row
+    // (published/archived/back-to-draft) is not double-flipped. `updated_at` is left to the
+    // `trigger_content_set_updated_at` BEFORE-UPDATE trigger (001_core_schema.sql), which sets it to
+    // NOW() — passing it here would only be overwritten.
     await query(
-      "UPDATE content SET status = 'published' WHERE type = 'blog' AND slug = $1 AND status = 'scheduled'",
-      [row.slug]
+      "UPDATE content SET status = 'published', data = jsonb_set(data, '{date}', to_jsonb($2::text), true) WHERE type = 'blog' AND slug = $1 AND status = 'scheduled'",
+      [row.slug, schoolDateString(Date.parse(at.trim()))]
     );
     summary.published.push(row.slug);
   }

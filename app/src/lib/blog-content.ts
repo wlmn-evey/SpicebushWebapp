@@ -15,6 +15,7 @@ import { isBlogBodyEmpty } from './blog-body-text';
 import { collectHtmlImageAlts, renderBodyHtml } from './blog-html';
 import { BLOG_PAGE_SIZE, indexableCategories } from './blog-discovery';
 import { isFutureScheduledPublishAt, isScheduledPublishAtFormat } from './blog-publish-schedule';
+import { IMAGE_SCHEME_REGEX, SLUG_REGEX, isValidImageAlt } from './blog-editor-validation';
 import { logError } from './error-logger';
 
 export type BlogPost = {
@@ -46,23 +47,15 @@ const BODY_MAX = 200000;
 
 const DEFAULT_AUTHOR = 'Spicebush Team';
 
-// Slug charset + length, shared by the read-path trust boundary and the write-path validator.
-const SLUG_REGEX = /^[a-z0-9-_]{1,100}$/;
+// Slug charset + length (SLUG_REGEX), the featured-image scheme (IMAGE_SCHEME_REGEX), and the
+// imageAlt quality bar (isValidImageAlt) live in the client-safe `blog-editor-validation.ts` so the
+// editor's pre-submit guard runs the SAME rules as this validator.
 
 // Legacy date-prefix namespace (`YYYY-MM-DD-…`), reserved for the redirect fallback.
 const DATE_PREFIX_REGEX = /^\d{4}-\d{2}-\d{2}-(.+)$/;
 
-// Featured-image URL scheme: HTTPS absolute OR a single-slash site-relative path that is
-// NOT `//` or `/\` (backslash-aware — browsers parse `/\evil.com` as `//evil.com`). R2-F1/F7/R3-F2.
-const IMAGE_SCHEME_REGEX = /^(\/(?![/\\])|https:\/\/)/;
-
 // Publish date format (YYYY-MM-DD).
 const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-
-// imageAlt quality floors (R1-F37): not filename-like, not a single generic word.
-const FILENAME_LIKE_REGEX = /\.(jpg|jpeg|png|gif|webp|svg)$/i;
-const GENERIC_WORD_REGEX = /^(image|photo|picture)$/i;
-const IMAGE_ALT_MIN = 6;
 
 const asTrimmedString = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
 
@@ -420,9 +413,6 @@ export function normalizeBlogData(
   // Leave categories / tags untouched (R1-F12).
   return normalized;
 }
-
-const isValidImageAlt = (alt: string): boolean =>
-  alt.length >= IMAGE_ALT_MIN && !FILENAME_LIKE_REGEX.test(alt) && !GENERIC_WORD_REGEX.test(alt);
 
 /**
  * Collect every image token's alt text from a markdown body (R2-F26). Image tokens are

@@ -2,15 +2,19 @@
  * Client behavior for `/admin/blog` (R2-F36 + R4-F7). Trimmed to faq.astro's complexity class:
  * conditional-`required` toggling, add-form slug autofill, and a blocking slug-collision check.
  *
- * Deliberately CUT (R4-F7): body-image-alt scanner, imageAlt filename/generic-word predicate,
- * backslash-URL tail check. `minlength`/`pattern` on imageAlt/image are declarative in the page
- * markup, NOT set here. The server (`validateBlogData`) remains the source of truth.
+ * Pre-submit guard: the body-image-alt scan, the imageAlt filename/generic-word predicate, the slug
+ * shape, the featured-image scheme, and "scheduled time in the past" run here before the POST, using
+ * the SAME predicates as `validateBlogData` (`blog-editor-validation.ts`). A server `400` redirects
+ * to the list and discards every unsaved edit, so any rule the server enforces should fail here
+ * first, inline. `minlength`/`pattern` on imageAlt/image/slug stay declarative in the page markup.
+ * The server remains the source of truth.
  *
  * `initBlogAdmin(doc)` takes an optional Document so jsdom unit tests can pass a constructed one.
  */
 import { BLOG_FORM_FIELDS } from '@lib/blog-form-fields';
 import { isBlogBodyEmpty } from './blog-body-text';
 import { localInputToUtcIso, utcIsoToLocalInput } from './blog-publish-schedule';
+import { validateBlogFormSnapshot } from './blog-editor-validation';
 
 const COLLISION_MESSAGE =
   'A post with this address already exists — choose a different address or edit the existing post.';
@@ -100,7 +104,39 @@ function initConditionalRequired(form: HTMLFormElement): void {
     event.stopImmediatePropagation();
   };
 
+  // Inline error region (`[data-blog-form-error]`, role="alert"). Falls back to alert() when a page
+  // does not render one.
+  const errorNode = form.querySelector('[data-blog-form-error]');
+  const showFormError = (message: string): void => {
+    if (!(errorNode instanceof HTMLElement)) {
+      window.alert(message);
+      return;
+    }
+    errorNode.textContent = message;
+    errorNode.hidden = false;
+    errorNode.scrollIntoView?.({ block: 'center' });
+    errorNode.focus?.();
+  };
+  const clearFormError = (): void => {
+    if (errorNode instanceof HTMLElement) {
+      errorNode.textContent = '';
+      errorNode.hidden = true;
+    }
+  };
+  const fieldValue = (name: string): string => {
+    const el = form.querySelector(`[name="${name}"]`);
+    return el instanceof HTMLInputElement ||
+      el instanceof HTMLTextAreaElement ||
+      el instanceof HTMLSelectElement
+      ? el.value
+      : '';
+  };
+
   form.addEventListener('submit', event => {
+    // Ignore submits bubbling up from a NESTED form (the editor's link/image dialogs render a
+    // <form> inside this one); only this form's own submit is a save.
+    if (event.target !== form) return;
+    clearFormError();
     const status = currentStatus();
     const publishing = PUBLISHING_STATUSES.has(status);
 
@@ -137,16 +173,32 @@ function initConditionalRequired(form: HTMLFormElement): void {
       }
     }
 
+    // Server-rule mirror (slug, featured image + description, body image descriptions, scheduled
+    // time in the past) — block HERE with an inline message rather than lose the edits to a 400.
+    const slugInput = form.querySelector(`[name="${BLOG_FORM_FIELDS.slug}"]`);
+    const ruleError = validateBlogFormSnapshot({
+      status,
+      // Only the new-post form has an editable slug; edit mode carries the existing slug, hidden.
+      slug:
+        form.hasAttribute('data-new-blog-form') && slugInput instanceof HTMLInputElement
+          ? slugInput.value
+          : null,
+      image: fieldValue(BLOG_FORM_FIELDS.image),
+      imageAlt: fieldValue(BLOG_FORM_FIELDS.imageAlt),
+      body: fieldValue(BLOG_FORM_FIELDS.bodyRaw),
+      publishedAt: status === 'scheduled' ? fieldValue(BLOG_FORM_FIELDS.publishedAt) : ''
+    });
+    if (ruleError) {
+      reject(event);
+      showFormError(ruleError);
+      return;
+    }
+
     // Body-required guard, now covering scheduled as well as published.
     if (!publishing) return;
-    const bodyField = form.querySelector(`[name="${BLOG_FORM_FIELDS.bodyRaw}"]`);
-    const value =
-      bodyField instanceof HTMLInputElement || bodyField instanceof HTMLTextAreaElement
-        ? bodyField.value
-        : '';
-    if (isBlogBodyEmpty(value)) {
+    if (isBlogBodyEmpty(fieldValue(BLOG_FORM_FIELDS.bodyRaw))) {
       reject(event);
-      window.alert('Body is required to publish.');
+      showFormError('Body is required to publish.');
     }
   });
 

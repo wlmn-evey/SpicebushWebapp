@@ -77,16 +77,28 @@ const userEmail = typeof locals.userEmail === 'string' ? locals.userEmail : 'Adm
           form.addEventListener('submit', event => {
             setTimeout(() => {
               if (event.defaultPrevented) return;
-              const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
-              if (!btn || btn.dataset.noLoading === 'true') return;
-              btn.dataset.originalText = btn.textContent?.trim() ?? '';
-              btn.disabled = true;
-              btn.textContent =
-                btn.dataset.loadingText ??
-                (btn.dataset.originalText.toLowerCase().startsWith('delete')
-                  ? 'Deleting\u2026'
-                  : 'Saving\u2026');
-              btn.classList.add('opacity-70', 'cursor-not-allowed');
+              // Disable EVERY submit button in the form (e.g. the blog editor has one in the action
+              // bar and one under the sidebar) — disabling only the first left the other live for a
+              // double-submit. The loading label goes on the button that was pressed (or the first,
+              // for an Enter-key submit).
+              const buttons = Array.from(
+                form.querySelectorAll<HTMLButtonElement>('button[type="submit"]')
+              ).filter(btn => btn.dataset.noLoading !== 'true');
+              const pressed = (event as SubmitEvent).submitter;
+              const labelled =
+                buttons.find(btn => btn === pressed) ?? (pressed ? undefined : buttons[0]);
+              buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('opacity-70', 'cursor-not-allowed');
+              });
+              if (labelled) {
+                labelled.dataset.originalText = labelled.textContent?.trim() ?? '';
+                labelled.textContent =
+                  labelled.dataset.loadingText ??
+                  (labelled.dataset.originalText.toLowerCase().startsWith('delete')
+                    ? 'Deleting\u2026'
+                    : 'Saving\u2026');
+              }
             }, 0);
           });
         });

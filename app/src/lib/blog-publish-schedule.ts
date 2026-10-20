@@ -104,3 +104,23 @@ export function utcIsoToLocalInput(iso: string, offsetMinutes: number): string {
     `T${pad2(local.getUTCHours())}:${pad2(local.getUTCMinutes())}`
   );
 }
+
+/** The school's wall-clock zone. The server (Netlify) runs in UTC; post dates are school-local. */
+export const SCHOOL_TIME_ZONE = 'America/New_York';
+
+/**
+ * The calendar day (`YYYY-MM-DD`, the `data.date` shape) of instant `ms` in the school's zone —
+ * NOT UTC, so after 8 PM Eastern (EDT) / 7 PM (EST) it is still "today", not tomorrow. Uses Intl
+ * (DST-aware, no deps). Used for the editor's default date and the date the scheduled-publish job
+ * stamps on a post when it goes live.
+ */
+export function schoolDateString(ms: number): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: SCHOOL_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(new Date(ms));
+  const part = (type: string): string => parts.find(p => p.type === type)?.value ?? '';
+  return `${part('year')}-${part('month')}-${part('day')}`;
+}

@@ -15,6 +15,8 @@
  */
 import { BLOG_FORM_FIELDS } from '@lib/blog-form-fields';
 import { renderPostBody, blogPostToEditData, type BlogPost } from '@lib/blog-content';
+import { IMAGE_URL_PATTERN_ATTR, SLUG_PATTERN_ATTR } from '@lib/blog-editor-validation';
+import { schoolDateString } from '@lib/blog-publish-schedule';
 import TipTapEditor from '@components/TipTapEditor';
 
 interface Props {
@@ -28,7 +30,9 @@ interface Props {
 const { mode, post, existingSlugs = [] } = Astro.props;
 const isEdit = mode === 'edit';
 
-const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD default for the date input
+// YYYY-MM-DD default for the date input, in the SCHOOL's zone — the server runs in UTC, so
+// `toISOString()` would default to tomorrow after 8 PM Eastern.
+const today = schoolDateString(Date.now());
 
 // Preserve the exact redirect contract of the previous inline forms (content.ts shares one
 // redirectTo for success AND error). Success → list with the status-aware saved flash.
@@ -113,6 +117,19 @@ const idns = isEdit ? `edit-${post!.slug}` : 'new';
     </button>
   </div>
 
+  {
+    /* Pre-submit validation error (blog-admin-client.ts): the same rules the server enforces, shown
+      HERE instead of bouncing the save to the list — a server rejection discards every unsaved edit. */
+  }
+  <p
+    data-blog-form-error
+    role="alert"
+    tabindex="-1"
+    hidden
+    class="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+  >
+  </p>
+
   <div class="grid gap-6 lg:grid-cols-3">
     {/* MAIN COLUMN — title + body canvas */}
     <div class="space-y-4 lg:col-span-2">
@@ -184,9 +201,9 @@ const idns = isEdit ? `edit-${post!.slug}` : 'new';
           </select>
           <span id={`status-help-${idns}`} class="mt-1 block text-xs text-earth-brown/70">
             To publish (now or scheduled) you also need an excerpt, a body, and a date; if you set a
-            featured image you also need an image description. Set <strong>Archived</strong> to hide
-            a post without deleting it. New posts appear at their link immediately after publishing;
-            the index and edits to already-published posts can take up to 5 minutes to update.
+            featured image you also need an image description. Set <strong>Archived</strong> to hide a
+            post without deleting it. New posts appear at their link immediately after publishing; the
+            index and edits to already-published posts can take up to 5 minutes to update.
           </span>
         </label>
 
@@ -265,7 +282,7 @@ const idns = isEdit ? `edit-${post!.slug}` : 'new';
                   name={BLOG_FORM_FIELDS.slug}
                   required
                   maxlength="100"
-                  pattern="[a-z0-9-_]+"
+                  pattern={SLUG_PATTERN_ATTR}
                   autocapitalize="none"
                   autocorrect="off"
                   spellcheck="false"
@@ -319,7 +336,7 @@ const idns = isEdit ? `edit-${post!.slug}` : 'new';
             type="text"
             name={BLOG_FORM_FIELDS.image}
             data-photo-url-input
-            pattern="(/(?![/\\]).*|https://.*)"
+            pattern={IMAGE_URL_PATTERN_ATTR}
             value={isEdit ? post!.image : undefined}
             class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
           />

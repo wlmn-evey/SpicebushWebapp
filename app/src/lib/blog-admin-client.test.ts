@@ -16,6 +16,8 @@ interface BuildOptions {
   status?: string; // initial status select value
   imageValue?: string; // initial image URL value
   publishedAt?: string; // initial stored UTC publishedAt (edit form)
+  slug?: string; // initial slug value (default: a valid slug)
+  withErrorRegion?: boolean; // render the [data-blog-form-error] inline alert region
 }
 
 /**
@@ -41,6 +43,8 @@ function buildDoc(options: BuildOptions, existingSlugs: string[] = []): { doc: D
   const slug = doc.createElement('input');
   slug.setAttribute('name', BLOG_FORM_FIELDS.slug);
   slug.required = true;
+  // A valid slug, as the real (required + pattern) input would hold by the time a submit fires.
+  slug.value = options.slug ?? 'a-test-post';
   form.appendChild(slug);
 
   const status = doc.createElement('select');
@@ -90,6 +94,14 @@ function buildDoc(options: BuildOptions, existingSlugs: string[] = []): { doc: D
   const imageAlt = doc.createElement('input');
   imageAlt.setAttribute('name', BLOG_FORM_FIELDS.imageAlt);
   form.appendChild(imageAlt);
+
+  if (options.withErrorRegion) {
+    const errorRegion = doc.createElement('p');
+    errorRegion.setAttribute('data-blog-form-error', '');
+    errorRegion.setAttribute('role', 'alert');
+    errorRegion.hidden = true;
+    form.appendChild(errorRegion);
+  }
 
   doc.body.appendChild(form);
   return { doc };
@@ -304,6 +316,81 @@ describe('initBlogAdmin — scheduling (R1-F1 / R4-F1 / R2-F19)', () => {
     expect(confirmSpy).toHaveBeenCalledOnce();
     expect(ev.defaultPrevented).toBe(false);
     confirmSpy.mockRestore();
+  });
+});
+
+describe('initBlogAdmin — pre-submit server-rule guard (edits are never lost to a 400)', () => {
+  const formOf = (doc: Document): HTMLFormElement =>
+    doc.querySelector('form[data-blog-form]') as HTMLFormElement;
+  const errorRegion = (doc: Document): HTMLElement =>
+    doc.querySelector('[data-blog-form-error]') as HTMLElement;
+  const submit = (doc: Document): Event => {
+    const ev = new Event('submit', { cancelable: true });
+    formOf(doc).dispatchEvent(ev);
+    return ev;
+  };
+
+  it('blocks a publish whose body image has a weak description, with an inline alert (no window.alert)', () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const { doc } = buildDoc({ kind: 'edit', status: 'published', withErrorRegion: true });
+    initBlogAdmin(doc);
+    field(doc, BLOG_FORM_FIELDS.bodyRaw).value = '<p>Hi</p><img src="/media/a.jpg" alt="photo">';
+
+    expect(submit(doc).defaultPrevented).toBe(true);
+    expect(errorRegion(doc).hidden).toBe(false);
+    expect(errorRegion(doc).textContent).toMatch(/Every image in the post needs a description/);
+    expect(alertSpy).not.toHaveBeenCalled();
+
+    // Fixing the description clears the message and lets the save through.
+    field(doc, BLOG_FORM_FIELDS.bodyRaw).value =
+      '<p>Hi</p><img src="/media/a.jpg" alt="Children planting seedlings">';
+    expect(submit(doc).defaultPrevented).toBe(false);
+    expect(errorRegion(doc).hidden).toBe(true);
+    alertSpy.mockRestore();
+  });
+
+  it('blocks a filename-like featured image description even on a draft (server checks it on every save)', () => {
+    const { doc } = buildDoc({
+      kind: 'edit',
+      status: 'draft',
+      imageValue: '/media/x.jpg',
+      withErrorRegion: true
+    });
+    initBlogAdmin(doc);
+    field(doc, BLOG_FORM_FIELDS.imageAlt).value = 'IMG_0042.jpg';
+    expect(submit(doc).defaultPrevented).toBe(true);
+    expect(errorRegion(doc).textContent).toMatch(/Featured image description/);
+  });
+
+  it('blocks a date-prefixed slug on the new-post form but ignores the slug on edit', () => {
+    const add = buildDoc({ kind: 'add', status: 'draft', slug: '2026-10-20-hello' }).doc;
+    initBlogAdmin(add);
+    expect(submit(add).defaultPrevented).toBe(true);
+
+    const edit = buildDoc({ kind: 'edit', status: 'draft', slug: '2026-10-20-legacy' }).doc;
+    initBlogAdmin(edit);
+    expect(submit(edit).defaultPrevented).toBe(false);
+  });
+
+  it('blocks a scheduled save whose go-live time is already in the past', () => {
+    const { doc } = buildDoc({ kind: 'edit', status: 'scheduled', withErrorRegion: true });
+    initBlogAdmin(doc);
+    field(doc, BLOG_FORM_FIELDS.bodyRaw).value = '<p>Body.</p>';
+    field(doc, BLOG_FORM_FIELDS.publishedAtLocal).value = '2001-01-01T09:00';
+    expect(submit(doc).defaultPrevented).toBe(true);
+    expect(errorRegion(doc).textContent).toMatch(/in the past/);
+  });
+
+  it('ignores a submit bubbling up from a nested dialog form (only the form itself saves)', () => {
+    const { doc } = buildDoc({ kind: 'edit', status: 'published', withErrorRegion: true });
+    initBlogAdmin(doc);
+    field(doc, BLOG_FORM_FIELDS.bodyRaw).value = '<p></p>'; // would be blocked if it were a save
+    const inner = doc.createElement('form');
+    formOf(doc).appendChild(inner);
+    const ev = new Event('submit', { cancelable: true, bubbles: true });
+    inner.dispatchEvent(ev);
+    expect(ev.defaultPrevented).toBe(false);
+    expect(errorRegion(doc).hidden).toBe(true);
   });
 });
 

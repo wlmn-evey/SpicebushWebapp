@@ -30,7 +30,7 @@ const formatDate = (date: string | undefined): string | null => {
           {post.image && (
             <img
               loading="lazy"
-              alt={post.imageAlt}
+              alt={post.imageAlt ?? ''}
               src={post.image}
               class="w-full rounded-lg mb-4"
             />
