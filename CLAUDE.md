@@ -72,7 +72,8 @@ Low-level: `queryFirst()` and `queryRows()` from `@lib/db/client`.
 - **Deploy from repo root, not `app/`.** Deploying from repo root with `--dir=app/dist` is the working, current path; there is no `base=app` in the committed `netlify.toml`. The repo-root deploy empirically uploads the SSR function and prod serves SSR.
 - **SVGs with `preserveAspectRatio="none"`** need explicit width values (`width: auto` won't work).
 - **Node >= 22.22.0 is required** (Astro 7, `@astrojs/react` 7). Older Node 22 releases print EBADENGINE warnings and are unsupported.
-- **Never read server secrets with a bare `import.meta.env.SECRET`.** Astro inlines it at build time (Vite loads `.env.local`), so a local build bakes the secret into the SSR bundle. Read `process.env` at runtime; for dev-only `.env` access, gate static reads behind `import.meta.env.DEV` (see `src/lib/db/env.ts`). Dynamic `import.meta.env[key]` throws in `astro dev`.
+- **Tests under `src/pages/` must be named `_*.test.ts`.** Astro routes every `.ts` file in `src/pages` unless it starts with `_`, so `health.test.ts` would deploy as a public `/api/health.test` endpoint bundling vitest. `src/lib/route-hygiene.test.ts` enforces this.
+- **Never reference server secrets through `import.meta.env` — not even behind `import.meta.env.DEV`.** Astro 7 rewrites `import.meta.env` into an object literal containing every private var the module mentions, so the value lands in the SSR bundle. Read `process.env` only; `astro.config.mjs` loads `.env.local`/`.env` into `process.env` for dev (no override). CI builds with sentinel secrets and fails if they appear in `dist/` or `.netlify/`. Dynamic `import.meta.env[key]` throws in `astro dev`.
 - **Content collections live in `src/content.config.ts`** (glob loaders). Entries are keyed by `entry.id`; the legacy `entry.slug` is gone.
 
 ## Conventions (Beyond Linter)
