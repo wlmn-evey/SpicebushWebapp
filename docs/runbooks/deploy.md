@@ -1,6 +1,6 @@
 # Production Deployment Runbook
 
-_Spicebush Montessori -- Astro 5 SSR on Netlify + Neon PostgreSQL_
+_Spicebush Montessori -- Astro 7 SSR on Netlify + Neon PostgreSQL_
 
 ---
 
@@ -10,7 +10,7 @@ Before starting, confirm:
 
 - [ ] You have `NETLIFY_SITE_ID` and `NETLIFY_AUTH_TOKEN` available
 - [ ] You are on the correct branch and all changes are committed
-- [ ] Node 22+ is installed locally (`app/package.json` `engines`)
+- [ ] Node 22.22.0+ is installed locally (required by Astro 7; `app/.nvmrc` pins it, so `nvm use` from `app/`)
 - [ ] Working directory is the repo root (`SpicebushWebapp/`)
 
 ---
@@ -85,7 +85,7 @@ Once the `/admin/blog` authoring page (PR-2) is live, the owner/tester can see t
 From `app/`:
 
 ```bash
-NETLIFY_DATABASE_URL="$(npx netlify env:get NETLIFY_DATABASE_URL --context production)" npm run db:migrate
+NETLIFY_DATABASE_URL="$(npx netlify-cli@27 env:get NETLIFY_DATABASE_URL --context production)" npm run db:migrate
 ```
 
 `--context production` is **MANDATORY** — `env:get` defaults to the dev context, and this site carries context-divergent values.
@@ -241,12 +241,27 @@ curl -s https://spicebushmontessori.org/robots.txt | grep Sitemap  # → 2 lines
 
 Merging a PR to `main` triggers the `deploy.yml` GitHub Actions workflow, which:
 
-1. Builds the app (`cd app && npm run build`)
-2. Deploys to Netlify via CLI (`npx netlify deploy --prod --dir=app/dist`)
+1. Installs dependencies with a plain `npm ci` (no `--force`, so a lockfile that can't install cleanly fails the deploy instead of being papered over — see issue #140)
+2. Builds the app (`cd app && npm run build`)
+3. Deploys to Netlify via CLI (`npx --yes netlify-cli@27 deploy --prod --dir=app/dist`, pinned explicitly because netlify-cli is not an app dependency)
+
+Deploys are serialized (`concurrency: deploy-production`). If two merges land close together, the second waits for the first to finish rather than racing it. A deploy that's already running is never cancelled.
 
 No Netlify git integration is used — GitHub Actions owns the build and deploy pipeline.
 Production deploys are serialized (`concurrency: deploy-prod`, never cancelled mid-run), so two
 quick merges queue rather than race.
+
+#### CI workflows at a glance
+
+| Workflow | Trigger | Blocking checks |
+|----------|---------|-----------------|
+| `ci.yml` | PRs to `main` | `npm ci`, lint (zero warnings), Prettier check, typecheck, unit tests, build |
+| `security.yml` | PRs to `main`, pushes to `main`, weekly (Sun 02:00 UTC) | `npm audit --omit=dev --audit-level=high` (production deps); CodeQL |
+| `deploy.yml` | Pushes to `main` | `npm ci`, build, Netlify deploy |
+
+- **Node version:** every workflow reads `app/.nvmrc` via `setup-node`'s `node-version-file`. `netlify.toml`'s `NODE_VERSION` must match it, so change both together.
+- **Dependency audit policy:** a high or critical advisory in production `dependencies` (code that can ship in the SSR function) fails the check. The full audit, which also covers dev deps like eslint, vitest and puppeteer, is report-only: the counts go to the job summary plus a warning annotation. Dev tooling never ships to the site, and Dependabot raises PRs for it. Never add `--force` or lower `--audit-level` to get the check green. Fix or upgrade the dependency, or move a build-only package to `devDependencies` if it doesn't belong in `dependencies`.
+- **Dependabot** (`.github/dependabot.yml`) opens weekly PRs for `app/` npm deps and for GitHub Actions. Minor and patch updates are grouped into one PR per ecosystem. Majors get individual PRs.
 
 > **Verified:** the repo-root `npx netlify deploy --prod --dir=app/dist` empirically uploads the SSR function and prod serves SSR (probed 2026-06-06: `/contact` → 200, `/admin` → 302). The workflow is correct as-is — no deploy-command patch and no SSR-function-upload verification-deploy gate are needed.
 
@@ -264,8 +279,10 @@ quick merges queue rather than race.
 cd app && npm run build
 
 # Deploy from repo root
-cd .. && npx netlify deploy --prod --dir=app/dist
+cd .. && npx netlify-cli@27 deploy --prod --dir=app/dist
 ```
+
+`netlify-cli` is intentionally **not** an `app/` dependency (its transitive tree was the bulk of the `npm audit` findings, issue #43). `npx netlify-cli@27 …` downloads the pinned major on demand; bump the major here, in `CLAUDE.md` and in `app/scripts/netlify-deploy.sh` / `seed-netlify-db.sh` / `check-migrations-netlify.sh` together.
 
 ---
 
@@ -319,13 +336,13 @@ flipped only at the supervised launch. The PR build does **not** execute any of 
    origin and per-post canonical/OG origins are baked from `PUBLIC_SITE_URL` at `astro build`
    time. The production build **must** run with `PUBLIC_SITE_URL=https://spicebushmontessori.org`:
    ```bash
-   npx netlify env:set PUBLIC_SITE_URL https://spicebushmontessori.org
+   npx netlify-cli@27 env:set PUBLIC_SITE_URL https://spicebushmontessori.org
    ```
    (all contexts; currently the production context is `https://spicebush-testing.netlify.app`,
    which is the confirmed canonicals bug.)
 2. **Neutralize the competing git-CI deploy path.** The Netlify production branch is `testing`
    (a live competing deploy path). Set `stop_builds=true` so the authoritative `deploy.yml`
-   (repo-root `npx netlify deploy --prod --dir=app/dist`) is the only deploy path:
+   (repo-root `npx netlify-cli@27 deploy --prod --dir=app/dist`) is the only deploy path:
    ```
    build_settings.stop_builds = true
    ```

@@ -1,7 +1,7 @@
 # Development Getting Started
 
 ## Prerequisites
-- Node.js 20+
+- Node.js 22.22.0+ (required by Astro 7)
 - npm 10+
 
 ## Install Dependencies

@@ -1,35 +1,67 @@
 name: Security
 
 on:
+  # Every PR, including ones stacked on another PR's branch.
   pull_request:
+  push:
+    # CodeQL needs default-branch runs to give PR alerts a baseline.
     branches: [main]
   schedule:
     - cron: '0 2 * * 0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   dependency-audit:
     name: Dependency Audit
     runs-on: ubuntu-latest
 
+    # `npm audit` reads app/package-lock.json directly, so this job doesn't
+    # install node_modules. CI (ci.yml) already checks that the lockfile
+    # installs cleanly with `npm ci`.
     steps:
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
 
-    - name: Setup Node.js 22
-      uses: actions/setup-node@v5
+    - name: Setup Node.js (app/.nvmrc)
+      uses: actions/setup-node@v7
       with:
-        node-version: '22'
-        cache: 'npm'
-        cache-dependency-path: 'app/package-lock.json'
+        node-version-file: 'app/.nvmrc'
 
-    - name: Install dependencies
-      # --force is a workaround for the lockfile's platform-specific optional packages;
-      # removing it is tracked in issues #42 and #140.
-      run: cd app && npm ci --force
+    - name: Full audit incl. dev deps (report only)
+      # Dev deps (eslint, vitest, puppeteer...) run only on
+      # developer machines and CI. They never ship in the Netlify function
+      # bundle. Their advisories go to the job summary and show as a warning,
+      # and Dependabot raises PRs for them. They don't block merges.
+      run: |
+        cd app
+        npm audit --json > "$RUNNER_TEMP/audit-full.json" || true
+        node -e '
+          const fs = require("fs");
+          const j = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+          const v = (j.metadata && j.metadata.vulnerabilities) || {};
+          const line = `critical=${v.critical||0} high=${v.high||0} moderate=${v.moderate||0} low=${v.low||0} total=${v.total||0}`;
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            `### Full npm audit (prod + dev, non-blocking)\n\n${line}\n\nRun \`cd app && npm audit\` locally for details.\n`);
+          if ((v.critical||0) + (v.high||0) > 0) {
+            console.log(`::warning title=npm audit (incl. dev deps)::${line}`);
+          } else {
+            console.log(line);
+          }
+        ' "$RUNNER_TEMP/audit-full.json"
 
-    - name: Audit (production dependencies)
-      # Only runtime deps block PRs; dev-tool advisories are tracked separately (#43).
-      run: cd app && npm audit --omit=dev --audit-level=high
+    - name: Production audit (blocking, high+)
+      # Gate: anything in `dependencies` can end up in the deployed SSR
+      # function, so a high or critical advisory there fails the check unless
+      # app/audit-allowlist.json lists it with an unexpired, documented reason
+      # (only for advisories with no patched release that are verified absent
+      # from the deployed function). Expired entries fail too.
+      run: cd app && node scripts/audit-gate.mjs
 
   codeql:
     name: CodeQL Analysis
@@ -41,25 +73,16 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
 
+    # JS/TS is analyzed from source (build-mode: none), so this job needs
+    # neither Node setup nor an npm install.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
       with:
-        languages: typescript, javascript
+        languages: javascript-typescript
+        build-mode: none
         config-file: ./.github/codeql-config.yml
-
-    - name: Setup Node.js 22
-      uses: actions/setup-node@v5
-      with:
-        node-version: '22'
-        cache: 'npm'
-        cache-dependency-path: 'app/package-lock.json'
-
-    - name: Install dependencies
-      # --force is a workaround for the lockfile's platform-specific optional packages;
-      # removing it is tracked in issues #42 and #140.
-      run: cd app && npm ci --force
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4

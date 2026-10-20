@@ -109,14 +109,7 @@ npx playwright show-report
 
 ## CI/CD Integration
 
-The test suite includes a GitHub Actions workflow (`.github/workflows/test.yml`) that:
-- Runs on push to main/develop branches
-- Tests on multiple Node.js versions
-- Runs all test suites
-- Uploads coverage reports to Codecov
-- Performs security audits
-- Runs Lighthouse accessibility audits
-- Checks for console.log statements
+GitHub Actions runs `ci.yml` on every PR to `main`. It does a plain `npm ci`, then lint (zero warnings), Prettier format check, typecheck, Vitest unit tests and the production build, all on the Node version in `app/.nvmrc`. `security.yml` runs the dependency audit and CodeQL. Playwright E2E, accessibility and Lighthouse suites are **not** run in CI, so run them locally before merging UI changes. See `docs/runbooks/deploy.md` §6 ("CI workflows at a glance") for the full workflow and audit policy.
 
 ## Manual QA Testing
 

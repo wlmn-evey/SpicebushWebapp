@@ -87,8 +87,13 @@ const getEnvValue = (key: string): string => {
     return runtimeValue.trim();
   }
 
-  const importEnv = import.meta.env as Record<string, string | undefined>;
-  const importValue = importEnv[key];
+  // Vite 8's dev module runner throws on dynamic `import.meta.env[key]` access.
+  let importValue: string | undefined;
+  try {
+    importValue = (import.meta.env as Record<string, string | undefined>)[key];
+  } catch {
+    importValue = undefined;
+  }
   if (typeof importValue === 'string' && importValue.trim().length > 0) {
     return importValue.trim();
   }
@@ -604,6 +609,7 @@ const seoMetadata = await resolveSeoMetadata({
     {analyticsEnabled && (
       <script is:inline define:vars={{ gaMeasurementId, shouldLoadGaScript }}>
         window.dataLayer = window.dataLayer || [];
+        // eslint-disable-next-line prefer-rest-params -- gtag.js requires the real arguments object
         function gtag() { window.dataLayer.push(arguments); }
         window.gtag = gtag;
         if (shouldLoadGaScript && gaMeasurementId) {

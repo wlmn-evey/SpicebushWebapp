@@ -3,21 +3,11 @@ import { logError } from '@lib/error-logger';
 type DbEnvKey = 'NETLIFY_DATABASE_URL' | 'DATABASE_URL';
 
 /**
- * Runtime secrets come from `process.env`. Astro inlines `import.meta.env.NAME` values at build
- * time, and Vite loads `.env` files into it, so an ungated read would bake the build machine's
- * database URL into the SSR bundle (local `npm run build` with `.env.local` present, then
- * `netlify deploy --dir=app/dist`). `import.meta.env.DEV` is statically false in production builds,
- * so these static reads are compiled out there; in `astro dev` they expose `.env` values, which
- * Vite does not copy into `process.env`. Static property access only: Vite's dev module runner
- * rejects dynamic `import.meta.env[name]` access.
+ * Database URLs come from `process.env` only. Never reference them through `import.meta.env`:
+ * Astro 7 inlines every private variable a module mentions there into the server bundle, even
+ * behind an `import.meta.env.DEV` check. In `astro dev`, `.env.local` reaches `process.env` via
+ * the dotenv call in astro.config.mjs; on Netlify the site's environment variables do.
  */
-const devImportMetaEnv: Partial<Record<DbEnvKey, string | undefined>> = import.meta.env.DEV
-  ? {
-      NETLIFY_DATABASE_URL: import.meta.env.NETLIFY_DATABASE_URL,
-      DATABASE_URL: import.meta.env.DATABASE_URL
-    }
-  : {};
-
 function readProcessEnv(key: DbEnvKey): string | undefined {
   return typeof process !== 'undefined' ? process.env?.[key] : undefined;
 }
@@ -29,7 +19,7 @@ function readEnv(key: DbEnvKey, { required = false }: { required?: boolean } = {
     return envCache.get(key) as string;
   }
 
-  const value = readProcessEnv(key) || devImportMetaEnv[key];
+  const value = readProcessEnv(key);
 
   if (!value) {
     if (required) {

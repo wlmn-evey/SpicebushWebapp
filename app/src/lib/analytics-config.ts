@@ -27,8 +27,13 @@ const readEnv = (key: string): string => {
   const fromRuntime = runtimeEnv?.[key];
   if (typeof fromRuntime === 'string' && fromRuntime.trim()) return fromRuntime.trim();
 
-  const importEnv = import.meta.env as Record<string, string | undefined>;
-  const fromImportMeta = importEnv[key];
+  // Vite 8's dev module runner throws on dynamic `import.meta.env[key]` access.
+  let fromImportMeta: string | undefined;
+  try {
+    fromImportMeta = (import.meta.env as Record<string, string | undefined>)[key];
+  } catch {
+    fromImportMeta = undefined;
+  }
   if (typeof fromImportMeta === 'string' && fromImportMeta.trim()) return fromImportMeta.trim();
 
   return '';

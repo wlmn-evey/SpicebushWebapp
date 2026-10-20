@@ -1,0 +1,19 @@
+{
+  "$comment": "Production npm advisories the Security gate tolerates. Each entry needs a reason and an expiry; an expired entry fails CI so it gets re-reviewed. Only add advisories with no patched release that are verified absent from the deployed SSR function (.netlify/v1/functions). Read by scripts/audit-gate.mjs.",
+  "advisories": [
+    {
+      "id": "GHSA-vfj7-8cjw-p6xm",
+      "package": "braces",
+      "severity": "high",
+      "reason": "No patched release (latest 3.0.3 is affected). Reaches prod deps only via @astrojs/netlify -> @netlify/vite-plugin -> @netlify/dev -> zip-it-and-ship-it -> fast-glob/micromatch, the local dev-server emulation. Verified not present in the deployed SSR function (2026-10-20).",
+      "expires": "2027-01-18"
+    },
+    {
+      "id": "GHSA-86w9-cpqp-85rv",
+      "package": "node-forge",
+      "severity": "high",
+      "reason": "No patched release (latest 1.4.0 is affected). Reaches prod deps only via @astrojs/netlify -> @netlify/vite-plugin -> @netlify/dev -> @netlify/images -> ipx -> listhen (dev-server HTTPS). Verified not present in the deployed SSR function (2026-10-20).",
+      "expires": "2027-01-18"
+    }
+  ]
+}

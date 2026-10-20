@@ -1,8 +1,15 @@
 name: CI
 
 on:
+  # Every PR, including ones stacked on another PR's branch.
   pull_request:
-    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ci:
@@ -11,19 +18,19 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
 
-    - name: Setup Node.js 22
-      uses: actions/setup-node@v5
+    - name: Setup Node.js (app/.nvmrc)
+      uses: actions/setup-node@v7
       with:
-        node-version: '22'
+        node-version-file: 'app/.nvmrc'
         cache: 'npm'
         cache-dependency-path: 'app/package-lock.json'
 
     - name: Install dependencies
-      # --force is a workaround for the lockfile's platform-specific optional packages;
-      # removing it is tracked in issues #42 and #140.
-      run: cd app && npm ci --force
+      # Plain `npm ci` on purpose: it must fail if the lockfile can't install
+      # cleanly (see issue #140). Do not add --force.
+      run: cd app && npm ci
 
     - name: Lint (zero warnings)
       run: cd app && npm run lint -- --max-warnings=0
@@ -37,6 +44,32 @@ jobs:
     - name: Unit tests
       run: cd app && npm run test
 
-    - name: Build
-      # Astro SSR defers DB connections to request time — no DATABASE_URL needed at build
-      run: cd app && npm run build
+    - name: Build (with sentinel secrets)
+      # Astro SSR defers DB connections to request time, so the build needs no real DATABASE_URL.
+      # Sentinel values in both .env.local and the process env make this build double as a leak
+      # check: Astro inlines any private var referenced through import.meta.env (see CLAUDE.md).
+      env:
+        NETLIFY_DATABASE_URL: postgres://ci-sentinel-7f3a@localhost/process-env
+      run: |
+        cd app
+        printf 'NETLIFY_DATABASE_URL=postgres://ci-sentinel-7f3a@localhost/dotenv\nDATABASE_URL=postgres://ci-sentinel-7f3a@localhost/dotenv\n' > .env.local
+        npm run build
+
+    - name: Check build output for inlined secrets
+      run: |
+        cd app
+        if grep -rl "ci-sentinel-7f3a" dist .netlify; then
+          echo "::error::A server secret was inlined into the build output (files above). Read it from process.env, not import.meta.env."
+          exit 1
+        fi
+
+    - name: Setup Node.js 22.11 (production function runtime floor)
+      # Netlify's nodejs22.x function runtime can't require() ES modules (an ESM-only
+      # transitive dep 500'd /blog in production, #153). 22.11 is the newest Node 22
+      # with that limitation, so the built function is exercised there, not on .nvmrc.
+      uses: actions/setup-node@v7
+      with:
+        node-version: '22.11.0'
+
+    - name: Smoke-test the built SSR function on the production runtime floor
+      run: cd app && node scripts/ssr-smoke.mjs

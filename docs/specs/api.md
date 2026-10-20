@@ -1,6 +1,6 @@
 # API Specification
 
-Spicebush Montessori School -- Astro 5 SSR on Netlify.
+Spicebush Montessori School -- Astro 7 SSR on Netlify.
 
 All endpoints live under `app/src/pages/api/`. Astro file-based routing maps exported
 HTTP-method functions (`GET`, `POST`, `PUT`, `DELETE`) to the corresponding methods

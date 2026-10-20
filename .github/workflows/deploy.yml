@@ -4,9 +4,13 @@ on:
   push:
     branches: [main]
 
-# Never run two production deploys at once; queue instead of cancelling a deploy mid-upload.
+permissions:
+  contents: read
+
+# Serialize production deploys so two quick merges can't race and leave the
+# older build live. Never cancel a deploy that is already uploading.
 concurrency:
-  group: deploy-prod
+  group: deploy-production
   cancel-in-progress: false
 
 jobs:
@@ -16,26 +20,27 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
 
-    - name: Setup Node.js 22
-      uses: actions/setup-node@v5
+    - name: Setup Node.js (app/.nvmrc)
+      uses: actions/setup-node@v7
       with:
-        node-version: '22'
+        node-version-file: 'app/.nvmrc'
         cache: 'npm'
         cache-dependency-path: 'app/package-lock.json'
 
     - name: Install dependencies
-      # --force is a workaround for the lockfile's platform-specific optional packages;
-      # removing it is tracked in issues #42 and #140.
-      run: cd app && npm ci --force
+      # Plain `npm ci`: the lockfile must install cleanly (issue #140). No --force.
+      run: cd app && npm ci
 
     - name: Build
       # Astro SSR defers DB connections to request time — no DATABASE_URL needed at build
       run: cd app && npm run build
 
     - name: Deploy to Netlify
-      run: npx netlify deploy --prod --dir=app/dist --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
+      # netlify-cli is not an app dependency, so pin the package explicitly.
+      # Bare `npx netlify` would resolve the unrelated `netlify` package.
+      run: npx --yes netlify-cli@27 deploy --prod --dir=app/dist --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
       env:
         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

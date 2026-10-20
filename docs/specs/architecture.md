@@ -1,6 +1,6 @@
 # Architecture Specification
 
-Spicebush Montessori School website -- an Astro 5 SSR application deployed on Netlify with a Neon PostgreSQL database. The site serves as the public face for the school plus a CMS-driven admin panel for content, camp, tuition, media, and analytics management.
+Spicebush Montessori School website -- an Astro 7 SSR application deployed on Netlify with a Neon PostgreSQL database. The site serves as the public face for the school plus a CMS-driven admin panel for content, camp, tuition, media, and analytics management.
 
 Live site: https://spicebushmontessori.org
 
@@ -10,10 +10,12 @@ Live site: https://spicebushmontessori.org
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| Framework | Astro 5 (^5.2.5) | `output: 'server'` (SSR) |
-| Adapter | `@astrojs/netlify` | Deployed as Netlify Functions |
-| Styling | Tailwind CSS 3 | Custom brand theme |
+| Runtime | Node.js >= 22.22.0 | Required by Astro 7 and `@astrojs/react` 7 |
+| Framework | Astro 7 (^7.3.8) | `output: 'server'` (SSR), `compressHTML: true` (pre-7 whitespace behavior) |
+| Adapter | `@astrojs/netlify` 8 | Deployed as Netlify Functions |
+| Styling | Tailwind CSS 3 | Custom brand theme; compiled by PostCSS (`postcss.config.mjs`), not `@astrojs/tailwind` |
 | Icons | `lucide-astro` | |
+| File content | Astro content collections | `src/content.config.ts` (glob loaders over `src/content/*`) |
 | React | Selective islands | `TuitionCalculator.tsx`, admin components |
 | Database | Neon PostgreSQL | Via `NETLIFY_DATABASE_URL`, accessed through `pg` client |
 | Auth | Magic-link admin sessions | Cookie-based validation |
@@ -67,7 +69,7 @@ SpicebushWebapp/              (repo root -- deploy from here)
 
 - **Build command**: `npm run build` (from `app/`)
 - **Output**: `app/dist/`
-- **Deploy**: `npx netlify deploy --prod --dir=app/dist` (from repo root, NOT `app/`)
+- **Deploy**: `npx netlify-cli@27 deploy --prod --dir=app/dist` (from repo root, NOT `app/`; netlify-cli is fetched by npx, not installed as an app dependency)
 - **Netlify config**: `netlify.toml` has no `base` key; deploy from the repo root with `--dir=app/dist`
 - **Email**: SendGrid and Unione are called over REST (`src/lib/email-service.ts`); there are no email SDK packages or Rollup externals
 
@@ -221,4 +223,4 @@ Low-level SQL uses `queryFirst()` and `queryRows()` from `@lib/db/client`.
 - Utilities: camelCase in `src/lib/` and `src/utils/`
 - Tests: `*.test.ts` co-located with source or under `src/test/`
 - Commit prefixes: `feat(scope):`, `fix(scope):`, `[BUILD-FIX]`
-- ESLint config: `app/.eslintrc.json` with `eslint-plugin-astro` and `eslint-plugin-jsx-a11y`
+- ESLint config: `app/eslint.config.js` (ESLint 10 flat config) with `typescript-eslint`, `eslint-plugin-astro` and `eslint-plugin-jsx-a11y-x`
