@@ -78,7 +78,7 @@
 ### 3.3 Screen Reader Testing
 - [ ] All links have descriptive text
 - [ ] Social media links have aria-labels
-- [ ] AMS Member School badge announces as one link, "AMS Pathway Member School of the American Montessori Society (opens in a new tab)"
+- [ ] AMS logo links (footer and About page) announce as "American Montessori Society Member School through July 1, 2027 (opens in a new tab)"
 - [ ] Heading hierarchy is correct
 - [ ] Lists are properly marked up
 
@@ -87,13 +87,11 @@
 - [ ] Text remains readable when zoomed to 200%
 - [ ] No horizontal scrolling at any zoom level
 
-### 3.5 AMS Member School Badge
-- [ ] Badge (`/images/affiliations/ams-pathway-member-school.png`) shows in the footer on every page
-- [ ] White ring keeps the purple badge edge visible against forest-canopy
-- [ ] Link opens https://amshq.org in a new tab
-- [ ] Interim 248px file from amshq.org; replace it with the member-portal file when it arrives (issue #138)
-
-## 4. Hours Widget - Friday Display
+### 3.5 AMS Member School Logo
+- [ ] Footer (every page): stacked logo (`/images/affiliations/ams-member-school-2027-stacked.{webp,png}`) on a white card, 192px wide, legible against forest-canopy
+- [ ] About page: horizontal logo from 640px up; stacked logo below 640px (the horizontal date line is too small on phones)
+- [ ] Both link to https://amshq.org in a new tab
+- [ ] The logo says "Through July 1, 2027": replace both files with the renewed logo before that date
 
 ### 4.1 Friday Hours Display
 - [ ] Verify Friday shows 7:30 AM - 3:00 PM

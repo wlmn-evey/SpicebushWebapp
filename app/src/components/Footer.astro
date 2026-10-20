@@ -89,28 +89,34 @@ try {
               )
             }
           </div>
-          <!-- Interim 248px badge from amshq.org; swap for the member-portal file (#138) -->
+          <!--
+            Official AMS Member School logo, valid through July 1, 2027. On renewal, replace the
+            files in /images/affiliations/ with the new year's logo. The logo's navy and green
+            don't read on forest-canopy, so it sits on a white card; its built-in margin is the
+            clear space.
+          -->
           <a
             href="https://amshq.org"
             target="_blank"
             rel="noopener noreferrer"
-            class="group inline-flex items-center gap-3"
+            class="block w-48 overflow-hidden rounded-xl bg-white shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sunlight-gold"
           >
-            <img
-              src="/images/affiliations/ams-pathway-member-school.png"
-              alt="AMS Pathway"
-              width="72"
-              height="72"
-              loading="lazy"
-              decoding="async"
-              class="h-[72px] w-[72px] shrink-0 rounded-full bg-white p-0.5"
-            />
-            <span
-              class="text-sm leading-snug text-light-stone transition-colors group-hover:text-sunlight-gold"
-            >
-              Member School of the<br />American Montessori Society
-              <span class="sr-only">(opens in a new tab)</span>
-            </span>
+            <picture>
+              <source
+                srcset="/images/affiliations/ams-member-school-2027-stacked.webp"
+                type="image/webp"
+              />
+              <img
+                src="/images/affiliations/ams-member-school-2027-stacked.png"
+                alt="American Montessori Society Member School through July 1, 2027"
+                width="800"
+                height="533"
+                loading="lazy"
+                decoding="async"
+                class="block h-auto w-full"
+              />
+            </picture>
+            <span class="sr-only">(opens in a new tab)</span>
           </a>
         </div>
 
