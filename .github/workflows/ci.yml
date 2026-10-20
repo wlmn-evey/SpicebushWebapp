@@ -62,3 +62,14 @@ jobs:
           echo "::error::A server secret was inlined into the build output (files above). Read it from process.env, not import.meta.env."
           exit 1
         fi
+
+    - name: Setup Node.js 22.11 (production function runtime floor)
+      # Netlify's nodejs22.x function runtime can't require() ES modules (an ESM-only
+      # transitive dep 500'd /blog in production, #153). 22.11 is the newest Node 22
+      # with that limitation, so the built function is exercised there, not on .nvmrc.
+      uses: actions/setup-node@v7
+      with:
+        node-version: '22.11.0'
+
+    - name: Smoke-test the built SSR function on the production runtime floor
+      run: cd app && node scripts/ssr-smoke.mjs

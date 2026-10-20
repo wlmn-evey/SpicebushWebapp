@@ -74,6 +74,7 @@ Low-level: `queryFirst()` and `queryRows()` from `@lib/db/client`.
 - **Node >= 22.22.0 is required** (Astro 7, `@astrojs/react` 7). Older Node 22 releases print EBADENGINE warnings and are unsupported.
 - **Tests under `src/pages/` must be named `_*.test.ts`.** Astro routes every `.ts` file in `src/pages` unless it starts with `_`, so `health.test.ts` would deploy as a public `/api/health.test` endpoint bundling vitest. `src/lib/route-hygiene.test.ts` enforces this.
 - **Never reference server secrets through `import.meta.env` — not even behind `import.meta.env.DEV`.** Astro 7 rewrites `import.meta.env` into an object literal containing every private var the module mentions, so the value lands in the SSR bundle. Read `process.env` only; `astro.config.mjs` loads `.env.local`/`.env` into `process.env` for dev (no override). CI builds with sentinel secrets and fails if they appear in `dist/` or `.netlify/`. Dynamic `import.meta.env[key]` throws in `astro dev`.
+- **Production functions can't `require()` ES modules.** Netlify's `nodejs22.x` SSR runtime behaves like Node ≤22.11, so a CommonJS dependency that requires an ESM-only package crashes routes in prod while passing locally. `isomorphic-dompurify` is pinned to 2.26.0 for this reason (#153). CI runs `scripts/ssr-smoke.mjs` under Node 22.11 against the built function.
 - **Content collections live in `src/content.config.ts`** (glob loaders). Entries are keyed by `entry.id`; the legacy `entry.slug` is gone.
 
 ## Conventions (Beyond Linter)

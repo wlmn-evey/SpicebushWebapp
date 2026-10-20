@@ -54,3 +54,7 @@ The Security workflow blocks on high/critical advisories in production dependenc
 Every entry has a reason and an `expires` date (~90 days). Once it expires the gate fails until someone re-checks upstream and either removes the entry or extends it. Entries that no longer match anything show as warnings; delete them.
 
 As of 2026-10-20 the allowlist holds `braces` (GHSA-vfj7-8cjw-p6xm) and `node-forge` (GHSA-86w9-cpqp-85rv). Both reach production deps only through `@astrojs/netlify`'s local dev-server tooling (`@netlify/vite-plugin` → `@netlify/dev`).
+
+## Pinned for the production function runtime
+
+- `isomorphic-dompurify` is pinned to **2.26.0** (its `dompurify` is overridden to the latest 3.x). Newer releases pull jsdom 28 → `html-encoding-sniffer` 6 → the ESM-only `@exodus/bytes`. Netlify's `nodejs22.x` SSR runtime can't `require()` ES modules, so every page that sanitizes HTML (all `/blog` routes) returned 500 in production (#153). Before bumping it, run `npm run build && npx --yes node@22.11.0 scripts/ssr-smoke.mjs`; CI does the same.
