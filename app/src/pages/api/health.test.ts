@@ -14,7 +14,8 @@ import { GET } from './health';
 describe('GET /api/health', () => {
   it('hides database error details from the public response', async () => {
     vi.stubEnv('NETLIFY_DATABASE_URL', 'postgres://example');
-    const response = await GET({} as Parameters<typeof GET>[0]);
+    // The handler ignores its context; call it the way it is declared.
+    const response = await (GET as () => Promise<Response>)();
     expect(response.status).toBe(503);
     const body = await response.json();
     expect(body.error).toBe('Database check failed');

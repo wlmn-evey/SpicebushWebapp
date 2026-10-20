@@ -48,9 +48,8 @@ describe('/api/test-email', () => {
   });
 
   it('refuses GET without sending mail', async () => {
-    const response = await GET(
-      makeContext(new Request('http://localhost/api/test-email?email=victim@example.com'))
-    );
+    // GET ignores its context (and any ?email=); call it the way it is declared.
+    const response = await (GET as () => Promise<Response>)();
     expect(response.status).toBe(405);
     expect(response.headers.get('Allow')).toBe('POST');
     expect(emailService.send).not.toHaveBeenCalled();
