@@ -342,7 +342,7 @@ flipped only at the supervised launch. The PR build does **not** execute any of 
    which is the confirmed canonicals bug.)
 2. **Neutralize the competing git-CI deploy path.** The Netlify production branch is `testing`
    (a live competing deploy path). Set `stop_builds=true` so the authoritative `deploy.yml`
-   (repo-root `npx netlify deploy --prod --dir=app/dist`) is the only deploy path:
+   (repo-root `npx netlify-cli@27 deploy --prod --dir=app/dist`) is the only deploy path:
    ```
    build_settings.stop_builds = true
    ```
