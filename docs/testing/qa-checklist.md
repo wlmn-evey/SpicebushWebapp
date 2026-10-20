@@ -78,6 +78,13 @@
 ### 3.3 Screen Reader Testing
 - [ ] All links have descriptive text
 - [ ] Social media links have aria-labels
+- [ ] AMS Member School badge announces as a link to amshq.org that opens in a new tab
+
+### 3.4 AMS Member School Badge
+- [ ] Badge (`/images/affiliations/ams-pathway-member-school.png`) shows in the footer on every page
+- [ ] White ring keeps the purple badge edge visible against forest-canopy
+- [ ] Link opens https://amshq.org in a new tab
+- [ ] Interim 248px file from amshq.org; replace it with the member-portal file when it arrives (issue #138)
 - [ ] Heading hierarchy is correct
 - [ ] Lists are properly marked up
 
