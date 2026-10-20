@@ -180,6 +180,61 @@ import OptimizedImage from '../components/OptimizedImage.astro';
       </div>
     </section>
 
+    <!-- AMS membership. The logo is valid through July 1, 2027; replace it on renewal. -->
+    <section class="py-14 bg-white" aria-labelledby="ams-membership-heading">
+      <div class="container mx-auto px-4">
+        <div class="mx-auto flex max-w-3xl flex-col items-center text-center">
+          <a
+            href="https://amshq.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="block w-full max-w-[16rem] sm:max-w-xl rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forest-canopy"
+          >
+            <!-- Stacked layout on phones: the horizontal one's date line would render ~8px tall. -->
+            <picture>
+              <source
+                media="(max-width: 639px)"
+                srcset="/images/affiliations/ams-member-school-2027-stacked.webp"
+                type="image/webp"
+                width="800"
+                height="533"
+              />
+              <source
+                media="(max-width: 639px)"
+                srcset="/images/affiliations/ams-member-school-2027-stacked.png"
+                type="image/png"
+                width="800"
+                height="533"
+              />
+              <source
+                srcset="/images/affiliations/ams-member-school-2027-horizontal.webp"
+                type="image/webp"
+              />
+              <img
+                src="/images/affiliations/ams-member-school-2027-horizontal.png"
+                alt="American Montessori Society Member School through July 1, 2027"
+                width="1900"
+                height="262"
+                loading="lazy"
+                decoding="async"
+                class="block h-auto w-full"
+              />
+            </picture>
+            <span class="sr-only">(opens in a new tab)</span>
+          </a>
+          <h2
+            id="ams-membership-heading"
+            class="mt-8 text-balance text-2xl lg:text-3xl font-bold text-earth-brown"
+          >
+            A Member School of the American Montessori Society
+          </h2>
+          <p class="mt-3 text-lg text-earth-brown">
+            Spicebush Montessori School is a Member School of the American Montessori Society (AMS).
+          </p>
+        </div>
+      </div>
+    </section>
+
     <!-- Teachers Section -->
     <TeachersSection />
   </main>
