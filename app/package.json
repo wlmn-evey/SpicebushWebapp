@@ -89,7 +89,7 @@
     "@types/pg": "^8.15.4",
     "astro": "^5.18.2",
     "csv-parse": "^6.1.0",
-    "isomorphic-dompurify": "^2.36.0",
+    "isomorphic-dompurify": "2.26.0",
     "jose": "^5.10.0",
     "lucide-astro": "^0.468.0",
     "marked": "^16.1.1",
@@ -134,5 +134,10 @@
     "puppeteer": "^24.22.3",
     "tsx": "^4.7.1",
     "vitest": "^1.4.0"
+  },
+  "overrides": {
+    "isomorphic-dompurify": {
+      "dompurify": "^3.4.17"
+    }
   }
 }
