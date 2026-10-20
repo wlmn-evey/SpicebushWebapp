@@ -5,14 +5,14 @@
 | Document | Purpose |
 |----------|---------|
 | [PRD.md](PRD.md) | Product requirements — what the product is, who it serves, features in/out of scope |
-| [ROADMAP.md](ROADMAP.md) | Phases, open backlog, audit remediation status, what's next |
+| [roadmap.md](roadmap.md) | Phases, open backlog, audit remediation status, what's next |
 
 ## Technical Specs (`specs/`)
 
 | Spec | Purpose |
 |------|---------|
 | [architecture.md](specs/architecture.md) | Stack, build pipeline, project structure, conventions |
-| [data-model.md](specs/data-model.md) | Full database schema (19 tables, 14 migrations) |
+| [data-model.md](specs/data-model.md) | Full database schema (19 tables, 16 migrations) |
 | [auth.md](specs/auth.md) | Magic-link auth flow, sessions, protected routes |
 | [camp-system.md](specs/camp-system.md) | Camp mode state machine, seat logic, promotions |
 | [email.md](specs/email.md) | Email providers, types, templates, routing |
@@ -31,6 +31,9 @@
 | [006](adr/006-cms-database-tables.md) | CMS as database tables over headless CMS |
 | [007](adr/007-email-provider-abstraction.md) | Configurable email provider abstraction |
 | [008](adr/008-db-backed-blog.md) | DB-backed blog over git-markdown Astro collection |
+| [009](adr/009-tiptap-editor-and-storage.md) | TipTap editor with HTML storage over Markdown round-trip |
+| [010](adr/010-ai-writing-voice-system.md) | AI writing and voice system for the blog (Proposed) |
+| [011](adr/011-blog-admin-editor-redesign.md) | Dedicated blog editor pages over the single-page accordion dashboard |
 
 ## Plans (`plans/`)
 
@@ -45,6 +48,9 @@
 |---------|---------|
 | [deploy.md](runbooks/deploy.md) | Production deployment checklist |
 | [rollback.md](runbooks/rollback.md) | Rollback procedures |
+| [blog-html-conversion.md](runbooks/blog-html-conversion.md) | Blog V2 Markdown-to-HTML cutover |
+| [scheduled-publish.md](runbooks/scheduled-publish.md) | Scheduled blog publishing function |
+| [ticker.md](runbooks/ticker.md) | Site-wide news ticker (/admin/ticker) |
 
 ## Other Docs
 

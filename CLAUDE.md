@@ -41,9 +41,10 @@ npx netlify deploy --prod --dir=app/dist
 - We use custom magic-link auth, not Auth0 or Clerk
 - We use Tailwind CSS 3, not CSS modules or styled-components
 - We use React islands selectively (TuitionCalculator), not as the primary renderer
-- Email providers: SendGrid + Unione (via REST). Resend/Postmark are Rollup externals but not active.
+- Email providers: SendGrid + Unione, both called via REST (`fetch`) — no email SDK packages are installed.
 - Blog: DB-backed via /admin/blog; posts are content rows with type='blog'. V2 authoring is a TipTap WYSIWYG editor storing sanitized HTML in data.body (ADR-009; `blog-html.ts` STRICT_CONFIG_V2 is the render-time trust boundary)
-- Out of scope: Stripe/payments, newsletter
+- Donations: on-site Stripe Checkout (`api/donations/checkout.ts`), confirmed by the `api/webhooks/stripe.ts` webhook; thank-you emails are queued and sent by `netlify/functions/process-donation-email-jobs.ts`. Tuition/other payments are not handled on-site.
+- Out of scope: newsletter
 
 ## Path Aliases
 
@@ -70,7 +71,6 @@ Low-level: `queryFirst()` and `queryRows()` from `@lib/db/client`.
 - **CSS `* { max-width: 100% }`** in `global.css` clamps ALL elements. Override with `max-width: none` when needed.
 - **Deploy from repo root, not `app/`.** Deploying from repo root with `--dir=app/dist` is the working, current path; there is no `base=app` in the committed `netlify.toml`. The repo-root deploy empirically uploads the SSR function and prod serves SSR.
 - **SVGs with `preserveAspectRatio="none"`** need explicit width values (`width: auto` won't work).
-- **Email packages are Rollup externals** in `astro.config.mjs` — they resolve at runtime on Netlify, not at build.
 
 ## Conventions (Beyond Linter)
 
@@ -84,10 +84,10 @@ Low-level: `queryFirst()` and `queryRows()` from `@lib/db/client`.
 Canonical docs live in `docs/`:
 
 - **PRD**: `docs/PRD.md`
-- **Roadmap**: `docs/ROADMAP.md`
+- **Roadmap**: `docs/roadmap.md`
 - **Specs**: `docs/specs/` (architecture, data-model, auth, camp-system, email, api, blog)
-- **ADRs**: `docs/adr/` (8 architecture decision records)
-- **Runbooks**: `docs/runbooks/` (deploy, rollback)
+- **ADRs**: `docs/adr/` (11 architecture decision records)
+- **Runbooks**: `docs/runbooks/` (deploy, rollback, blog-html-conversion, scheduled-publish, ticker)
 
 ## Agents
 

@@ -1,10 +1,9 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `app/`: Astro site, with pages in `app/src/pages/`, components in `app/src/components/`, shared utilities under `app/src/lib/`, and tests in `app/tests/` or near code.
+- `app/`: Astro site, with pages in `app/src/pages/`, components in `app/src/components/`, shared utilities under `app/src/lib/`, and tests near code or in `app/src/test/`.
 - `scripts/`: Operational helpers for deployment, migration, and maintenance tasks.
-- `src/`: Shared root-level services used by non-app tooling.
-- `docs/`, `journal/`, `debug/`: Internal documentation and operational notes; review before touching infrastructure or incident playbooks.
+- `docs/`: Canonical documentation (PRD, specs, ADRs, runbooks, `incidents/` notes); review before touching infrastructure or incident playbooks.
 
 ## Build, Test, and Development Commands
 - `npm run dev`: Launches Netlify dev server with functions/proxy (run from repo root).
@@ -21,7 +20,7 @@
 
 ## Testing Guidelines
 - Write unit/integration tests with Vitest (`*.test.ts` or `*.spec.ts`) close to source or under `app/src/test/`.
-- Place Playwright scenarios in `app/e2e/` or `app/tests/`; keep fixtures minimal and deterministic.
+- Place Playwright scenarios in `app/e2e/`; keep fixtures minimal and deterministic.
 - Run `npm run test` and `npm run test:e2e` locally before pushing; aim to cover new logic and routes.
 
 ## Commit & Pull Request Guidelines
@@ -30,5 +29,5 @@
 
 ## Security & Configuration Tips
 - Do not commit secrets; populate `app/.env.local` from `app/.env.example` and rely on Netlify env vars.
-- Run `cd app && npm run setup:dev` to validate required variables before development.
+- Run `cd app && npm run setup:dev` to copy `.env.example` to `.env.local` (it overwrites an existing `.env.local` and does not validate anything), then fill in values. Secrets live in 1Password.
 - Keep API endpoints configurable via environment variables.

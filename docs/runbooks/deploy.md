@@ -10,7 +10,7 @@ Before starting, confirm:
 
 - [ ] You have `NETLIFY_SITE_ID` and `NETLIFY_AUTH_TOKEN` available
 - [ ] You are on the correct branch and all changes are committed
-- [ ] Node 20+ is installed locally
+- [ ] Node 22+ is installed locally (`app/package.json` `engines`)
 - [ ] Working directory is the repo root (`SpicebushWebapp/`)
 
 ---
@@ -245,6 +245,8 @@ Merging a PR to `main` triggers the `deploy.yml` GitHub Actions workflow, which:
 2. Deploys to Netlify via CLI (`npx netlify deploy --prod --dir=app/dist`)
 
 No Netlify git integration is used — GitHub Actions owns the build and deploy pipeline.
+Production deploys are serialized (`concurrency: deploy-prod`, never cancelled mid-run), so two
+quick merges queue rather than race.
 
 > **Verified:** the repo-root `npx netlify deploy --prod --dir=app/dist` empirically uploads the SSR function and prod serves SSR (probed 2026-06-06: `/contact` → 200, `/admin` → 302). The workflow is correct as-is — no deploy-command patch and no SSR-function-upload verification-deploy gate are needed.
 
@@ -283,14 +285,14 @@ Complete each item against the live production URL.
 
 ## 8. Netlify Build Configuration Reference
 
-These settings must match in the Netlify dashboard (Site Settings > Build & Deploy):
+These mirror the committed root `netlify.toml` (Site Settings > Build & Deploy should agree):
 
-| Setting           | Value           |
-| ----------------- | --------------- |
-| Base directory    | `app`           |
-| Build command     | `npm run build` |
-| Publish directory | `dist`          |
-| Node version      | `20`            |
+| Setting           | Value                                                                    |
+| ----------------- | ------------------------------------------------------------------------ |
+| Base directory    | _(none — repo root; there is no `base` key, see §6)_                     |
+| Build command     | `npm run build`                                                          |
+| Publish directory | `dist` in `netlify.toml`; deploys pass `--dir=app/dist`, which overrides |
+| Node version      | `22` (`NODE_VERSION` in `netlify.toml`)                                  |
 
 Environment variables required in Netlify:
 

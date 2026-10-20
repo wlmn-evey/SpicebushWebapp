@@ -68,8 +68,8 @@ SpicebushWebapp/              (repo root -- deploy from here)
 - **Build command**: `npm run build` (from `app/`)
 - **Output**: `app/dist/`
 - **Deploy**: `npx netlify deploy --prod --dir=app/dist` (from repo root, NOT `app/`)
-- **Netlify config**: `netlify.toml` has `base=app`, so deploying from `app/` causes path doubling
-- **Externalized packages**: `resend`, `@sendgrid/mail`, `postmark` are marked as Rollup externals and resolved at runtime on Netlify, not at build time
+- **Netlify config**: `netlify.toml` has no `base` key; deploy from the repo root with `--dir=app/dist`
+- **Email**: SendGrid and Unione are called over REST (`src/lib/email-service.ts`); there are no email SDK packages or Rollup externals
 
 ---
 

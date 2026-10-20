@@ -1,4 +1,6 @@
-# Root Netlify Configuration for Spicebush Testing Site
+# Root Netlify configuration for the Spicebush Montessori production site
+# (spicebushmontessori.org). Production deploys run from the repo root with
+# --dir=app/dist; see docs/runbooks/deploy.md.
 
 [build]
   # Build command for Astro app in root directory
@@ -14,7 +16,8 @@
     bundle = true
     minify = true
   
-  # Directory to deploy (relative to app directory where build runs)
+  # Note: there is no `base` key. The CLI/GitHub Actions deploy passes --dir=app/dist,
+  # which overrides this publish value (see docs/runbooks/deploy.md).
   publish = "dist"
   
   # Node version and other environment settings
@@ -44,8 +47,10 @@
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
-    X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    # Keep in sync with app/src/lib/security-headers.ts (applied to SSR responses).
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     
 # Cache static assets
 [[headers]]
@@ -69,18 +74,6 @@
   to = "https://spicebushmontessori.org/:splat"
   status = 301
   force = true
-
-[[redirects]]
-  from = "/admin/*"
-  to = "/admin/:splat"
-  status = 200
-  force = false
-
-[[redirects]]
-  from = "/auth/*"
-  to = "/auth/:splat"
-  status = 200
-  force = false
 
 # Functions configuration
 [functions]
