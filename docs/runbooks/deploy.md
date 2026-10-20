@@ -243,7 +243,7 @@ Merging a PR to `main` triggers the `deploy.yml` GitHub Actions workflow, which:
 
 1. Installs dependencies with a plain `npm ci` (no `--force`, so a lockfile that can't install cleanly fails the deploy instead of being papered over — see issue #140)
 2. Builds the app (`cd app && npm run build`)
-3. Deploys to Netlify via CLI (`npx netlify deploy --prod --dir=app/dist`)
+3. Deploys to Netlify via CLI (`npx --yes netlify-cli@27 deploy --prod --dir=app/dist`, pinned explicitly because netlify-cli is not an app dependency)
 
 Deploys are serialized (`concurrency: deploy-production`). If two merges land close together, the second waits for the first to finish rather than racing it. A deploy that's already running is never cancelled.
 
@@ -258,7 +258,7 @@ No Netlify git integration is used — GitHub Actions owns the build and deploy 
 | `deploy.yml` | Pushes to `main` | `npm ci`, build, Netlify deploy |
 
 - **Node version:** every workflow reads `app/.nvmrc` via `setup-node`'s `node-version-file`. `netlify.toml`'s `NODE_VERSION` must match it, so change both together.
-- **Dependency audit policy:** a high or critical advisory in production `dependencies` (code that can ship in the SSR function) fails the check. The full audit, which also covers dev deps like netlify-cli, eslint, vitest and puppeteer, is report-only: the counts go to the job summary plus a warning annotation. Dev tooling never ships to the site, and Dependabot raises PRs for it. Never add `--force` or lower `--audit-level` to get the check green. Fix or upgrade the dependency, or move a build-only package to `devDependencies` if it doesn't belong in `dependencies`.
+- **Dependency audit policy:** a high or critical advisory in production `dependencies` (code that can ship in the SSR function) fails the check. The full audit, which also covers dev deps like eslint, vitest and puppeteer, is report-only: the counts go to the job summary plus a warning annotation. Dev tooling never ships to the site, and Dependabot raises PRs for it. Never add `--force` or lower `--audit-level` to get the check green. Fix or upgrade the dependency, or move a build-only package to `devDependencies` if it doesn't belong in `dependencies`.
 - **Dependabot** (`.github/dependabot.yml`) opens weekly PRs for `app/` npm deps and for GitHub Actions. Minor and patch updates are grouped into one PR per ecosystem. Majors get individual PRs.
 
 > **Verified:** the repo-root `npx netlify deploy --prod --dir=app/dist` empirically uploads the SSR function and prod serves SSR (probed 2026-06-06: `/contact` → 200, `/admin` → 302). The workflow is correct as-is — no deploy-command patch and no SSR-function-upload verification-deploy gate are needed.

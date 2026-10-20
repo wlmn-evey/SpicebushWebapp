@@ -38,7 +38,9 @@ jobs:
       run: cd app && npm run build
 
     - name: Deploy to Netlify
-      run: npx netlify deploy --prod --dir=app/dist --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
+      # netlify-cli is not an app dependency, so pin the package explicitly.
+      # Bare `npx netlify` would resolve the unrelated `netlify` package.
+      run: npx --yes netlify-cli@27 deploy --prod --dir=app/dist --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
       env:
         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

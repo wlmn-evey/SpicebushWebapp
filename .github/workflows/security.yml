@@ -34,7 +34,7 @@ jobs:
         node-version-file: 'app/.nvmrc'
 
     - name: Full audit incl. dev deps (report only)
-      # Dev deps (netlify-cli, eslint, vitest, puppeteer...) run only on
+      # Dev deps (eslint, vitest, puppeteer...) run only on
       # developer machines and CI. They never ship in the Netlify function
       # bundle. Their advisories go to the job summary and show as a warning,
       # and Dependabot raises PRs for them. They don't block merges.
