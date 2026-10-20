@@ -1,5 +1,32 @@
 ---
 import { Calculator, Calendar, Phone } from 'lucide-astro';
+import { db } from '@lib/db';
+import { logServerError } from '@lib/server-logger';
+import { getTourLink, TOUR_CTA_DESTINATION } from '@lib/tour-settings';
+
+// Same sources as Header.astro: the admin tour link setting and the school-info phone,
+// with the long-standing values as fallbacks so a DB hiccup never breaks the layout.
+const DEFAULT_PHONE = '(484) 202-0712';
+
+let tourLink = TOUR_CTA_DESTINATION;
+try {
+  tourLink = await getTourLink();
+} catch (error) {
+  logServerError('Failed to load tour link', error, { component: 'MobileBottomNav' });
+}
+const tourLinkIsExternal = /^https?:\/\//.test(tourLink);
+
+let phone = DEFAULT_PHONE;
+try {
+  const schoolEntry = await db.content.getEntry('school-info', 'general');
+  const rawPhone = (schoolEntry?.data as { phone?: unknown } | undefined)?.phone;
+  if (typeof rawPhone === 'string' && rawPhone.trim().length > 0) {
+    phone = rawPhone.trim();
+  }
+} catch (error) {
+  logServerError('Failed to load school info', error, { component: 'MobileBottomNav' });
+}
+const phoneDigits = phone.replace(/[^0-9]/g, '');
 ---
 
 <!-- Sticky Mobile Bottom Navigation -->
@@ -18,7 +45,9 @@ import { Calculator, Calendar, Phone } from 'lucide-astro';
     </a>
 
     <a
-      href="/admissions"
+      href={tourLink}
+      target={tourLinkIsExternal ? '_blank' : undefined}
+      rel={tourLinkIsExternal ? 'noopener noreferrer' : undefined}
       class="bg-sunlight-gold py-3 px-2 flex flex-col items-center justify-center hover:bg-orange-600 transition-colors"
       aria-label="Schedule a tour"
     >
@@ -27,9 +56,9 @@ import { Calculator, Calendar, Phone } from 'lucide-astro';
     </a>
 
     <a
-      href="tel:484-202-0712"
+      href={`tel:${phoneDigits}`}
       class="bg-white py-3 px-2 flex flex-col items-center justify-center hover:bg-stone-beige transition-colors"
-      aria-label="Call us"
+      aria-label={`Call us at ${phone}`}
     >
       <Phone className="w-6 h-6 text-forest-canopy mb-1" />
       <span class="text-xs font-medium text-earth-brown">Call</span>

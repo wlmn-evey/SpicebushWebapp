@@ -47,20 +47,34 @@ const paragraphParts = (value: string): string[] =>
                 FAQ content is being updated. Please check back shortly.
               </div>
             ) : (
-              faqSections.map(section => (
+              faqSections.map((section, sectionIndex) => (
                 <div class="mb-12">
                   <h2 class="text-2xl lg:text-3xl font-bold text-earth-brown mb-8">
                     {section.title}
                   </h2>
                   <div class="space-y-4">
-                    {section.items.map(item => (
+                    {section.items.map((item, itemIndex) => (
                       <div class="faq-item border border-gray-200 rounded-lg overflow-hidden">
-                        <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors">
+                        <button
+                          type="button"
+                          id={`faq-q-${sectionIndex}-${itemIndex}`}
+                          aria-expanded="false"
+                          aria-controls={`faq-a-${sectionIndex}-${itemIndex}`}
+                          class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-stone-beige/50 transition-colors"
+                        >
                           <span class="font-semibold text-earth-brown">{item.question}</span>
-                          <ChevronDown className="w-5 h-5 text-earth-brown transition-transform" />
+                          <ChevronDown
+                            className="w-5 h-5 text-earth-brown transition-transform"
+                            aria-hidden="true"
+                          />
                         </button>
 
-                        <div class="faq-content hidden px-6 pb-4">
+                        <div
+                          id={`faq-a-${sectionIndex}-${itemIndex}`}
+                          role="region"
+                          aria-labelledby={`faq-q-${sectionIndex}-${itemIndex}`}
+                          class="faq-content hidden px-6 pb-4"
+                        >
                           {paragraphParts(item.answer).map((paragraph, index) => (
                             <p class={`text-earth-brown/80 ${index > 0 ? 'mt-2' : ''}`}>
                               {paragraph}
@@ -151,6 +165,7 @@ const paragraphParts = (value: string): string[] =>
           if (otherItem !== item) {
             otherContent?.classList.add('hidden');
             otherIcon?.classList.remove('rotate-180');
+            otherItem.querySelector('.faq-toggle')?.setAttribute('aria-expanded', 'false');
           }
         });
 
@@ -161,6 +176,7 @@ const paragraphParts = (value: string): string[] =>
           content?.classList.remove('hidden');
           icon?.classList.add('rotate-180');
         }
+        toggle?.setAttribute('aria-expanded', String(!isOpen));
       });
     });
   });

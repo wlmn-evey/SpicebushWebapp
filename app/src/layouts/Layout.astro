@@ -97,11 +97,11 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
     {ogType === 'article' && modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
 
     <!-- Twitter -->
-    <meta property="twitter:card" content={seoMetadata.twitterCard} />
-    <meta property="twitter:url" content={canonicalURL} />
-    <meta property="twitter:title" content={seoMetadata.title} />
-    <meta property="twitter:description" content={seoMetadata.description} />
-    <meta property="twitter:image" content={resolvedOgImage} />
+    <meta name="twitter:card" content={seoMetadata.twitterCard} />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:title" content={seoMetadata.title} />
+    <meta name="twitter:description" content={seoMetadata.description} />
+    <meta name="twitter:image" content={resolvedOgImage} />
     {ogImage && ogImageAlt && <meta name="twitter:image:alt" content={ogImageAlt} />}
 
     <!-- Performance Optimization: Resource Hints -->

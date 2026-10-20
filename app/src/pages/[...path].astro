@@ -1,25 +1,14 @@
 ---
-// This catch-all route ensures all pages work with middleware
+// Catch-all for any path that no other route matches (typos, old URLs, stray
+// asset/module requests). It used to 302 everything to the homepage, which
+// search engines treat as a soft 404. Return a real 404 instead: an empty-body
+// 404 Response makes Astro render the branded src/pages/404.astro (same pattern
+// as blog/[slug].astro).
+//
+// Known legacy URLs that should permanently move go here as explicit 301s, e.g.
+//   if (path === 'old-page') return Astro.redirect('/new-page', 301);
+// (none are currently known; legacy blog URLs are handled in blog/[slug].astro).
 export const prerender = false;
 
-// Get the request path
-const { path } = Astro.params;
-// Check if this is a module import or static asset request
-if (
-  path?.includes('/lib/') ||
-  path?.includes('/assets/') ||
-  path?.includes('/images/') ||
-  path?.includes('/@') ||
-  path?.includes('/node_modules/') ||
-  path?.includes('.js') ||
-  path?.includes('.ts') ||
-  path?.includes('.css') ||
-  path?.includes('.json')
-) {
-  // Return 404 for non-existent assets/modules instead of redirecting
-  return new Response('Not Found', { status: 404 });
-}
-
-// For actual page routes that don't exist, redirect to home
-return Astro.redirect('/');
+return new Response(null, { status: 404 });
 ---
