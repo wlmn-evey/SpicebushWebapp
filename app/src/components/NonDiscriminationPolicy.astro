@@ -1,5 +1,14 @@
 ---
 import { Heart } from 'lucide-astro';
+import {
+  ADMISSIONS_STATEMENT,
+  ANONYMOUS_FEEDBACK_FORM,
+  ANONYMOUS_FEEDBACK_LEAD,
+  CONTACT_PROMPT,
+  NON_DISCRIMINATION_STATEMENT,
+  REPORTING_AGENCIES,
+  REPORTING_INTRO
+} from '@lib/non-discrimination-policy';
 ---
 
 <section class="py-12 bg-stone-beige">
@@ -20,70 +29,44 @@ import { Heart } from 'lucide-astro';
       <!-- Main Policy Text -->
       <div class="prose prose-lg max-w-none mb-8">
         <p class="text-earth-brown leading-relaxed-plus mb-6">
-          Spicebush Montessori School admits students of any race, color, gender, national and
-          ethnic origin, and sexual orientation to all the rights, privileges, programs, and
-          activities generally accorded or made available to students at the school. It does not
-          discriminate on the basis of gender, race, color, national and ethnic origin, or sexual
-          orientation in administration of its educational policies, admissions policies,
-          scholarship and loan programs, and athletic and other school-administered programs.
+          {ADMISSIONS_STATEMENT}
+          {NON_DISCRIMINATION_STATEMENT}
         </p>
 
         <p class="text-earth-brown leading-relaxed-plus mb-6">
-          Below are ways to reach out to the U.S. Department of Health and Human Services' Office of
-          Civil Rights, the Office of Civil Rights Compliance, the Pennsylvania Human Relations
-          Commission, or our school directly if you have been subjected to implicit bias or
-          discrimination.
+          {REPORTING_INTRO}
         </p>
       </div>
 
       <!-- Contact Links -->
       <div class="space-y-4 mb-8">
-        <div class="text-center">
-          <a
-            href="https://www.hhs.gov/ocr/index.html"
-            target="_blank"
-            rel="noopener"
-            class="inline-block text-lg font-bold text-forest-canopy hover:text-moss-green transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
-          >
-            Office for Civil Rights
-          </a>
-        </div>
-
-        <div class="text-center">
-          <a
-            href="https://www.dhs.pa.gov/contact/DHS-Offices/Pages/OA-Bureau%20of%20Equal%20Opportunity.aspx"
-            target="_blank"
-            rel="noopener"
-            class="inline-block text-lg font-bold text-forest-canopy hover:text-moss-green transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
-          >
-            Bureau of Equal Opportunity
-          </a>
-        </div>
-
-        <div class="text-center">
-          <a
-            href="https://www.phrc.pa.gov/File-a-Complaint/Pages/default.aspx"
-            target="_blank"
-            rel="noopener"
-            class="inline-block text-lg font-bold text-forest-canopy hover:text-moss-green transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
-          >
-            Pennsylvania Human Rights Commission
-          </a>
-        </div>
+        {
+          REPORTING_AGENCIES.map(agency => (
+            <div class="text-center">
+              <a
+                href={agency.href}
+                target="_blank"
+                rel="noopener"
+                class="inline-block text-lg font-bold text-forest-canopy hover:text-moss-green transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
+              >
+                {agency.label}
+              </a>
+            </div>
+          ))
+        }
       </div>
 
       <!-- Anonymous Feedback -->
       <div class="mb-8">
         <p class="text-earth-brown text-center">
-          If you would like to file an anonymous complaint or offer feedback to teachers leaders,
-          please use this
+          {ANONYMOUS_FEEDBACK_LEAD}
           <a
-            href="https://docs.google.com/forms/d/e/1FAIpQLSd9x0mdbCKXBjbWuVme2SeRX9enMfUAf7Y_80VqFUDFs4qfRg/viewform?usp=sf_link"
+            href={ANONYMOUS_FEEDBACK_FORM.href}
             target="_blank"
             rel="noopener"
             class="text-forest-canopy hover:text-moss-green font-bold transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-1"
           >
-            Google Form
+            {ANONYMOUS_FEEDBACK_FORM.label}
           </a>.
         </p>
       </div>
@@ -97,8 +80,7 @@ import { Heart } from 'lucide-astro';
           class="text-white hover:text-light-stone transition-colors focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-forest-canopy rounded px-2 inline-block"
         >
           <p class="text-lg font-semibold mb-1">
-            Please contact us directly here if you or your family has been subjected to implicit
-            bias or discrimination.
+            {CONTACT_PROMPT}
           </p>
         </a>
       </div>

@@ -3,6 +3,7 @@ export const prerender = false;
 
 import { getCollection, getEntries, getAllSettings, type ContentEntry } from '@lib/content-db';
 import { getTestimonialsForPlacement, type ManagedTestimonial } from '@lib/testimonials-content';
+import { ADMISSIONS_STATEMENT } from '@lib/non-discrimination-policy';
 import ExternalLinkTargetBehavior from '@components/ExternalLinkTargetBehavior.astro';
 import OptimizedImage from '@components/OptimizedImage.astro';
 import { resolveSeoMetadata } from '@lib/seo-config';
@@ -2167,8 +2168,7 @@ const seoMetadata = await resolveSeoMetadata({
       <a href={adminSignInPath} class="footer-admin-access-link">Admin Sign In</a>
     </div>
     <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.9; max-width: 800px; margin-left: auto; margin-right: auto;">
-      Spicebush Montessori School admits students of any race, color, national and ethnic origin to all the rights, 
-      privileges, programs, and activities generally accorded or made available to students at the school.
+      {ADMISSIONS_STATEMENT}
     </p>
   </footer>
 
