@@ -195,6 +195,8 @@ const handleComingSoon = async (context: APIContext, next: MiddlewareNext) => {
     '/uploads',
     '/_image',
     '/favicon.svg',
+    '/favicon.ico',
+    '/apple-touch-icon.png',
     '/images/'
   ];
 

@@ -3,6 +3,7 @@ import '../styles/global.css';
 import MobileBottomNav from '../components/MobileBottomNav.astro';
 import AdminPreviewBar from '../components/AdminPreviewBar.astro';
 import ExternalLinkTargetBehavior from '../components/ExternalLinkTargetBehavior.astro';
+import FaviconLinks from '../components/FaviconLinks.astro';
 import { CRITICAL_IMAGES, generatePreloadLinks } from '../lib/image-preloader';
 import { getAnalyticsConfig } from '@lib/analytics-config';
 import { resolveSeoMetadata } from '@lib/seo-config';
@@ -74,7 +75,7 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <FaviconLinks />
     <meta name="generator" content={Astro.generator} />
     
     <!-- SEO Meta Tags -->

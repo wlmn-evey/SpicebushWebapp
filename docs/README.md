@@ -58,6 +58,7 @@
 - `testing/` — testing guide, QA checklist
 - `setup/` — quick start guide
 - `incidents/` — operational incident notes
+- `brand/` — brand assets; [favicon/README.md](brand/favicon/README.md) covers the site icon set and how to regenerate it
 
 ## Issue Tracking
 
