@@ -88,7 +88,7 @@
     "isomorphic-dompurify": "2.26.0",
     "jose": "^6.2.13",
     "lucide-astro": "^0.536.0",
-    "marked": "^16.4.2",
+    "marked": "^18.1.1",
     "nanoid": "^5.1.16",
     "pg": "^8.23.1",
     "react": "19.3.0",
