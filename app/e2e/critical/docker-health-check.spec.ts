@@ -298,6 +298,8 @@ test.describe('Docker Container Health Checks', () => {
     // Check static assets are accessible
     const staticAssets = [
       '/favicon.svg',
+      '/favicon.ico',
+      '/apple-touch-icon.png',
       '/robots.txt',
     ];
 

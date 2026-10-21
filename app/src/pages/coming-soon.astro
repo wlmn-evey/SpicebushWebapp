@@ -4,6 +4,7 @@ export const prerender = false;
 import { getCollection, getEntries, getAllSettings, type ContentEntry } from '@lib/content-db';
 import { getTestimonialsForPlacement, type ManagedTestimonial } from '@lib/testimonials-content';
 import ExternalLinkTargetBehavior from '@components/ExternalLinkTargetBehavior.astro';
+import FaviconLinks from '@components/FaviconLinks.astro';
 import OptimizedImage from '@components/OptimizedImage.astro';
 import { resolveSeoMetadata } from '@lib/seo-config';
 import { getTurnstileSiteKey } from '@lib/turnstile-config';
@@ -599,7 +600,7 @@ const seoMetadata = await resolveSeoMetadata({
     <meta property="twitter:title" content={seoMetadata.title}>
     <meta property="twitter:description" content={seoMetadata.description}>
     <meta property="twitter:image" content={seoMetadata.ogImageUrl}>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <FaviconLinks />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
