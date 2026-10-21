@@ -22,7 +22,9 @@ describe('non-discrimination policy wording', () => {
   });
 
   it('labels every reporting link with an agency named in the introduction', () => {
-    const pa = REPORTING_AGENCIES.find(agency => agency.href.includes('phrc.pa.gov'));
+    const pa = REPORTING_AGENCIES.find(
+      agency => new URL(agency.href).hostname === 'www.phrc.pa.gov'
+    );
     expect(pa?.label).toBe('Pennsylvania Human Relations Commission');
     expect(REPORTING_INTRO).toContain(pa?.label);
   });
