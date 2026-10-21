@@ -222,5 +222,8 @@ Low-level SQL uses `queryFirst()` and `queryRows()` from `@lib/db/client`.
 - Pages: kebab-case (`camp-coming-soon.astro`)
 - Utilities: camelCase in `src/lib/` and `src/utils/`
 - Tests: `*.test.ts` co-located with source or under `src/test/`
+- Policy wording that must stay exact (the non-discrimination policy) lives once in
+  `@lib/non-discrimination-policy`; every page that shows it imports the text instead of
+  retyping it (#163)
 - Commit prefixes: `feat(scope):`, `fix(scope):`, `[BUILD-FIX]`
 - ESLint config: `app/eslint.config.js` (ESLint 10 flat config) with `typescript-eslint`, `eslint-plugin-astro` and `eslint-plugin-jsx-a11y-x`
