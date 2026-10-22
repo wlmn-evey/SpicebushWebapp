@@ -39,6 +39,9 @@ const phoneDigits = phone.replace(/[^0-9]/g, '');
       href="/admissions/tuition-calculator"
       class="bg-white py-3 px-2 flex flex-col items-center justify-center hover:bg-stone-beige transition-colors"
       aria-label="Calculate tuition"
+      data-analytics-event="tuition_calculator_click"
+      data-analytics-label="bottom-bar-tuition"
+      data-analytics-location="mobile-bottom-bar"
     >
       <Calculator className="w-6 h-6 text-forest-canopy mb-1" />
       <span class="text-xs font-medium text-earth-brown">Tuition</span>
@@ -50,6 +53,9 @@ const phoneDigits = phone.replace(/[^0-9]/g, '');
       rel={tourLinkIsExternal ? 'noopener noreferrer' : undefined}
       class="bg-sunlight-gold py-3 px-2 flex flex-col items-center justify-center hover:bg-orange-600 transition-colors"
       aria-label="Schedule a tour"
+      data-analytics-event="tour_click"
+      data-analytics-label="bottom-bar-tour"
+      data-analytics-location="mobile-bottom-bar"
     >
       <Calendar className="w-6 h-6 text-white mb-1" />
       <span class="text-xs font-medium text-white">Tour</span>
@@ -59,6 +65,9 @@ const phoneDigits = phone.replace(/[^0-9]/g, '');
       href={`tel:${phoneDigits}`}
       class="bg-white py-3 px-2 flex flex-col items-center justify-center hover:bg-stone-beige transition-colors"
       aria-label={`Call us at ${phone}`}
+      data-analytics-event="phone_click"
+      data-analytics-label="bottom-bar-call"
+      data-analytics-location="mobile-bottom-bar"
     >
       <Phone className="w-6 h-6 text-forest-canopy mb-1" />
       <span class="text-xs font-medium text-earth-brown">Call</span>

@@ -12,7 +12,12 @@ vi.mock('@lib/db', () => ({
   }
 }));
 
-import { TOUR_CTA_DESTINATION, getTourLink, getTourSettings } from './tour-settings';
+import {
+  TOUR_CTA_DESTINATION,
+  getTourLink,
+  getTourSettings,
+  getTrackedTourLink
+} from './tour-settings';
 
 describe('tour-settings', () => {
   beforeEach(() => {
@@ -30,6 +35,20 @@ describe('tour-settings', () => {
     getSettingMock.mockResolvedValue('https://calendly.com/spicebushmontessori/tour');
 
     await expect(getTourLink()).resolves.toBe('https://calendly.com/spicebushmontessori/tour');
+  });
+
+  it('gives the tracker no tour link when only the admissions fallback is configured', async () => {
+    getSettingMock.mockResolvedValue(null);
+
+    await expect(getTrackedTourLink()).resolves.toBe('');
+  });
+
+  it('gives the tracker the configured tour link', async () => {
+    getSettingMock.mockResolvedValue('https://calendly.com/spicebushmontessori/tour');
+
+    await expect(getTrackedTourLink()).resolves.toBe(
+      'https://calendly.com/spicebushmontessori/tour'
+    );
   });
 
   it('returns tour settings payload from DB settings', async () => {
