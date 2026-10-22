@@ -283,22 +283,68 @@
     });
   };
 
+  // Enrollment links are counted by destination even when nobody tagged them (#167), so a new
+  // tour, tuition or phone link can't silently drop out of the numbers.
+  const TUITION_CALCULATOR_PATH = '/admissions/tuition-calculator';
+  const tourUrl = (() => {
+    const configured = clampText(config.tourLink, 2048);
+    if (!configured) return null;
+    try {
+      return new URL(configured, runtimeWindow.location.href);
+    } catch {
+      return null;
+    }
+  })();
+  const trimSlash = (path) => path.replace(/\/+$/, '') || '/';
+
+  const classifyEnrollmentLink = (anchor) => {
+    const rawHref = anchor.getAttribute('href') || '';
+    if (/^tel:/i.test(rawHref)) return 'phone_click';
+
+    let url;
+    try {
+      url = new URL(anchor.href, runtimeWindow.location.href);
+    } catch {
+      return '';
+    }
+    if (url.origin === runtimeWindow.location.origin && trimSlash(url.pathname) === TUITION_CALCULATOR_PATH) {
+      return 'tuition_calculator_click';
+    }
+    if (tourUrl && url.origin === tourUrl.origin && trimSlash(url.pathname) === trimSlash(tourUrl.pathname)) {
+      return 'tour_click';
+    }
+    return '';
+  };
+
+  const landmarkFor = (anchor) => {
+    const landmark = anchor.closest('header, nav, footer, main, aside');
+    if (!landmark) return 'page';
+    const name = landmark.getAttribute('aria-label') || landmark.id || '';
+    return clampText(`${landmark.tagName.toLowerCase()}${name ? `:${name}` : ''}`, 120);
+  };
+
   const attachLinkTracking = () => {
     document.addEventListener('click', (event) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
-      const anchor = target.closest('a[data-analytics-event]');
+      const anchor = target.closest('a[href]');
       if (!(anchor instanceof HTMLAnchorElement)) return;
 
-      const eventName = clampText(anchor.dataset.analyticsEvent || 'cta_click', 80);
+      const taggedEvent = anchor.dataset.analyticsEvent;
+      const autoEvent = taggedEvent ? '' : classifyEnrollmentLink(anchor);
+      if (!taggedEvent && !autoEvent) return;
+
+      const eventName = clampText(taggedEvent || autoEvent || 'cta_click', 80);
       const label = clampText(anchor.dataset.analyticsLabel || anchor.textContent || '', 180);
       const href = clampText(anchor.href, 2048);
-
-      track(eventName, {
+      const properties = {
         label,
         href,
-        location: clampText(anchor.dataset.analyticsLocation || '', 120)
-      }, {
+        location: clampText(anchor.dataset.analyticsLocation || (autoEvent ? landmarkFor(anchor) : ''), 120)
+      };
+      if (autoEvent) properties.auto = true;
+
+      track(eventName, properties, {
         eventCategory: 'engagement'
       });
     }, { passive: true });

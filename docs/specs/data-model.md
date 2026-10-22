@@ -362,6 +362,12 @@ Authenticated admin sessions created after magic-link verification. Introduced i
 
 Custom analytics event tracking. Introduced in migration 004. Subject to retention cleanup in migration 014.
 
+**Link clicks** are recorded by `app/public/js/analytics-tracker.js`:
+
+- A link tagged with `data-analytics-event` (plus optional `data-analytics-label` / `data-analytics-location`) records that event.
+- An untagged link is still recorded when it is an enrollment link (#167): the admin-configured tour link (`tour_external_link`) records `tour_click`, `/admissions/tuition-calculator` records `tuition_calculator_click`, and any `tel:` link records `phone_click`. These rows carry `properties.auto = true`, and `properties.location` is the nearest landmark (`header`, `nav:<aria-label>`, `footer`, `main`, `aside`, or `page`). When only the `/admissions` fallback is configured, no link is auto-counted as a tour click, because that page is linked for many reasons.
+- Rows before 2026-10-22 undercount tour, tuition and phone clicks: the phone bottom bar, the homepage hero and about two dozen other links were untagged. Compare before/after periods with that in mind.
+
 | Column           | Type          | Constraints                     |
 | ---------------- | ------------- | ------------------------------- |
 | `id`             | `UUID`        | PK, DEFAULT `gen_random_uuid()` |
