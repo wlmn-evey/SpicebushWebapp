@@ -92,7 +92,7 @@ Canonical docs live in `docs/`:
 - **Roadmap**: `docs/roadmap.md`
 - **Specs**: `docs/specs/` (architecture, data-model, auth, camp-system, email, api, blog)
 - **ADRs**: `docs/adr/` (11 architecture decision records)
-- **Runbooks**: `docs/runbooks/` (deploy, rollback, blog-html-conversion, scheduled-publish, ticker)
+- **Runbooks**: `docs/runbooks/` (deploy, rollback, blog-html-conversion, scheduled-publish, ticker, google-api-access)
 
 ## Agents
 
