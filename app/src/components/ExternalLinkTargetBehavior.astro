@@ -39,6 +39,8 @@
 
     const processAnchor = anchor => {
       if (!(anchor instanceof HTMLAnchorElement)) return;
+      // TipTap redraws links changed by outside code. Even the processed marker can start a loop.
+      if (anchor.isContentEditable) return;
       if (anchor.getAttribute(EXTERNAL_LINK_ATTR) === 'true') return;
 
       if (shouldOpenInNewTab(anchor)) {
