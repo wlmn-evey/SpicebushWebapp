@@ -35,6 +35,16 @@ export async function getTourLink(): Promise<string> {
   return normalized ?? TOUR_CTA_DESTINATION;
 }
 
+/**
+ * The tour link the analytics tracker should count as `tour_click` (#167), or '' when only the
+ * generic /admissions fallback is configured: that page is linked for many reasons, so counting
+ * every link to it as a tour click would inflate the baseline.
+ */
+export async function getTrackedTourLink(): Promise<string> {
+  const link = await getTourLink();
+  return link === TOUR_CTA_DESTINATION ? '' : link;
+}
+
 export async function getTourSettings(): Promise<{
   tourLink: string;
   tourSchedulingEnabled: boolean;
