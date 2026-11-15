@@ -53,7 +53,7 @@ The Security workflow blocks on high/critical advisories in production dependenc
 
 Every entry has a reason and an `expires` date (~90 days). Once it expires the gate fails until someone re-checks upstream and either removes the entry or extends it. Entries that no longer match anything show as warnings; delete them.
 
-As of 2026-10-20 the allowlist holds `braces` (GHSA-vfj7-8cjw-p6xm) and `node-forge` (GHSA-86w9-cpqp-85rv). Both reach production deps only through `@astrojs/netlify`'s local dev-server tooling (`@netlify/vite-plugin` → `@netlify/dev`).
+Remove an exception when the production audit stops reporting its advisory.
 
 ## Pinned for the production function runtime
 
