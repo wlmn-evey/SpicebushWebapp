@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isAllowedMediaPath,
+  isAllowedRasterContentType,
   isAllowedRenderHost,
   readBodyWithLimit,
-  resolveRedirectTarget
+  resolveRedirectTarget,
+  resolveSafeMediaSourceUrl
 } from './media-render-source';
 
 describe('isAllowedRenderHost', () => {
@@ -96,5 +99,76 @@ describe('resolveRedirectTarget', () => {
 
   it('rejects a redirect with no Location header', () => {
     expect(resolveRedirectTarget(redirect(307), current, 'spicebushmontessori.org')).toBeNull();
+  });
+
+  it('rejects a redirect to /api/media/render or non-media paths', () => {
+    expect(
+      resolveRedirectTarget(
+        redirect(302, 'https://spicebushmontessori.org/api/media/render?src=/images/a.jpg'),
+        current,
+        'spicebushmontessori.org'
+      )
+    ).toBeNull();
+    expect(
+      resolveRedirectTarget(
+        redirect(302, 'https://spicebushmontessori.org/admin'),
+        current,
+        'spicebushmontessori.org'
+      )
+    ).toBeNull();
+  });
+
+  it('rejects http downgrade redirects to non-local hosts', () => {
+    expect(
+      resolveRedirectTarget(
+        redirect(302, 'http://spicebushmontessori.org/images/a.jpg'),
+        current,
+        'spicebushmontessori.org'
+      )
+    ).toBeNull();
+  });
+});
+
+describe('isAllowedMediaPath & isAllowedRasterContentType', () => {
+  it('allows only expected media prefixes and blocks render recursion', () => {
+    expect(isAllowedMediaPath('/images/a.webp')).toBe(true);
+    expect(isAllowedMediaPath('/uploads/photo.jpg')).toBe(true);
+    expect(isAllowedMediaPath('/api/media/blob/abc.png')).toBe(true);
+    expect(isAllowedMediaPath('/api/media/render')).toBe(false);
+    expect(isAllowedMediaPath('/admin/settings')).toBe(false);
+  });
+
+  it('allows raster image MIME types and rejects SVG / non-image types', () => {
+    expect(isAllowedRasterContentType('image/jpeg')).toBe(true);
+    expect(isAllowedRasterContentType('image/webp; charset=utf-8')).toBe(true);
+    expect(isAllowedRasterContentType('image/png')).toBe(true);
+    expect(isAllowedRasterContentType('image/svg+xml')).toBe(false);
+    expect(isAllowedRasterContentType('text/html')).toBe(false);
+  });
+});
+
+describe('resolveSafeMediaSourceUrl', () => {
+  const reqUrl = new URL('https://spicebushmontessori.org/api/media/render');
+
+  it('accepts valid relative and absolute media URLs', () => {
+    expect(resolveSafeMediaSourceUrl('/images/a.webp', reqUrl)?.href).toBe(
+      'https://spicebushmontessori.org/images/a.webp'
+    );
+    expect(
+      resolveSafeMediaSourceUrl('https://spicebushmontessori.org/api/media/blob/abc.jpg', reqUrl)
+        ?.href
+    ).toBe('https://spicebushmontessori.org/api/media/blob/abc.jpg');
+  });
+
+  it.each([
+    '/images/../api/media/render?src=/images/a.webp',
+    '/images/../../admin/settings',
+    'https://spicebushmontessori.org/api/media/render?src=/images/a.webp',
+    'https://spicebushmontessori.org:8443/images/a.webp',
+    'https://evil.example.com/images/a.webp',
+    'http://169.254.169.254/latest/meta-data/',
+    '//evil.example.com/images/a.webp'
+  ])('rejects unsafe media source: %s', candidate => {
+    expect(resolveSafeMediaSourceUrl(candidate, reqUrl)).toBeNull();
   });
 });

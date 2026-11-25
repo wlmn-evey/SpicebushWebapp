@@ -66,7 +66,8 @@
     "docker:reset": "docker-compose down -v && docker-compose up --build",
     "docker:logs": "docker-compose logs -f app",
     "setup:dev": "cp .env.example .env.local && echo 'Please update .env.local with your values'",
-    "optimize:images": "node scripts/optimize-images.js"
+    "optimize:images": "node scripts/optimize-images.js",
+    "favicons": "node scripts/generate-favicons.mjs"
   },
   "dependencies": {
     "@astrojs/netlify": "^8.2.10",

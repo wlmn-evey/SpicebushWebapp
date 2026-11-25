@@ -14,6 +14,7 @@ paths-ignore:
 
 paths:
   - app/src
+  - app/netlify/functions
 
 packs:
   - codeql/javascript-queries

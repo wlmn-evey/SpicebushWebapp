@@ -35,6 +35,8 @@ jobs:
 
     - name: Build
       # Astro SSR defers DB connections to request time — no DATABASE_URL needed at build
+      env:
+        NODE_ENV: production
       run: cd app && npm run build
 
     - name: Deploy to Netlify

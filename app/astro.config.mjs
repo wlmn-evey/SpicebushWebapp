@@ -66,9 +66,6 @@ export default defineConfig({
   compressHTML: true,
   adapter: netlify(),
   vite: {
-    define: {
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
-    },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),

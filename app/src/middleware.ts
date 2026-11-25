@@ -30,6 +30,20 @@ const parseBoolean = (value: unknown): boolean => {
 const isApiRoute = (pathname: string): boolean =>
   (normalizePathForAuth(pathname) ?? '/api/').startsWith('/api/');
 
+const SAFE_HTTP_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+const isCrossSiteMutation = (request: Request): boolean => {
+  if (SAFE_HTTP_METHODS.has(request.method.toUpperCase())) {
+    return false;
+  }
+  const requestOrigin = new URL(request.url).origin;
+  const origin = request.headers.get('origin');
+  if (origin && origin !== requestOrigin) {
+    return true;
+  }
+  return request.headers.get('sec-fetch-site') === 'cross-site';
+};
+
 const unauthorizedResponse = (status: 401 | 403, message: string) =>
   new Response(JSON.stringify({ error: message }), {
     status,
@@ -54,7 +68,7 @@ const toSignInRedirect = (context: APIContext, errorCode?: string): Response => 
 async function getComingSoonEnabled(): Promise<boolean> {
   const runtimeEnv =
     typeof process !== 'undefined' && typeof process.env !== 'undefined' ? process.env : undefined;
-  const rawComingSoon = runtimeEnv?.COMING_SOON_MODE ?? import.meta.env.COMING_SOON_MODE;
+  const rawComingSoon = runtimeEnv?.COMING_SOON_MODE;
   if (typeof rawComingSoon === 'string') {
     return parseBoolean(rawComingSoon);
   }
@@ -80,9 +94,8 @@ async function getComingSoonEnabled(): Promise<boolean> {
     cachedComingSoonExpiresAt = now + SETTINGS_CACHE_TTL_MS;
     return enabled;
   } catch {
-    cachedComingSoonValue = false;
-    cachedComingSoonExpiresAt = now + SETTINGS_CACHE_TTL_MS;
-    return false;
+    // Do not cache a transient DB error as `false` (fail-open for 30s); preserve last known state.
+    return cachedComingSoonValue ?? false;
   }
 }
 
@@ -187,30 +200,32 @@ const handleComingSoon = async (context: APIContext, next: MiddlewareNext) => {
     '/coming-soon',
     '/coming-soon-comprehensive',
     '/donate/thank-you',
+    '/privacy-policy',
+    '/non-discrimination-policy',
+    '/accessibility',
     '/admin',
     '/auth',
     '/api',
     '/robots.txt',
     '/sitemap',
     '/uploads',
+    '/_astro/',
+    '/js/',
     '/_image',
     '/favicon.svg',
+    '/favicon.ico',
+    '/apple-touch-icon.png',
     '/images/'
   ];
 
   const shouldBypass = bypassPaths.some(path => pathname.startsWith(path));
-  const hasAuthParams =
-    context.url.searchParams.has('token_hash') ||
-    context.url.searchParams.has('type') ||
-    context.url.searchParams.has('error') ||
-    context.url.searchParams.has('error_code');
 
-  if (isComingSoonEnabled && !shouldBypass && !hasAuthParams) {
+  if (isComingSoonEnabled && !shouldBypass) {
     const locals = context.locals as unknown as Record<string, unknown>;
     const isAdmin = locals.isAdmin === true;
     const previewMode = context.cookies.get(PREVIEW_MODE_COOKIE)?.value;
     if (isAdmin && previewMode === PREVIEW_MODE_SITE) {
-      return next();
+      return handleCampMode(context, next);
     }
 
     return context.redirect('/coming-soon');
@@ -250,10 +265,14 @@ const handleRequest = async (context: APIContext, next: MiddlewareNext) => {
   let userEmail: string | undefined;
 
   if (sessionToken) {
-    const session = await validateAdminSession(sessionToken);
-    if (session) {
-      userId = session.sessionId;
-      userEmail = session.email;
+    try {
+      const session = await validateAdminSession(sessionToken);
+      if (session) {
+        userId = session.sessionId;
+        userEmail = session.email;
+      }
+    } catch {
+      // Treat transient session lookup errors as unauthenticated instead of 500ing public pages.
     }
   }
 
@@ -286,6 +305,10 @@ const handleRequest = async (context: APIContext, next: MiddlewareNext) => {
         return unauthorizedResponse(403, 'Admin access required');
       }
       return context.redirect('/');
+    }
+
+    if (isCrossSiteMutation(context.request)) {
+      return unauthorizedResponse(403, 'Cross-site request rejected');
     }
   }
 

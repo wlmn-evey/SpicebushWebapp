@@ -45,7 +45,7 @@ SpicebushWebapp/              (repo root -- deploy from here)
     db/
       migrations/             (14 SQL migrations, numbered 001-014)
     e2e/                      (Playwright E2E tests)
-    public/                   (static assets, images)
+    public/                   (static assets, images; favicon set: see docs/brand/favicon/README.md)
   docs/                       (canonical documentation)
   scripts/                    (operational helpers)
 ```

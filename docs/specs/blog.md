@@ -649,9 +649,9 @@ registered around each sanitize call and removed in a `finally` so it never leak
 The featured-image URL is validated by the same backslash-aware scheme on the write path
 (`validateBlogData`) and re-checked on the read path (`normalizeBlogEntry`); the slug charset is
 re-checked on the read path. All other fields render through Astro's escaping interpolation.
-External links rely on Layout's `ExternalLinkTargetBehavior`; if it does not cover `set:html`
-output, a DOMPurify `afterSanitizeAttributes` hook adds `rel="noopener noreferrer"` to external
-`<a>`.
+On rendered pages, `ExternalLinkTargetBehavior` opens external links in a new tab and adds
+`noopener noreferrer`. Inside the editable post body, TipTap manages the link attributes.
+Changing those attributes outside the editor can make it redraw the same links indefinitely.
 
 No new dependencies — `marked` (^16.1.1) and `isomorphic-dompurify` (^2.26.0) are already installed.
 

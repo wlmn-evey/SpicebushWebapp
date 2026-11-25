@@ -66,7 +66,9 @@ export const verifyTurnstileToken = async (input: {
 
   const secret = asString(process.env.TURNSTILE_SECRET_KEY);
   if (!secret) {
-    if (process.env.NODE_ENV !== 'production') {
+    const isProductionRuntime =
+      process.env.NODE_ENV === 'production' || process.env.CONTEXT === 'production';
+    if (!isProductionRuntime) {
       return { success: true, reason: 'bypassed_without_secret_non_production' };
     }
     return { success: false, reason: 'missing_secret' };
