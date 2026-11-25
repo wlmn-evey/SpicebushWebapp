@@ -47,9 +47,7 @@ const initialsFromAuthor = (author: string): string => {
                 <Star className="w-4 h-4 text-yellow-400 fill-current" />
               ))}
             </div>
-            {testimonial.body && (
-              <div class="text-earth-brown mb-4 italic" set:html={testimonial.body} />
-            )}
+            {testimonial.body && <p class="text-earth-brown mb-4 italic">{testimonial.body}</p>}
             <div class="flex items-center space-x-3">
               {testimonial.authorPhotoSlug ? (
                 <OptimizedImage

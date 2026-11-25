@@ -1,11 +1,10 @@
 import type { APIRoute } from 'astro';
 import {
-  isAllowedRenderHost,
+  isAllowedRasterContentType,
   readBodyWithLimit,
-  resolveRedirectTarget
+  resolveRedirectTarget,
+  resolveSafeMediaSourceUrl
 } from '@lib/media-render-source';
-
-const ALLOWED_RELATIVE_PREFIXES = ['/images/', '/uploads/', '/api/media/blob/'];
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
@@ -29,35 +28,8 @@ const parseQuality = (value: string | null): number => {
   return parsed ?? 82;
 };
 
-const resolveSourceUrl = (rawSrc: string, requestUrl: URL): URL | null => {
-  if (!rawSrc) return null;
-  const src = rawSrc.trim();
-  if (!src) return null;
-
-  if (src.startsWith('/')) {
-    const allowed = ALLOWED_RELATIVE_PREFIXES.some(prefix => src.startsWith(prefix));
-    if (!allowed) {
-      return null;
-    }
-    if (src.startsWith('/api/media/render')) {
-      return null;
-    }
-    return new URL(src, requestUrl.origin);
-  }
-
-  try {
-    const absolute = new URL(src);
-    if (absolute.protocol !== 'https:') {
-      return null;
-    }
-    if (!isAllowedRenderHost(absolute.hostname, requestUrl.hostname)) {
-      return null;
-    }
-    return absolute;
-  } catch {
-    return null;
-  }
-};
+const resolveSourceUrl = (rawSrc: string, requestUrl: URL): URL | null =>
+  resolveSafeMediaSourceUrl(rawSrc, requestUrl);
 
 type OutputFormat = 'webp' | 'jpg' | 'png';
 
@@ -82,6 +54,8 @@ const passthroughResponse = (
   const headers = new Headers();
   headers.set('Content-Type', image.contentType || 'image/webp');
   headers.set('Cache-Control', 'public, max-age=3600');
+  headers.set('Content-Security-Policy', "default-src 'none'; sandbox");
+  headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-SB-Render-Fallback', reason);
   return new Response(new Uint8Array(image.buffer), {
     status: 200,
@@ -137,7 +111,8 @@ const fetchImage = async (
     }
 
     const contentType = (response.headers.get('content-type') ?? '').toLowerCase();
-    if (!contentType.startsWith('image/')) {
+    if (!isAllowedRasterContentType(contentType)) {
+      await response.body?.cancel().catch(() => undefined);
       return null;
     }
 
@@ -194,8 +169,11 @@ export const GET: APIRoute = async ({ request, url }) => {
   try {
     const probe = sharpFactory(image.buffer).rotate();
     const metadata = await probe.metadata();
-    const sourceWidth = metadata.width ?? 0;
-    const sourceHeight = metadata.height ?? 0;
+    // Sharp's metadata() reports pre-rotation sensor dimensions; orientations 5-8 rotate 90°/270°.
+    const orientation = metadata.orientation ?? 1;
+    const isQuarterTurn = orientation >= 5 && orientation <= 8;
+    const sourceWidth = (isQuarterTurn ? metadata.height : metadata.width) ?? 0;
+    const sourceHeight = (isQuarterTurn ? metadata.width : metadata.height) ?? 0;
 
     if (sourceWidth <= 0 || sourceHeight <= 0) {
       return new Response(JSON.stringify({ error: 'Invalid source image dimensions' }), {

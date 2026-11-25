@@ -86,3 +86,21 @@ jobs:
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
+
+  secret-scan:
+    name: Secret Scan (Gitleaks)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+
+    - name: Install Gitleaks
+      run: |
+        GITLEAKS_VERSION="8.24.2"
+        curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o /tmp/gitleaks.tar.gz
+        tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+        sudo mv /tmp/gitleaks /usr/local/bin/gitleaks
+
+    - name: Scan working tree for secrets
+      run: gitleaks detect --no-git --source=. --redact --verbose

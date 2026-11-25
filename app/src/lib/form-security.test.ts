@@ -22,6 +22,7 @@ const logServerWarnMock = vi.mocked(logServerWarn);
 
 describe('form-security', () => {
   const originalNodeEnv = process.env.NODE_ENV;
+  const originalContext = process.env.CONTEXT;
   const originalTurnstileSecret = process.env.TURNSTILE_SECRET_KEY;
 
   beforeEach(() => {
@@ -32,6 +33,11 @@ describe('form-security', () => {
 
   afterEach(() => {
     process.env.NODE_ENV = originalNodeEnv;
+    if (originalContext === undefined) {
+      delete process.env.CONTEXT;
+    } else {
+      process.env.CONTEXT = originalContext;
+    }
     if (originalTurnstileSecret === undefined) {
       delete process.env.TURNSTILE_SECRET_KEY;
     } else {
@@ -65,11 +71,19 @@ describe('form-security', () => {
     });
 
     process.env.NODE_ENV = 'development';
+    delete process.env.CONTEXT;
     delete process.env.TURNSTILE_SECRET_KEY;
     await expect(verifyTurnstileToken({ token: 'abc' })).resolves.toEqual({
       success: true,
       reason: 'bypassed_without_secret_non_production'
     });
+
+    process.env.CONTEXT = 'production';
+    await expect(verifyTurnstileToken({ token: 'abc' })).resolves.toEqual({
+      success: false,
+      reason: 'missing_secret'
+    });
+    delete process.env.CONTEXT;
 
     process.env.NODE_ENV = 'production';
     delete process.env.TURNSTILE_SECRET_KEY;
