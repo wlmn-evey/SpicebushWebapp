@@ -2,30 +2,235 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import ContactInfo from '../components/ContactInfo.astro';
+import { db } from '@lib/db';
+import { logServerError } from '@lib/server-logger';
+import { FileText, Heart, Book, Users, ArrowRight, ExternalLink, Mail, Phone } from 'lucide-astro';
+
+let email = 'information@spicebushmontessori.org';
+let phone = '(484) 202-0712';
+
+try {
+  const [dbEmail, dbPhone] = await Promise.all([
+    db.content.getSetting('school_email').catch(() => null),
+    db.content.getSetting('school_phone').catch(() => null)
+  ]);
+
+  if (typeof dbEmail === 'string' && dbEmail.trim().length > 0) {
+    email = dbEmail.trim();
+  }
+  if (typeof dbPhone === 'string' && dbPhone.trim().length > 0) {
+    phone = dbPhone.trim();
+  }
+} catch (error) {
+  logServerError('Failed to load contact settings on policies page', error, {
+    route: '/policies'
+  });
+}
+
+const phoneDigits = phone.replace(/[^0-9]/g, '');
 ---
 
 <Layout
-  title="Policies - Spicebush Montessori School"
-  description="Review our school policies including health and safety guidelines, enrollment policies, and educational standards."
-  keywords="school policies, enrollment guidelines, health safety, educational standards"
+  title="School Policies - Spicebush Montessori School"
+  description="Review Spicebush Montessori School's published policies, including our Non-Discrimination Policy, Website Privacy Policy, Accessibility Statement, and Family Handbook information."
+  keywords="school policies, non-discrimination policy, privacy policy, accessibility statement, family handbook, Spicebush Montessori"
 >
   <Header />
 
   <main id="main-content">
     <!-- Hero Section -->
-    <section class="bg-gradient-to-br from-stone-beige to-light-stone py-16 lg:py-24">
+    <section class="bg-gradient-to-br from-forest-canopy to-moss-green py-16 lg:py-20">
       <div class="container mx-auto px-4">
-        <div class="text-center">
-          <h1 class="text-4xl lg:text-5xl font-bold text-earth-brown mb-6">School Policies</h1>
-          <p class="text-lg text-earth-brown max-w-3xl mx-auto">Content coming soon...</p>
+        <div class="max-w-4xl mx-auto text-center">
+          <div class="flex justify-center mb-6">
+            <div
+              class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30"
+            >
+              <Book className="w-8 h-8 text-white" aria-hidden="true" />
+            </div>
+          </div>
+          <h1 class="text-4xl lg:text-5xl font-heading font-bold text-white mb-4 tracking-tight">
+            School Policies
+          </h1>
+          <p
+            class="text-lg lg:text-xl text-green-100 max-w-3xl mx-auto leading-relaxed-plus font-light"
+          >
+            Transparency, inclusion, and family trust guide our school. Review our published public
+            policies below or reach out to request a copy of our Family Handbook.
+          </p>
         </div>
       </div>
     </section>
 
-    <!-- Additional sections to be built -->
-    <div class="py-16 text-center text-earth-brown">
-      <p>Page sections will be built here...</p>
-    </div>
+    <!-- Published Policies Grid -->
+    <section class="py-12 lg:py-16 bg-stone-beige">
+      <div class="container mx-auto px-4 max-w-5xl">
+        <h2 class="text-2xl lg:text-3xl font-bold text-earth-brown mb-8 text-center">
+          Published Public Policies
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <!-- Non-Discrimination Policy -->
+          <article
+            class="bg-warm-white rounded-2xl p-7 shadow-sm border border-gray-200 flex flex-col"
+          >
+            <div class="flex items-center gap-3 mb-4">
+              <div
+                class="w-11 h-11 rounded-xl bg-forest-canopy flex items-center justify-center flex-shrink-0"
+              >
+                <Heart className="w-5 h-5 text-white" aria-hidden="true" />
+              </div>
+              <h3 class="text-xl font-bold text-earth-brown">Non-Discrimination Policy</h3>
+            </div>
+            <p class="text-earth-brown/90 leading-relaxed-plus mb-6 flex-1">
+              Our commitment to equal educational opportunity for all children and families,
+              external civil rights contacts, and our confidential anonymous feedback channel.
+            </p>
+            <a
+              href="/non-discrimination-policy"
+              class="inline-flex items-center font-semibold text-forest-canopy hover:text-moss-green transition-colors"
+            >
+              Read Non-Discrimination Policy
+              <ArrowRight className="w-4 h-4 ml-1.5" aria-hidden="true" />
+            </a>
+          </article>
+
+          <!-- Privacy Policy -->
+          <article
+            class="bg-warm-white rounded-2xl p-7 shadow-sm border border-gray-200 flex flex-col"
+          >
+            <div class="flex items-center gap-3 mb-4">
+              <div
+                class="w-11 h-11 rounded-xl bg-moss-green flex items-center justify-center flex-shrink-0"
+              >
+                <FileText className="w-5 h-5 text-white" aria-hidden="true" />
+              </div>
+              <h3 class="text-xl font-bold text-earth-brown">Website Privacy Policy</h3>
+            </div>
+            <p class="text-earth-brown/90 leading-relaxed-plus mb-6 flex-1">
+              How we collect, use, and protect inquiry forms, donation acknowledgments, cookies,
+              analytics, and children&apos;s privacy on our website.
+            </p>
+            <a
+              href="/privacy-policy"
+              class="inline-flex items-center font-semibold text-forest-canopy hover:text-moss-green transition-colors"
+            >
+              Read Privacy Policy
+              <ArrowRight className="w-4 h-4 ml-1.5" aria-hidden="true" />
+            </a>
+          </article>
+
+          <!-- Accessibility Statement -->
+          <article
+            class="bg-warm-white rounded-2xl p-7 shadow-sm border border-gray-200 flex flex-col"
+          >
+            <div class="flex items-center gap-3 mb-4">
+              <div
+                class="w-11 h-11 rounded-xl bg-forest-canopy flex items-center justify-center flex-shrink-0"
+              >
+                <Users className="w-5 h-5 text-white" aria-hidden="true" />
+              </div>
+              <h3 class="text-xl font-bold text-earth-brown">Accessibility Statement</h3>
+            </div>
+            <p class="text-earth-brown/90 leading-relaxed-plus mb-6 flex-1">
+              Our WCAG 2.1 Level AA web accessibility goals, campus accommodations for families and
+              neurodivergent learners, and how to report a barrier or request assistance.
+            </p>
+            <a
+              href="/accessibility"
+              class="inline-flex items-center font-semibold text-forest-canopy hover:text-moss-green transition-colors"
+            >
+              Read Accessibility Statement
+              <ArrowRight className="w-4 h-4 ml-1.5" aria-hidden="true" />
+            </a>
+          </article>
+
+          <!-- Admissions & Tuition -->
+          <article
+            class="bg-warm-white rounded-2xl p-7 shadow-sm border border-gray-200 flex flex-col"
+          >
+            <div class="flex items-center gap-3 mb-4">
+              <div
+                class="w-11 h-11 rounded-xl bg-moss-green flex items-center justify-center flex-shrink-0"
+              >
+                <Book className="w-5 h-5 text-white" aria-hidden="true" />
+              </div>
+              <h3 class="text-xl font-bold text-earth-brown">Admissions &amp; Tuition</h3>
+            </div>
+            <p class="text-earth-brown/90 leading-relaxed-plus mb-6 flex-1">
+              Learn about our sliding-scale tuition structure, enrollment process, and community
+              principles.
+            </p>
+            <div class="flex flex-wrap gap-4">
+              <a
+                href="/admissions"
+                class="inline-flex items-center font-semibold text-forest-canopy hover:text-moss-green transition-colors"
+              >
+                Admissions Overview
+                <ArrowRight className="w-4 h-4 ml-1.5" aria-hidden="true" />
+              </a>
+              <a
+                href="/admissions/tuition-calculator"
+                class="inline-flex items-center font-semibold text-forest-canopy hover:text-moss-green transition-colors"
+              >
+                Tuition Calculator
+                <ArrowRight className="w-4 h-4 ml-1.5" aria-hidden="true" />
+              </a>
+            </div>
+          </article>
+        </div>
+
+        <!-- Family Handbook & Operational Policies -->
+        <div
+          class="bg-warm-white rounded-2xl p-8 lg:p-10 shadow-sm border border-gray-200 space-y-6"
+        >
+          <h2 class="text-2xl lg:text-3xl font-bold text-earth-brown">
+            Health, Safety &amp; Family Handbook Policies
+          </h2>
+          <p class="text-earth-brown leading-relaxed-plus">
+            Comprehensive day-to-day school policies — including health and illness guidelines,
+            immunization and medication procedures, emergency preparedness, weather closures,
+            attendance, arrival and dismissal, and parent-school communication — are maintained in
+            our <strong>Family Handbook</strong> and updated each school year.
+          </p>
+          <p class="text-earth-brown leading-relaxed-plus">
+            Enrolled families receive the current Family Handbook upon enrollment, and prospective
+            families are welcome to request a copy or ask specific policy questions at any time.
+            Families may also share confidential feedback regarding bias or discrimination through
+            our{' '}
+            <a
+              href="https://docs.google.com/forms/d/e/1FAIpQLSd9x0mdbCKXBjbWuVme2SeRX9enMfUAf7Y_80VqFUDFs4qfRg/viewform?usp=sf_link"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-forest-canopy underline hover:text-moss-green inline-flex items-center gap-1"
+            >
+              anonymous feedback form<ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+            </a>.
+          </p>
+
+          <div class="rounded-xl bg-stone-beige p-6 border border-gray-200 space-y-4">
+            <ContactInfo />
+            <div class="flex flex-wrap gap-3 pt-1">
+              <a
+                href={`mailto:${email}?subject=Family%20Handbook%20%26%20Policy%20Inquiry`}
+                class="inline-flex items-center rounded-lg bg-forest-canopy px-4 py-2.5 text-sm font-semibold text-white hover:bg-moss-green transition-colors"
+              >
+                <Mail className="w-4 h-4 mr-2" aria-hidden="true" />
+                Request Family Handbook
+              </a>
+              <a
+                href={`tel:${phoneDigits}`}
+                class="inline-flex items-center rounded-lg border-2 border-forest-canopy px-4 py-2.5 text-sm font-semibold text-forest-canopy hover:bg-forest-canopy hover:text-white transition-colors"
+              >
+                <Phone className="w-4 h-4 mr-2" aria-hidden="true" />
+                Call {phone}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <Footer />

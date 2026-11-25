@@ -2,30 +2,242 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import ContactInfo from '../components/ContactInfo.astro';
+import { db } from '@lib/db';
+import { logServerError } from '@lib/server-logger';
+import { Heart, CheckCircle, Mail, Phone, Users } from 'lucide-astro';
+
+const LAST_UPDATED = 'November 25, 2026';
+
+let email = 'information@spicebushmontessori.org';
+let phone = '(484) 202-0712';
+
+try {
+  const [dbEmail, dbPhone] = await Promise.all([
+    db.content.getSetting('school_email').catch(() => null),
+    db.content.getSetting('school_phone').catch(() => null)
+  ]);
+
+  if (typeof dbEmail === 'string' && dbEmail.trim().length > 0) {
+    email = dbEmail.trim();
+  }
+  if (typeof dbPhone === 'string' && dbPhone.trim().length > 0) {
+    phone = dbPhone.trim();
+  }
+} catch (error) {
+  logServerError('Failed to load contact settings on accessibility page', error, {
+    route: '/accessibility'
+  });
+}
+
+const phoneDigits = phone.replace(/[^0-9]/g, '');
 ---
 
 <Layout
-  title="Accessibility - Spicebush Montessori School"
-  description="Our commitment to accessibility and information about how we ensure our website and facilities are accessible to all users."
-  keywords="accessibility statement, website accessibility, facility accessibility, inclusive design"
+  title="Accessibility Statement - Spicebush Montessori School"
+  description="Spicebush Montessori School's commitment to digital and campus accessibility, our WCAG 2.1 Level AA goals, and how to request accommodations or report barriers."
+  keywords="accessibility statement, WCAG 2.1 AA, website accessibility, facility accessibility, inclusive Montessori school"
 >
   <Header />
 
   <main id="main-content">
     <!-- Hero Section -->
-    <section class="bg-gradient-to-br from-stone-beige to-light-stone py-16 lg:py-24">
+    <section class="bg-gradient-to-br from-forest-canopy to-moss-green py-16 lg:py-20">
       <div class="container mx-auto px-4">
-        <div class="text-center">
-          <h1 class="text-4xl lg:text-5xl font-bold text-earth-brown mb-6">Accessibility</h1>
-          <p class="text-lg text-earth-brown max-w-3xl mx-auto">Content coming soon...</p>
+        <div class="max-w-4xl mx-auto text-center">
+          <div class="flex justify-center mb-6">
+            <div
+              class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30"
+            >
+              <Heart className="w-8 h-8 text-white" aria-hidden="true" />
+            </div>
+          </div>
+          <h1 class="text-4xl lg:text-5xl font-heading font-bold text-white mb-4 tracking-tight">
+            Accessibility Statement
+          </h1>
+          <p
+            class="text-lg lg:text-xl text-green-100 max-w-3xl mx-auto leading-relaxed-plus font-light"
+          >
+            Spicebush Montessori School is committed to ensuring our website and learning community
+            are welcoming and accessible to all children, caregivers, and visitors.
+          </p>
+          <p class="mt-4 text-sm text-green-100/90">Last updated: {LAST_UPDATED}</p>
         </div>
       </div>
     </section>
 
-    <!-- Additional sections to be built -->
-    <div class="py-16 text-center text-earth-brown">
-      <p>Page sections will be built here...</p>
-    </div>
+    <!-- Statement Content -->
+    <section class="py-12 lg:py-16 bg-stone-beige">
+      <div class="container mx-auto px-4 max-w-4xl">
+        <div
+          class="bg-warm-white rounded-2xl p-8 lg:p-12 shadow-sm border border-gray-200 space-y-10"
+        >
+          <!-- Commitment -->
+          <section aria-labelledby="a11y-commitment">
+            <h2 id="a11y-commitment" class="text-2xl lg:text-3xl font-bold text-earth-brown mb-4">
+              Our Commitment
+            </h2>
+            <p class="text-earth-brown leading-relaxed-plus mb-4">
+              Inclusion is foundational to everything we do at Spicebush Montessori School. We work
+              continually to improve the user experience of{' '}
+              <a
+                href="https://spicebushmontessori.org"
+                class="text-forest-canopy underline hover:text-moss-green"
+                >spicebushmontessori.org</a
+              > for everyone — including people using screen readers, keyboard-only navigation, voice
+              control, magnification, or other assistive technologies.
+            </p>
+            <p class="text-earth-brown leading-relaxed-plus">
+              Our goal is to conform with the{' '}
+              <strong>Web Content Accessibility Guidelines (WCAG) 2.1 Level AA</strong> published by
+              the World Wide Web Consortium (W3C).
+            </p>
+          </section>
+
+          <!-- Measures Implemented -->
+          <section aria-labelledby="a11y-measures">
+            <h2 id="a11y-measures" class="text-2xl lg:text-3xl font-bold text-earth-brown mb-4">
+              Accessibility Measures on Our Website
+            </h2>
+            <p class="text-earth-brown leading-relaxed-plus mb-4">
+              We take the following steps to support digital accessibility across our site:
+            </p>
+            <ul class="space-y-3 text-earth-brown leading-relaxed-plus">
+              <li class="flex items-start gap-3">
+                <CheckCircle
+                  className="w-5 h-5 text-forest-canopy flex-shrink-0 mt-1"
+                  aria-hidden="true"
+                />
+                <span>
+                  <strong>Semantic Structure &amp; Skip Navigation:</strong> Clear page landmarks, structured
+                  headings, and a keyboard-accessible &ldquo;Skip to main content&rdquo; link on every
+                  page.
+                </span>
+              </li>
+              <li class="flex items-start gap-3">
+                <CheckCircle
+                  className="w-5 h-5 text-forest-canopy flex-shrink-0 mt-1"
+                  aria-hidden="true"
+                />
+                <span>
+                  <strong>Keyboard &amp; Focus Support:</strong> Interactive navigation, forms, and controls
+                  designed to be operable by keyboard with visible focus indicators.
+                </span>
+              </li>
+              <li class="flex items-start gap-3">
+                <CheckCircle
+                  className="w-5 h-5 text-forest-canopy flex-shrink-0 mt-1"
+                  aria-hidden="true"
+                />
+                <span>
+                  <strong>Alternative Text &amp; Labels:</strong> Descriptive alternative text for photographs,
+                  explicit form field labels, and screen-reader status announcements for form feedback.
+                </span>
+              </li>
+              <li class="flex items-start gap-3">
+                <CheckCircle
+                  className="w-5 h-5 text-forest-canopy flex-shrink-0 mt-1"
+                  aria-hidden="true"
+                />
+                <span>
+                  <strong>User Preference Support:</strong> Responsive layouts that adapt to zoom and
+                  mobile screens, along with CSS support for{' '}
+                  <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded"
+                    >prefers-reduced-motion</code
+                  > and{' '}
+                  <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded"
+                    >prefers-contrast: high</code
+                  >.
+                </span>
+              </li>
+              <li class="flex items-start gap-3">
+                <CheckCircle
+                  className="w-5 h-5 text-forest-canopy flex-shrink-0 mt-1"
+                  aria-hidden="true"
+                />
+                <span>
+                  <strong>Ongoing Auditing:</strong> Periodic automated and manual accessibility reviews
+                  as we update pages, color palettes, and interactive components.
+                </span>
+              </li>
+            </ul>
+          </section>
+
+          <!-- Third-Party Services -->
+          <section aria-labelledby="a11y-third-party">
+            <h2 id="a11y-third-party" class="text-2xl lg:text-3xl font-bold text-earth-brown mb-4">
+              Third-Party Tools &amp; Limitations
+            </h2>
+            <p class="text-earth-brown leading-relaxed-plus">
+              Some features on our website rely on embedded or linked third-party services — such as
+              Google Maps on our Contact page, Cloudflare Turnstile spam verification, Stripe
+              Checkout for donations, Calendly for tour scheduling, Transparent Classroom for online
+              applications, and Google Forms for anonymous feedback. While we select reputable
+              providers, we do not directly control the code of third-party platforms. If any
+              embedded or linked tool poses an accessibility barrier, please contact us and we will
+              gladly assist you directly by phone, email, or an alternative format.
+            </p>
+          </section>
+
+          <!-- Campus & Program Accessibility -->
+          <section
+            aria-labelledby="a11y-campus"
+            class="rounded-xl bg-stone-beige/70 border border-forest-canopy/20 p-6"
+          >
+            <div class="flex items-center gap-3 mb-3">
+              <Users className="w-6 h-6 text-forest-canopy flex-shrink-0" aria-hidden="true" />
+              <h2 id="a11y-campus" class="text-2xl font-bold text-earth-brown">
+                Campus Visits &amp; Family Accommodations
+              </h2>
+            </div>
+            <p class="text-earth-brown leading-relaxed-plus">
+              We welcome neurodivergent learners and families with diverse mobility, sensory, and
+              communication needs. If you or your child need specific accommodations for a campus
+              tour, family meeting, community event, or enrollment materials, please let us know in
+              advance — we will work with you thoughtfully to make your visit comfortable and
+              accessible.
+            </p>
+          </section>
+
+          <!-- Feedback & Contact -->
+          <section aria-labelledby="a11y-feedback" class="pt-6 border-t border-gray-200">
+            <h2 id="a11y-feedback" class="text-2xl lg:text-3xl font-bold text-earth-brown mb-4">
+              Need Assistance or Want to Report a Barrier?
+            </h2>
+            <p class="text-earth-brown leading-relaxed-plus mb-6">
+              We welcome your feedback on the accessibility of Spicebush Montessori&apos;s website
+              and facilities. If you encounter an accessibility issue, need information in an
+              alternative format, or would like direct assistance completing an inquiry, tour
+              request, application, or donation, please contact us:
+            </p>
+            <div class="rounded-xl bg-stone-beige p-6 border border-gray-200 space-y-4">
+              <ContactInfo />
+              <p class="text-sm text-earth-brown/85">
+                When reporting a website issue, sharing the page URL, the assistive technology or
+                browser you were using, and a brief description of the barrier helps us resolve it
+                quickly. We aim to respond within 2 business days.
+              </p>
+              <div class="flex flex-wrap gap-3 pt-1">
+                <a
+                  href={`mailto:${email}?subject=Website%20Accessibility%20Feedback`}
+                  class="inline-flex items-center rounded-lg bg-forest-canopy px-4 py-2.5 text-sm font-semibold text-white hover:bg-moss-green transition-colors"
+                >
+                  <Mail className="w-4 h-4 mr-2" aria-hidden="true" />
+                  Email Accessibility Feedback
+                </a>
+                <a
+                  href={`tel:${phoneDigits}`}
+                  class="inline-flex items-center rounded-lg border-2 border-forest-canopy px-4 py-2.5 text-sm font-semibold text-forest-canopy hover:bg-forest-canopy hover:text-white transition-colors"
+                >
+                  <Phone className="w-4 h-4 mr-2" aria-hidden="true" />
+                  Call {phone}
+                </a>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
   </main>
 
   <Footer />
