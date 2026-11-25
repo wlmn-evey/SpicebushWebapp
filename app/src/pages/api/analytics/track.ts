@@ -82,7 +82,7 @@ export const POST: APIRoute = async ({ request, clientAddress, locals }) => {
     });
   }
 
-  const ipAddress = requestIp !== 'unknown' ? requestIp : null;
+  // Use IP only for in-memory rate limiting above; do not persist raw visitor IPs on analytics rows.
   const userAgent = asString(request.headers.get('user-agent'));
 
   await recordAnalyticsEvent({
@@ -95,7 +95,7 @@ export const POST: APIRoute = async ({ request, clientAddress, locals }) => {
     clientId: asString(payload.clientId),
     eventValue: asOptionalNumber(payload.eventValue),
     properties: asRecord(payload.properties),
-    ipAddress,
+    ipAddress: null,
     userAgent
   });
 

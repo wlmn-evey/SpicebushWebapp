@@ -177,25 +177,24 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
   </body>
 </html>
 
-<style>
+<style is:global>
   body {
     line-height: 1.6;
   }
-  
-  /* Focus styles for accessibility */
-  *:focus {
-    outline: 2px solid #2E4A3B !important;
+
+  /* Focus styles for keyboard accessibility */
+  :focus-visible {
+    outline: 2px solid #2e4a3b;
     outline-offset: 2px;
   }
-  
-  /* Additional focus styles for better visibility */
-  *:focus-visible {
-    outline: 2px solid #2E4A3B !important;
-    outline-offset: 2px;
+
+  footer :focus-visible,
+  .bg-forest-canopy :focus-visible {
+    outline-color: #f89406;
   }
-  
+
   /* Screen reader only content */
-  :global(.sr-only) {
+  .sr-only {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -206,29 +205,29 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
     white-space: nowrap;
     border: 0;
   }
-  
+
   /* Add padding for mobile bottom nav */
   @media (max-width: 767px) {
     body {
       padding-bottom: 60px;
     }
   }
-  
+
   /* High contrast mode support */
   @media (prefers-contrast: high) {
-    :global(.bg-sunlight-gold) {
-      background-color: #B8860B !important;
+    .bg-sunlight-gold {
+      background-color: #b8860b !important;
     }
-    
-    :global(.bg-forest-canopy) {
+
+    .bg-forest-canopy {
       background-color: #1a2a21 !important;
     }
-    
+
     .text-earth-brown {
       color: #000000 !important;
     }
   }
-  
+
   /* Reduced motion support */
   @media (prefers-reduced-motion: reduce) {
     * {
@@ -236,7 +235,7 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
-    
+
     html {
       scroll-behavior: auto;
     }
