@@ -77,7 +77,7 @@ export default tseslint.config(
     rules: { 'astro/no-unused-css-selector': 'off' }
   },
   {
-    files: ['scripts/**/*.js', 'scripts/**/*.ts'],
+    files: ['scripts/**/*.{js,mjs,cjs,ts,mts}'],
     rules: {
       'no-console': 'off',
       '@typescript-eslint/no-require-imports': 'off'

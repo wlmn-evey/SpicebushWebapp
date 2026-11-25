@@ -51,6 +51,7 @@
 | [blog-html-conversion.md](runbooks/blog-html-conversion.md) | Blog V2 Markdown-to-HTML cutover |
 | [scheduled-publish.md](runbooks/scheduled-publish.md) | Scheduled blog publishing function |
 | [ticker.md](runbooks/ticker.md) | Site-wide news ticker (/admin/ticker) |
+| [google-api-access.md](runbooks/google-api-access.md) | Google Search Console, Analytics, Business Profile, PageSpeed and Places access via one account, stored in 1Password |
 
 ## Other Docs
 
