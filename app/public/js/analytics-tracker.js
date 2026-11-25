@@ -11,7 +11,6 @@
   const STORAGE_CLIENT_ID = 'sb_client_id';
   const STORAGE_FIRST_TOUCH = 'sb_first_touch';
   const STORAGE_LAST_TOUCH = 'sb_last_touch';
-  const STORAGE_SESSION_ID = 'sb_session_id';
   const COOKIE_SESSION_ID = 'sb_session_id';
   const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
@@ -62,7 +61,8 @@
   };
 
   const writeCookie = (name, value) => {
-    document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${COOKIE_MAX_AGE_SECONDS}; Path=/; SameSite=Lax`;
+    const secureAttr = runtimeWindow.location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${COOKIE_MAX_AGE_SECONDS}; Path=/; SameSite=Lax${secureAttr}`;
   };
 
   const ensureClientId = () => {
@@ -73,21 +73,14 @@
     return next;
   };
 
+  // Store session ID in cookie only (do not mirror to localStorage) so clearing cookies resets it.
   const ensureSessionId = () => {
-    const existingSessionStorage = clampText(safeGetLocalStorage(STORAGE_SESSION_ID), 120);
-    if (existingSessionStorage) {
-      writeCookie(COOKIE_SESSION_ID, existingSessionStorage);
-      return existingSessionStorage;
-    }
-
     const existingCookie = clampText(readCookie(COOKIE_SESSION_ID), 120);
     if (existingCookie) {
-      safeSetLocalStorage(STORAGE_SESSION_ID, existingCookie);
       return existingCookie;
     }
 
     const next = makeId('sbsid');
-    safeSetLocalStorage(STORAGE_SESSION_ID, next);
     writeCookie(COOKIE_SESSION_ID, next);
     return next;
   };

@@ -35,7 +35,7 @@ const phoneDigits = phone.replace(/[^0-9]/g, '');
 
 <Layout
   title="Privacy Policy - Spicebush Montessori School"
-  description="How Spicebush Montessori School collects, uses, stores, and protects personal information on our website, including children's privacy, cookies, donations, and your choices."
+  description="How Spicebush Montessori School collects, uses, stores, and protects personal information on our website, including children's privacy, cookies, analytics, donations, and your choices."
   keywords="privacy policy, data protection, children's privacy, COPPA, website privacy, Spicebush Montessori"
 >
   <Header />
@@ -90,11 +90,11 @@ const phoneDigits = phone.replace(/[^0-9]/g, '');
             </p>
             <p class="text-earth-brown leading-relaxed-plus">
               This Privacy Policy explains what information we collect through our website, why we
-              collect it, which trusted service providers help us operate the site, and how you can
-              access, correct, or request deletion of your information. This policy applies only to
+              collect it, which service providers help us operate the site, and how you can access,
+              correct, or request deletion of your information. This policy applies only to
               information collected through our website and does not govern offline student
-              education records, which are handled separately through our enrollment and family
-              handbook procedures.
+              education records, which are handled separately through our enrollment and Family
+              Handbook procedures.
             </p>
           </section>
 
@@ -109,23 +109,23 @@ const phoneDigits = phone.replace(/[^0-9]/g, '');
             </h3>
             <ul class="list-disc pl-6 space-y-2 text-earth-brown leading-relaxed-plus">
               <li>
-                <strong>Contact, Tour, Camp &amp; Admissions Inquiries:</strong> When you submit a contact
-                form, camp question, or inquiry form on our site, we collect the details you enter — typically
-                your name, email address, phone number (optional), subject, message, tour interest, and
-                any optional child age, child birthdate, program interest, or referral source you choose
-                to share.
+                <strong>Contact, Tour, Camp &amp; Admissions Inquiries:</strong> Depending on the form
+                you submit, we collect your name, email address, phone number, subject, message, tour
+                preference, program interest, referral source, and your child&apos;s age or birthdate
+                (required on certain tour or enrollment-interest forms so we can confirm program age eligibility).
               </li>
               <li>
-                <strong>Online Donations:</strong> When you initiate a one-time or monthly donation on
-                our Donate page, you select an amount and frequency and are redirected to Stripe&apos;s
+                <strong>Online Donations:</strong> When you initiate a one-time or recurring monthly donation
+                on our Donate page, you choose an amount and frequency and are redirected to Stripe&apos;s
                 secure hosted checkout. Stripe collects your payment card and billing information directly;
-                Spicebush never receives or stores full payment card numbers. Stripe shares confirmation
-                metadata with us (such as donor name, email address, donation amount, frequency, and transaction
-                status) so we can record gifts and send acknowledgment messages.
+                Spicebush never receives or stores full payment card numbers. Stripe sends us confirmation
+                records (such as donor name, email address, donation amount, frequency, transaction/subscription
+                identifiers, and payment status) so we can record gifts and send thank-you messages.
               </li>
               <li>
                 <strong>School Staff Accounts:</strong> Authorized school administrators sign in using
-                school-approved email addresses and authentication records to manage website content.
+                school-approved email addresses (via magic-link email or Auth0). For security auditing,
+                administrator login records log the staff member&apos;s IP address and browser user-agent.
               </li>
             </ul>
 
@@ -135,40 +135,75 @@ const phoneDigits = phone.replace(/[^0-9]/g, '');
             <ul class="list-disc pl-6 space-y-2 text-earth-brown leading-relaxed-plus">
               <li>
                 <strong>First-Party Website Analytics (when enabled):</strong> To understand how prospective
-                families discover our school and which pages are most helpful, our website may record
-                page views, button/link clicks, form submission events, referring URLs, and campaign parameters
-                (such as UTM tags or click IDs). For this purpose, our analytics script stores pseudonymous
-                identifiers in your browser: a first-party cookie named <code
-                  class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">sb_session_id</code
-                > (which expires after 30 days) and browser <code
-                  class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">localStorage</code
-                > entries (<code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded"
-                  >sb_client_id</code
-                >, <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">sb_session_id</code>,{
+                families discover our school and which pages are most helpful, our website records page
+                views, button/link clicks, form submission events, browser user-agent strings, referring
+                URLs, and campaign parameters (such as UTM tags or Google Ads click IDs <code
+                  class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">gclid</code
+                >, <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">gbraid</code>, and{
                   ' '
                 }
-                <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">sb_first_touch</code>,
+                <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">wbraid</code>). Our
+                analytics script stores a first-party cookie named{' '}
+                <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">sb_session_id</code>
+                (which expires after 30 days) and browser{' '}
+                <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">localStorage</code>{' '}
+                entries (<code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded"
+                  >sb_client_id</code
+                >, <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">sb_first_touch</code>,
                 and <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">sb_last_touch</code
-                >).
+                >). We do not store raw visitor IP addresses on analytics event rows (IP addresses
+                are checked transiently in memory for rate limiting only).
               </li>
               <li>
-                <strong>Google Analytics 4 (when enabled):</strong> When Google Analytics is active, Google
-                collects aggregated usage metrics with IP anonymization enabled.
+                <strong>Linking Analytics to Form Submissions:</strong> When you submit a contact or inquiry
+                form on our website, your browser&apos;s{' '}
+                <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">sb_session_id</code>,{
+                  ' '
+                }
+                <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">sb_client_id</code>,
+                landing page, referrer URL, and campaign attribution parameters are submitted with
+                and stored alongside your inquiry record so our team can understand which outreach
+                channels bring families to Spicebush.
               </li>
               <li>
-                <strong>Security &amp; Anti-Spam Signals:</strong> When you submit a public form, we record
-                the submitting IP address and submission timing metadata to enforce rate limits, protect
-                families from spam, and maintain service reliability.
+                <strong>Google Analytics 4 (when enabled):</strong> When Google Analytics 4 is active,
+                Google uses cookies and identifiers (such as{' '}
+                <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">_ga</code> and{' '}
+                <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">_ga_*</code>) to measure
+                aggregated site usage. Per Google&apos;s GA4 architecture, Google does not log or
+                store full IP addresses after transient geolocation lookup. Learn more at{' '}
+                <a
+                  href="https://www.google.com/policies/privacy/partners/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-forest-canopy underline hover:text-moss-green inline-flex items-center gap-1"
+                >
+                  How Google uses information from sites or apps that use our services<ExternalLink
+                    className="w-3.5 h-3.5"
+                    aria-hidden="true"
+                  /><span class="sr-only"> (opens in a new tab)</span>
+                </a>.
+              </li>
+              <li>
+                <strong>Form Security &amp; Anti-Spam Signals:</strong> When you submit a public inquiry
+                form, we record the submitting IP address and submission timing metadata to enforce rate
+                limits and block automated spam.
               </li>
               <li>
                 <strong>Essential Administrative Cookies:</strong> Logged-in school administrators receive
                 strictly necessary <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded"
                   >HttpOnly</code
-                > session and preview cookies (<code
+                > authentication and preview cookies (<code
                   class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">sbms-admin-session</code
-                > and <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded"
+                >, <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded"
                   >sbms-preview-mode</code
-                >) that are not set for general public visitors.
+                >, and — when Auth0 sign-in is enabled — temporary OAuth cookies{' '}
+                <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">sbms-auth0-state</code>,{
+                  ' '
+                }
+                <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">sbms-auth0-nonce</code>,
+                and <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">sbms-auth0-next</code
+                >). These cookies are not set for general public visitors.
               </li>
             </ul>
           </section>
@@ -187,8 +222,8 @@ const phoneDigits = phone.replace(/[^0-9]/g, '');
               knowingly collect personal information directly from children online.
             </p>
             <p class="text-earth-brown leading-relaxed-plus">
-              Any child&apos;s age or birthdate entered on an admissions or contact form is provided
-              voluntarily by a parent or guardian solely to help our team answer program placement
+              Any child&apos;s age or birthdate entered on an admissions, tour, or contact form is
+              provided by a parent or guardian solely to help our team answer program eligibility
               and enrollment questions. If you believe a child under 13 has submitted personal
               information through our website without parental consent, please contact us
               immediately at{' '}
@@ -236,13 +271,13 @@ const phoneDigits = phone.replace(/[^0-9]/g, '');
             </p>
             <ul class="list-disc pl-6 space-y-2 text-earth-brown leading-relaxed-plus mb-4">
               <li>
-                <strong>Netlify &amp; Neon (PostgreSQL):</strong> Website hosting, media storage, and
-                encrypted database storage for website inquiries and school content.
+                <strong>Netlify &amp; Neon (PostgreSQL):</strong> Website hosting, media storage (Netlify
+                Blobs), and hosted PostgreSQL database infrastructure (with TLS encryption in transit
+                and provider-managed encryption at rest).
               </li>
               <li>
-                <strong>Stripe:</strong> Hosted payment processing for online donations, governed by{
-                  ' '
-                }
+                <strong>Stripe:</strong> Hosted payment processing for one-time and recurring monthly
+                donations, governed by{' '}
                 <a
                   href="https://stripe.com/privacy"
                   target="_blank"
@@ -252,31 +287,56 @@ const phoneDigits = phone.replace(/[^0-9]/g, '');
                   Stripe&apos;s Privacy Policy<ExternalLink
                     className="w-3.5 h-3.5"
                     aria-hidden="true"
-                  />
+                  /><span class="sr-only"> (opens in a new tab)</span>
                 </a>.
               </li>
               <li>
-                <strong>Cloudflare Turnstile:</strong> Bot and spam verification on public inquiry forms.
-              </li>
-              <li>
-                <strong>Email Delivery Providers (SendGrid / UniOne):</strong> Sending inquiry confirmations,
-                donation thank-you messages, and school announcements.
-              </li>
-              <li>
-                <strong
-                  >Google Services (Google Analytics, Google Fonts, Google Maps, Google Forms):</strong
+                <strong>Cloudflare Turnstile:</strong> Bot and spam verification on public inquiry forms,
+                which evaluates browser and network signals and may set anti-bot tokens, governed by{
+                  ' '
+                }
+                <a
+                  href="https://www.cloudflare.com/privacypolicy/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-forest-canopy underline hover:text-moss-green inline-flex items-center gap-1"
                 >
-                Optional site analytics, web typography, the embedded location map on our Contact page,
-                and our confidential anonymous feedback form hosted via Google Forms.
+                  Cloudflare&apos;s Privacy Policy<ExternalLink
+                    className="w-3.5 h-3.5"
+                    aria-hidden="true"
+                  /><span class="sr-only"> (opens in a new tab)</span>
+                </a>.
               </li>
               <li>
-                <strong>External School Tools (Transparent Classroom &amp; Calendly):</strong> Links for
-                submitting formal admissions applications or scheduling campus tours direct you to external
-                platforms operated under their own privacy policies.
+                <strong>Email Delivery &amp; Admin Authentication Providers:</strong> SendGrid and/or
+                UniOne for delivering inquiry confirmations, donation thank-you messages, and school announcements,
+                and Auth0 when enabled for staff sign-in.
               </li>
               <li>
-                <strong>Public Holiday Information (Nager.Date):</strong> Our school hours widget may
-                request public U.S. federal holiday dates to display holiday notices.
+                <strong>Google Services (Analytics, Fonts, Maps, Forms):</strong> Optional Google Analytics
+                4, Google Fonts web typography, the embedded location map on our Contact page, and our
+                feedback form hosted on Google Forms (Spicebush does not ask for your name or email on
+                that form, though Google collects standard technical data under Google&apos;s Privacy
+                Policy).
+              </li>
+              <li>
+                <strong>External School Tools &amp; Links:</strong> Links to Transparent Classroom (online
+                admissions applications), Calendly (campus tour scheduling), PA DHS Child Care Works,
+                American Montessori Society, and social media pages (Facebook, Instagram, X) direct you
+                to external platforms governed by their own privacy policies.
+              </li>
+              <li>
+                <strong>Public Holiday Data (Nager.Date):</strong> Pages displaying our school hours widget
+                currently make a direct browser request to{' '}
+                <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded">date.nager.at</code> to fetch
+                public U.S. federal holiday dates, which transmits standard browser request metadata (such
+                as IP address and user-agent) to that service.
+              </li>
+              <li>
+                <strong>Internal Admin Content Tools (Optional):</strong> School administrators may optionally
+                use AI-assisted tools (Google Gemini and/or OpenAI APIs) to help draft page metadata or
+                suggest image crop framing for published school photography. No visitor form submissions
+                or donor records are sent to these tools.
               </li>
             </ul>
             <p class="text-earth-brown leading-relaxed-plus">
@@ -292,14 +352,17 @@ const phoneDigits = phone.replace(/[^0-9]/g, '');
             </h2>
             <p class="text-earth-brown leading-relaxed-plus mb-4">
               We use reasonable administrative and technical safeguards — including HTTPS/TLS
-              encryption in transit, restricted administrator authentication, and reputable hosted
-              database infrastructure — to protect the information you share with us. No method of
-              internet transmission or electronic storage is 100% secure, so please avoid sending
-              sensitive medical, financial, or government identification numbers through general
-              website contact forms.
+              encryption in transit, provider-managed encryption at rest on our hosted database,
+              restricted administrator authentication, and never storing payment card numbers — to
+              protect the information you share with us. No method of internet transmission or
+              electronic storage is 100% secure, so please avoid sending sensitive medical,
+              financial, or government identification numbers through general website contact forms.
+              In the unlikely event of a security incident affecting personal information, we will
+              notify affected individuals as required by applicable law, including the Pennsylvania
+              Breach of Personal Information Notification Act.
             </p>
             <p class="text-earth-brown leading-relaxed-plus">
-              We retain inquiry submissions, donation acknowledgment records, and analytics data
+              We retain inquiry submissions, donation acknowledgment records, and website analytics
               only for as long as reasonably needed to serve families, operate our website, and meet
               nonprofit recordkeeping or legal obligations.
             </p>
@@ -308,30 +371,49 @@ const phoneDigits = phone.replace(/[^0-9]/g, '');
           <!-- Choices & Rights -->
           <section aria-labelledby="privacy-choices">
             <h2 id="privacy-choices" class="text-2xl lg:text-3xl font-bold text-earth-brown mb-4">
-              7. Your Privacy Choices &amp; Requests
+              7. Your Privacy Choices, Opt-Outs &amp; Do Not Track
             </h2>
             <ul class="list-disc pl-6 space-y-2 text-earth-brown leading-relaxed-plus">
               <li>
                 <strong>Access, Correction, or Deletion:</strong> You may email or call us at any time
-                to request a copy of personal information you submitted through our website, ask us to
+                to request access to personal information you submitted through our website, ask us to
                 correct inaccurate details, or request deletion (subject to nonprofit accounting or legal
                 retention requirements).
               </li>
               <li>
-                <strong>Email Preferences:</strong> To stop receiving non-essential school announcements
-                or updates, contact us at{' '}
+                <strong>Email Opt-Out:</strong> To stop receiving non-essential school announcements or
+                updates, email{' '}
                 <a
-                  href={`mailto:${email}`}
+                  href={`mailto:${email}?subject=Unsubscribe%20Request`}
                   class="font-semibold text-forest-canopy underline hover:text-moss-green"
                   >{email}</a
+                >. We honor opt-out requests promptly (within 10 business days).
+              </li>
+              <li>
+                <strong>Recurring Monthly Donations:</strong> You can cancel or update a recurring monthly
+                gift at any time by emailing{' '}
+                <a
+                  href={`mailto:${email}?subject=Recurring%20Donation%20Update`}
+                  class="font-semibold text-forest-canopy underline hover:text-moss-green"
+                  >{email}</a
+                > or calling{' '}
+                <a
+                  href={`tel:${phoneDigits}`}
+                  class="font-semibold text-forest-canopy underline hover:text-moss-green"
+                  >{phone}</a
+                >. See{' '}
+                <a
+                  href="/policies#donations"
+                  class="font-semibold text-forest-canopy underline hover:text-moss-green"
+                  >Donations &amp; Giving Terms</a
                 >.
               </li>
               <li>
                 <strong>Cookies &amp; Analytics Controls:</strong> You can clear or block cookies and
                 browser <code class="text-sm bg-stone-beige px-1.5 py-0.5 rounded"
                   >localStorage</code
-                > in your browser settings at any time. You can also opt out of Google Analytics using
-                the{' '}
+                > together in your browser&apos;s site-data settings at any time. You can also opt out
+                of Google Analytics using the{' '}
                 <a
                   href="https://tools.google.com/dlpage/gaoptout"
                   target="_blank"
@@ -341,8 +423,15 @@ const phoneDigits = phone.replace(/[^0-9]/g, '');
                   Google Analytics Opt-out Browser Add-on<ExternalLink
                     className="w-3.5 h-3.5"
                     aria-hidden="true"
-                  />
+                  /><span class="sr-only"> (opens in a new tab)</span>
                 </a>.
+              </li>
+              <li>
+                <strong>Do Not Track (DNT) &amp; Global Privacy Control (GPC):</strong> Because browsers
+                transmit these signals inconsistently and we do not sell personal information or engage
+                in cross-context behavioral advertising, our website does not currently alter its first-party
+                analytics behavior in response to browser DNT or GPC signals. You can use the browser
+                cookie/site-data controls and Google Analytics opt-out listed above.
               </li>
             </ul>
           </section>

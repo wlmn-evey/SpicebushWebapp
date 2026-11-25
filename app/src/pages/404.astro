@@ -3,8 +3,14 @@ import Layout from '@layouts/Layout.astro';
 import { Home, ArrowLeft } from 'lucide-astro';
 ---
 
-<Layout title="Page Not Found - Spicebush Montessori">
-  <main class="min-h-[80vh] flex items-center justify-center px-4 py-16">
+<Layout title="Page Not Found - Spicebush Montessori" robots="noindex-follow">
+  <a
+    href="#main-content"
+    class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded focus:bg-forest-canopy focus:px-4 focus:py-2 focus:font-semibold focus:text-white"
+  >
+    Skip to main content
+  </a>
+  <main id="main-content" class="min-h-[80vh] flex items-center justify-center px-4 py-16">
     <div class="max-w-lg w-full text-center">
       <!-- Error Code -->
       <h1 class="text-9xl font-bold text-forest-canopy mb-4">404</h1>
@@ -41,6 +47,7 @@ import { Home, ArrowLeft } from 'lucide-astro';
         </a>
 
         <button
+          type="button"
           onclick="history.back()"
           class="inline-flex items-center justify-center gap-2 bg-white hover:bg-stone-beige text-forest-canopy border-2 border-forest-canopy px-6 py-3 rounded-lg font-semibold transition-colors"
         >

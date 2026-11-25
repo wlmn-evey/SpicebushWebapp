@@ -105,7 +105,8 @@ describe('POST /api/analytics/track', () => {
         eventName: 'test_event',
         eventCategory: 'conversion',
         pagePath: '/about',
-        eventValue: 42
+        eventValue: 42,
+        ipAddress: null
       })
     );
   });

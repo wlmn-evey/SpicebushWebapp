@@ -2,15 +2,46 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
+import { db } from '@lib/db';
+import { logServerError } from '@lib/server-logger';
 import { CheckCircle, Heart, Mail } from 'lucide-astro';
 
-const sessionId = Astro.url.searchParams.get('session_id');
+const rawSessionId = Astro.url.searchParams.get('session_id')?.trim() ?? '';
+const sessionId = /^cs_(test|live)_[A-Za-z0-9]+$/.test(rawSessionId) ? rawSessionId : null;
+
+let schoolEmail = 'information@spicebushmontessori.org';
+let schoolPhone = '(484) 202-0712';
+let schoolEin: string | null = null;
+
+try {
+  const [dbEmail, dbPhone, dbEin] = await Promise.all([
+    db.content.getSetting('school_email').catch(() => null),
+    db.content.getSetting('school_phone').catch(() => null),
+    db.content.getSetting('school_ein').catch(() => null)
+  ]);
+  if (typeof dbEmail === 'string' && dbEmail.trim().length > 0) {
+    schoolEmail = dbEmail.trim();
+  }
+  if (typeof dbPhone === 'string' && dbPhone.trim().length > 0) {
+    schoolPhone = dbPhone.trim();
+  }
+  if (typeof dbEin === 'string' && dbEin.trim().length > 0) {
+    schoolEin = dbEin.trim();
+  }
+} catch (error) {
+  logServerError('Failed to load contact settings on donation thank-you page', error, {
+    route: '/donate/thank-you'
+  });
+}
+
+const schoolPhoneDigits = schoolPhone.replace(/[^0-9]/g, '');
 ---
 
 <Layout
   title="Thank You - Spicebush Montessori School"
   description="Thank you for supporting Spicebush Montessori School."
   keywords="Spicebush Montessori donation thank you"
+  robots="noindex-follow"
 >
   <Header />
 
@@ -36,17 +67,32 @@ const sessionId = Astro.url.searchParams.get('session_id');
           </p>
 
           <div
-            class="mt-8 rounded-xl border border-moss-green/20 bg-moss-green/10 px-5 py-4 text-left"
+            class="mt-8 rounded-xl border border-moss-green/20 bg-moss-green/10 px-5 py-4 text-left space-y-2"
           >
-            <p class="font-semibold text-earth-brown mb-1">What happens next</p>
-            <p class="text-sm text-earth-brown/80">
-              Stripe will email your donation receipt. If you have any questions, our team is happy
-              to help.
+            <p class="font-semibold text-earth-brown">What happens next</p>
+            <p class="text-sm text-earth-brown/85">
+              You will receive an email confirmation for your gift. No goods or services were
+              provided in exchange for this contribution{schoolEin ? ` (EIN: ${schoolEin})` : ''}.
+              If you need an additional tax acknowledgment letter, have a question about a charge,
+              or wish to cancel or update a recurring monthly gift at any time, email{' '}
+              <a
+                href={`mailto:${schoolEmail}?subject=Donation%20Support`}
+                class="font-semibold text-forest-canopy underline hover:text-moss-green"
+              >
+                {schoolEmail}
+              </a>{' '}
+              or call{' '}
+              <a
+                href={`tel:${schoolPhoneDigits}`}
+                class="font-semibold text-forest-canopy underline hover:text-moss-green"
+              >
+                {schoolPhone}
+              </a>.
             </p>
             {
               sessionId && (
-                <p class="mt-2 text-xs text-earth-brown/60 break-all">
-                  Confirmation reference: {sessionId}
+                <p class="pt-1 text-xs text-earth-brown/65 break-all">
+                  Checkout reference: {sessionId}
                 </p>
               )
             }
@@ -61,7 +107,7 @@ const sessionId = Astro.url.searchParams.get('session_id');
               Return to Home
             </a>
             <a
-              href="mailto:information@spicebushmontessori.org"
+              href={`mailto:${schoolEmail}`}
               class="inline-flex items-center justify-center rounded-lg border border-forest-canopy px-5 py-3 text-forest-canopy font-semibold transition-colors hover:bg-forest-canopy hover:text-white"
             >
               <Mail className="w-4 h-4 mr-2" aria-hidden="true" />
