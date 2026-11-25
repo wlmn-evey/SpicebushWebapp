@@ -1,6 +1,7 @@
 /**
- * The school's non-discrimination policy, word for word. Every page that shows any part of the
- * policy reads it from here so the copies can't drift apart (see #163).
+ * The school's non-discrimination policy, word for word. It is the school's own legal text: change it
+ * only when the school approves new wording, never as a copy edit or to match other pages. Every page
+ * that shows any part of the policy reads it from here, so the copies can't drift apart (see #163).
  */
 
 export const ADMISSIONS_STATEMENT =

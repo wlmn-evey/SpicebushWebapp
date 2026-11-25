@@ -203,6 +203,7 @@ const handleComingSoon = async (context: APIContext, next: MiddlewareNext) => {
     '/privacy-policy',
     '/non-discrimination-policy',
     '/accessibility',
+    '/policies',
     '/admin',
     '/auth',
     '/api',
