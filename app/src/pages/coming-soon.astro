@@ -7,6 +7,10 @@ import AdminPreviewBar from '@components/AdminPreviewBar.astro';
 import ExternalLinkTargetBehavior from '@components/ExternalLinkTargetBehavior.astro';
 import FaviconLinks from '@components/FaviconLinks.astro';
 import OptimizedImage from '@components/OptimizedImage.astro';
+import {
+  ADMISSIONS_STATEMENT,
+  NON_DISCRIMINATION_STATEMENT
+} from '@lib/non-discrimination-policy';
 import { resolveSeoMetadata } from '@lib/seo-config';
 import { getTurnstileSiteKey } from '@lib/turnstile-config';
 
@@ -2169,15 +2173,8 @@ const seoMetadata = await resolveSeoMetadata({
       <a href={adminSignInPath} class="footer-admin-access-link">Admin Sign In</a>
     </div>
     <p style="margin-top: 1.25rem; font-size: 0.95rem; line-height: 1.6; max-width: 820px; margin-left: auto; margin-right: auto;">
-      Spicebush Montessori School admits students of any race, color, national and ethnic origin,
-      ancestry, religion, sex, gender identity or expression, sexual orientation, disability or
-      ability, or family and socioeconomic background (within the age range served by our licensed
-      early childhood programs) to all the rights, privileges, programs, and activities generally
-      accorded or made available to students at the school. It does not discriminate on the basis
-      of race, color, national and ethnic origin, ancestry, religion, sex, gender identity or
-      expression, sexual orientation, disability or ability, or family and socioeconomic background
-      in administration of its educational policies, admissions policies, scholarship and loan
-      programs, and athletic and other school-administered programs.
+      {ADMISSIONS_STATEMENT}
+      {NON_DISCRIMINATION_STATEMENT}
     </p>
   </footer>
 

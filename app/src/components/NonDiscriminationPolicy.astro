@@ -1,5 +1,14 @@
 ---
 import { Heart } from 'lucide-astro';
+import {
+  ADMISSIONS_STATEMENT,
+  ANONYMOUS_FEEDBACK_FORM,
+  ANONYMOUS_FEEDBACK_LEAD,
+  CONTACT_PROMPT,
+  NON_DISCRIMINATION_STATEMENT,
+  REPORTING_AGENCIES,
+  REPORTING_INTRO
+} from '@lib/non-discrimination-policy';
 ---
 
 <section class="py-12 bg-stone-beige">
@@ -17,95 +26,48 @@ import { Heart } from 'lucide-astro';
         </h2>
       </div>
 
-      <!-- Main Policy Text (preserves IRS Rev. Proc. 75-50 / 2019-22 required wording) -->
+      <!-- Main Policy Text -->
       <div class="prose prose-lg max-w-none mb-8">
         <p class="text-earth-brown leading-relaxed-plus mb-6">
-          Spicebush Montessori School admits students of any race, color, national and ethnic
-          origin, ancestry, religion, sex, gender identity or expression, sexual orientation,
-          disability or ability, or family and socioeconomic background (within the age range served
-          by our licensed early childhood programs) to all the rights, privileges, programs, and
-          activities generally accorded or made available to students at the school. It does not
-          discriminate on the basis of race, color, national and ethnic origin, ancestry, religion,
-          sex, gender identity or expression, sexual orientation, disability or ability, or family
-          and socioeconomic background in administration of its educational policies, admissions
-          policies, scholarship and loan programs, and athletic and other school-administered
-          programs.
+          {ADMISSIONS_STATEMENT}
+          {NON_DISCRIMINATION_STATEMENT}
         </p>
 
         <p class="text-earth-brown leading-relaxed-plus mb-6">
-          Below are ways to reach out to the U.S. Department of Health and Human Services&apos;
-          Office for Civil Rights, the Pennsylvania Department of Human Services Bureau of Equal
-          Opportunity, the Pennsylvania Human Relations Commission, or our school directly if you
-          have been subjected to implicit bias or discrimination.
+          {REPORTING_INTRO}
         </p>
       </div>
 
       <!-- Contact Links -->
       <div class="space-y-4 mb-8">
-        <div class="text-center">
-          <a
-            href="https://www.hhs.gov/civil-rights/filing-a-complaint/index.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-block text-lg font-bold text-forest-canopy hover:text-moss-green transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
-          >
-            U.S. HHS Office for Civil Rights
-            <span class="sr-only"> (opens in a new tab)</span>
-          </a>
-        </div>
-
-        <div class="text-center">
-          <a
-            href="https://www.pa.gov/agencies/dhs/departments-offices/oa-info/oa-bureau-equal-opportunity"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-block text-lg font-bold text-forest-canopy hover:text-moss-green transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
-          >
-            PA DHS Bureau of Equal Opportunity
-            <span class="sr-only"> (opens in a new tab)</span>
-          </a>
-          <p class="text-sm text-earth-brown/80 mt-0.5">
-            Phone: <a href="tel:7177871127" class="underline hover:text-forest-canopy"
-              >(717) 787-1127</a
-            > &bull; Email: <a
-              href="mailto:RA-PWDHSCIVILRIGHTS@pa.gov"
-              class="underline hover:text-forest-canopy">RA-PWDHSCIVILRIGHTS@pa.gov</a
-            >
-          </p>
-        </div>
-
-        <div class="text-center">
-          <a
-            href="https://www.pa.gov/agencies/phrc"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-block text-lg font-bold text-forest-canopy hover:text-moss-green transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
-          >
-            Pennsylvania Human Relations Commission
-            <span class="sr-only"> (opens in a new tab)</span>
-          </a>
-          <p class="text-sm text-earth-brown/80 mt-0.5">
-            Phone: <a href="tel:7177874410" class="underline hover:text-forest-canopy"
-              >(717) 787-4410</a
-            > &bull; Email: <a href="mailto:PHRC@pa.gov" class="underline hover:text-forest-canopy"
-              >PHRC@pa.gov</a
-            >
-          </p>
-        </div>
+        {
+          REPORTING_AGENCIES.map(agency => (
+            <div class="text-center">
+              <a
+                href={agency.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-block text-lg font-bold text-forest-canopy hover:text-moss-green transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-2 py-1"
+              >
+                {agency.label}
+                <span class="sr-only"> (opens in a new tab)</span>
+              </a>
+            </div>
+          ))
+        }
       </div>
 
-      <!-- Feedback Form -->
+      <!-- Anonymous Feedback -->
       <div class="mb-8">
         <p class="text-earth-brown text-center">
-          If you would like to submit a complaint or offer feedback to teachers and school leaders
-          without sharing your name or email, please use our
+          {ANONYMOUS_FEEDBACK_LEAD}
           <a
-            href="https://docs.google.com/forms/d/e/1FAIpQLSd9x0mdbCKXBjbWuVme2SeRX9enMfUAf7Y_80VqFUDFs4qfRg/viewform?usp=sf_link"
+            href={ANONYMOUS_FEEDBACK_FORM.href}
             target="_blank"
             rel="noopener noreferrer"
             class="text-forest-canopy hover:text-moss-green font-bold transition-colors focus:ring-2 focus:ring-forest-canopy focus:ring-offset-2 rounded px-1"
           >
-            feedback form hosted on Google Forms
+            {ANONYMOUS_FEEDBACK_FORM.label}
             <span class="sr-only"> (opens in a new tab)</span>
           </a>.
         </p>
@@ -119,7 +81,7 @@ import { Heart } from 'lucide-astro';
           href="/contact"
           class="text-white text-lg font-semibold hover:text-light-stone transition-colors focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-forest-canopy rounded px-2 inline-block"
         >
-          Contact Spicebush Montessori directly to report implicit bias or discrimination
+          {CONTACT_PROMPT}
         </a>
       </div>
     </div>
