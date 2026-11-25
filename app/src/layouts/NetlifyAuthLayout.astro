@@ -6,6 +6,8 @@ import ExternalLinkTargetBehavior from '../components/ExternalLinkTargetBehavior
 import FaviconLinks from '../components/FaviconLinks.astro';
 import { CRITICAL_IMAGES, generatePreloadLinks } from '../lib/image-preloader';
 import { getAnalyticsConfig } from '@lib/analytics-config';
+import { getTrackedTourLink } from '@lib/tour-settings';
+import { logServerError } from '@lib/server-logger';
 import { resolveSeoMetadata } from '@lib/seo-config';
 
 export interface Props {
@@ -34,6 +36,15 @@ const canonicalURL = seoMetadata.canonicalUrl;
 const analyticsConfig = await getAnalyticsConfig();
 const analyticsEnabled = analyticsConfig.enabled;
 const gaMeasurementId = analyticsConfig.measurementId;
+// Lets the tracker count clicks on any link to the booking page as tour_click (#167).
+let trackedTourLink = '';
+if (analyticsEnabled) {
+  try {
+    trackedTourLink = await getTrackedTourLink();
+  } catch (error) {
+    logServerError('Failed to load tour link for analytics', error, { component: 'NetlifyAuthLayout' });
+  }
+}
 const shouldLoadGaScript = analyticsEnabled && gaMeasurementId.length > 0;
 
 // Generate preload links for critical images on homepage
@@ -83,7 +94,7 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
       <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaMeasurementId)}`}></script>
     )}
     {analyticsEnabled && (
-      <script is:inline define:vars={{ gaMeasurementId, shouldLoadGaScript }}>
+      <script is:inline define:vars={{ gaMeasurementId, shouldLoadGaScript, trackedTourLink }}>
         window.dataLayer = window.dataLayer || [];
         // eslint-disable-next-line prefer-rest-params -- gtag.js requires the real arguments object
         function gtag() { window.dataLayer.push(arguments); }
@@ -97,7 +108,8 @@ const preloadLinks = preloadImages ? generatePreloadLinks(CRITICAL_IMAGES) : '';
         }
         window.sbAnalyticsConfig = {
           enabled: true,
-          measurementId: gaMeasurementId || ''
+          measurementId: gaMeasurementId || '',
+          tourLink: trackedTourLink || ''
         };
       </script>
     )}
