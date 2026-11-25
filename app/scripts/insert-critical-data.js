@@ -16,6 +16,7 @@ const __dirname = dirname(__filename);
 const APP_ROOT = join(__dirname, '..');
 const CONTENT_ROOT = join(APP_ROOT, 'src', 'content');
 const IS_DRY_RUN = process.argv.includes('--dry-run');
+const ALLOW_OVERWRITE = process.argv.includes('--overwrite');
 
 dotenv.config({ path: join(APP_ROOT, '.env.local') });
 
@@ -34,7 +35,7 @@ const CONTENT_COLLECTIONS = [
 const DEFAULT_SETTINGS = new Map([
   ['donation_external_link', ''],
   ['enrollment_external_link', ''],
-  ['tour_external_link', 'https://calendly.com/spicebushmontessori/tour-of-spicebush-montessori-school?month=2026-02'],
+  ['tour_external_link', 'https://calendly.com/spicebushmontessori/tour-of-spicebush-montessori-school'],
   ['tour_scheduling_enabled', true]
 ]);
 
@@ -340,31 +341,39 @@ async function loadSettingsEntries() {
 }
 
 async function upsertContent(client, type, slug, title, data) {
+  const conflictClause = ALLOW_OVERWRITE
+    ? `DO UPDATE SET
+        title = EXCLUDED.title,
+        data = EXCLUDED.data,
+        status = EXCLUDED.status,
+        author_email = EXCLUDED.author_email,
+        updated_at = NOW()`
+    : 'DO NOTHING';
+
   await client.query(
     `
       INSERT INTO content (type, slug, title, data, status, author_email)
       VALUES ($1, $2, $3, $4::jsonb, 'published', 'seed@spicebushmontessori.org')
       ON CONFLICT (type, slug)
-      DO UPDATE SET
-        title = EXCLUDED.title,
-        data = EXCLUDED.data,
-        status = EXCLUDED.status,
-        author_email = EXCLUDED.author_email,
-        updated_at = NOW()
+      ${conflictClause}
     `,
     [type, slug, title, JSON.stringify(data ?? {})]
   );
 }
 
 async function upsertSetting(client, key, value) {
+  const conflictClause = ALLOW_OVERWRITE
+    ? `DO UPDATE SET
+        value = EXCLUDED.value,
+        updated_at = NOW()`
+    : 'DO NOTHING';
+
   await client.query(
     `
       INSERT INTO settings (key, value)
       VALUES ($1, $2::jsonb)
       ON CONFLICT (key)
-      DO UPDATE SET
-        value = EXCLUDED.value,
-        updated_at = NOW()
+      ${conflictClause}
     `,
     [key, JSON.stringify(value ?? null)]
   );

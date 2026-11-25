@@ -6,7 +6,8 @@ export interface AdminConfig {
   adminDomains: string[];
 }
 
-const isDevelopmentEnvironment = (): boolean => process.env.NODE_ENV !== 'production';
+const isDevelopmentEnvironment = (): boolean =>
+  process.env.NODE_ENV !== 'production' && process.env.CONTEXT !== 'production';
 
 const ALLOWED_ADMIN_LOGIN_DOMAINS = new Set(['spicebushmontessori.org', 'eveywinters.com']);
 const DEVELOPMENT_ADMIN_DOMAIN_ALLOWLIST = new Set(['spicebushmontessori.test']);

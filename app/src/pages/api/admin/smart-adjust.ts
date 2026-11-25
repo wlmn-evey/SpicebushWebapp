@@ -10,6 +10,12 @@ import {
   type SmartAdjustContext
 } from '@lib/smart-adjust';
 import { logServerError } from '@lib/server-logger';
+import {
+  isAllowedRasterContentType,
+  readBodyWithLimit,
+  resolveRedirectTarget,
+  resolveSafeMediaSourceUrl
+} from '@lib/media-render-source';
 
 type SmartAdjustRequestBody = {
   slotId?: unknown;
@@ -191,10 +197,10 @@ const resolvePhotoImageUrl = (
   photoData: Record<string, unknown>,
   photoSlug: string,
   requestUrl: URL
-): string | null => {
+): URL | null => {
   const sourceUrl = asString(photoData.sourceUrl);
   if (sourceUrl) {
-    return sourceUrl;
+    return resolveSafeMediaSourceUrl(sourceUrl, requestUrl);
   }
 
   const category = asString(photoData.category, 'gallery');
@@ -203,40 +209,55 @@ const resolvePhotoImageUrl = (
     ? `/images/optimized/gallery/${category}`
     : `/images/optimized/${category}`;
 
-  return `${requestUrl.origin}${basePath}/${optimizedFilename}`;
+  return resolveSafeMediaSourceUrl(`${basePath}/${optimizedFilename}`, requestUrl);
 };
 
+const MAX_IMAGE_REDIRECTS = 3;
+
 const fetchImageBuffer = async (
-  imageUrl: string
+  sourceUrl: URL,
+  requestHostname: string
 ): Promise<{ buffer: Buffer; mimeType: string | null } | null> => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
-    const response = await fetch(imageUrl, {
-      method: 'GET',
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'SpicebushSmartAdjust/1.0'
-      }
-    });
+    let currentUrl = sourceUrl;
+    let response: Response | null = null;
+    for (let hop = 0; hop <= MAX_IMAGE_REDIRECTS; hop += 1) {
+      response = await fetch(currentUrl, {
+        method: 'GET',
+        redirect: 'manual',
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'SpicebushSmartAdjust/1.0'
+        }
+      });
+      const nextUrl = resolveRedirectTarget(response, currentUrl, requestHostname);
+      if (nextUrl === undefined) break;
+      await response.body?.cancel().catch(() => undefined);
+      if (nextUrl === null || hop === MAX_IMAGE_REDIRECTS) return null;
+      currentUrl = nextUrl;
+    }
 
-    if (!response.ok) {
+    if (!response || !response.ok) {
       return null;
     }
 
-    const contentTypeHeader = response.headers.get('content-type');
-    const mimeType = contentTypeHeader
-      ? (contentTypeHeader.split(';')[0]?.trim().toLowerCase() ?? null)
-      : null;
+    const contentTypeHeader = response.headers.get('content-type') ?? '';
+    if (!isAllowedRasterContentType(contentTypeHeader)) {
+      await response.body?.cancel().catch(() => undefined);
+      return null;
+    }
+    const mimeType = contentTypeHeader.split(';')[0]?.trim().toLowerCase() ?? null;
 
-    const arrayBuffer = await response.arrayBuffer();
-    if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+    const buffer = await readBodyWithLimit(response);
+    if (!buffer || buffer.byteLength === 0) {
       return null;
     }
 
     return {
-      buffer: Buffer.from(arrayBuffer),
+      buffer,
       mimeType
     };
   } catch {
@@ -762,8 +783,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
       context.pagePath = body.pagePath.trim().slice(0, 180);
     }
 
-    const imageUrl = resolvePhotoImageUrl(photoData, photoEntry.slug, new URL(request.url));
-    const imageData = imageUrl ? await fetchImageBuffer(imageUrl) : null;
+    const requestUrl = new URL(request.url);
+    const resolvedImageUrl = resolvePhotoImageUrl(photoData, photoEntry.slug, requestUrl);
+    const imageUrl = resolvedImageUrl ? resolvedImageUrl.toString() : null;
+    const imageData = resolvedImageUrl
+      ? await fetchImageBuffer(resolvedImageUrl, requestUrl.hostname)
+      : null;
 
     const geminiKey = getRuntimeEnvValue('GEMINI_API_KEY');
     const openAiApiKey = getRuntimeEnvValue('OPENAI_API_KEY');

@@ -49,6 +49,7 @@ jobs:
       # Sentinel values in both .env.local and the process env make this build double as a leak
       # check: Astro inlines any private var referenced through import.meta.env (see CLAUDE.md).
       env:
+        NODE_ENV: production
         NETLIFY_DATABASE_URL: postgres://ci-sentinel-7f3a@localhost/process-env
       run: |
         cd app

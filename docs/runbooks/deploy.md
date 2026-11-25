@@ -24,10 +24,10 @@ cd app && NETLIFY_SITE_ID=<site-id> npm run db:check:migrations:netlify -- produ
 ```
 
 - If the check **passes**: continue to step 2b.
-- If **pending migrations** exist: apply them, then verify.
+- If **pending migrations** exist: apply them with `npm run db:migrate` (do **not** run `db:seed:netlify` on an already-seeded production DB; seeding is for initial bootstrap only and defaults to `ON CONFLICT DO NOTHING`), then verify:
 
 ```bash
-cd app && NETLIFY_SITE_ID=<site-id> npm run db:seed:netlify -- production
+cd app && NETLIFY_DATABASE_URL="$(npx netlify-cli@27 env:get NETLIFY_DATABASE_URL --context production)" npm run db:migrate
 cd app && npm run test:db
 ```
 

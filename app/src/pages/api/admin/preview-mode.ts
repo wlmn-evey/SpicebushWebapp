@@ -55,7 +55,7 @@ const handleToggle: APIRoute = async context => {
     context.cookies.set(PREVIEW_MODE_COOKIE, 'site', {
       path: '/',
       sameSite: 'strict',
-      secure: true,
+      secure: url.protocol === 'https:',
       httpOnly: true,
       maxAge: 60 * 60 * 12
     });
@@ -66,5 +66,11 @@ const handleToggle: APIRoute = async context => {
   return context.redirect(redirectPath);
 };
 
-export const GET = handleToggle;
+// Preview mode toggles cookie state, so GET is refused to prevent cross-site state changes.
+export const GET: APIRoute = async () =>
+  new Response(JSON.stringify({ error: 'Method not allowed. Use POST.' }), {
+    status: 405,
+    headers: { 'Content-Type': 'application/json', Allow: 'POST' }
+  });
+
 export const POST = handleToggle;

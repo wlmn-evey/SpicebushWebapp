@@ -88,6 +88,7 @@ blog-backend/public/uploads/*
 *.key
 *.cert
 *.crt
+cookies.txt
 
 # Package manager files
 .pnpm-store/
